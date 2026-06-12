@@ -1,4 +1,5 @@
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![Discord](https://dcbadge.limes.pink/api/server/9JWNpH7E?style=flat)](https://discord.gg/9JWNpH7E)
 
 # agentrust-io Integrations
 
@@ -30,6 +31,10 @@ TRACE only works as a standard if it is genuinely neutral. Integrations are list
 | Integration | Vendor | Integrates with | Tier |
 |---|---|---|---|
 | _none yet - be the first_ | | | |
+
+## Community
+
+Questions, feedback, integration help: [Discord](https://discord.gg/9JWNpH7E).
 
 ## License
 
