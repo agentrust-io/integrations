@@ -3,7 +3,7 @@ kind: Integration
 metadata:
   name: decisionassure
   displayName: DecisionAssure
-  description: Convert DecisionAssure runtime governance traces into TRACE v0.1 claims (signed JWT and JSON).
+  description: Convert DecisionAssure runtime governance traces into a signed TRACE v0.1 JWT (Ed25519).
   category: governance
   maintainer:
     name: Akhilesh Warik
@@ -23,7 +23,7 @@ spec:
     command: |
       pip install -r requirements.txt
       python da_to_trace.py decisionassure_trace.json
-      # Produces claim.jwt (signed) and claim.json (unsigned schema reference)
+      # Outputs claim.jwt – the signed JWT (primary artifact)
   evidence:
     - type: trace-tests
       command: |
