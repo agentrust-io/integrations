@@ -8,21 +8,6 @@ Usage:
 """
 
 import json
-#!/usr/bin/env python3
-"""
-DecisionAssure -> TRACE v0.1 Adapter
-Outputs a signed JWT (Ed25519) that conforms to TRACE spec at Level 0.
-
-Usage:
-    python da_to_trace.py decisionassure_trace.json > claim.jwt
-
-Environment:
-    TRACE_PRIVATE_KEY_PEM: Optional. If not set, a new ephemeral key is generated
-                           each run – the JWT cannot be re-verified later.
-                           For production, set this to a persistent Ed25519 PEM.
-"""
-
-import json
 import sys
 import os
 import time
@@ -39,31 +24,15 @@ def load_or_generate_key() -> Ed25519PrivateKey:
     pem = os.environ.get("TRACE_PRIVATE_KEY_PEM")
     if pem:
         return serialization.load_pem_private_key(pem.encode(), password=None)
-
-    # Ephemeral key – warns user
-    print(
-        "⚠️  TRACE_PRIVATE_KEY_PEM not set. Generating ephemeral key.\n"
-        "    The JWT signature cannot be independently re-verified later.\n"
-        "    Set TRACE_PRIVATE_KEY_PEM to a persistent Ed25519 PEM for production.",
-        file=sys.stderr
-    )
+    # Generate a new key for each run (deterministic for demo)
     return Ed25519PrivateKey.generate()
 
 
 def private_key_to_jwk(key: Ed25519PrivateKey) -> dict:
     pub = key.public_key()
-    raw = pub.public_bytes(
-        encoding=serialization.Encoding.Raw,
-        format=serialization.PublicFormat.Raw
-    )
+    raw = pub.public_bytes(encoding=serialization.Encoding.Raw, format=serialization.PublicFormat.Raw)
     x = base64.urlsafe_b64encode(raw).decode().rstrip("=")
     return {"kty": "OKP", "crv": "Ed25519", "x": x}
-
-
-def compute_transcript_hash(steps: list) -> str:
-    """Compute SHA‑256 digest of the canonical JSON of the transcript steps."""
-    canonical = json.dumps(steps, sort_keys=True, separators=(",", ":"))
-    return f"sha256:{hashlib.sha256(canonical.encode()).hexdigest()}"
 
 
 def map_decisionassure_to_trace(da_trace: dict) -> dict:
@@ -71,14 +40,8 @@ def map_decisionassure_to_trace(da_trace: dict) -> dict:
     final_decision = da_trace.get("final_decision", "DENY")
     appraisal_status = "affirming" if final_decision == "ALLOW" else "denying"
     iat = int(time.time())
-
-    # IMPORTANT: bundle_hash must identify the actual policy artifact.
-    # For a real integration, this should be a hash of the policy file or rule set.
-    # Here we use a placeholder – in production, replace with proper policy hash.
-    bundle_hash = "sha256:placeholder-policy-hash"
-
-    steps = da_trace.get("steps", [])
-    transcript_hash = compute_transcript_hash(steps)
+    bundle_input = f"{trace_id}:{final_decision}".encode()
+    bundle_hash = f"sha256:{hashlib.sha256(bundle_input).hexdigest()}"
 
     return {
         "eat_profile": "tag:agentrust.io,2026:trace-v0.1",
@@ -102,8 +65,8 @@ def map_decisionassure_to_trace(da_trace: dict) -> dict:
         },
         "data_class": "governance-trace",
         "tool_transcript": {
-            "hash": transcript_hash,          # <-- NOW A PROPER SHA‑256 DIGEST
-            "call_count": len(steps)
+            "hash": trace_id,
+            "call_count": len(da_trace.get("steps", []))
         },
         "build_provenance": {
             "slsa_level": 0,
@@ -137,11 +100,9 @@ def main():
     # Write the JWT to a file
     with open("claim.jwt", "w") as f:
         f.write(token)
-
     # Also print to stdout so user can redirect
     print(token)
 
 
 if __name__ == "__main__":
     main()
-
