@@ -1,40 +1,15 @@
-apiVersion: integration/v1
-kind: Integration
-metadata:
-  name: nobulex
-  displayName: Nobulex
-  description: Emit Ed25519-signed, JCS-canonical action receipts from Python agents; receipts carry action_ref = SHA-256(JCS({agent_id, action_type, scope, timestamp_ms})) as a content-derived identifier compatible with TRACE external execution evidence (trace-spec #34).
-  category: governance
-  maintainer:
-    name: Arian Gogani
-    email: nobulex.dev@gmail.com
-    github: arian-gogani
-  license: MIT
-  version: 0.1.0
-spec:
-  compatibility:
-    - trace-spec: external-execution-evidence (informational, trace-spec #34)
-  files:
-    - README.md
-  usage:
-    command: |
-      pip install nobulex
-      python3 -c "
-      from nobulex import Agent
-      agent = Agent('my-agent')
-      receipt = agent.act('tool_call', scope='resource:read')
-      assert receipt.verify()
-      print(receipt.action_ref)
-      "
-  evidence:
-    - type: verify
-      command: |
-        python3 -c "
-        from nobulex import Agent
-        agent = Agent('my-agent')
-        receipt = agent.act('tool_call', scope='resource:read')
-        assert receipt.verify(), 'signature verification failed'
-        assert len(receipt.action_ref) == 64, 'action_ref not SHA-256 hex'
-        print('PASS')
-        "
-      expected_output: "PASS"
+name: Nobulex
+vendor: Nobulex
+integrates_with:
+  - trace
+description: >-
+  Emits Ed25519-signed JCS-canonical action receipts; each carries
+  action_ref = SHA-256(JCS({agent_id, action_type, scope, timestamp_ms}))
+  usable as TRACE external execution evidence (trace-spec #34).
+maintainer:
+  github: arian-gogani
+  email: nobulex.dev@gmail.com
+repository: https://github.com/arian-gogani/nobulex
+homepage: https://nobulex.com
+license: MIT
+tier: community
