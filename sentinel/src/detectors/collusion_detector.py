@@ -65,3 +65,7 @@ class CollusionDetector(BaseDetector):
         if score < 0.6: return RiskLevel.MEDIUM
         if score < 0.8: return RiskLevel.HIGH
         return RiskLevel.CRITICAL
+if __name__ == "__main__":
+    # Quick test
+    from ..models import DetectionResult, RiskLevel
+    print("CollusionDetector loaded successfully.")

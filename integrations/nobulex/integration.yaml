@@ -1,0 +1,15 @@
+name: Nobulex
+vendor: Nobulex
+integrates_with:
+  - trace
+description: >-
+  Emits Ed25519-signed JCS-canonical action receipts; each carries
+  action_ref = SHA-256(JCS({agent_id, action_type, scope, timestamp_ms}))
+  usable as TRACE external execution evidence (trace-spec #34).
+maintainer:
+  github: arian-gogani
+  email: nobulex.dev@gmail.com
+repository: https://github.com/arian-gogani/nobulex
+homepage: https://nobulex.com
+license: MIT
+tier: community
