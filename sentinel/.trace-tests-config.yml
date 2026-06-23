@@ -1,0 +1,5 @@
+trace_tests:
+  enabled: true
+  test_data_dir: ./test_data
+  output_dir: ./test_reports
+  max_traces_per_run: 100

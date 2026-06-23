@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  sentinel:
+    build: .
+    ports:
+      - "8001:8001"
+    environment:
+      - QUARANTINE_THRESHOLD=0.7
+      - TRACE_PRIVATE_KEY_PEM=optional
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
