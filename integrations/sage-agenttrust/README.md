@@ -69,7 +69,7 @@ SAGE_UPSTREAM=http://127.0.0.1:18080 uvicorn bridge.app:app --port 19090 &
 BRIDGE_URL=http://127.0.0.1:19090 python demo/run_demo.py
 ```
 
-## What is verified (reproduction steps for the Verified tier)
+## What is verified (reproduction steps for maintainers when requesting verification)
 
 `./run_tests.sh` (offline, no node) reproduces:
 
