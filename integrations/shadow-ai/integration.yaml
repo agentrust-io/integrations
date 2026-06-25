@@ -1,0 +1,17 @@
+name: Shadow AI Discovery
+vendor: agentrust-io
+integrates_with:
+  - cmcp
+  - agent-manifest
+description: >-
+  Detects unregistered agents making MCP tool calls not declared in a cmcp
+  catalog.json, emitting DiscoveryEvents that map to Agent Manifest records
+  for remediation or quarantine.
+maintainer:
+  github: imransiddique-opaque
+repository: https://github.com/agentrust-io/integrations
+license: Apache-2.0
+tier: community
+tested_against:
+  cmcp-runtime: "0.2.0"
+  agent-manifest: "1.0.0"
