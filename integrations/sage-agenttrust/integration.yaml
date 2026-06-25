@@ -1,0 +1,22 @@
+name: SAGE AgentTrust Bridge
+vendor: SAGE AgentTrust Bridge
+integrates_with:
+  - cmcp
+  - trace
+description: >-
+  Reverse proxy that edge-verifies a TRACE record (key-equal) or cMCP
+  RuntimeClaim (gateway-asserted) before admitting a memory submit to a stock,
+  unmodified SAGE consensus-memory node.
+maintainer:
+  github: l33tdawg
+  email: dhillon.andrew@gmail.com
+repository: https://github.com/l33tdawg/sage-agenttrust
+homepage: https://github.com/l33tdawg/sage
+license: Apache-2.0
+tier: community
+# Level the cMCP-RuntimeClaim (envelope) path passes; the bare C-2 TRACE record is not graded
+# by agentrust-trace-tests (LoadError), so it carries no conformance level — see README.
+trace_conformance_level: 0
+tested_against:
+  cmcp-runtime: "0.2.1"
+  agentrust-trace: "0.2.0"
