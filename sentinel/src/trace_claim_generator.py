@@ -4,19 +4,10 @@ import hashlib
 import base64
 from datetime import datetime
 from typing import Dict, Any
-<<<<<<< HEAD
 
 from src.models import DetectionResult, TraceClaim, DetectionType
 
-=======
-from src.models import DetectionResult, TraceClaim, DetectionType
 
-import time
-import hashlib
-from datetime import datetime
-from src.models import DetectionResult, TraceClaim
-
->>>>>>> upstream/main
 def generate_trace_claim(agent_id: str, detection: DetectionResult, decision: str = "ADMIT") -> TraceClaim:
     claim_id = f"sentinel-{int(time.time())}-{hashlib.md5(f'{agent_id}{detection.detection_type}'.encode()).hexdigest()[:8]}"
     claim_payload = {
