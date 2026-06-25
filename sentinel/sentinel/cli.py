@@ -1,8 +1,8 @@
 import click
 import json
-from src.trace_ingester import ingest_trace
-from src.risk_engine import RiskEngine
-from src.models import SentinelInput
+from sentinel.trace_ingester import ingest_trace
+from sentinel.risk_engine import RiskEngine
+from sentinel.models import SentinelInput
 
 @click.command()
 @click.argument('trace_path', type=click.Path(exists=True))

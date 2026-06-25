@@ -1,16 +1,16 @@
-from src.models import (
+from sentinel.models import (
     SentinelInput, SentinelOutput, DetectionResult, RiskLevel, Action,
     TimelineEvent, TraceClaim, GraphNode, GraphEdge, QuarantineRecord
 )
-from src.detectors import (
+from sentinel.detectors import (
     DelegationEscalationDetector,
     ToolDriftDetector,
     PolicyAvoidanceDetector,
     IdentityDriftDetector,
     CollusionDetector
 )
-from src.quarantine import generate_quarantine
-from src.trace_claim_generator import generate_trace_claim
+from sentinel.quarantine import generate_quarantine
+from sentinel.trace_claim_generator import generate_trace_claim
 from datetime import datetime
 
 # In-memory store for quarantine records (for demo)
