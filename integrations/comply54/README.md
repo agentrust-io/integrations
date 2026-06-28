@@ -77,7 +77,7 @@ print('comply54:   ', payload['comply54'])
 **5. Run tests**
 
 ```bash
-pip install pytest
+pip install -r integrations/comply54/requirements.txt pytest
 python -m pytest integrations/comply54/tests/ -v
 ```
 
