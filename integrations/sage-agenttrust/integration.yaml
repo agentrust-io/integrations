@@ -1,5 +1,5 @@
-name: SAGE AgentTrust Bridge
-vendor: SAGE AgentTrust Bridge
+name: SAGE AgenTrust Bridge
+vendor: SAGE AgenTrust Bridge
 integrates_with:
   - cmcp
   - trace

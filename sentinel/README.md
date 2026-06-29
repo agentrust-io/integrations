@@ -17,9 +17,9 @@ Runtime behavioral anomaly detection, collusion detection, and quarantine for ag
 pip install -r requirements.txt
 python -m src.cli claim.jwt --output report.json
 
-Integration with AgentTrust
+Integration with AgenTrust
 
-Sentinel consumes TRACE claims and produces risk scores that can be used by AGT, cMCP, and other AgentTrust components.
+Sentinel consumes TRACE claims and produces risk scores that can be used by AGT, cMCP, and other AgenTrust components.
 
 Dashboard
 
@@ -27,7 +27,7 @@ bash
 uvicorn src.server:app --host 0.0.0.0 --port 8001 --reload
 Open http://localhost:8001
 
-Integration with AgentTrust
+Integration with AgenTrust
 
 Sentinel fills the documented gap: "no dedicated behavioral anomaly detection or agent quarantine tooling."
 
