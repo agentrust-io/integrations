@@ -3,7 +3,7 @@
 [SAGE](https://github.com/l33tdawg/sage) is consensus-validated agent memory: writes go
 through BFT consensus, carry a confidence score, and decay over time. This integration is an
 attestation-verifying reverse proxy that sits in front of a **stock, unmodified** SAGE node
-and admits a `POST /v1/memory/submit` only when it carries a verifiable AgentTrust attestation,
+and admits a `POST /v1/memory/submit` only when it carries a verifiable AgenTrust attestation,
 bound to the key that authors the memory on-chain. **Only the submit endpoint is gated** —
 other SAGE writes (`/forget`, `/vote`, `/corroborate`, `/challenge`, governance, access) pass
 through to SAGE's own Ed25519 auth + RBAC (out of scope for this submission-provenance bridge).
@@ -30,7 +30,7 @@ Two paths:
   agent ran behind an attested gateway — **not** per-write authorization.
 
 **What it does not claim:** the bridge does **not** verify any hardware root of trust with the
-published AgentTrust stack — `cmcp_verify`'s per-platform verifiers check the measurement
+published AgenTrust stack — `cmcp_verify`'s per-platform verifiers check the measurement
 format/parse but **defer the silicon root** (TPM EK chains / AMD VCEK / Intel DCAP quote
 signatures go to *unverified_fields*, "out of scope for Phase 1"), and a C-2 record's
 `runtime.platform` is self-asserted. So it **never** reports
