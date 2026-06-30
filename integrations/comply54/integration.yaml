@@ -1,0 +1,17 @@
+name: comply54
+vendor: comply54
+integrates_with:
+  - trace
+description: >-
+  Converts a comply54 ComplianceResult into a signed TRACE v0.1 JWT,
+  mapping African regulatory policy decisions to verifiable attestation claims.
+maintainer:
+  github: kingztech2019
+  email: oluwajuwon.falore@sagegreytech.com
+repository: https://github.com/comply54/comply54
+homepage: https://comply54.io
+license: Apache-2.0
+tier: community
+trace_conformance_level: 0
+tested_against:
+  agentrust-trace: "0.2.0"
