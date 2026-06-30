@@ -22,9 +22,12 @@ spec:
   usage:
     command: |
       pip install -r requirements.txt
-      python -m src.cli sample_trace.json --output report.json
+      # Sentinel fails closed: traces are verified before scoring. For signed
+      # production traces set TRACE_TRUSTED_JWK. To run the unsigned demo trace,
+      # set SENTINEL_ALLOW_UNVERIFIED=1 (logs a loud warning, dev/demo only).
+      SENTINEL_ALLOW_UNVERIFIED=1 python -m src.cli sample_trace.json --output report.json
       # For fleet evaluation:
-      # python -m src.cli fleet_trace.json --fleet --output fleet_report.json
+      # SENTINEL_ALLOW_UNVERIFIED=1 python -m src.cli fleet_trace.json --fleet --output fleet_report.json
   evidence:
     - type: manual
       description: |

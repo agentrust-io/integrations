@@ -135,6 +135,19 @@
         let currentReplayResults = {};
         let claimActionMap = {};
 
+        // Escape any string that originates from posted trace data before it is
+        // placed into innerHTML. Prevents DOM-XSS from agent_id, reason,
+        // description, detection_type, claim_id, etc.
+        function esc(value) {
+            if (value === null || value === undefined) return '';
+            return String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
         function getRiskLevel(agent) {
             if (agent && agent.risk_level) {
                 const level = agent.risk_level.toLowerCase();
@@ -180,9 +193,9 @@
             }
             let summaryHtml = '';
             for (const [type, count] of Object.entries(detectionCounts)) {
-                summaryHtml += `<div class="summary-item"><div class="count">${count}</div><div class="label">${type.replace(/_/g, ' ').toUpperCase()}</div></div>`;
+                summaryHtml += `<div class="summary-item"><div class="count">${esc(count)}</div><div class="label">${esc(type.replace(/_/g, ' ').toUpperCase())}</div></div>`;
             }
-            summaryHtml += `<div class="summary-item"><div class="count">${totalClaims}</div><div class="label">TRACE CLAIMS</div></div>`;
+            summaryHtml += `<div class="summary-item"><div class="count">${esc(totalClaims)}</div><div class="label">TRACE CLAIMS</div></div>`;
             summaryContainer.innerHTML = summaryHtml;
 
             const agentContainer = document.getElementById('agentCards');
@@ -196,14 +209,15 @@
                     if (d.action === "escalate") { action = "ESCALATE"; actionClass = "action-escalate"; badge = "badge-escalate"; break; }
                     if (d.action === "block") { action = "BLOCK"; actionClass = "action-block"; badge = "badge-block"; break; }
                 }
-                const topDets = agent.detections.slice(0, 2).map(d => d.detection_type.replace(/_/g, ' ').toUpperCase()).join(', ');
+                const topDets = agent.detections.slice(0, 2).map(d => esc(d.detection_type.replace(/_/g, ' ').toUpperCase())).join(', ');
+                const riskLevelClass = getRiskLevel(agent);
                 agentHtml += `
                     <div class="agent-card ${actionClass}">
-                        <strong>${agent.agent_id}</strong>
+                        <strong>${esc(agent.agent_id)}</strong>
                         <span class="action-badge ${badge}">${action}</span>
-                        <br><span style="font-size:0.9rem;">Risk: <span class="risk-${agent.risk_level}">${(agent.risk_score * 100).toFixed(0)}%</span></span>
+                        <br><span style="font-size:0.9rem;">Risk: <span class="risk-${riskLevelClass}">${(agent.risk_score * 100).toFixed(0)}%</span></span>
                         <br><span style="color:#8b949e;font-size:0.85rem;">${topDets || 'No detections'}</span>
-                        ${agent.quarantine_action ? `<br><span style="color:#f85149;">🔒 ${agent.quarantine_action.blocked_tools.join(', ')} blocked</span>` : ''}
+                        ${agent.quarantine_action ? `<br><span style="color:#f85149;">🔒 ${esc(agent.quarantine_action.blocked_tools.join(', '))} blocked</span>` : ''}
                     </div>
                 `;
             }
@@ -221,24 +235,33 @@
                     const actionFromClaim = claim.enforcement_action || 'monitor';
                     claimActionMap[claim.claim_id] = actionFromClaim.toLowerCase();
 
+                    // All trace-derived strings are HTML-escaped before insertion.
+                    // Untrusted values are carried on data-* attributes (also
+                    // escaped) and read by delegated listeners attached below --
+                    // never interpolated into inline on* handlers.
                     claimsHtml += `
-                        <div class="claim-box" id="claim-${claim.claim_id}">
+                        <div class="claim-box" id="claim-${esc(claim.claim_id)}"
+                             data-claim-id="${esc(claim.claim_id)}"
+                             data-agent-id="${esc(claim.agent_id)}"
+                             data-detection-type="${esc(claim.detection_type)}"
+                             data-risk-score="${esc(claim.risk_score)}"
+                             data-risk-level="${esc(riskLevel)}">
                             <div class="flex">
-                                <strong>${claim.claim_id}</strong>
-                                <span class="status-badge ${statusClass}">${status.replace(/_/g, ' ').toUpperCase()}</span>
-                                <span class="${decClass}">${decision}</span>
+                                <strong>${esc(claim.claim_id)}</strong>
+                                <span class="status-badge ${statusClass}">${esc(status.replace(/_/g, ' ').toUpperCase())}</span>
+                                <span class="${decClass}">${esc(decision)}</span>
                             </div>
-                            <div><strong>Agent:</strong> ${claim.agent_id} | <strong>Detection:</strong> ${claim.detection_type.replace(/_/g, ' ').toUpperCase()} | <strong>Risk:</strong> ${(claim.risk_score * 100).toFixed(0)}%</div>
-                            ${claim.reason ? `<div style="color:#8b949e;">Reason: ${claim.reason}</div>` : ''}
+                            <div><strong>Agent:</strong> ${esc(claim.agent_id)} | <strong>Detection:</strong> ${esc(claim.detection_type.replace(/_/g, ' ').toUpperCase())} | <strong>Risk:</strong> ${(claim.risk_score * 100).toFixed(0)}%</div>
+                            ${claim.reason ? `<div style="color:#8b949e;">Reason: ${esc(claim.reason)}</div>` : ''}
                             <div class="flex" style="margin-top:0.3rem;">
-                                <button class="btn btn-warning" onclick="enforceClaim('${claim.claim_id}', 'escalate', '${claim.agent_id}')">📈 Escalate</button>
-                                <button class="btn btn-danger" onclick="enforceClaim('${claim.claim_id}', 'quarantine', '${claim.agent_id}')">🔒 Quarantine</button>
-                                <button class="btn btn-danger" onclick="enforceClaim('${claim.claim_id}', 'block', '${claim.agent_id}')">🚫 Block</button>
-                                <button class="btn btn-secondary" onclick="openReplay('${claim.claim_id}')">🔄 Replay</button>
-                                <button class="btn btn-export" onclick="exportIncident('${claim.claim_id}', '${claim.agent_id}', '${claim.detection_type}', ${claim.risk_score}, '${riskLevel}')">📋 Export Incident</button>
-                                <button class="btn btn-verify" onclick="verifyIncident('${claim.claim_id}')">✅ Verify</button>
+                                <button class="btn btn-warning" data-action="escalate">📈 Escalate</button>
+                                <button class="btn btn-danger" data-action="quarantine">🔒 Quarantine</button>
+                                <button class="btn btn-danger" data-action="block">🚫 Block</button>
+                                <button class="btn btn-secondary" data-action="replay">🔄 Replay</button>
+                                <button class="btn btn-export" data-action="export">📋 Export Incident</button>
+                                <button class="btn btn-verify" data-action="verify">✅ Verify</button>
                             </div>
-                            <div id="enforcement-log-${claim.claim_id}" class="enforcement-log" style="display:none;"></div>
+                            <div id="enforcement-log-${esc(claim.claim_id)}" class="enforcement-log" style="display:none;"></div>
                         </div>
                     `;
                 }
@@ -247,18 +270,40 @@
             }
             claimsContainer.innerHTML = claimsHtml;
 
+            // Attach listeners instead of inline on* handlers. The untrusted
+            // claim values live on data-* attributes, so they never become code.
+            claimsContainer.querySelectorAll('.claim-box button[data-action]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const box = btn.closest('.claim-box');
+                    const claimId = box.dataset.claimId;
+                    const agentId = box.dataset.agentId;
+                    const detectionType = box.dataset.detectionType;
+                    const riskScore = parseFloat(box.dataset.riskScore) || 0.0;
+                    const claimRiskLevel = box.dataset.riskLevel || 'low';
+                    switch (btn.dataset.action) {
+                        case 'escalate': enforceClaim(claimId, 'escalate', agentId); break;
+                        case 'quarantine': enforceClaim(claimId, 'quarantine', agentId); break;
+                        case 'block': enforceClaim(claimId, 'block', agentId); break;
+                        case 'replay': openReplay(claimId); break;
+                        case 'export': exportIncident(claimId, agentId, detectionType, riskScore, claimRiskLevel); break;
+                        case 'verify': verifyIncident(claimId, agentId, detectionType, riskScore, claimRiskLevel); break;
+                    }
+                });
+            });
+
             const timelineContainer = document.getElementById('timelineContainer');
             let timelineHtml = '';
             if (data.timeline && data.timeline.length > 0) {
                 for (const event of data.timeline) {
                     const time = new Date(event.timestamp).toLocaleTimeString();
-                    const severityClass = event.severity ? `risk-${event.severity}` : '';
+                    const sev = (event.severity || '').toString().toLowerCase();
+                    const severityClass = ['low', 'medium', 'high', 'critical'].includes(sev) ? `risk-${sev}` : '';
                     timelineHtml += `
                         <div style="padding:0.2rem 0; border-bottom:1px solid #1c2333; font-size:0.9rem;">
-                            <span style="color:#8b949e;margin-right:0.5rem;">${time}</span>
-                            <span class="${severityClass}">${event.agent_id}</span>
-                            ${event.event_type.replace(/_/g, ' ').toUpperCase()}
-                            <span style="color:#8b949e;">- ${event.description}</span>
+                            <span style="color:#8b949e;margin-right:0.5rem;">${esc(time)}</span>
+                            <span class="${severityClass}">${esc(event.agent_id)}</span>
+                            ${esc((event.event_type || '').replace(/_/g, ' ').toUpperCase())}
+                            <span style="color:#8b949e;">- ${esc(event.description)}</span>
                         </div>
                     `;
                 }
@@ -328,26 +373,30 @@
                     let receiptHtml = `
                         <div class="receipt">
                             <h4>🧾 Enforcement Receipt</h4>
-                            <div class="row"><span class="label">Claim:</span> <span>${claimId}</span></div>
-                            <div class="row"><span class="label">Action:</span> <span>${result.action.toUpperCase()}</span></div>
-                            <div class="row"><span class="label">Timestamp:</span> <span>${new Date(result.timestamp).toLocaleString()}</span></div>
-                            <div class="row"><span class="label">Agent:</span> <span>${result.agent_id}</span></div>
+                            <div class="row"><span class="label">Claim:</span> <span>${esc(claimId)}</span></div>
+                            <div class="row"><span class="label">Action:</span> <span>${esc((result.action || '').toUpperCase())}</span></div>
+                            <div class="row"><span class="label">Timestamp:</span> <span>${esc(new Date(result.timestamp).toLocaleString())}</span></div>
+                            <div class="row"><span class="label">Agent:</span> <span>${esc(result.agent_id)}</span></div>
                     `;
                     for (const [key, value] of Object.entries(result.details)) {
                         if (key === 'message') continue;
                         let displayValue = value;
                         if (typeof value === 'object') displayValue = JSON.stringify(value);
-                        receiptHtml += `<div class="row"><span class="label">${key.replace(/_/g, ' ').toUpperCase()}:</span> <span>${displayValue}</span></div>`;
+                        receiptHtml += `<div class="row"><span class="label">${esc(key.replace(/_/g, ' ').toUpperCase())}:</span> <span>${esc(displayValue)}</span></div>`;
                     }
                     receiptHtml += `
-                            <div class="row"><span class="label">Outcome:</span> <span style="color:#3fb950;">${result.details.message || 'Applied'}</span></div>
+                            <div class="row"><span class="label">Outcome:</span> <span style="color:#3fb950;">${esc(result.details.message || 'Applied')}</span></div>
                             <div class="row"><span class="label">Evidence:</span> <span>trace.jwt</span></div>
                             <div class="btn-group" style="margin-top:0.3rem;">
-                                <button class="btn btn-export" onclick="exportReceipt('${claimId}')">📄 Export Receipt JSON</button>
+                                <button class="btn btn-export" data-export-receipt="${esc(claimId)}">📄 Export Receipt JSON</button>
                             </div>
                         </div>
                     `;
                     logDiv.innerHTML = receiptHtml;
+                    const exportBtn = logDiv.querySelector('button[data-export-receipt]');
+                    if (exportBtn) {
+                        exportBtn.addEventListener('click', () => exportReceipt(claimId));
+                    }
                 }
 
                 const claimBox = document.getElementById(`claim-${claimId}`);
@@ -455,15 +504,9 @@
             }
         }
 
-        async function verifyIncident(claimId) {
+        async function verifyIncident(claimId, agentId, detectionType, riskScore, riskLevel) {
             try {
-                const claimBox = document.getElementById(`claim-${claimId}`);
-                const infoDiv = claimBox.querySelector('div:nth-child(2)');
-                const agentId = infoDiv.innerText.split('Agent: ')[1].split('|')[0].trim();
-                const detectionType = infoDiv.innerText.split('Detection: ')[1].split('|')[0].trim();
-                const riskScore = parseFloat(infoDiv.innerText.split('Risk: ')[1].replace('%', '')) / 100;
-                const riskLevel = 'low';
-
+                riskLevel = riskLevel || 'low';
                 const exportResponse = await fetch(`/export/incident/${claimId}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -491,6 +534,8 @@
                 const verifyResult = await verifyResponse.json();
                 if (verifyResult.status === 'VERIFIED') {
                     alert('✅ Signature verified! Incident is authentic.');
+                } else if (verifyResult.status === 'UNVERIFIABLE') {
+                    alert('⚠️ Cannot verify: ' + (verifyResult.details && verifyResult.details.reason ? verifyResult.details.reason : 'no signing key configured.'));
                 } else {
                     alert('❌ Signature verification failed: ' + JSON.stringify(verifyResult.details));
                 }
@@ -526,7 +571,7 @@
                 });
                 const replayResults = await response.json();
                 if (replayResults.error) {
-                    resultsDiv.innerHTML = `<span style="color:#f85149;">Error: ${replayResults.error}</span>`;
+                    resultsDiv.innerHTML = `<span style="color:#f85149;">Error: ${esc(replayResults.error)}</span>`;
                     return;
                 }
                 currentReplayResults[claimId] = replayResults;
@@ -540,18 +585,18 @@
                     const decisionColor = r.decision === 'DENY' ? '#f85149' : '#3fb950';
                     tableHtml += `
                         <tr>
-                            <td><strong>${r.policy_version}</strong></td>
+                            <td><strong>${esc(r.policy_version)}</strong></td>
                             <td>${(r.risk_score * 100).toFixed(0)}%</td>
-                            <td>${r.risk_level}</td>
-                            <td style="color:${decisionColor};">${r.decision}</td>
-                            <td style="color:#8b949e;">${r.reason}</td>
+                            <td>${esc(r.risk_level)}</td>
+                            <td style="color:${decisionColor};">${esc(r.decision)}</td>
+                            <td style="color:#8b949e;">${esc(r.reason)}</td>
                         </tr>
                     `;
                 }
                 tableHtml += '</tbody></table>';
                 resultsDiv.innerHTML = tableHtml;
             } catch (e) {
-                resultsDiv.innerHTML = `<span style="color:#f85149;">Error: ${e.message}</span>`;
+                resultsDiv.innerHTML = `<span style="color:#f85149;">Error: ${esc(e.message)}</span>`;
             }
         }
 
