@@ -166,5 +166,6 @@ class IncidentReport(BaseModel):
     evidence_export: Dict[str, Any]
     receipt: Optional[Receipt] = None
     signature: Optional[str] = None
+    signature_status: str = "unsigned"  # "signed" or "unsigned" (fail closed)
     claim_hash: Optional[str] = None
     incident_hash: Optional[str] = None

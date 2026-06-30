@@ -3,6 +3,7 @@ import json
 from src.trace_ingester import ingest_trace
 from src.risk_engine import RiskEngine
 from src.models import SentinelInput
+from src.trace_verification import verify_trace, TraceVerificationError
 
 @click.command()
 @click.argument('trace_path', type=click.Path(exists=True))
@@ -15,6 +16,12 @@ def main(trace_path, output, fleet):
 
     if fleet or "agents" in data:
         # Fleet mode
+        # Verification gate: refuse to score/enforce on unverified trace input.
+        try:
+            for agent_data in data.get("agents", []):
+                verify_trace(agent_data)
+        except TraceVerificationError as e:
+            raise click.ClickException(f"Trace verification failed: {e}")
         engine = RiskEngine()
         inputs = []
         for agent_data in data.get("agents", []):

@@ -8,11 +8,13 @@ from src.models import (
 )
 from src.risk_engine import RiskEngine
 from src.replay_engine import ReplayEngine
+from src.signing import sign_payload, verify_payload, is_signing_configured, SigningKeyMissing
+from src.trace_verification import verify_trace, TraceVerificationError
 import traceback
 import uuid
 import json
 import hashlib
-import base64
+import hmac
 from datetime import datetime
 
 app = FastAPI(title="Agent Sentinel")
@@ -44,11 +46,6 @@ def log_enforcement(action: str, claim_id: str, result: dict, status: str = "SUC
     print(f"Result: {result.get('message', result)}")
     print(f"Status: {status}\n")
 
-def sign_payload(payload: dict) -> str:
-    data = json.dumps(payload, sort_keys=True).encode('utf-8')
-    hash_digest = hashlib.sha256(data).digest()
-    return base64.b64encode(hash_digest + b"signed").decode('utf-8')
-
 def hash_payload(payload: dict) -> str:
     data = json.dumps(payload, sort_keys=True).encode('utf-8')
     return hashlib.sha256(data).hexdigest()
@@ -65,6 +62,16 @@ async def evaluate(request: Request):
             agents_list = data.get("agents") or data.get("agent_fleet", [])
             if not agents_list:
                 return JSONResponse(content={"error": "No agents provided"}, status_code=400)
+
+            # Verification gate: refuse to score/enforce on unverified trace input.
+            try:
+                for agent_data in agents_list:
+                    verify_trace(agent_data)
+            except TraceVerificationError as e:
+                return JSONResponse(
+                    content={"error": f"Trace verification failed: {str(e)}"},
+                    status_code=403,
+                )
 
             inputs = []
             for agent_data in agents_list:
@@ -120,6 +127,14 @@ async def evaluate(request: Request):
             }
             return JSONResponse(content=serializable)
         else:
+            # Verification gate: refuse to score/enforce on unverified trace input.
+            try:
+                verify_trace(data)
+            except TraceVerificationError as e:
+                return JSONResponse(
+                    content={"error": f"Trace verification failed: {str(e)}"},
+                    status_code=403,
+                )
             try:
                 inp = SentinelInput(**data)
                 result = engine.evaluate(inp)
@@ -286,12 +301,25 @@ async def export_incident(claim_id: str, request: Request):
         if claim_id in receipt_store:
             report.receipt = receipt_store[claim_id]
 
-        # Generate hashes and signature for the report (without the signature and hash fields)
-        report_dict = report.model_dump(mode='json', exclude={'signature', 'claim_hash', 'incident_hash'})
+        # Generate hashes and a keyed signature for the report (excluding the
+        # signature / hash fields and the signature_status marker).
+        report_dict = report.model_dump(
+            mode='json',
+            exclude={'signature', 'claim_hash', 'incident_hash', 'signature_status'},
+        )
         claim_data = {"claim_id": claim_id, "agent_id": agent_id, "detection_type": detection_type, "risk_score": risk_score}
         report.claim_hash = hash_payload(claim_data)
         report.incident_hash = hash_payload(report_dict)
-        report.signature = sign_payload(report_dict)
+
+        # Fail closed: only emit a signature when a signing key is configured.
+        # Otherwise mark the report explicitly unsigned rather than emitting a
+        # value that merely looks signed.
+        try:
+            report.signature = sign_payload(report_dict)
+            report.signature_status = "signed"
+        except SigningKeyMissing:
+            report.signature = None
+            report.signature_status = "unsigned"
 
         return JSONResponse(content=report.model_dump(mode='json'))
     except Exception as e:
@@ -318,8 +346,23 @@ async def verify_incident(claim_id: str, request: Request):
         if not report_data:
             return JSONResponse(content={"error": "Missing report data"}, status_code=400)
 
-        # Recompute hashes and signature from the report (excluding signature and hash fields)
-        report_copy = {k: v for k, v in report_data.items() if k not in ["signature", "claim_hash", "incident_hash"]}
+        # Fail closed: a keyed signature is required to verify. Without a
+        # configured signing key there is nothing to verify against.
+        if not is_signing_configured():
+            return JSONResponse(content={
+                "claim_id": claim_id,
+                "status": "UNVERIFIABLE",
+                "details": {
+                    "reason": "No signing key configured (SENTINEL_SIGNING_KEY). "
+                              "Cannot verify incident signatures.",
+                }
+            })
+
+        # Recompute integrity hashes; verify the keyed signature with HMAC.
+        report_copy = {
+            k: v for k, v in report_data.items()
+            if k not in ["signature", "claim_hash", "incident_hash", "signature_status"]
+        }
         recomputed_claim_hash = hash_payload({
             "claim_id": claim_id,
             "agent_id": report_data.get("agent_id"),
@@ -327,11 +370,11 @@ async def verify_incident(claim_id: str, request: Request):
             "risk_score": report_data.get("risk_score")
         })
         recomputed_incident_hash = hash_payload(report_copy)
-        recomputed_signature = sign_payload(report_copy)
 
-        valid_claim_hash = recomputed_claim_hash == report_data.get("claim_hash")
-        valid_incident_hash = recomputed_incident_hash == report_data.get("incident_hash")
-        valid_signature = recomputed_signature == report_data.get("signature")
+        valid_claim_hash = hmac.compare_digest(recomputed_claim_hash, report_data.get("claim_hash") or "")
+        valid_incident_hash = hmac.compare_digest(recomputed_incident_hash, report_data.get("incident_hash") or "")
+        # Keyed HMAC verification with constant-time comparison.
+        valid_signature = verify_payload(report_copy, report_data.get("signature") or "")
 
         status = "VERIFIED" if (valid_claim_hash and valid_incident_hash and valid_signature) else "TAMPERED"
         return JSONResponse(content={

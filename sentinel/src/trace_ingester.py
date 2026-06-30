@@ -1,10 +1,16 @@
 import json
 from src.models import SentinelInput, SentinelOutput  # <-- added SentinelOutput
 from src.risk_engine import RiskEngine
+from src.trace_verification import verify_trace
 
 def ingest_trace(trace_path: str) -> SentinelOutput:
     with open(trace_path, 'r') as f:
         data = json.load(f)
+
+    # Verification gate: refuse to score/enforce on unverified trace input.
+    # Raises TraceVerificationError unless the trace is signed by the configured
+    # trusted key (or SENTINEL_ALLOW_UNVERIFIED=1 is explicitly set).
+    verify_trace(data)
 
     steps = data.get("steps", [])
     if not steps:
