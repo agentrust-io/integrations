@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tag:agentrust.io,2026:trace-claim-v0.1-schema",
+  "description": "TRACE v0.1 JWT payload — core envelope. Private/extension claims (e.g. comply54.*) are carried outside this schema per RFC 7519 §4.3.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "eat_profile",
+    "iat",
+    "subject",
+    "model",
+    "runtime",
+    "policy",
+    "data_class",
+    "build_provenance",
+    "appraisal",
+    "transparency"
+  ],
+  "properties": {
+    "eat_profile": {
+      "type": "string",
+      "const": "tag:agentrust.io,2026:trace-v0.1"
+    },
+    "iat": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "subject": {
+      "type": "string",
+      "pattern": "^spiffe://"
+    },
+    "cnf": {
+      "type": "object",
+      "properties": {
+        "jwk": {
+          "type": "object",
+          "required": ["kty", "crv", "x"],
+          "properties": {
+            "kty": { "type": "string" },
+            "crv": { "type": "string" },
+            "x":   { "type": "string" }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "model": {
+      "type": "object",
+      "required": ["provider", "model_id"],
+      "properties": {
+        "provider":       { "type": "string" },
+        "model_id":       { "type": "string" },
+        "version":        { "type": "string" },
+        "weights_digest": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "runtime": {
+      "type": "object",
+      "required": ["platform"],
+      "properties": {
+        "platform": {
+          "type": "string",
+          "enum": ["software-only", "amd-sev-snp", "intel-tdx", "arm-cca"]
+        },
+        "measurement": { "type": "string" },
+        "rim_uri":     { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "policy": {
+      "type": "object",
+      "required": ["bundle_hash"],
+      "properties": {
+        "bundle_hash":      { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+        "enforcement_mode": { "type": "string" },
+        "version":          { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "data_class": {
+      "type": "string"
+    },
+    "build_provenance": {
+      "type": "object",
+      "properties": {
+        "slsa_level": { "type": "integer", "minimum": 0 },
+        "builder":    { "type": "string" },
+        "digest":     { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "appraisal": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["affirming", "warning", "contraindicated", "none"]
+        },
+        "verifier":   { "type": "string" },
+        "policy_ref": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "transparency": {
+      "type": "string"
+    }
+  }
+}

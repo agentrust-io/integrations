@@ -24,9 +24,11 @@ comply54 evaluates AI agent actions against African regulatory frameworks (NDPA 
 | comply54 `overall` | TRACE `appraisal.status` |
 |--------------------|--------------------------|
 | `allow` | `affirming` |
-| `audit` | `advisory` |
+| `audit` | `warning` |
 | `escalate` | `warning` |
 | `deny` | `contraindicated` |
+
+`audit` is an "allow with mandatory trail" outcome — the action proceeds but must be logged. `warning` is the nearest valid TRACE status (action proceeded with a caveat). `none` would suppress the appraisal entirely, which is semantically wrong for an audit outcome.
 
 ## Usage
 
@@ -81,7 +83,7 @@ pip install -r integrations/comply54/requirements.txt pytest
 python -m pytest integrations/comply54/tests/ -v
 ```
 
-All 20 tests should pass.
+All 26 tests should pass.
 
 ## Key Management
 
@@ -118,7 +120,7 @@ python src/comply54_to_trace.py result.json
 
 ## comply54 extension claims
 
-The JWT carries a non-standard `comply54` object with:
+The JWT carries a top-level `comply54` object with African-regulatory-specific context:
 
 ```json
 {
@@ -138,6 +140,12 @@ The JWT carries a non-standard `comply54` object with:
   }
 }
 ```
+
+### Extension-claim profile
+
+The TRACE core schema (`schema/trace-claim.json`) is `additionalProperties: false` at the root. The `comply54` key is a **private claim** in the sense of RFC 7519 §4.3 — it is not part of the TRACE core envelope and must not be validated against the core schema.
+
+Schema-conformance tests strip the `comply54` key before validating the core fields. Consumers that wish to process the extension claims should do so after verifying the TRACE core fields pass schema validation.
 
 ## Repository
 

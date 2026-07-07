@@ -6,6 +6,7 @@ Run: pip install -r requirements.txt && python -m pytest tests/ -v
 import json
 import base64
 import pytest
+import jsonschema
 import jwt as pyjwt
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
@@ -53,6 +54,16 @@ ESCALATE_RESULT = {
     ],
 }
 
+AUDIT_RESULT = {
+    "overall": "audit",
+    "audit_id": "test-audit-005",
+    "decisions": [
+        {"pack": "nigeria/ndpa", "regulation": "Nigeria Data Protection Act 2023",
+         "jurisdiction": "NG", "action": "audit",
+         "messages": ["Data subject rights audit trail required per NDPA s.25"]},
+    ],
+}
+
 PAN_AFRICAN_RESULT = {
     "overall": "deny",
     "audit_id": "test-audit-004",
@@ -78,6 +89,10 @@ class TestAppraisalMapping:
 
     def test_escalate_maps_to_warning(self):
         payload = comply54_to_trace_payload(ESCALATE_RESULT, "agent-1", "anthropic/claude-sonnet-4-6")
+        assert payload["appraisal"]["status"] == "warning"
+
+    def test_audit_maps_to_warning(self):
+        payload = comply54_to_trace_payload(AUDIT_RESULT, "agent-1", "anthropic/claude-sonnet-4-6")
         assert payload["appraisal"]["status"] == "warning"
 
 
@@ -179,3 +194,47 @@ class TestJWTSigning:
         payload["cnf"] = {"jwk": private_key_to_jwk(key)}
         token = pyjwt.encode(payload, key, algorithm="EdDSA", headers={"alg": "EdDSA", "typ": "JWT"})
         assert len(token.split(".")) == 3
+
+
+# ── TRACE schema conformance ──────────────────────────────────────────────────
+
+SCHEMA_PATH = Path(__file__).parent.parent.parent.parent / "schema" / "trace-claim.json"
+
+
+def _load_schema() -> dict:
+    return json.loads(SCHEMA_PATH.read_text())
+
+
+def _core(payload: dict) -> dict:
+    """Strip private comply54 extension claims before schema validation.
+
+    The TRACE schema is additionalProperties:false on the core envelope.
+    Private claims under the 'comply54' namespace are carried as extension
+    claims per RFC 7519 §4.3 and are validated separately, not against the
+    core TRACE schema. See README §Extension Claims for details.
+    """
+    return {k: v for k, v in payload.items() if k != "comply54"}
+
+
+class TestSchemaConformance:
+    def test_allow_result_core_conforms_to_trace_schema(self):
+        payload = comply54_to_trace_payload(ALLOW_RESULT, "agent-1", "anthropic/claude-sonnet-4-6")
+        jsonschema.validate(_core(payload), _load_schema())
+
+    def test_deny_result_core_conforms_to_trace_schema(self):
+        payload = comply54_to_trace_payload(DENY_RESULT, "agent-1", "anthropic/claude-sonnet-4-6")
+        jsonschema.validate(_core(payload), _load_schema())
+
+    def test_escalate_result_core_conforms_to_trace_schema(self):
+        payload = comply54_to_trace_payload(ESCALATE_RESULT, "agent-1", "anthropic/claude-sonnet-4-6")
+        jsonschema.validate(_core(payload), _load_schema())
+
+    def test_audit_result_core_conforms_to_trace_schema(self):
+        payload = comply54_to_trace_payload(AUDIT_RESULT, "agent-1", "anthropic/claude-sonnet-4-6")
+        jsonschema.validate(_core(payload), _load_schema())
+
+    def test_appraisal_status_is_valid_enum(self):
+        schema = _load_schema()
+        valid = schema["properties"]["appraisal"]["properties"]["status"]["enum"]
+        assert "advisory" not in valid, "advisory is not a valid TRACE appraisal.status"
+        assert set(valid) == {"affirming", "warning", "contraindicated", "none"}

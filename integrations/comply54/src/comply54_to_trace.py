@@ -31,7 +31,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 _APPRAISAL_MAP = {
     "allow":    "affirming",
-    "audit":    "advisory",
+    "audit":    "warning",
     "escalate": "warning",
     "deny":     "contraindicated",
 }
