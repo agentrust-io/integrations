@@ -79,11 +79,11 @@ print('comply54:   ', payload['comply54'])
 **5. Run tests**
 
 ```bash
-pip install -r integrations/comply54/requirements.txt pytest
+pip install -r integrations/comply54/requirements.txt jsonschema pytest
 python -m pytest integrations/comply54/tests/ -v
 ```
 
-All 26 tests should pass.
+All 30 tests should pass — 26 unit/schema tests plus 4 `agentrust-trace-tests` Level 0 conformance tests (TR-ENV, TR-SIG, TR-POL).
 
 ## Key Management
 
@@ -143,7 +143,7 @@ The JWT carries a top-level `comply54` object with African-regulatory-specific c
 
 ### Extension-claim profile
 
-The TRACE core schema (`schema/trace-claim.json`) is `additionalProperties: false` at the root. The `comply54` key is a **private claim** in the sense of RFC 7519 §4.3 — it is not part of the TRACE core envelope and must not be validated against the core schema.
+The TRACE core schema (kept as `tests/fixtures/trace-claim.json` — a local regression fixture, not the canonical schema) is `additionalProperties: false` at the root. The `comply54` key is a **private claim** in the sense of RFC 7519 §4.3 — it is not part of the TRACE core envelope and must not be validated against the core schema.
 
 Schema-conformance tests strip the `comply54` key before validating the core fields. Consumers that wish to process the extension claims should do so after verifying the TRACE core fields pass schema validation.
 

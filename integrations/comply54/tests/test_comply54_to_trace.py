@@ -4,11 +4,15 @@ Run: pip install -r requirements.txt && python -m pytest tests/ -v
 """
 
 import json
+import os
 import base64
+import tempfile
 import pytest
 import jsonschema
 import jwt as pyjwt
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+from trace_tests.loader import load_record
+from trace_tests.runner import run as trace_run
 
 import sys
 from pathlib import Path
@@ -198,7 +202,7 @@ class TestJWTSigning:
 
 # ── TRACE schema conformance ──────────────────────────────────────────────────
 
-SCHEMA_PATH = Path(__file__).parent.parent.parent.parent / "schema" / "trace-claim.json"
+SCHEMA_PATH = Path(__file__).parent / "fixtures" / "trace-claim.json"
 
 
 def _load_schema() -> dict:
@@ -238,3 +242,45 @@ class TestSchemaConformance:
         valid = schema["properties"]["appraisal"]["properties"]["status"]["enum"]
         assert "advisory" not in valid, "advisory is not a valid TRACE appraisal.status"
         assert set(valid) == {"affirming", "warning", "contraindicated", "none"}
+
+
+# ── agentrust-trace-tests Level 0 conformance ─────────────────────────────────
+
+def _build_signed_payload(result_fixture: dict) -> dict:
+    """Return a complete TRACE payload (including cnf.jwk) for conformance testing."""
+    payload = comply54_to_trace_payload(result_fixture, "test-agent", "anthropic/claude-sonnet-4-6")
+    key = load_or_generate_key()
+    payload["cnf"] = {"jwk": private_key_to_jwk(key)}
+    return payload
+
+
+def _run_level0(result_fixture: dict) -> dict:
+    payload = _build_signed_payload(result_fixture)
+    with tempfile.NamedTemporaryFile(suffix=".json", mode="w", delete=False) as f:
+        json.dump(payload, f)
+        fname = f.name
+    try:
+        record, fmt = load_record(fname)
+        return trace_run(record, fmt, level=0)
+    finally:
+        os.unlink(fname)
+
+
+class TestLevel0Conformance:
+    """agentrust-trace-tests 0.1.0 Level 0 suite (TR-ENV + TR-SIG + TR-POL)."""
+
+    def _assert_no_failures(self, results: dict) -> None:
+        failures = [f for findings in results.values() for f in findings if f.failed()]
+        assert not failures, f"Level 0 failures: {[f.message for f in failures]}"
+
+    def test_allow_passes_level0(self):
+        self._assert_no_failures(_run_level0(ALLOW_RESULT))
+
+    def test_deny_passes_level0(self):
+        self._assert_no_failures(_run_level0(DENY_RESULT))
+
+    def test_escalate_passes_level0(self):
+        self._assert_no_failures(_run_level0(ESCALATE_RESULT))
+
+    def test_audit_passes_level0(self):
+        self._assert_no_failures(_run_level0(AUDIT_RESULT))
