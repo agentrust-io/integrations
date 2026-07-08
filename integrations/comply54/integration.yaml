@@ -14,4 +14,4 @@ license: Apache-2.0
 tier: community
 trace_conformance_level: 0
 tested_against:
-  agentrust-trace: "0.2.0"
+  agentrust-trace: "0.1.0"

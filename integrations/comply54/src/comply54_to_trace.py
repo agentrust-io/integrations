@@ -60,7 +60,7 @@ def private_key_to_jwk(key: Ed25519PrivateKey) -> dict:
 
 # ── Mapping ───────────────────────────────────────────────────────────────────
 
-def comply54_to_trace_payload(result: dict, agent_id: str, model: str) -> dict:
+def comply54_to_trace_payload(result: dict, agent_id: str, model: str, key=None) -> dict:
     overall = result.get("overall", "deny")
     audit_id = result.get("audit_id", "unknown")
     decisions = result.get("decisions", [])
@@ -89,18 +89,25 @@ def comply54_to_trace_payload(result: dict, agent_id: str, model: str) -> dict:
 
     provider, _, model_id = model.partition("/")
 
+    if key is None:
+        key = load_or_generate_key()
+
     return {
         # ── Required TRACE EAT envelope ──────────────────────────────────────
         "eat_profile": "tag:agentrust.io,2026:trace-v0.1",
         "iat": int(time.time()),
         "subject": f"spiffe://comply54.io/agent/{agent_id}",
 
+        # ── Confirmation key — Ed25519 public key for this claim ─────────────
+        "cnf": {"jwk": private_key_to_jwk(key)},
+
         # ── Model identity (the agent being governed, not comply54) ──────────
         "model": {
             "provider": provider or "unknown",
             "model_id": model_id or model,
             "version": "unknown",
-            "weights_digest": "sha256:not-attested",
+            # sha256 all-zeros: canonical Level 0 placeholder (hardware attestation not available)
+            "weights_digest": "sha256:" + "0" * 64,
         },
 
         # ── Runtime (software-only — Level 0) ────────────────────────────────
@@ -124,7 +131,8 @@ def comply54_to_trace_payload(result: dict, agent_id: str, model: str) -> dict:
         "build_provenance": {
             "slsa_level": 0,
             "builder": "https://github.com/comply54/comply54",
-            "digest": "sha256:not-attested",
+            # sha256 all-zeros: canonical Level 0 placeholder (hardware attestation not available)
+            "digest": "sha256:" + "0" * 64,
         },
 
         # ── Appraisal: the comply54 decision ─────────────────────────────────
@@ -161,9 +169,8 @@ def main() -> None:
     with open(args.result_json) as f:
         result = json.load(f)
 
-    payload = comply54_to_trace_payload(result, args.agent_id, args.model)
     key = load_or_generate_key()
-    payload["cnf"] = {"jwk": private_key_to_jwk(key)}
+    payload = comply54_to_trace_payload(result, args.agent_id, args.model, key=key)
 
     token = jwt.encode(payload, key, algorithm="EdDSA", headers={"alg": "EdDSA", "typ": "JWT"})
 

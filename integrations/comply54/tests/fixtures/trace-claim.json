@@ -8,6 +8,7 @@
     "eat_profile",
     "iat",
     "subject",
+    "cnf",
     "model",
     "runtime",
     "policy",
@@ -31,6 +32,7 @@
     },
     "cnf": {
       "type": "object",
+      "required": ["jwk"],
       "properties": {
         "jwk": {
           "type": "object",
@@ -51,7 +53,7 @@
         "provider":       { "type": "string" },
         "model_id":       { "type": "string" },
         "version":        { "type": "string" },
-        "weights_digest": { "type": "string" }
+        "weights_digest": { "type": "string", "pattern": "^sha(256:[0-9a-f]{64}|384:[0-9a-f]{96})$" }
       },
       "additionalProperties": false
     },
@@ -86,7 +88,7 @@
       "properties": {
         "slsa_level": { "type": "integer", "minimum": 0 },
         "builder":    { "type": "string" },
-        "digest":     { "type": "string" }
+        "digest":     { "type": "string", "pattern": "^sha(256:[0-9a-f]{64}|384:[0-9a-f]{96})$" }
       },
       "additionalProperties": false
     },

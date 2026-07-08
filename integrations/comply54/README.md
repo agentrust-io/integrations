@@ -6,7 +6,7 @@ comply54 evaluates AI agent actions against African regulatory frameworks (NDPA 
 
 ## Conformance Level
 
-**Level 0 (software-only)** — No hardware TEE attestation. The JWT is signed with Ed25519 and carries all required TRACE envelope fields. Runtime fields use software-simulated placeholders; hardware fields are marked `not-attested`.
+**Level 0 (software-only)** — No hardware TEE attestation. The JWT is signed with Ed25519 and carries all required TRACE envelope fields. Hardware attestation fields (`model.weights_digest`, `build_provenance.digest`, `runtime.measurement`) use `sha256:<all-zeros>` canonical Level 0 placeholders.
 
 | Check | Status |
 |-------|--------|
@@ -79,11 +79,11 @@ print('comply54:   ', payload['comply54'])
 **5. Run tests**
 
 ```bash
-pip install -r integrations/comply54/requirements.txt jsonschema pytest
+pip install -r integrations/comply54/requirements.txt -r integrations/comply54/requirements-dev.txt
 python -m pytest integrations/comply54/tests/ -v
 ```
 
-All 30 tests should pass — 26 unit/schema tests plus 4 `agentrust-trace-tests` Level 0 conformance tests (TR-ENV, TR-SIG, TR-POL).
+All 31 tests should pass — 27 unit/schema tests plus 4 `agentrust-trace-tests` Level 0 conformance tests (TR-ENV, TR-SIG, TR-POL).
 
 ## Key Management
 

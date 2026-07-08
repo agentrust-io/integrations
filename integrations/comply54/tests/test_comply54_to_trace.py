@@ -184,20 +184,27 @@ class TestJWTSigning:
         assert "x" in jwk
 
     def test_signed_jwt_is_decodable(self):
-        payload = comply54_to_trace_payload(DENY_RESULT, "agent-1", "anthropic/claude-sonnet-4-6")
         key = load_or_generate_key()
-        payload["cnf"] = {"jwk": private_key_to_jwk(key)}
+        payload = comply54_to_trace_payload(DENY_RESULT, "agent-1", "anthropic/claude-sonnet-4-6", key=key)
         token = pyjwt.encode(payload, key, algorithm="EdDSA", headers={"alg": "EdDSA", "typ": "JWT"})
         decoded = pyjwt.decode(token, options={"verify_signature": False})
         assert decoded["eat_profile"] == "tag:agentrust.io,2026:trace-v0.1"
         assert decoded["appraisal"]["status"] == "contraindicated"
 
     def test_signed_jwt_has_three_parts(self):
-        payload = comply54_to_trace_payload(ALLOW_RESULT, "agent-1", "anthropic/claude-sonnet-4-6")
         key = load_or_generate_key()
-        payload["cnf"] = {"jwk": private_key_to_jwk(key)}
+        payload = comply54_to_trace_payload(ALLOW_RESULT, "agent-1", "anthropic/claude-sonnet-4-6", key=key)
         token = pyjwt.encode(payload, key, algorithm="EdDSA", headers={"alg": "EdDSA", "typ": "JWT"})
         assert len(token.split(".")) == 3
+
+    def test_signature_is_cryptographically_verified(self):
+        key = load_or_generate_key()
+        payload = comply54_to_trace_payload(ALLOW_RESULT, "agent-1", "anthropic/claude-sonnet-4-6", key=key)
+        token = pyjwt.encode(payload, key, algorithm="EdDSA", headers={"alg": "EdDSA", "typ": "JWT"})
+        public_key = key.public_key()
+        decoded = pyjwt.decode(token, public_key, algorithms=["EdDSA"])
+        assert decoded["eat_profile"] == "tag:agentrust.io,2026:trace-v0.1"
+        assert decoded["cnf"]["jwk"]["kty"] == "OKP"
 
 
 # ── TRACE schema conformance ──────────────────────────────────────────────────
@@ -247,11 +254,9 @@ class TestSchemaConformance:
 # ── agentrust-trace-tests Level 0 conformance ─────────────────────────────────
 
 def _build_signed_payload(result_fixture: dict) -> dict:
-    """Return a complete TRACE payload (including cnf.jwk) for conformance testing."""
-    payload = comply54_to_trace_payload(result_fixture, "test-agent", "anthropic/claude-sonnet-4-6")
+    """Return a complete TRACE payload (cnf.jwk included via the mapping function)."""
     key = load_or_generate_key()
-    payload["cnf"] = {"jwk": private_key_to_jwk(key)}
-    return payload
+    return comply54_to_trace_payload(result_fixture, "test-agent", "anthropic/claude-sonnet-4-6", key=key)
 
 
 def _run_level0(result_fixture: dict) -> dict:
