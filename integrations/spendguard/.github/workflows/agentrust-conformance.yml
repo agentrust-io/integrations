@@ -28,7 +28,7 @@ jobs:
       - name: Install released agentrust-io packages
         run: |
           python -m pip install --upgrade pip
-          pip install agentrust-trace cmcp-runtime agentrust-trace-tests
+          pip install agentrust-trace agentrust-trace-tests
       - name: Install this integration
         run: pip install -e "integrations/spendguard[test]"
       - name: Integration tests
@@ -40,4 +40,6 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
         with:
           name: conformance-${{ matrix.os }}-py${{ matrix.python }}
-          path: trust-record.jwt
+          path: |
+            trust-record.jwt
+            trust-record.jwt.signed.json
