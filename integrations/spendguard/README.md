@@ -55,7 +55,8 @@ See rules 2 and 4 in [CONTRIBUTING.md](../../CONTRIBUTING.md).
 
 ## Conformance CI
 
-`.github/workflows/agentrust-conformance.yml` installs the released agentrust-io
-packages, runs the mapping tests, emits a record, and runs `trace-tests verify
---level 0` across Python 3.11–3.13. A clean matrix run is the basis for the
-Verified tier.
+The repository-root workflow
+[`.github/workflows/spendguard-conformance.yml`](../../.github/workflows/spendguard-conformance.yml)
+(path-scoped to this directory) installs the released agentrust-io packages,
+runs the mapping tests, emits a record, and runs `trace-tests verify --level 0`
+across Python 3.11–3.13. A clean matrix run is the basis for the Verified tier.

@@ -1,10 +1,16 @@
 # agentrust-io conformance workflow for the Agentic SpendGuard integration.
-name: agentrust conformance
+# Lives in the repository root because GitHub Actions only discovers workflows
+# in the root .github/workflows directory; scoped to this integration via paths.
+name: spendguard conformance
 on:
   push:
-    paths: ["integrations/spendguard/**"]
+    paths:
+      - "integrations/spendguard/**"
+      - ".github/workflows/spendguard-conformance.yml"
   pull_request:
-    paths: ["integrations/spendguard/**"]
+    paths:
+      - "integrations/spendguard/**"
+      - ".github/workflows/spendguard-conformance.yml"
   schedule:
     - cron: "0 6 * * 1"   # weekly: catch drift against the latest released packages
   workflow_dispatch:
