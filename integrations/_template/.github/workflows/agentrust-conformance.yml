@@ -1,9 +1,10 @@
 # agentrust-io integration conformance template.
-# Copy this into your integration and replace <vendor>-<product>.
+# Copy into your integration and replace <vendor>-<product> and <LEVEL>.
 #
-# Purpose: prove the integration works against the RELEASED agentrust-io
-# packages and passes the TRACE conformance suite at the level claimed in
-# integration.yaml. A clean run is what earns the Verified tier.
+# Purpose: prove the integration works against the RELEASED agentrust-io packages
+# and that the TRACE record it produces passes the conformance suite at the level
+# claimed in integration.yaml. A clean run earns the Verified tier.
+# (Manifest schema validation is handled by the repo's own validate.yml, not here.)
 name: agentrust conformance
 on:
   push:
@@ -26,8 +27,8 @@ jobs:
         os: [ubuntu-latest]   # add macos-latest / windows-latest for cross-platform coverage
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4          # pin to a commit SHA per repo policy
-      - uses: actions/setup-python@v5      # pin to a commit SHA per repo policy
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5
         with:
           python-version: ${{ matrix.python }}
 
@@ -45,13 +46,15 @@ jobs:
       - name: Integration tests
         run: pytest integrations/<vendor>-<product>/tests -q
 
-      - name: TRACE conformance vectors (assert the level in integration.yaml)
-        run: python -m agentrust_trace_tests --level 0 --report conformance-report.json
+      # Emit a TRACE record with your integration, then verify it at the level
+      # you claim in integration.yaml (replace <LEVEL>, e.g. 0, 1, 2).
+      - name: Emit a sample TRACE record
+        run: python integrations/<vendor>-<product>/examples/emit_record.py --out trust-record.jwt
 
-      - name: Validate integration manifest
-        run: python -m agentrust_trace_tests.validate integrations/<vendor>-<product>/integration.yaml
+      - name: TRACE conformance
+        run: trace-tests verify --record trust-record.jwt --level <LEVEL>
 
-      - uses: actions/upload-artifact@v4   # pin to a commit SHA per repo policy
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
         with:
           name: conformance-${{ matrix.os }}-py${{ matrix.python }}
-          path: conformance-report.json
+          path: trust-record.jwt
