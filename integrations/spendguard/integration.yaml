@@ -1,0 +1,20 @@
+# Scaffold for the Agentic SpendGuard integration. Fill the TODOs; the
+# conformance workflow proves the TRACE level before tier flips to verified.
+# Do not set trace_conformance_level until the workflow passes.
+name: Agentic SpendGuard
+vendor: SpendGuard
+integrates_with:
+  - trace
+  - cmcp
+description: >-
+  Spend firewall for LLM agents that reserves budget and gates tool calls before
+  the provider is called, with a signed, hash-chained decision record.
+maintainer:
+  github: m24927605
+repository: https://github.com/m24927605/agentic-spendguard
+license: Apache-2.0
+tier: community
+# trace_conformance_level: 0   # uncomment + set once the conformance workflow passes
+# tested_against:              # fill with the released versions you tested
+#   agentrust-trace: "0.2.0"
+#   cmcp-runtime: "0.3.0"
