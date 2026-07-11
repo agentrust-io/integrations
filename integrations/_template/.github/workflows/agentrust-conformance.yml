@@ -1,0 +1,57 @@
+# agentrust-io integration conformance template.
+# Copy this into your integration and replace <vendor>-<product>.
+#
+# Purpose: prove the integration works against the RELEASED agentrust-io
+# packages and passes the TRACE conformance suite at the level claimed in
+# integration.yaml. A clean run is what earns the Verified tier.
+name: agentrust conformance
+on:
+  push:
+    paths: ["integrations/<vendor>-<product>/**"]
+  pull_request:
+    paths: ["integrations/<vendor>-<product>/**"]
+  schedule:
+    - cron: "0 6 * * 1"   # weekly: catch drift against the latest released packages
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  conformance:
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12", "3.13"]
+        os: [ubuntu-latest]   # add macos-latest / windows-latest for cross-platform coverage
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4          # pin to a commit SHA per repo policy
+      - uses: actions/setup-python@v5      # pin to a commit SHA per repo policy
+        with:
+          python-version: ${{ matrix.python }}
+
+      # Released packages only (CONTRIBUTING rule 1). Keep only the ones your
+      # integration declares in integrates_with.
+      - name: Install released agentrust-io packages
+        run: |
+          python -m pip install --upgrade pip
+          pip install agentrust-trace agent-manifest cmcp-runtime
+          pip install agentrust-trace-tests
+
+      - name: Install this integration
+        run: pip install -e "integrations/<vendor>-<product>[test]"
+
+      - name: Integration tests
+        run: pytest integrations/<vendor>-<product>/tests -q
+
+      - name: TRACE conformance vectors (assert the level in integration.yaml)
+        run: python -m agentrust_trace_tests --level 0 --report conformance-report.json
+
+      - name: Validate integration manifest
+        run: python -m agentrust_trace_tests.validate integrations/<vendor>-<product>/integration.yaml
+
+      - uses: actions/upload-artifact@v4   # pin to a commit SHA per repo policy
+        with:
+          name: conformance-${{ matrix.os }}-py${{ matrix.python }}
+          path: conformance-report.json
