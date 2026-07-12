@@ -20,9 +20,10 @@ these steps are what we run.
 
 ## Conformance CI
 
-This template ships `.github/workflows/agentrust-conformance.yml`. Replace
-`<vendor>-<product>` in it, keep only the packages your integration declares in
-`integrates_with`, and point the conformance step at the level you claim in
-`integration.yaml`. It installs the released agentrust-io packages and runs the
-TRACE conformance suite across a Python matrix; a clean run is the basis for the
-Verified tier and the index badge.
+Copy `agentrust-conformance.yml.example` to the repository root as
+`.github/workflows/<vendor>-conformance.yml`, then replace `<vendor>-<product>`
+and `<LEVEL>`. Workflows only run from the repo-root `.github/workflows/`
+directory, never from inside an integration folder, so keep the file at the root
+with a `paths:` filter scoped to `integrations/<vendor>-<product>/**`. It installs
+the released agentrust-io packages, emits a record, and runs `trace-tests verify`
+at the level you claim; a clean matrix run is the basis for the Verified tier.
