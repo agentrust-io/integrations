@@ -72,9 +72,6 @@ It never reads `~/.claude/.credentials.json`, and records skill / tool / MCP
   SessionStart check compares skills, permissions, and the instruction layer.
   The full tool/MCP diff runs in `/manifest verify`, where the agent supplies the
   live roster.
-- **agent-manifest version.** The manifest builder targets agent-manifest 0.3.x;
-  PyPI currently publishes 0.2.0. Install agent-manifest from source until 0.3.x
-  ships.
 
 ## Layout
 
