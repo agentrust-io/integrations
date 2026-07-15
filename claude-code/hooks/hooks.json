@@ -1,0 +1,16 @@
+{
+  "description": "AgenTrust agent-integrity hook for Claude Code",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"${CLAUDE_PLUGIN_ROOT}/engine/capture.py\" hook",
+            "timeout": 20
+          }
+        ]
+      }
+    ]
+  }
+}

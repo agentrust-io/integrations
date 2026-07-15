@@ -1,0 +1,11 @@
+{
+  "name": "agentrust-claude-code",
+  "description": "Agent-integrity for Claude Code: capture what your agent IS (Agent Manifest) and what it DID (TRACE), and check nothing was added or subtracted since your approved baseline.",
+  "version": "0.1.0",
+  "author": {
+    "name": "agentrust-io"
+  },
+  "homepage": "https://github.com/agentrust-io/integrations/tree/main/claude-code",
+  "repository": "https://github.com/agentrust-io/integrations",
+  "license": "Apache-2.0"
+}
