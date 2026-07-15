@@ -2,11 +2,8 @@
 # the Python standard library -- nothing here is needed for them.
 #
 # These are required only to generate SIGNED records (/trace, /manifest approve
-# --sign): the Agent Manifest and the TRACE Trust Record.
-#
-# NOTE: the manifest builder targets agent-manifest 0.3.x (repo). PyPI currently
-# publishes 0.2.0; 0.3.x is not yet released there. Until it is, install from the
-# agent-manifest repo. See README "Known gaps".
+# --sign): the Agent Manifest and the TRACE Trust Record. Verified against the
+# PyPI releases below in a clean virtualenv.
 agent-manifest>=0.2
 agentrust-trace>=0.3
 agentrust-trace-tests>=0.2
