@@ -1,0 +1,15 @@
+name: claude-code
+vendor: agentrust-io
+integrates_with:
+  - agent-manifest
+  - trace
+description: Claude Code plugin that emits a signed Agent Manifest and TRACE record per session and detects agent composition drift from an approved baseline.
+maintainer:
+  github: agentrust-io
+repository: https://github.com/agentrust-io/integrations
+license: Apache-2.0
+tier: community
+trace_conformance_level: 0
+tested_against:
+  agent-manifest: 0.3.0
+  agentrust-trace: 0.3.0

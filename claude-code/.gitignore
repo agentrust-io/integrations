@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+# local capture artifacts
+manifest.json
+trace.json
+live.json
