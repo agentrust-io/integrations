@@ -428,7 +428,13 @@ def cmd_hook(args) -> int:
 
 def cmd_verify(args) -> int:
     base = _load(BASELINE)
-    snap = _load(LATEST) or snapshot(_live_from(args))
+    # Always re-snapshot so verify reflects the agent's CURRENT composition,
+    # not a cached session-latest.json. Otherwise drift introduced after
+    # session start (a skill dropped in, a widened permission) would be missed
+    # and verify would falsely report "nothing added, nothing subtracted".
+    # The live context supplied by the /manifest command is merged in here.
+    snap = snapshot(_live_from(args))
+    _save(LATEST, snap)
     if base is None:
         print("No approved baseline yet. Run /manifest approve to establish one.")
         return 0
