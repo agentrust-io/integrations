@@ -1,0 +1,20 @@
+{
+  "name": "agentrust",
+  "description": "AgenTrust integrations for Claude Code: agent-integrity tooling built on Agent Manifest and TRACE.",
+  "owner": {
+    "name": "agentrust-io",
+    "url": "https://github.com/agentrust-io"
+  },
+  "plugins": [
+    {
+      "name": "agentrust-claude-code",
+      "source": "./claude-code",
+      "description": "Agent-integrity for Claude Code: capture what your agent IS (Agent Manifest) and what it DID (TRACE), and check nothing was added or subtracted since your approved baseline.",
+      "version": "0.1.0",
+      "author": {
+        "name": "agentrust-io"
+      },
+      "license": "Apache-2.0"
+    }
+  ]
+}
