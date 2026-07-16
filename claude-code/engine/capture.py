@@ -88,35 +88,73 @@ def _now_iso() -> str:
 def _skills() -> dict[str, str]:
     out: dict[str, str] = {}
     sdir = CLAUDE_HOME / "skills"
-    if sdir.exists():
-        for d in sorted(sdir.iterdir()):
-            sk = d / "SKILL.md"
+    # is_dir(), not exists(): tolerate ~/.claude/skills being a stray file.
+    if not sdir.is_dir():
+        return out
+    try:
+        entries = sorted(sdir.iterdir())
+    except OSError:
+        return out
+    for d in entries:
+        sk = d / "SKILL.md"
+        try:
             if sk.is_file():
                 out[d.name] = _sha_file(sk)
+        except OSError:
+            continue  # unreadable skill file: skip it, never crash the hook
     return out
+
+
+def _server_names(mapping: object) -> list[str]:
+    """Keys of a config mapping, or [] if it is not a dict (malformed config)."""
+    return list(mapping.keys()) if isinstance(mapping, dict) else []
 
 
 def _policy() -> tuple[str, list[str]]:
     settings = CLAUDE_HOME / "settings.json"
-    if not settings.exists():
+    if not settings.is_file():
         return _sha_bytes(b"{}"), []
-    data = json.loads(settings.read_text(encoding="utf-8"))
-    allow = data.get("permissions", {}).get("allow", [])
-    return _sha_file(settings), allow
+    # Always hash the real file bytes so a hand-edit is detected as drift, even
+    # if the JSON is malformed. Parsing the allow-list is best-effort: bad JSON
+    # or an unexpected shape yields an empty list rather than crashing the hook.
+    try:
+        policy_hash = _sha_file(settings)
+    except OSError:
+        return _sha_bytes(b"{}"), []
+    allow: list[str] = []
+    try:
+        data = json.loads(settings.read_text(encoding="utf-8"))
+        if isinstance(data, dict):
+            perms = data.get("permissions")
+            if isinstance(perms, dict) and isinstance(perms.get("allow"), list):
+                allow = perms["allow"]
+    except (json.JSONDecodeError, OSError):
+        pass
+    return policy_hash, allow
 
 
 def _mcp_from_config() -> list[str]:
-    """MCP server names declared on disk (global + per-project). Names only."""
+    """MCP server names declared on disk (global + per-project). Names only.
+
+    Best-effort: a missing, unreadable, malformed, or unexpectedly-shaped
+    ``~/.claude.json`` yields an empty list, never an exception.
+    """
     servers: set[str] = set()
     cfg = Path(os.path.expanduser("~")) / ".claude.json"
-    if cfg.exists():
-        try:
-            data = json.loads(cfg.read_text(encoding="utf-8"))
-        except json.JSONDecodeError:
-            return []
-        servers.update((data.get("mcpServers") or {}).keys())
-        for proj in (data.get("projects") or {}).values():
-            servers.update((proj.get("mcpServers") or {}).keys())
+    if not cfg.is_file():
+        return []
+    try:
+        data = json.loads(cfg.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return []
+    if not isinstance(data, dict):
+        return []
+    servers.update(_server_names(data.get("mcpServers")))
+    projects = data.get("projects")
+    if isinstance(projects, dict):
+        for proj in projects.values():
+            if isinstance(proj, dict):
+                servers.update(_server_names(proj.get("mcpServers")))
     return sorted(servers)
 
 
@@ -310,8 +348,16 @@ def build_trace(cur: dict) -> dict:
 
 
 def sign_all(cur: dict, outdir: Path) -> tuple[dict, dict]:
-    from agent_manifest import Ed25519Signer, Ed25519Verifier, Manifest, generate_ed25519
-    from agentrust_trace import generate_key, sign_record
+    try:
+        from agent_manifest import Ed25519Signer, Ed25519Verifier, Manifest, generate_ed25519
+        from agentrust_trace import generate_key, sign_record
+    except ImportError as e:
+        raise SystemExit(
+            "Signing needs the crypto packages, which are not installed. Run:\n"
+            "  pip install -r requirements.txt\n"
+            f"(missing module: {e.name}). Drift detection (snapshot / verify / "
+            "approve without --sign) does not need them."
+        )
 
     manifest = build_manifest(cur)
     Manifest.model_validate(manifest)
@@ -377,7 +423,19 @@ def _save(path: Path, obj: dict) -> None:
 
 
 def _load(path: Path) -> dict | None:
-    return json.loads(path.read_text(encoding="utf-8")) if path.exists() else None
+    """Load a state file, or None if it is absent, unreadable, or corrupt.
+
+    A truncated baseline.json (crash mid-write, disk full, racing sessions) must
+    not brick the hook on every future session. Treating corrupt state as absent
+    lets the next run re-establish it instead of crashing forever.
+    """
+    if not path.is_file():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return None
+    return data if isinstance(data, dict) else None
 
 
 def _live_from(args) -> dict | None:
@@ -396,12 +454,17 @@ def cmd_snapshot(args) -> int:
     return 0
 
 
-def cmd_hook(args) -> int:
-    """SessionStart entrypoint. Reads the hook payload on stdin, snapshots,
-    checks drift against the baseline, and emits SessionStart context."""
+def _emit_context(msg: str) -> None:
+    out = {"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": msg}}
+    print(json.dumps(out))
+
+
+def _hook_body() -> None:
     try:
         payload = json.load(sys.stdin) if not sys.stdin.isatty() else {}
     except (json.JSONDecodeError, ValueError):
+        payload = {}
+    if not isinstance(payload, dict):
         payload = {}
     live = {k: payload[k] for k in ("model_id", "model_provider", "model_version") if k in payload}
     snap = snapshot(live or None)
@@ -421,8 +484,24 @@ def cmd_hook(args) -> int:
             detail = "; ".join(f"{c['change']} {c['what']} {c['detail']}" for c in changes[:8])
             msg = (f"AgenTrust WARNING: {len(changes)} change(s) to your agent since baseline: "
                    f"{detail}. Run /manifest verify for detail, or /manifest approve to accept.")
-    out = {"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": msg}}
-    print(json.dumps(out))
+    _emit_context(msg)
+
+
+def cmd_hook(args) -> int:
+    """SessionStart entrypoint. Reads the hook payload on stdin, snapshots,
+    checks drift against the baseline, and emits SessionStart context.
+
+    A SessionStart hook must never block or break the session. Whatever goes
+    wrong (unreadable config, a bug, an OS error), emit a benign context and
+    exit 0 rather than dumping a traceback into the user's session.
+    """
+    try:
+        _hook_body()
+    except Exception:  # noqa: BLE001 -- last-resort guard: the session must start
+        _emit_context(
+            "AgenTrust: integrity check skipped this session (could not read the "
+            "agent configuration). Run /manifest verify to check manually."
+        )
     return 0
 
 

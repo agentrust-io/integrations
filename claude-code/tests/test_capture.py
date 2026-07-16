@@ -5,6 +5,7 @@ network or signing dependencies, so it runs in CI without the crypto packages.
 """
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -119,3 +120,71 @@ def test_verify_detects_drift_introduced_after_baseline(tmp_path, monkeypatch, c
     assert "1 change(s) since baseline" in out
     # the success line must NOT appear when drift is present
     assert "Verified: nothing added, nothing subtracted" not in out
+
+
+# ---------------------------------------------------------------------------
+# Robustness: a SessionStart hook must never crash on malformed input.
+# ---------------------------------------------------------------------------
+def _setup_home(tmp_path, monkeypatch):
+    """Point CLAUDE_HOME and ~ expansion at an isolated temp home."""
+    home = tmp_path / "home"
+    claude = home / ".claude"
+    claude.mkdir(parents=True)
+    monkeypatch.setattr(capture, "CLAUDE_HOME", claude)
+    monkeypatch.setattr(capture.os.path, "expanduser", lambda p: str(home))
+    return home, claude
+
+
+def test_policy_tolerates_malformed_settings_json(tmp_path, monkeypatch):
+    _home, claude = _setup_home(tmp_path, monkeypatch)
+    (claude / "settings.json").write_text("{ not valid json ", encoding="utf-8")
+    policy_hash, allow = capture._policy()
+    # No exception; empty allow-list; hash still reflects the real (broken) bytes
+    # so a hand-edit is detected as drift rather than silently ignored.
+    assert allow == []
+    assert policy_hash.startswith("sha256:")
+    assert policy_hash != capture._sha_bytes(b"{}")
+
+
+def test_policy_tolerates_nondict_permissions(tmp_path, monkeypatch):
+    _home, claude = _setup_home(tmp_path, monkeypatch)
+    (claude / "settings.json").write_text('{"permissions": "all"}', encoding="utf-8")
+    _hash, allow = capture._policy()
+    assert allow == []
+
+
+def test_mcp_tolerates_malformed_and_misshaped_config(tmp_path, monkeypatch):
+    home, _claude = _setup_home(tmp_path, monkeypatch)
+    (home / ".claude.json").write_text('{"mcpServers": ["a", "b"]}', encoding="utf-8")
+    assert capture._mcp_from_config() == []
+    (home / ".claude.json").write_text("NOT JSON {", encoding="utf-8")
+    assert capture._mcp_from_config() == []
+
+
+def test_skills_tolerates_file_where_dir_expected(tmp_path, monkeypatch):
+    _home, claude = _setup_home(tmp_path, monkeypatch)
+    (claude / "skills").write_text("i am a file, not a dir", encoding="utf-8")
+    assert capture._skills() == {}
+
+
+def test_load_returns_none_on_corrupt_state(tmp_path):
+    p = tmp_path / "baseline.json"
+    p.write_text('{ "captured_at": "2026"  ', encoding="utf-8")  # truncated
+    assert capture._load(p) is None  # treated as absent -> next run re-establishes
+
+
+def test_hook_never_crashes_and_exits_zero(tmp_path, monkeypatch, capsys):
+    """Any failure inside the hook still yields valid SessionStart output and 0."""
+    _isolate_state(tmp_path, monkeypatch)
+
+    def boom(*a, **k):
+        raise RuntimeError("simulated failure deep in snapshot")
+
+    monkeypatch.setattr(capture, "snapshot", boom)
+    monkeypatch.setattr(capture.sys.stdin, "isatty", lambda: True)
+
+    assert capture.cmd_hook(_Args()) == 0
+    out = capsys.readouterr().out
+    payload = json.loads(out)
+    assert payload["hookSpecificOutput"]["hookEventName"] == "SessionStart"
+    assert "integrity check skipped" in payload["hookSpecificOutput"]["additionalContext"]
