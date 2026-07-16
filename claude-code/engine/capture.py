@@ -30,9 +30,11 @@ Subcommands:
 from __future__ import annotations
 
 import argparse
+import base64
 import hashlib
 import json
 import os
+import stat
 import sys
 import time
 import uuid
@@ -43,6 +45,7 @@ CLAUDE_HOME = Path(os.path.expanduser("~")) / ".claude"
 STATE_DIR = CLAUDE_HOME / "agentrust"
 BASELINE = STATE_DIR / "baseline.json"
 LATEST = STATE_DIR / "session-latest.json"
+SIGNING_KEY = STATE_DIR / "signing_key.json"
 
 
 # --------------------------------------------------------------------------- #
@@ -349,7 +352,7 @@ def build_trace(cur: dict) -> dict:
 
 def sign_all(cur: dict, outdir: Path) -> tuple[dict, dict]:
     try:
-        from agent_manifest import Ed25519Signer, Ed25519Verifier, Manifest, generate_ed25519
+        from agent_manifest import Ed25519Signer, Ed25519Verifier, Manifest
         from agentrust_trace import generate_key, sign_record
     except ImportError as e:
         raise SystemExit(
@@ -359,9 +362,10 @@ def sign_all(cur: dict, outdir: Path) -> tuple[dict, dict]:
             "approve without --sign) does not need them."
         )
 
+    kp = _load_or_create_manifest_keypair()
+
     manifest = build_manifest(cur)
     Manifest.model_validate(manifest)
-    kp = generate_ed25519()
     manifest["signature"] = Ed25519Signer(kp).sign(manifest)
     Ed25519Verifier(kp.public_bytes).verify(manifest, manifest["signature"]["signature_value"])
 
@@ -370,7 +374,64 @@ def sign_all(cur: dict, outdir: Path) -> tuple[dict, dict]:
     outdir.mkdir(parents=True, exist_ok=True)
     (outdir / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
     (outdir / "trace.json").write_text(json.dumps(trace, indent=2), encoding="utf-8")
+    # Publish the public key so a third party can verify manifest.json without
+    # trusting this machine: load it into the verifier's trusted_keys as
+    # {key_id: public_key_b64url}. The private key never leaves ~/.claude.
+    verification_key = {
+        "algorithm": "Ed25519",
+        "key_id": kp.key_id,
+        "public_key_b64url": kp.public_b64url(),
+        "note": "load as {key_id: public_key_b64url} into the verifier's trusted_keys",
+    }
+    (outdir / "verification_key.json").write_text(
+        json.dumps(verification_key, indent=2), encoding="utf-8"
+    )
     return manifest, trace
+
+
+def _load_or_create_manifest_keypair():
+    """Return a stable Ed25519 keypair, persisted at ~/.claude/agentrust.
+
+    Signing the Agent Manifest with a fresh key every run would make the
+    signature unverifiable (nobody has the public half) and give the agent a
+    different identity each session. Instead we persist one key and publish its
+    public half beside each record, so manifest.json is genuinely third-party
+    verifiable and records chain to a single identity. The private key stays
+    local, readable only by the owner where the OS supports it.
+    """
+    from agent_manifest import Ed25519KeyPair, generate_ed25519
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+
+    existing = _load(SIGNING_KEY)
+    if existing and isinstance(existing.get("private_b64url"), str):
+        try:
+            pad = "=" * (-len(existing["private_b64url"]) % 4)
+            raw = base64.urlsafe_b64decode(existing["private_b64url"] + pad)
+            priv = Ed25519PrivateKey.from_private_bytes(raw)
+            return Ed25519KeyPair(priv, priv.public_key())
+        except (ValueError, TypeError):
+            pass  # corrupt key file: fall through and mint a fresh one
+
+    kp = generate_ed25519()
+    SIGNING_KEY.parent.mkdir(parents=True, exist_ok=True)
+    SIGNING_KEY.write_text(
+        json.dumps(
+            {
+                "algorithm": "Ed25519",
+                "key_id": kp.key_id,
+                "public_key_b64url": kp.public_b64url(),
+                "private_b64url": kp.private_b64url(),
+                "created_at": _now_iso(),
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+    try:  # best-effort owner-only permissions (no-op on filesystems without it)
+        os.chmod(SIGNING_KEY, stat.S_IRUSR | stat.S_IWUSR)
+    except OSError:
+        pass
+    return kp
 
 
 # --------------------------------------------------------------------------- #
@@ -409,7 +470,9 @@ def render_report(cur: dict, changes: list[dict] | None, signed: bool) -> str:
         L.append("")
     if signed:
         L += ["  Signed records written: manifest.json (agent-manifest, verified),",
-              "                          trace.json (TRACE Level 0, software-only).", ""]
+              "                          trace.json (TRACE Level 0, software-only),",
+              "                          verification_key.json (public key to verify",
+              "                          manifest.json on another machine).", ""]
     L.append("=" * 66)
     return "\n".join(L)
 

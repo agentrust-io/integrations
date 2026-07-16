@@ -9,6 +9,8 @@ import json
 import sys
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "engine"))
 
 import capture  # noqa: E402
@@ -188,3 +190,48 @@ def test_hook_never_crashes_and_exits_zero(tmp_path, monkeypatch, capsys):
     payload = json.loads(out)
     assert payload["hookSpecificOutput"]["hookEventName"] == "SessionStart"
     assert "integrity check skipped" in payload["hookSpecificOutput"]["additionalContext"]
+
+
+# ---------------------------------------------------------------------------
+# Signing: persistent key + externally-verifiable, tamper-evident manifest.
+# These need the crypto packages; skipped cleanly where they are absent.
+# ---------------------------------------------------------------------------
+def _point_signing_key(tmp_path, monkeypatch):
+    monkeypatch.setattr(capture, "STATE_DIR", tmp_path / "agentrust")
+    monkeypatch.setattr(capture, "SIGNING_KEY", tmp_path / "agentrust" / "signing_key.json")
+
+
+def test_signing_key_is_persisted_and_stable(tmp_path, monkeypatch):
+    pytest.importorskip("agent_manifest")
+    pytest.importorskip("cryptography")
+    _point_signing_key(tmp_path, monkeypatch)
+
+    kp1 = capture._load_or_create_manifest_keypair()
+    assert capture.SIGNING_KEY.is_file()
+    kp2 = capture._load_or_create_manifest_keypair()  # second run must reuse it
+    assert kp1.key_id == kp2.key_id
+
+
+def test_manifest_is_externally_verifiable_and_tamper_evident(tmp_path, monkeypatch):
+    pytest.importorskip("agent_manifest")
+    pytest.importorskip("cryptography")
+    from agent_manifest import RevocationStore, VerificationContext, verify_manifest
+
+    _point_signing_key(tmp_path, monkeypatch)
+    out = tmp_path / "records"
+    cur = capture.snapshot({"model_id": "claude-x", "builtin_tools": ["Bash"], "mcp_servers": ["github"]})
+    manifest, _trace = capture.sign_all(cur, out)
+
+    vk = json.loads((out / "verification_key.json").read_text(encoding="utf-8"))
+    assert vk["key_id"] == manifest["signature"]["key_id"]
+    ctx = VerificationContext(trusted_keys={vk["key_id"]: vk["public_key_b64url"]})
+
+    # a third party with only the published public key verifies the manifest
+    good = verify_manifest(manifest, ctx, RevocationStore())
+    assert good.signature_verified is True
+
+    # any post-signing change breaks verification
+    tampered = json.loads(json.dumps(manifest))
+    tampered["artifacts"]["policy_bundle"]["hash"] = "sha256:" + "0" * 64
+    bad = verify_manifest(tampered, ctx, RevocationStore())
+    assert bad.signature_verified is False
