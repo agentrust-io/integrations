@@ -1,0 +1,54 @@
+name: claude-code tests
+
+on:
+  pull_request:
+    paths:
+      - "claude-code/**"
+      - ".github/workflows/claude-code-tests.yml"
+  push:
+    branches: [main]
+    paths:
+      - "claude-code/**"
+      - ".github/workflows/claude-code-tests.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  # The SessionStart hook and drift check must work with the standard library
+  # alone. This job installs no crypto packages, so the signing tests skip and
+  # any accidental dependency on them fails the build.
+  stdlib:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.12"
+      - name: Run stdlib-only tests (no crypto packages)
+        working-directory: claude-code
+        run: |
+          pip install pytest
+          python -m pytest tests -q
+
+  # Full suite including the signing / verification tests, which need the crypto
+  # packages from requirements.txt.
+  signing:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Run full suite (with crypto packages)
+        working-directory: claude-code
+        run: |
+          pip install pytest -r requirements.txt
+          python -m pytest tests -q
