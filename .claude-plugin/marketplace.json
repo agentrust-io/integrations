@@ -10,7 +10,7 @@
       "name": "agentrust-claude-code",
       "source": "./claude-code",
       "description": "Agent-integrity for Claude Code: capture what your agent IS (Agent Manifest) and what it DID (TRACE), and check nothing was added or subtracted since your approved baseline.",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "author": {
         "name": "agentrust-io"
       },
