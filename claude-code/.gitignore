@@ -4,4 +4,6 @@ __pycache__/
 # local capture artifacts
 manifest.json
 trace.json
+verification_key.json
+signing_key.json
 live.json
