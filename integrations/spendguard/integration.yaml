@@ -1,0 +1,17 @@
+name: Agentic SpendGuard
+vendor: SpendGuard
+integrates_with:
+  - trace
+description: >-
+  Spend firewall for LLM agents that reserves budget and gates tool calls before
+  the provider is called, with a signed, hash-chained decision record.
+maintainer:
+  github: m24927605
+repository: https://github.com/m24927605/agentic-spendguard
+license: Apache-2.0
+tier: community
+# Level 0 passes with the explicit TR-SIG-005 UNVERIFIED finding: trace-tests
+# 0.1.0 does not grade signatures on plain trace records (see README).
+trace_conformance_level: 0
+tested_against:
+  agentrust-trace: "0.3.0"

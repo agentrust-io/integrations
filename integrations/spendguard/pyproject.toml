@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "spendguard-agentrust-integration"
+version = "0.1.0"
+description = "Maps SpendGuard signed spend/gate decisions onto TRACE Trust Records"
+requires-python = ">=3.11"
+license = "Apache-2.0"
+dependencies = ["agentrust-trace"]
+
+[project.optional-dependencies]
+test = ["pytest"]
+
+[tool.setuptools]
+py-modules = ["spendguard_trace"]
