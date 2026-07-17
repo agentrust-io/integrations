@@ -1,0 +1,18 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"$PLUGIN_ROOT/scripts/session-start.sh\"",
+            "commandWindows": "\"%PLUGIN_ROOT%\\scripts\\session-start.cmd\"",
+            "timeout": 20,
+            "statusMessage": "Checking AgenTrust agent baseline"
+          }
+        ]
+      }
+    ]
+  }
+}

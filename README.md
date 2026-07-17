@@ -31,6 +31,7 @@ TRACE only works as a standard if it is genuinely neutral. Integrations are list
 | Integration | Vendor | Integrates with | Tier |
 |---|---|---|---|
 | [claude-code](claude-code/) | agentrust-io | agent-manifest, trace | community |
+| [agentrust-codex](plugins/agentrust-codex/) | agentrust-io | agent-manifest, trace | community |
 
 ## Community
 

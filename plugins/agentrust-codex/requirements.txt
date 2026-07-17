@@ -1,0 +1,5 @@
+# Snapshot, drift detection, and SessionStart use the Python standard library.
+# Install these released packages only when generating signed records.
+agent-manifest==0.3.0
+agentrust-trace==0.3.0
+agentrust-trace-tests==0.2.0

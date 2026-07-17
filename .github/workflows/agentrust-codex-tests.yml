@@ -1,0 +1,70 @@
+name: agentrust-codex tests
+
+on:
+  pull_request:
+    paths:
+      - ".agents/plugins/marketplace.json"
+      - "plugins/agentrust-codex/**"
+      - ".github/workflows/agentrust-codex-tests.yml"
+      - "README.md"
+  push:
+    branches: [main]
+    paths:
+      - ".agents/plugins/marketplace.json"
+      - "plugins/agentrust-codex/**"
+      - ".github/workflows/agentrust-codex-tests.yml"
+      - "README.md"
+
+permissions:
+  contents: read
+
+jobs:
+  stdlib:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "${{ matrix.python-version }}"
+      - name: Run dependency-free capture tests
+        run: |
+          pip install pytest
+          python -m pytest plugins/agentrust-codex/tests -q
+
+  signing:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "${{ matrix.python-version }}"
+      - name: Run signing and conformance tests
+        run: |
+          pip install pytest -r plugins/agentrust-codex/requirements.txt
+          python -m pytest plugins/agentrust-codex/tests -q
+
+  structure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.12"
+      - name: Validate integration and plugin structure
+        run: |
+          pip install jsonschema pyyaml
+          python plugins/agentrust-codex/tests/validate_structure.py

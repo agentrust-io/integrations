@@ -1,0 +1,15 @@
+name: agentrust-codex
+vendor: agentrust-io
+integrates_with:
+  - agent-manifest
+  - trace
+description: Codex plugin that fingerprints agent configuration, detects workspace-scoped drift, and emits signed Agent Manifest and TRACE Level 0 records.
+maintainer:
+  github: carloshvp
+repository: https://github.com/agentrust-io/integrations
+license: Apache-2.0
+tier: community
+trace_conformance_level: 0
+tested_against:
+  agent-manifest: 0.3.0
+  agentrust-trace: 0.3.0
