@@ -1,0 +1,38 @@
+{
+  "name": "agentrust-codex",
+  "version": "0.1.0",
+  "description": "Detect Codex agent-composition drift and emit signed Agent Manifest and TRACE session records.",
+  "author": {
+    "name": "agentrust-io",
+    "url": "https://github.com/agentrust-io"
+  },
+  "homepage": "https://github.com/agentrust-io/integrations/tree/main/plugins/agentrust-codex",
+  "repository": "https://github.com/agentrust-io/integrations",
+  "license": "Apache-2.0",
+  "keywords": [
+    "codex",
+    "agent-integrity",
+    "agent-manifest",
+    "trace",
+    "governance"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "AgenTrust for Codex",
+    "shortDescription": "Detect agent drift and create signed session records",
+    "longDescription": "Fingerprint Codex configuration at session start, compare it with a workspace baseline, and create signed Agent Manifest and TRACE Level 0 records on request.",
+    "developerName": "agentrust-io",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Local configuration integrity",
+      "Signed governance records"
+    ],
+    "websiteURL": "https://github.com/agentrust-io/integrations/tree/main/plugins/agentrust-codex",
+    "privacyPolicyURL": "https://github.com/agentrust-io/integrations/blob/main/plugins/agentrust-codex/PRIVACY.md",
+    "defaultPrompt": [
+      "Verify my Codex agent against its AgenTrust baseline.",
+      "Approve the current Codex agent baseline.",
+      "Generate signed Agent Manifest and TRACE records."
+    ]
+  }
+}

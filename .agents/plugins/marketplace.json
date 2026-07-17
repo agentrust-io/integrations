@@ -1,0 +1,20 @@
+{
+  "name": "agentrust",
+  "interface": {
+    "displayName": "AgenTrust"
+  },
+  "plugins": [
+    {
+      "name": "agentrust-codex",
+      "source": {
+        "source": "local",
+        "path": "./plugins/agentrust-codex"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Security"
+    }
+  ]
+}
