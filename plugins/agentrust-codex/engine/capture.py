@@ -16,7 +16,6 @@ import os
 import platform
 import re
 import socket
-import stat
 import sys
 import tempfile
 import time
@@ -739,7 +738,7 @@ def build_trace(current: Mapping[str, Any]) -> Dict[str, Any]:
     }
 
 
-def _atomic_write(path: Path, content: str, mode: int = 0o600) -> None:
+def _atomic_write(path: Path, content: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary: Optional[str] = None
     try:
@@ -755,7 +754,7 @@ def _atomic_write(path: Path, content: str, mode: int = 0o600) -> None:
             os.fsync(handle.fileno())
             temporary = handle.name
         try:
-            os.chmod(temporary, mode)
+            os.chmod(temporary, 0o600)
         except OSError:
             pass
         os.replace(temporary, path)
@@ -767,8 +766,8 @@ def _atomic_write(path: Path, content: str, mode: int = 0o600) -> None:
                 pass
 
 
-def _save(path: Path, value: Mapping[str, Any], mode: int = 0o600) -> None:
-    _atomic_write(path, json.dumps(value, indent=2, sort_keys=True) + "\n", mode)
+def _save(path: Path, value: Mapping[str, Any]) -> None:
+    _atomic_write(path, json.dumps(value, indent=2, sort_keys=True) + "\n")
 
 
 def _load(path: Path) -> Tuple[Optional[Dict[str, Any]], str]:
@@ -813,7 +812,6 @@ def _load_or_create_manifest_keypair():
             "private_b64url": keypair.private_b64url(),
             "created_at": _now_iso(),
         },
-        stat.S_IRUSR | stat.S_IWUSR,
     )
     return keypair
 
@@ -845,15 +843,15 @@ def sign_all(
     trace = sign_record(build_trace(current), generate_key())
 
     outdir.mkdir(parents=True, exist_ok=True)
-    _save(outdir / "manifest.json", manifest, 0o644)
-    _save(outdir / "trace.json", trace, 0o644)
+    _save(outdir / "manifest.json", manifest)
+    _save(outdir / "trace.json", trace)
     verification_key = {
         "algorithm": "Ed25519",
         "key_id": keypair.key_id,
         "public_key_b64url": keypair.public_b64url(),
         "note": "Load this key into agent-manifest trusted_keys to verify the manifest signature.",
     }
-    _save(outdir / "verification_key.json", verification_key, 0o644)
+    _save(outdir / "verification_key.json", verification_key)
     return manifest, trace
 
 

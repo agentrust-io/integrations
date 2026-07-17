@@ -353,6 +353,9 @@ def test_signed_outputs_verify_and_pass_trace_level_zero(tmp_path, monkeypatch):
     )
     good = verify_manifest(manifest, context, RevocationStore())
     assert good.signature_verified is True
+    if os.name == "posix":
+        for name in ("manifest.json", "trace.json", "verification_key.json"):
+            assert stat_mode(out / name) == 0o600
 
     tampered = json.loads(json.dumps(manifest))
     tampered["artifacts"]["policy_bundle"]["hash"] = "sha256:" + "0" * 64

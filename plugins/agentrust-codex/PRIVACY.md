@@ -29,8 +29,8 @@ tool outputs, or environment secrets.
 
 The plugin writes baselines, latest snapshots, and its signing key below
 `$CODEX_HOME/agentrust`, which defaults to `~/.codex/agentrust`. It requests
-owner-only permissions for private state. Signed reports go to the output
-directory you choose.
+owner-only permissions for private state and signed report files. Signed
+reports go to the output directory you choose.
 
 The plugin makes no network request during SessionStart, snapshot, verify, or
 approve. A signed-report request can run the included bootstrap, which installs
