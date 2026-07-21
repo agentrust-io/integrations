@@ -1,4 +1,0 @@
-agentrust-trace
-
-[test]
-pytest

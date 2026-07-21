@@ -1,9 +1,0 @@
-README.md
-pyproject.toml
-ramen_ai_trace.py
-ramen_ai_cmcp_integration.egg-info/PKG-INFO
-ramen_ai_cmcp_integration.egg-info/SOURCES.txt
-ramen_ai_cmcp_integration.egg-info/dependency_links.txt
-ramen_ai_cmcp_integration.egg-info/requires.txt
-ramen_ai_cmcp_integration.egg-info/top_level.txt
-tests/test_mapping.py
