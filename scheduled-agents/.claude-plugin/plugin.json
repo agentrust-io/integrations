@@ -1,0 +1,11 @@
+{
+  "name": "agentrust-scheduled-agents",
+  "description": "Agent-integrity for Claude Code scheduled agents: fingerprint routine specs and auto-run hooks, and check nothing changed about what runs without you watching since your approved baseline.",
+  "version": "0.1.0",
+  "author": {
+    "name": "agentrust-io"
+  },
+  "homepage": "https://github.com/agentrust-io/integrations/tree/main/scheduled-agents",
+  "repository": "https://github.com/agentrust-io/integrations",
+  "license": "Apache-2.0"
+}

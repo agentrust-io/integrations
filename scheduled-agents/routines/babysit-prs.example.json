@@ -1,0 +1,8 @@
+{
+  "name": "babysit-prs",
+  "schedule": "*/30 * * * *",
+  "prompt": "Check my open pull requests. For any with failing CI, read the logs and push a fix. Do not merge; leave a comment summarising what you changed.",
+  "allowed_tools": ["Bash(gh:*)", "Read", "Grep", "Edit"],
+  "mcp_servers": ["github"],
+  "model": "claude-opus-4-8"
+}
