@@ -1,0 +1,9 @@
+Metadata-Version: 2.4
+Name: ramen-ai-cmcp-integration
+Version: 0.1.0
+Summary: ramen-ai cMCP policy adapter and TRACE Trust Record mapper
+License-Expression: MIT
+Requires-Python: >=3.11
+Requires-Dist: agentrust-trace
+Provides-Extra: test
+Requires-Dist: pytest; extra == "test"
