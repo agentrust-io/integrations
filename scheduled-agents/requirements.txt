@@ -1,0 +1,7 @@
+# Drift detection (snapshot / verify / approve) and the SessionStart hook use
+# only the Python standard library -- nothing here is needed for them.
+#
+# Required only to sign a TRACE record (/schedule-trace, /schedule-manifest
+# approve --sign). Verified against the PyPI releases below in a clean virtualenv.
+agentrust-trace>=0.3
+agentrust-trace-tests>=0.2
