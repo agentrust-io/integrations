@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ramen-ai-cmcp-integration"
+version = "0.1.0"
+description = "ramen-ai cMCP policy adapter and TRACE Trust Record mapper"
+requires-python = ">=3.11"
+license = "MIT"
+dependencies = ["agentrust-trace"]
+
+[project.optional-dependencies]
+test = ["pytest"]
+
+[tool.setuptools]
+py-modules = ["ramen_ai_trace"]
