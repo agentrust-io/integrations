@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Agent Sentinel – Enforcement Dashboard</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: sans-serif; background: #0d1117; color: #c9d1d9; padding: 1.5rem; max-width: 1400px; margin: 0 auto; }
+        h1 { color: #f0f6fc; border-bottom: 1px solid #30363d; padding-bottom: 0.5rem; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .card { background: #161b22; padding: 1.2rem; border-radius: 8px; border: 1px solid #30363d; }
+        .card h3 { margin-top: 0; color: #f0f6fc; }
+        .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.5rem; }
+        .summary-item { background: #0d1117; padding: 0.5rem; border-radius: 4px; text-align: center; }
+        .summary-item .count { font-size: 2rem; font-weight: bold; }
+        .summary-item .label { font-size: 0.8rem; color: #8b949e; }
+        .agent-card { background: #0d1117; padding: 0.8rem; border-radius: 4px; border-left: 3px solid #30363d; margin: 0.4rem 0; }
+        .agent-card .action-badge { float: right; padding: 0.1rem 0.5rem; border-radius: 1rem; font-size: 0.7rem; }
+        .action-monitor { color: #3fb950; border-left-color: #3fb950; }
+        .action-escalate { color: #d29922; border-left-color: #d29922; }
+        .action-quarantine { color: #f85149; border-left-color: #f85149; }
+        .action-block { color: #f85149; border-left-color: #f85149; }
+        .badge-monitor { background: #238636; color: white; }
+        .badge-escalate { background: #d29922; color: black; }
+        .badge-quarantine { background: #da3633; color: white; }
+        .badge-block { background: #da3633; color: white; }
+        .graph-container { height: 400px; background: #0d1117; border-radius: 4px; border: 1px solid #30363d; }
+        .claim-box { background: #0d1117; padding: 0.5rem; border-radius: 4px; font-family: monospace; font-size: 0.75rem; white-space: pre-wrap; margin: 0.3rem 0; border-left: 2px solid #d29922; }
+        .btn { background: #238636; color: white; border: none; padding: 0.3rem 0.8rem; border-radius: 4px; cursor: pointer; font-size: 0.8rem; }
+        .btn:hover { background: #2ea043; }
+        .btn-danger { background: #da3633; }
+        .btn-danger:hover { background: #f85149; }
+        .btn-warning { background: #d29922; }
+        .btn-warning:hover { background: #e3b341; }
+        .btn-secondary { background: #30363d; }
+        .btn-secondary:hover { background: #484f58; }
+        .btn-export { background: #1f6feb; }
+        .btn-export:hover { background: #388bfd; }
+        .btn-verify { background: #238636; border: 1px solid #3fb950; }
+        .btn-verify:hover { background: #2ea043; }
+        textarea { width: 100%; padding: 0.5rem; background: #0d1117; color: #c9d1d9; border: 1px solid #30363d; border-radius: 4px; font-family: monospace; }
+        .flex { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+        .status-badge { display: inline-block; padding: 0.1rem 0.5rem; border-radius: 1rem; font-size: 0.7rem; }
+        .status-pending { background: #8b949e; color: black; }
+        .status-escalate_applied { background: #d29922; color: black; }
+        .status-quarantine_applied { background: #da3633; color: white; }
+        .status-block_applied { background: #f85149; color: white; }
+        .risk-low { color: #3fb950; }
+        .risk-medium { color: #d29922; }
+        .risk-high { color: #f85149; }
+        .risk-critical { color: #f85149; }
+        .replay-table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; font-size: 0.8rem; }
+        .replay-table th { text-align: left; color: #8b949e; border-bottom: 1px solid #30363d; padding: 0.3rem; }
+        .replay-table td { padding: 0.3rem; border-bottom: 1px solid #1c2333; }
+        .enforcement-log { background: #0d1117; padding: 0.3rem; border-radius: 4px; border-left: 2px solid #d29922; margin-top: 0.3rem; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); }
+        .modal-content { background: #161b22; margin: 10% auto; padding: 1.5rem; border-radius: 8px; max-width: 600px; border: 1px solid #30363d; }
+        .modal-close { float: right; background: none; border: none; color: #c9d1d9; font-size: 1.5rem; cursor: pointer; }
+        .log-detail { background: #0d1117; padding: 0.3rem; border-radius: 4px; font-size: 0.7rem; margin-top: 0.2rem; }
+        .decision-admit { color: #3fb950; }
+        .decision-deny { color: #f85149; }
+        .receipt { background: #0d1117; padding: 0.5rem; border-radius: 4px; border: 1px solid #30363d; margin-top: 0.5rem; }
+        .receipt h4 { margin: 0 0 0.3rem 0; color: #f0f6fc; }
+        .receipt .row { display: flex; justify-content: space-between; padding: 0.1rem 0; font-size: 0.75rem; }
+        .receipt .label { color: #8b949e; }
+        .btn-group { display: flex; gap: 0.3rem; flex-wrap: wrap; margin-top: 0.2rem; }
+        .signature-badge { background: #1c2333; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.6rem; color: #8b949e; }
+    </style>
+    <script type="text/javascript" src="https://unpkg.com/vis-network@9.1.2/dist/vis-network.min.js"></script>
+</head>
+<body>
+    <h1>🔍 Agent Sentinel – Enforcement Dashboard</h1>
+    <p>Runtime anomaly detection + distinct enforcement actions + policy replay + signed incident reports + verification</p>
+
+    <div class="card">
+        <h3>📤 Evaluate Fleet</h3>
+        <textarea id="traceInput" rows="6" placeholder='Paste your fleet JSON here...'>{
+  "agents": [
+    {
+      "agent_id": "alice",
+      "delegation_chain": ["root", "admin", "alice"],
+      "tool_calls": [{"name": "read_database"}, {"name": "write_config"}]
+    },
+    {
+      "agent_id": "bob",
+      "delegation_chain": ["root", "admin", "bob"],
+      "tool_calls": [{"name": "grant_permission"}, {"name": "delete_logs"}]
+    }
+  ]
+}</textarea>
+        <br><br>
+        <button class="btn" onclick="evaluateTrace()">🚀 Evaluate Fleet</button>
+    </div>
+
+    <div id="results" style="display:none;">
+        <div class="grid">
+            <div>
+                <div class="card">
+                    <h3>🚨 Fleet Findings</h3>
+                    <div id="summaryContainer" class="summary-grid"></div>
+                </div>
+                <div class="card">
+                    <h3>🤖 Agents</h3>
+                    <div id="agentCards"></div>
+                </div>
+                <div class="card">
+                    <h3>🔐 TRACE Claims</h3>
+                    <div id="claimsContainer"></div>
+                </div>
+            </div>
+            <div>
+                <div class="card">
+                    <h3>📊 Delegation & Collusion Graph</h3>
+                    <div id="graphContainer" class="graph-container"></div>
+                </div>
+                <div class="card">
+                    <h3>⏱️ Fleet Timeline</h3>
+                    <div id="timelineContainer" style="max-height:200px; overflow-y:auto;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Replay Modal -->
+    <div id="replayModal" class="modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeReplayModal()">&times;</button>
+            <h3>🔄 Policy Replay</h3>
+            <div id="replayResults"></div>
+        </div>
+    </div>
+
+    <script>
+        let network = null;
+        let currentTraceData = null;
+        let currentReplayResults = {};
+        let claimActionMap = {};
+
+        function getRiskLevel(agent) {
+            if (agent && agent.risk_level) {
+                const level = agent.risk_level.toLowerCase();
+                if (['low', 'medium', 'high', 'critical'].includes(level)) {
+                    return level;
+                }
+            }
+            return 'low';
+        }
+
+        async function evaluateTrace() {
+            const input = document.getElementById('traceInput').value;
+            try {
+                const trace = JSON.parse(input);
+                currentTraceData = trace;
+                const response = await fetch('/evaluate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(trace)
+                });
+                const result = await response.json();
+                if (result.error) {
+                    alert('Error: ' + result.error);
+                    return;
+                }
+                displayResults(result);
+            } catch (e) {
+                alert('Invalid JSON: ' + e.message);
+            }
+        }
+
+        function displayResults(data) {
+            document.getElementById('results').style.display = 'block';
+
+            const summaryContainer = document.getElementById('summaryContainer');
+            const detectionCounts = {};
+            let totalClaims = data.trace_claims ? data.trace_claims.length : 0;
+            for (const agent of data.agent_results) {
+                for (const d of agent.detections) {
+                    const type = d.detection_type;
+                    detectionCounts[type] = (detectionCounts[type] || 0) + 1;
+                }
+            }
+            let summaryHtml = '';
+            for (const [type, count] of Object.entries(detectionCounts)) {
+                summaryHtml += `<div class="summary-item"><div class="count">${count}</div><div class="label">${type.replace(/_/g, ' ').toUpperCase()}</div></div>`;
+            }
+            summaryHtml += `<div class="summary-item"><div class="count">${totalClaims}</div><div class="label">TRACE CLAIMS</div></div>`;
+            summaryContainer.innerHTML = summaryHtml;
+
+            const agentContainer = document.getElementById('agentCards');
+            let agentHtml = '';
+            for (const agent of data.agent_results) {
+                let action = "MONITOR";
+                let actionClass = "action-monitor";
+                let badge = "badge-monitor";
+                for (const d of agent.detections) {
+                    if (d.action === "quarantine") { action = "QUARANTINE"; actionClass = "action-quarantine"; badge = "badge-quarantine"; break; }
+                    if (d.action === "escalate") { action = "ESCALATE"; actionClass = "action-escalate"; badge = "badge-escalate"; break; }
+                    if (d.action === "block") { action = "BLOCK"; actionClass = "action-block"; badge = "badge-block"; break; }
+                }
+                const topDets = agent.detections.slice(0, 2).map(d => d.detection_type.replace(/_/g, ' ').toUpperCase()).join(', ');
+                agentHtml += `
+                    <div class="agent-card ${actionClass}">
+                        <strong>${agent.agent_id}</strong>
+                        <span class="action-badge ${badge}">${action}</span>
+                        <br><span style="font-size:0.9rem;">Risk: <span class="risk-${agent.risk_level}">${(agent.risk_score * 100).toFixed(0)}%</span></span>
+                        <br><span style="color:#8b949e;font-size:0.85rem;">${topDets || 'No detections'}</span>
+                        ${agent.quarantine_action ? `<br><span style="color:#f85149;">🔒 ${agent.quarantine_action.blocked_tools.join(', ')} blocked</span>` : ''}
+                    </div>
+                `;
+            }
+            agentContainer.innerHTML = agentHtml;
+
+            const claimsContainer = document.getElementById('claimsContainer');
+            let claimsHtml = '';
+            if (data.trace_claims && data.trace_claims.length > 0) {
+                for (const claim of data.trace_claims) {
+                    const status = claim.enforcement_status || 'pending';
+                    const statusClass = `status-${status}`;
+                    const decision = claim.decision || 'ADMIT';
+                    const decClass = decision === 'DENY' ? 'decision-deny' : 'decision-admit';
+                    const riskLevel = claim.risk_level || 'low';
+                    const actionFromClaim = claim.enforcement_action || 'monitor';
+                    claimActionMap[claim.claim_id] = actionFromClaim.toLowerCase();
+
+                    claimsHtml += `
+                        <div class="claim-box" id="claim-${claim.claim_id}">
+                            <div class="flex">
+                                <strong>${claim.claim_id}</strong>
+                                <span class="status-badge ${statusClass}">${status.replace(/_/g, ' ').toUpperCase()}</span>
+                                <span class="${decClass}">${decision}</span>
+                            </div>
+                            <div><strong>Agent:</strong> ${claim.agent_id} | <strong>Detection:</strong> ${claim.detection_type.replace(/_/g, ' ').toUpperCase()} | <strong>Risk:</strong> ${(claim.risk_score * 100).toFixed(0)}%</div>
+                            ${claim.reason ? `<div style="color:#8b949e;">Reason: ${claim.reason}</div>` : ''}
+                            <div class="flex" style="margin-top:0.3rem;">
+                                <button class="btn btn-warning" onclick="enforceClaim('${claim.claim_id}', 'escalate', '${claim.agent_id}')">📈 Escalate</button>
+                                <button class="btn btn-danger" onclick="enforceClaim('${claim.claim_id}', 'quarantine', '${claim.agent_id}')">🔒 Quarantine</button>
+                                <button class="btn btn-danger" onclick="enforceClaim('${claim.claim_id}', 'block', '${claim.agent_id}')">🚫 Block</button>
+                                <button class="btn btn-secondary" onclick="openReplay('${claim.claim_id}')">🔄 Replay</button>
+                                <button class="btn btn-export" onclick="exportIncident('${claim.claim_id}', '${claim.agent_id}', '${claim.detection_type}', ${claim.risk_score}, '${riskLevel}')">📋 Export Incident</button>
+                                <button class="btn btn-verify" onclick="verifyIncident('${claim.claim_id}')">✅ Verify</button>
+                            </div>
+                            <div id="enforcement-log-${claim.claim_id}" class="enforcement-log" style="display:none;"></div>
+                        </div>
+                    `;
+                }
+            } else {
+                claimsHtml = '<div style="color:#8b949e;">No high-risk claims generated.</div>';
+            }
+            claimsContainer.innerHTML = claimsHtml;
+
+            const timelineContainer = document.getElementById('timelineContainer');
+            let timelineHtml = '';
+            if (data.timeline && data.timeline.length > 0) {
+                for (const event of data.timeline) {
+                    const time = new Date(event.timestamp).toLocaleTimeString();
+                    const severityClass = event.severity ? `risk-${event.severity}` : '';
+                    timelineHtml += `
+                        <div style="padding:0.2rem 0; border-bottom:1px solid #1c2333; font-size:0.9rem;">
+                            <span style="color:#8b949e;margin-right:0.5rem;">${time}</span>
+                            <span class="${severityClass}">${event.agent_id}</span>
+                            ${event.event_type.replace(/_/g, ' ').toUpperCase()}
+                            <span style="color:#8b949e;">- ${event.description}</span>
+                        </div>
+                    `;
+                }
+            } else {
+                timelineHtml = '<div style="color:#8b949e;">No events.</div>';
+            }
+            timelineContainer.innerHTML = timelineHtml;
+
+            renderGraph(data.graph_nodes, data.graph_edges);
+        }
+
+        function renderGraph(nodes, edges) {
+            const container = document.getElementById('graphContainer');
+            const visNodes = nodes.map(n => ({
+                id: n.id,
+                label: n.label,
+                color: n.color,
+                shape: n.shape || 'circle',
+                font: { color: '#c9d1d9', size: 14 }
+            }));
+            const visEdges = edges.map(e => ({
+                from: e.from,
+                to: e.to,
+                label: e.label,
+                color: e.color,
+                dashes: e.dashes || false,
+                width: e.width || 1,
+                font: { color: '#8b949e', size: 10 }
+            }));
+
+            const data = { nodes: visNodes, edges: visEdges };
+            const options = {
+                layout: {
+                    hierarchical: {
+                        enabled: true,
+                        direction: 'UD',
+                        sortMethod: 'directed',
+                        levelSeparation: 150,
+                        nodeSpacing: 100,
+                        treeSpacing: 50
+                    }
+                },
+                physics: { enabled: false },
+                interaction: { hover: true }
+            };
+
+            if (network) {
+                network.setData(data);
+                network.setOptions(options);
+            } else {
+                network = new vis.Network(container, data, options);
+            }
+        }
+
+        async function enforceClaim(claimId, action, agentId) {
+            if (!confirm(`Apply ${action} to claim ${claimId}?`)) return;
+            try {
+                const response = await fetch(`/enforce/${claimId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action, agent_id: agentId })
+                });
+                const result = await response.json();
+                const logDiv = document.getElementById(`enforcement-log-${claimId}`);
+                if (logDiv) {
+                    logDiv.style.display = 'block';
+                    let receiptHtml = `
+                        <div class="receipt">
+                            <h4>🧾 Enforcement Receipt</h4>
+                            <div class="row"><span class="label">Claim:</span> <span>${claimId}</span></div>
+                            <div class="row"><span class="label">Action:</span> <span>${result.action.toUpperCase()}</span></div>
+                            <div class="row"><span class="label">Timestamp:</span> <span>${new Date(result.timestamp).toLocaleString()}</span></div>
+                            <div class="row"><span class="label">Agent:</span> <span>${result.agent_id}</span></div>
+                    `;
+                    for (const [key, value] of Object.entries(result.details)) {
+                        if (key === 'message') continue;
+                        let displayValue = value;
+                        if (typeof value === 'object') displayValue = JSON.stringify(value);
+                        receiptHtml += `<div class="row"><span class="label">${key.replace(/_/g, ' ').toUpperCase()}:</span> <span>${displayValue}</span></div>`;
+                    }
+                    receiptHtml += `
+                            <div class="row"><span class="label">Outcome:</span> <span style="color:#3fb950;">${result.details.message || 'Applied'}</span></div>
+                            <div class="row"><span class="label">Evidence:</span> <span>trace.jwt</span></div>
+                            <div class="btn-group" style="margin-top:0.3rem;">
+                                <button class="btn btn-export" onclick="exportReceipt('${claimId}')">📄 Export Receipt JSON</button>
+                            </div>
+                        </div>
+                    `;
+                    logDiv.innerHTML = receiptHtml;
+                }
+
+                const claimBox = document.getElementById(`claim-${claimId}`);
+                if (claimBox) {
+                    const statusBadge = claimBox.querySelector('.status-badge');
+                    if (statusBadge) {
+                        statusBadge.innerText = action.toUpperCase() + '_APPLIED';
+                        statusBadge.className = `status-badge status-${action}_applied`;
+                    }
+                    const actionBadge = claimBox.querySelector('.action-badge');
+                    if (actionBadge) {
+                        actionBadge.innerText = action.toUpperCase();
+                        actionBadge.className = `action-badge badge-${action}`;
+                    }
+                    claimActionMap[claimId] = action;
+                }
+            } catch (e) {
+                alert('Enforcement failed: ' + e.message);
+            }
+        }
+
+        async function exportReceipt(claimId) {
+            try {
+                const response = await fetch(`/export/receipt/${claimId}`);
+                const receipt = await response.json();
+                const blob = new Blob([JSON.stringify(receipt, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `receipt-${claimId}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+            } catch (e) {
+                alert('Export failed: ' + e.message);
+            }
+        }
+
+        async function exportIncident(claimId, agentId, detectionType, riskScore, riskLevel) {
+            try {
+                const validLevels = ['low', 'medium', 'high', 'critical'];
+                let finalRiskLevel = riskLevel || 'low';
+                if (!validLevels.includes(finalRiskLevel.toLowerCase())) {
+                    finalRiskLevel = 'low';
+                }
+                finalRiskLevel = finalRiskLevel.toLowerCase();
+
+                let replayResults = [];
+                const replayData = currentReplayResults[claimId];
+                if (replayData) {
+                    replayResults = replayData;
+                } else if (currentTraceData && currentTraceData.agents) {
+                    const agentData = currentTraceData.agents[0];
+                    const response = await fetch('/replay', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            trace: agentData,
+                            policy_versions: ['v1', 'v2', 'v3']
+                        })
+                    });
+                    replayResults = await response.json();
+                    if (replayResults.error) replayResults = [];
+                }
+
+                let enforcementAction = claimActionMap[claimId] || 'monitor';
+                const validActions = ['monitor', 'escalate', 'quarantine', 'block'];
+                if (!validActions.includes(enforcementAction.toLowerCase())) {
+                    enforcementAction = 'monitor';
+                }
+
+                let enforcementStatus = 'pending';
+                if (enforcementAction !== 'monitor') {
+                    enforcementStatus = 'success';
+                }
+
+                const payload = {
+                    agent_id: agentId,
+                    detection_type: detectionType,
+                    risk_score: parseFloat(riskScore) || 0.0,
+                    risk_level: finalRiskLevel,
+                    enforcement_action: enforcementAction,
+                    enforcement_status: enforcementStatus,
+                    replay_results: replayResults
+                };
+
+                const response = await fetch(`/export/incident/${claimId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const report = await response.json();
+                if (report.error) {
+                    alert('Error: ' + report.error);
+                    return;
+                }
+                const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `incident-${report.incident_id || claimId}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+            } catch (e) {
+                alert('Export failed: ' + e.message);
+            }
+        }
+
+        async function verifyIncident(claimId) {
+            try {
+                const claimBox = document.getElementById(`claim-${claimId}`);
+                const infoDiv = claimBox.querySelector('div:nth-child(2)');
+                const agentId = infoDiv.innerText.split('Agent: ')[1].split('|')[0].trim();
+                const detectionType = infoDiv.innerText.split('Detection: ')[1].split('|')[0].trim();
+                const riskScore = parseFloat(infoDiv.innerText.split('Risk: ')[1].replace('%', '')) / 100;
+                const riskLevel = 'low';
+
+                const exportResponse = await fetch(`/export/incident/${claimId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        agent_id: agentId,
+                        detection_type: detectionType,
+                        risk_score: riskScore,
+                        risk_level: riskLevel,
+                        replay_results: currentReplayResults[claimId] || [],
+                        enforcement_action: claimActionMap[claimId] || 'monitor',
+                        enforcement_status: 'success'
+                    })
+                });
+                const report = await exportResponse.json();
+                if (report.error) {
+                    alert('Error: ' + report.error);
+                    return;
+                }
+
+                const verifyResponse = await fetch(`/verify/${claimId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ report })
+                });
+                const verifyResult = await verifyResponse.json();
+                if (verifyResult.status === 'VERIFIED') {
+                    alert('✅ Signature verified! Incident is authentic.');
+                } else {
+                    alert('❌ Signature verification failed: ' + JSON.stringify(verifyResult.details));
+                }
+            } catch (e) {
+                alert('Verification failed: ' + e.message);
+            }
+        }
+
+        async function openReplay(claimId) {
+            const modal = document.getElementById('replayModal');
+            const resultsDiv = document.getElementById('replayResults');
+            modal.style.display = 'block';
+            resultsDiv.innerHTML = 'Loading replay...';
+
+            try {
+                if (!currentTraceData) {
+                    resultsDiv.innerHTML = 'No trace data available. Please evaluate a fleet first.';
+                    return;
+                }
+                const agentData = currentTraceData.agents ? currentTraceData.agents[0] : null;
+                if (!agentData) {
+                    resultsDiv.innerHTML = 'No agent data found.';
+                    return;
+                }
+                const policyVersions = ['v1', 'v2', 'v3'];
+                const response = await fetch('/replay', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        trace: agentData,
+                        policy_versions: policyVersions
+                    })
+                });
+                const replayResults = await response.json();
+                if (replayResults.error) {
+                    resultsDiv.innerHTML = `<span style="color:#f85149;">Error: ${replayResults.error}</span>`;
+                    return;
+                }
+                currentReplayResults[claimId] = replayResults;
+
+                let tableHtml = `
+                    <table class="replay-table">
+                        <thead><tr><th>Policy</th><th>Risk</th><th>Level</th><th>Decision</th><th>Reason</th></tr></thead>
+                        <tbody>
+                `;
+                for (const r of replayResults) {
+                    const decisionColor = r.decision === 'DENY' ? '#f85149' : '#3fb950';
+                    tableHtml += `
+                        <tr>
+                            <td><strong>${r.policy_version}</strong></td>
+                            <td>${(r.risk_score * 100).toFixed(0)}%</td>
+                            <td>${r.risk_level}</td>
+                            <td style="color:${decisionColor};">${r.decision}</td>
+                            <td style="color:#8b949e;">${r.reason}</td>
+                        </tr>
+                    `;
+                }
+                tableHtml += '</tbody></table>';
+                resultsDiv.innerHTML = tableHtml;
+            } catch (e) {
+                resultsDiv.innerHTML = `<span style="color:#f85149;">Error: ${e.message}</span>`;
+            }
+        }
+
+        function closeReplayModal() {
+            document.getElementById('replayModal').style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('replayModal');
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        };
+    </script>
+</body>
+</html>

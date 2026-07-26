@@ -1,0 +1,15 @@
+version: '3.8'
+services:
+  sentinel:
+    build: .
+    ports:
+      - "8001:8001"
+    environment:
+      - QUARANTINE_THRESHOLD=0.7
+      # Required. Sentinel signs every TRACE claim and will not emit unsigned
+      # records. Supply a PEM-encoded Ed25519 private key (for example from a
+      # secret store); enforcement fails closed if this is unset.
+      - TRACE_PRIVATE_KEY_PEM=${TRACE_PRIVATE_KEY_PEM:?set an Ed25519 private key PEM}
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped

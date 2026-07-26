@@ -1,0 +1,12 @@
+name: Agent Sentinel
+vendor: a1k7
+integrates_with:
+  - trace
+description: "Runtime enforcement sidecar for agent fleets: detectors for delegation escalation, tool and identity drift, and policy avoidance, emitting Ed25519-signed TRACE Level 0 records."
+maintainer:
+  github: a1k7
+  email: warik.akhilesh@gmail.com
+repository: https://github.com/agentrust-io/integrations/tree/main/integrations/sentinel
+license: MIT
+tier: community
+trace_conformance_level: 0

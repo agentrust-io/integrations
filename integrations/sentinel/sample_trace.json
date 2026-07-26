@@ -1,0 +1,7 @@
+{
+  "trace_id": "test-001",
+  "delegation_chain": ["root", "admin", "finance"],
+  "policy_version": "v1",
+  "agent_id": "alice",
+  "action": "write"
+}
