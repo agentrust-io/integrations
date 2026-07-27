@@ -6,4 +6,4 @@
 # PyPI releases below in a clean virtualenv.
 agent-manifest>=0.3
 agentrust-trace>=0.3
-agentrust-trace-tests>=0.2
+agentrust-trace-tests>=0.3.0
