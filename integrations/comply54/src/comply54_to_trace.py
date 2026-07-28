@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-comply54 -> TRACE v0.1 Adapter
-Reads a comply54 ComplianceResult JSON and emits a signed TRACE v0.1 JWT (Ed25519).
+comply54 -> TRACE v0.2 Adapter
+Reads a comply54 ComplianceResult JSON and emits a signed TRACE v0.2 JWT (Ed25519).
 Conforms to TRACE spec at Level 0 (software-only; no hardware TEE attestation).
 
 Usage:
@@ -94,7 +94,7 @@ def comply54_to_trace_payload(result: dict, agent_id: str, model: str, key=None)
 
     return {
         # ── Required TRACE EAT envelope ──────────────────────────────────────
-        "eat_profile": "tag:agentrust.io,2026:trace-v0.1",
+        "eat_profile": "tag:agentrust-io.com,2026:trace-v0.2",
         "iat": int(time.time()),
         "subject": f"spiffe://comply54.io/agent/{agent_id}",
 
@@ -159,7 +159,7 @@ def comply54_to_trace_payload(result: dict, agent_id: str, model: str, key=None)
 # ── CLI ───────────────────────────────────────────────────────────────────────
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Convert comply54 ComplianceResult to TRACE v0.1 JWT")
+    parser = argparse.ArgumentParser(description="Convert comply54 ComplianceResult to TRACE v0.2 JWT")
     parser.add_argument("result_json", help="Path to comply54 ComplianceResult JSON file")
     parser.add_argument("--agent-id", default="fintech-agent", help="Agent SPIFFE identity suffix")
     parser.add_argument("--model", default="unknown/unknown", help="Model in provider/model-id format")

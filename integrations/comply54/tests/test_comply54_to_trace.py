@@ -1,5 +1,5 @@
 """
-Tests for comply54 -> TRACE v0.1 adapter.
+Tests for comply54 -> TRACE v0.2 adapter.
 Run: pip install -r requirements.txt && python -m pytest tests/ -v
 """
 
@@ -105,7 +105,7 @@ class TestAppraisalMapping:
 class TestTraceEnvelope:
     def test_eat_profile_present(self):
         payload = comply54_to_trace_payload(ALLOW_RESULT, "agent-1", "anthropic/claude-sonnet-4-6")
-        assert payload["eat_profile"] == "tag:agentrust.io,2026:trace-v0.1"
+        assert payload["eat_profile"] == "tag:agentrust-io.com,2026:trace-v0.2"
 
     def test_iat_is_integer(self):
         payload = comply54_to_trace_payload(ALLOW_RESULT, "agent-1", "anthropic/claude-sonnet-4-6")
@@ -188,7 +188,7 @@ class TestJWTSigning:
         payload = comply54_to_trace_payload(DENY_RESULT, "agent-1", "anthropic/claude-sonnet-4-6", key=key)
         token = pyjwt.encode(payload, key, algorithm="EdDSA", headers={"alg": "EdDSA", "typ": "JWT"})
         decoded = pyjwt.decode(token, options={"verify_signature": False})
-        assert decoded["eat_profile"] == "tag:agentrust.io,2026:trace-v0.1"
+        assert decoded["eat_profile"] == "tag:agentrust-io.com,2026:trace-v0.2"
         assert decoded["appraisal"]["status"] == "contraindicated"
 
     def test_signed_jwt_has_three_parts(self):
@@ -203,7 +203,7 @@ class TestJWTSigning:
         token = pyjwt.encode(payload, key, algorithm="EdDSA", headers={"alg": "EdDSA", "typ": "JWT"})
         public_key = key.public_key()
         decoded = pyjwt.decode(token, public_key, algorithms=["EdDSA"])
-        assert decoded["eat_profile"] == "tag:agentrust.io,2026:trace-v0.1"
+        assert decoded["eat_profile"] == "tag:agentrust-io.com,2026:trace-v0.2"
         assert decoded["cnf"]["jwk"]["kty"] == "OKP"
 
 

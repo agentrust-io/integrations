@@ -1,4 +1,4 @@
-"""TRACE v0.1 Level 0 conformance for Agent Sentinel's emitted records.
+"""TRACE v0.2 Level 0 conformance for Agent Sentinel's emitted records.
 
 Runs the agentrust-trace-tests Level 0 suite (TR-ENV, TR-SIG, TR-POL) against
 records produced by the signed claim generator, plus a signature round-trip.
@@ -71,6 +71,6 @@ class TestSigning:
         claim = generator.generate_claim(ENFORCE_EVENT, agent_id="alice", decision="DENY")
         public_key = generator._key().public_key()
         decoded = pyjwt.decode(claim.token, public_key, algorithms=["EdDSA"])
-        assert decoded["eat_profile"] == "tag:agentrust.io,2026:trace-v0.1"
+        assert decoded["eat_profile"] == "tag:agentrust-io.com,2026:trace-v0.2"
         assert decoded["appraisal"]["status"] == "contraindicated"
         assert decoded["cnf"]["jwk"] == private_key_to_jwk(generator._key())

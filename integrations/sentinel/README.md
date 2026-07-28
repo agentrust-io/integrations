@@ -2,7 +2,7 @@
 
 Runtime behavioral anomaly detection, collusion detection, and quarantine for
 agent fleets. Sentinel scores incoming agent traces, decides whether to admit,
-review, or deny an action, and emits an Ed25519-signed TRACE v0.1 record for
+review, or deny an action, and emits an Ed25519-signed TRACE v0.2 record for
 every enforcement.
 
 ## Features

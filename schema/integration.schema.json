@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://agentrust.io/schema/integration.schema.json",
+  "$id": "https://agentrust-io.com/schema/integration.schema.json",
   "title": "agentrust-io integration manifest",
   "type": "object",
   "additionalProperties": false,

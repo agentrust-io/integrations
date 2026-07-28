@@ -662,7 +662,7 @@ def build_manifest(current: Mapping[str, Any]) -> Dict[str, Any]:
         for key, value in sorted(current.get("policy_scope", {}).items())
     ] or ["codex:configuration"]
     return {
-        "@context": "https://agentmanifest.agentrust.io/v0.1/context.json",
+        "@context": "https://agentmanifest.agentrust-io.com/v0.1/context.json",
         "@type": "AgentManifest",
         "manifest_id": _uuid7(),
         "agent_id": current["agent_id"],
@@ -712,7 +712,7 @@ def build_manifest(current: Mapping[str, Any]) -> Dict[str, Any]:
 
 def build_trace(current: Mapping[str, Any]) -> Dict[str, Any]:
     return {
-        "eat_profile": "tag:agentrust.io,2026:trace-v0.1",
+        "eat_profile": "tag:agentrust-io.com,2026:trace-v0.2",
         "iat": int(time.time()),
         "subject": current["agent_id"],
         "model": {
@@ -734,7 +734,7 @@ def build_trace(current: Mapping[str, Any]) -> Dict[str, Any]:
             "digest": current["hashes"]["plugin_set"],
         },
         "appraisal": {"status": "none", "verifier": "https://codex.local"},
-        "transparency": "https://registry.agentrust.io/claim/placeholder",
+        "transparency": "https://registry.agentrust-io.com/claim/placeholder",
     }
 
 

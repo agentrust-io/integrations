@@ -1,7 +1,7 @@
 """
-Agent Sentinel -> TRACE v0.1 claim generator.
+Agent Sentinel -> TRACE v0.2 claim generator.
 
-Every enforcement event is emitted as an Ed25519-signed TRACE v0.1 JWT,
+Every enforcement event is emitted as an Ed25519-signed TRACE v0.2 JWT,
 conformant at Level 0 (software-only; no hardware TEE attestation).
 
 Signing is mandatory. Sentinel will not emit an unsigned governance claim.
@@ -77,7 +77,7 @@ def _isoified(value: Any) -> Any:
 
 @dataclass
 class SignedTraceClaim:
-    payload: Dict[str, Any]  # canonical TRACE v0.1 EAT payload (includes cnf.jwk)
+    payload: Dict[str, Any]  # canonical TRACE v0.2 EAT payload (includes cnf.jwk)
     token: str  # EdDSA-signed JWT, offline-verifiable against cnf.jwk
 
     def to_json(self) -> str:
@@ -114,9 +114,9 @@ class TraceClaimGenerator:
         provider, _, model_id = model.partition("/")
         return {
             # Required TRACE EAT envelope
-            "eat_profile": "tag:agentrust.io,2026:trace-v0.1",
+            "eat_profile": "tag:agentrust-io.com,2026:trace-v0.2",
             "iat": int(time.time()),
-            "subject": f"spiffe://agentrust.io/agent/{agent_id}",
+            "subject": f"spiffe://agentrust-io.com/agent/{agent_id}",
             # Confirmation key: the Ed25519 public key that signs this claim
             "cnf": {"jwk": private_key_to_jwk(key)},
             "model": {

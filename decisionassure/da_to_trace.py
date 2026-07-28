@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-DecisionAssure -> TRACE v0.1 Adapter
+DecisionAssure -> TRACE v0.2 Adapter
 Outputs a signed JWT (Ed25519) that conforms to TRACE spec at Level 0.
 
 Usage:
@@ -44,7 +44,7 @@ def map_decisionassure_to_trace(da_trace: dict) -> dict:
     bundle_hash = f"sha256:{hashlib.sha256(bundle_input).hexdigest()}"
 
     return {
-        "eat_profile": "tag:agentrust.io,2026:trace-v0.1",
+        "eat_profile": "tag:agentrust-io.com,2026:trace-v0.2",
         "iat": iat,
         "subject": f"spiffe://decisionassure.io/agent/{trace_id}",
         "model": {
