@@ -1,0 +1,22 @@
+name: ramen-ai cMCP Adapter
+vendor: ramen-ai
+integrates_with:
+  - cmcp
+  - trace
+description: >-
+  cMCP tool-call policy adapter that evaluates semantic intent via the ramen-ai
+  API and maps the V5 Ed25519-signed receipt onto a TRACE Trust Record.
+maintainer:
+  github: ramen-noodle6
+  email: damian_smith442@aol.com
+repository: https://github.com/ramen-ai-dev/ramen-ai-integrations
+homepage: https://ramenai.dev
+license: MIT
+tier: community
+# Level 0 passes with the TR-SIG-005 UNVERIFIED finding: trace-tests does not
+# grade signatures on plain trace records — the signed form is written alongside
+# the gradable record and verifies via agentrust_trace.verify_record.
+trace_conformance_level: 0
+tested_against:
+  agentrust-trace: "0.3.0"
+  cmcp-runtime: "0.3.0"
