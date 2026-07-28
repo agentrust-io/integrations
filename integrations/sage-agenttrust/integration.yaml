@@ -19,4 +19,4 @@ tier: community
 trace_conformance_level: 0
 tested_against:
   cmcp-runtime: "0.2.1"
-  agentrust-trace: "0.2.0"
+  agentrust-trace: "0.5.0"

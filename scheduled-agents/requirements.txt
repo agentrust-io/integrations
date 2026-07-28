@@ -3,5 +3,5 @@
 #
 # Required only to sign a TRACE record (/schedule-trace, /schedule-manifest
 # approve --sign). Verified against the PyPI releases below in a clean virtualenv.
-agentrust-trace>=0.3
-agentrust-trace-tests>=0.2
+agentrust-trace>=0.5
+agentrust-trace-tests>=0.4,<0.5
