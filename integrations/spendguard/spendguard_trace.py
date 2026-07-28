@@ -26,7 +26,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-EAT_PROFILE = "tag:agentrust.io,2026:trace-v0.1"
+EAT_PROFILE = "tag:agentrust-io.com,2026:trace-v0.2"
 VERIFIER = "agentic-spendguard-agentrust-exporter"
 # SpendGuard's exporter asserts SLSA level 1 for its fixture builder; carried
 # through unchanged so this record matches the upstream golden outputs.

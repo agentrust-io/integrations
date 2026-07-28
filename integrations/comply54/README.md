@@ -1,6 +1,6 @@
 # comply54 → TRACE Adapter
 
-Converts a [comply54](https://github.com/comply54/comply54) `ComplianceResult` JSON into a **signed TRACE v0.1 JWT** (Ed25519).
+Converts a [comply54](https://github.com/comply54/comply54) `ComplianceResult` JSON into a **signed TRACE v0.2 JWT** (Ed25519).
 
 comply54 evaluates AI agent actions against African regulatory frameworks (NDPA 2023, CBN Transaction Controls, KDPA 2019, POPIA, and 9 other jurisdictions). This adapter maps the compliance decision into the TRACE attestation format so the policy outcome becomes a cryptographically verifiable evidence record.
 
@@ -10,7 +10,7 @@ comply54 evaluates AI agent actions against African regulatory frameworks (NDPA 
 
 | Check | Status |
 |-------|--------|
-| `eat_profile` = `tag:agentrust.io,2026:trace-v0.1` | ✅ |
+| `eat_profile` = `tag:agentrust-io.com,2026:trace-v0.2` | ✅ |
 | `iat` (integer Unix timestamp) | ✅ |
 | `subject` (SPIFFE URI) | ✅ |
 | `cnf.jwk` with Ed25519 public key | ✅ |
@@ -106,7 +106,7 @@ python src/comply54_to_trace.py result.json
 
 ## What is verified
 
-- `eat_profile` is exactly `tag:agentrust.io,2026:trace-v0.1`
+- `eat_profile` is exactly `tag:agentrust-io.com,2026:trace-v0.2`
 - `policy.bundle_hash` is `sha256:` + hex(SHA-256(JSON-sorted pack IDs)) — reproducible from the same comply54 result
 - `appraisal.status` matches the comply54 decision using the mapping table above
 - `comply54.audit_id` matches the `audit_id` from the source ComplianceResult

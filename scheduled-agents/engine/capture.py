@@ -284,7 +284,7 @@ def build_trace(cur: dict) -> dict:
     only: Level 0, no hardware attestation on a normal dev box. enforcement_mode
     is 'advisory' because this warns, it does not block a routine from running."""
     return {
-        "eat_profile": "tag:agentrust.io,2026:trace-v0.1",
+        "eat_profile": "tag:agentrust-io.com,2026:trace-v0.2",
         "iat": int(time.time()),
         "subject": cur["agent_id"],
         "model": {"provider": "anthropic", "model_id": "unknown", "version": "unknown"},
@@ -293,7 +293,7 @@ def build_trace(cur: dict) -> dict:
         "data_class": "internal",
         "build_provenance": {"slsa_level": 0, "digest": cur["hashes"]["routines_set"]},
         "appraisal": {"status": "none", "verifier": "https://claude-code.local"},
-        "transparency": "https://registry.agentrust.io/claim/placeholder",
+        "transparency": "https://registry.agentrust-io.com/claim/placeholder",
     }
 
 

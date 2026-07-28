@@ -287,7 +287,7 @@ def build_manifest(cur: dict) -> dict:
         for t in cur["tools"]
     ]
     return {
-        "@context": "https://agentmanifest.agentrust.io/v0.1/context.json",
+        "@context": "https://agentmanifest.agentrust-io.com/v0.1/context.json",
         "@type": "AgentManifest",
         "manifest_id": _uuid7(),
         "agent_id": cur["agent_id"],
@@ -337,7 +337,7 @@ def build_manifest(cur: dict) -> dict:
 
 def build_trace(cur: dict) -> dict:
     return {
-        "eat_profile": "tag:agentrust.io,2026:trace-v0.1",
+        "eat_profile": "tag:agentrust-io.com,2026:trace-v0.2",
         "iat": int(time.time()),
         "subject": cur["agent_id"],
         "model": {k: cur["model"][k] for k in ("provider", "model_id", "version")},
@@ -346,7 +346,7 @@ def build_trace(cur: dict) -> dict:
         "data_class": cur["data_class"],
         "build_provenance": {"slsa_level": 0, "digest": cur["hashes"]["tool_catalog"]},
         "appraisal": {"status": "none", "verifier": "https://claude-code.local"},
-        "transparency": "https://registry.agentrust.io/claim/placeholder",
+        "transparency": "https://registry.agentrust-io.com/claim/placeholder",
     }
 
 

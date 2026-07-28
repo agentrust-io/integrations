@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "tag:agentrust.io,2026:trace-claim-v0.1-schema",
-  "description": "TRACE v0.1 JWT payload — core envelope. Private/extension claims (e.g. comply54.*) are carried outside this schema per RFC 7519 §4.3.",
+  "$id": "tag:agentrust-io.com,2026:trace-claim-v0.2-schema",
+  "description": "TRACE v0.2 JWT payload — core envelope. Private/extension claims (e.g. comply54.*) are carried outside this schema per RFC 7519 §4.3.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -20,7 +20,7 @@
   "properties": {
     "eat_profile": {
       "type": "string",
-      "const": "tag:agentrust.io,2026:trace-v0.1"
+      "const": "tag:agentrust-io.com,2026:trace-v0.2"
     },
     "iat": {
       "type": "integer",
