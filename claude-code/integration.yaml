@@ -12,5 +12,5 @@ tier: community
 trace_conformance_level: 0
 tested_against:
   agent-manifest: 0.3.0
-  agentrust-trace: 0.3.0
-  agentrust-trace-tests: 0.2.0
+  agentrust-trace: 0.5.0
+  agentrust-trace-tests: 0.4.0
