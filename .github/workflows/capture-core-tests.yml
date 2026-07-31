@@ -1,0 +1,86 @@
+name: capture-core tests
+
+on:
+  pull_request:
+    paths:
+      - "packages/agentrust-capture-core/**"
+      - "scripts/sync_vendored_core.py"
+      - "**/_vendor/agentrust_capture_core/**"
+      - ".github/workflows/capture-core-tests.yml"
+  push:
+    branches: [main]
+    paths:
+      - "packages/agentrust-capture-core/**"
+      - "scripts/sync_vendored_core.py"
+      - "**/_vendor/agentrust_capture_core/**"
+      - ".github/workflows/capture-core-tests.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  # The engines run from shell hooks at session start, before anything is
+  # installed, so the core must work on the standard library alone. 3.9 is the
+  # floor because the scheduled-agents matrix tests it.
+  core:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Run core tests
+        working-directory: packages/agentrust-capture-core
+        run: |
+          pip install pytest
+          python -m pytest tests -q
+
+  # Each engine keeps a pinned copy of the core so a bare plugin install still
+  # gets drift detection. Copies are free to rot, which is the failure this whole
+  # package exists to end, so they are generated and checked rather than trusted.
+  vendored-in-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - name: Vendored copies must match the package
+        run: python scripts/sync_vendored_core.py --check
+
+  # The fallback is the path most users are on, since it is what runs before any
+  # pip install. Exercising it explicitly stops it rotting behind the installed
+  # path, which nothing else would catch.
+  bare-install-fallback:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - name: Engines must import with the core NOT installed
+        run: |
+          python - <<'PY'
+          import importlib.util, sys
+          assert importlib.util.find_spec("agentrust_capture_core") is None, (
+              "the core is installed; this job must test the vendored fallback"
+          )
+          for path in (
+              "claude-code/engine/capture.py",
+              "plugins/agentrust-codex/engine/capture.py",
+              "scheduled-agents/engine/capture.py",
+          ):
+              spec = importlib.util.spec_from_file_location("cap_" + path.replace("/", "_"), path)
+              module = importlib.util.module_from_spec(spec)
+              spec.loader.exec_module(module)
+              print("ok:", path)
+          PY
