@@ -26,6 +26,18 @@ from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Set, 
 
 
 VERSION = "0.1.0"
+
+#: Version of WHAT this engine measures, distinct from what it found.
+#:
+#: Bump it whenever a change makes a fingerprint incomparable to one an earlier
+#: version wrote, so an upgrade cannot be mistaken for drift. A baseline at an
+#: older scope is reported as needing a one-time re-approve instead of showing
+#: every affected category as changed: an alarm the user knows is false is worse
+#: than no alarm, because it teaches them to dismiss the next one.
+#:
+#: 1  skills fingerprinted by SKILL.md alone
+#: 2  skills fingerprinted across their whole directory
+MEASUREMENT_SCOPE = 2
 HOME = Path.home()
 CODEX_HOME = Path(os.environ.get("CODEX_HOME", str(HOME / ".codex"))).expanduser()
 STATE_DIR = Path(
@@ -198,6 +210,69 @@ def _skill_roots(chain: Sequence[Path]) -> List[Tuple[str, Path]]:
     return roots
 
 
+#: Directory names skipped when fingerprinting a skill. These hold state a skill
+#: writes as it runs, so hashing them would report drift on ordinary use, and a
+#: tool that cries wolf on every run trains its user to ignore it.
+#:
+#: Controlled here rather than by a file inside the skill on purpose. A per-skill
+#: ignore file would let the thing being measured decide what gets measured, so a
+#: hostile skill could ship an ignore rule covering its own payload.
+SKILL_EXCLUDE_DIRS = frozenset(
+    {"state", ".cache", "__pycache__", ".git", ".pytest_cache", "node_modules"}
+)
+
+#: File suffixes skipped for the same reason: run artifacts, not behaviour.
+SKILL_EXCLUDE_SUFFIXES = frozenset({".log", ".tmp", ".pyc", ".pyo"})
+
+
+def _skill_tree_digest(skill_dir: Path) -> Optional[str]:
+    """Hash every behavioural file in one skill directory.
+
+    Covers the whole tree rather than SKILL.md alone. A skill is not just its
+    manifest: these directories carry scripts, tools and reference material that
+    decide what the skill actually does, so hashing only SKILL.md let a payload be
+    swapped into scripts/ while the report said nothing added, nothing subtracted.
+
+    Relative paths are bound into the digest alongside contents so a rename or a
+    move is drift too, and symlinks are skipped so a link out of the tree cannot
+    drag unrelated content into the fingerprint.
+    """
+    digest = hashlib.sha256()
+    try:
+        paths = sorted(skill_dir.rglob("*"))
+    except OSError:
+        return None
+    seen_any = False
+    for path in paths:
+        if path.is_symlink() or not path.is_file():
+            continue
+        try:
+            relative = path.relative_to(skill_dir)
+        except ValueError:  # pragma: no cover - rglob results are relative
+            continue
+        if SKILL_EXCLUDE_DIRS & set(relative.parts[:-1]):
+            continue
+        if path.suffix in SKILL_EXCLUDE_SUFFIXES:
+            continue
+        try:
+            content = path.read_bytes()
+        except OSError:
+            # An unreadable file is itself worth recording: bind its path so the
+            # file appearing or vanishing still moves the digest.
+            digest.update(relative.as_posix().encode("utf-8"))
+            digest.update(b"\0<unreadable>\0")
+            seen_any = True
+            continue
+        digest.update(relative.as_posix().encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(content)
+        digest.update(b"\0")
+        seen_any = True
+    if not seen_any:
+        return None
+    return "sha256:" + digest.hexdigest()
+
+
 def _skill_fingerprints(chain: Sequence[Path]) -> Dict[str, str]:
     found: Dict[str, str] = {}
     for prefix, root in _skill_roots(chain):
@@ -208,7 +283,7 @@ def _skill_fingerprints(chain: Sequence[Path]) -> Dict[str, str]:
         except OSError:
             continue
         for path in candidates:
-            digest = _safe_hash(path)
+            digest = _skill_tree_digest(path.parent)
             if not digest:
                 continue
             try:
@@ -486,6 +561,7 @@ def snapshot(live: Optional[Mapping[str, Any]] = None) -> Dict[str, Any]:
 
     return {
         "captured_at": _now_iso(),
+        "scope": MEASUREMENT_SCOPE,
         "workspace_id": workspace_id,
         "observed": sorted(observed),
         "agent_id": _identity(),
@@ -551,6 +627,25 @@ def _set_changes(
 def diff(base: Mapping[str, Any], current: Mapping[str, Any]) -> List[Dict[str, str]]:
     common = set(base.get("observed", [])) & set(current.get("observed", []))
     changes: List[Dict[str, str]] = []
+
+    # A baseline written before MEASUREMENT_SCOPE 2 holds skill digests over
+    # SKILL.md alone, so comparing them against whole-directory digests would
+    # report every skill as changed. Drop skills from the comparison and say why.
+    base_scope = base.get("scope", 1)
+    if base_scope != MEASUREMENT_SCOPE:
+        changes.append(
+            {
+                "change": "changed",
+                "what": "measurement scope",
+                "detail": (
+                    "widened from %s to %s; skill digests now cover the whole skill "
+                    "directory. Re-approve once to compare on the new scope."
+                    % (base_scope, MEASUREMENT_SCOPE)
+                ),
+            }
+        )
+        common.discard("skills")
+
     if "instructions" in common:
         changes += _map_changes(
             base.get("instructions", {}), current.get("instructions", {}), "instruction"
