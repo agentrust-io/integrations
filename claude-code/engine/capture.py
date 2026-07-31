@@ -32,8 +32,10 @@ from __future__ import annotations
 import argparse
 import base64
 import hashlib
+import hmac
 import json
 import os
+import secrets
 import stat
 import sys
 import time
@@ -447,7 +449,13 @@ _UNMEASURED = "not measured this run"
 _ENRICH_HINT = "run /manifest verify to include model, tools and MCP"
 
 
-def render_report(cur: dict, changes: list[dict] | None, signed: bool) -> str:
+def render_report(
+    cur: dict,
+    changes: list[dict] | None,
+    signed: bool,
+    integrity: str | None = None,
+    baseline_digest: str | None = None,
+) -> str:
     m = cur["model"]
     observed = set(cur.get("observed", []))
     # The hook runs in a shell and cannot introspect the live tool roster or the
@@ -506,6 +514,27 @@ def render_report(cur: dict, changes: list[dict] | None, signed: bool) -> str:
     if not (tools_seen and mcp_seen and model_seen):
         L += ["  Categories marked \"not measured\" are NOT part of this comparison.",
               "  They are unchecked, not verified as empty.", ""]
+    if integrity is not None and changes is not None:
+        L += ["  IS THE BASELINE ITSELF INTACT?", "  " + "-" * 62]
+        if integrity == INTEGRITY_BROKEN:
+            # Stated before the drift section on purpose: if the baseline was
+            # altered, a "nothing changed" result below is meaningless, and
+            # letting the reader see it first would be actively misleading.
+            L += ["  !! baseline.json FAILED its integrity check. It was modified",
+                  "     outside this tool, so the comparison below is unreliable.",
+                  "     Re-approve only once you are satisfied the current setup is",
+                  "     what you intend."]
+        elif integrity == INTEGRITY_UNTAGGED:
+            L.append("  ~  baseline carries no integrity tag (written by an older "
+                     "version). Re-approve to tag it.")
+        else:
+            L.append("  >> baseline integrity tag verified.")
+        if baseline_digest:
+            L.append(f"     digest: {baseline_digest}")
+        L += ["     A co-located tag stops anyone who cannot read this directory,",
+              "     not someone who can. Compare the digest above against the one",
+              "     you recorded off-box to catch a silent re-baseline.", ""]
+
     if changes is not None:
         L += ["  NOTHING ADDED, NOTHING SUBTRACTED?  (vs approved baseline)",
               "  " + "-" * 62]
@@ -531,11 +560,108 @@ def render_report(cur: dict, changes: list[dict] | None, signed: bool) -> str:
 
 
 # --------------------------------------------------------------------------- #
+# baseline integrity
+# --------------------------------------------------------------------------- #
+#: Local secret used to tag the baseline. Separate from SIGNING_KEY, which needs
+#: the crypto packages: the SessionStart hook is deliberately standard-library
+#: only, so the tag has to be verifiable without them. Hence HMAC, not Ed25519.
+BASELINE_TAG_KEY = STATE_DIR / "baseline_tag_key"
+
+#: Excluded from the digest it carries, since including it would be circular.
+_INTEGRITY_FIELD = "integrity"
+
+#: Integrity verdicts for a loaded baseline.
+INTEGRITY_OK = "ok"
+INTEGRITY_UNTAGGED = "untagged"  # no tag: written before tagging existed
+INTEGRITY_BROKEN = "broken"      # tag present and wrong: edited outside this tool
+
+
+def _tag_key() -> bytes:
+    """Return the baseline tag secret, creating it on first use."""
+    existing = _load(BASELINE_TAG_KEY)
+    if existing and isinstance(existing.get("secret_b64"), str):
+        try:
+            return base64.urlsafe_b64decode(existing["secret_b64"])
+        except (ValueError, TypeError):
+            pass  # corrupt secret: mint a fresh one below
+    secret = secrets.token_bytes(32)
+    BASELINE_TAG_KEY.parent.mkdir(parents=True, exist_ok=True)
+    BASELINE_TAG_KEY.write_text(
+        json.dumps({
+            "alg": "HMAC-SHA256",
+            "secret_b64": base64.urlsafe_b64encode(secret).decode(),
+            "created_at": _now_iso(),
+        }, indent=2),
+        encoding="utf-8",
+    )
+    try:  # best-effort owner-only permissions
+        os.chmod(BASELINE_TAG_KEY, stat.S_IRUSR | stat.S_IWUSR)
+    except OSError:
+        pass
+    return secret
+
+
+def state_digest(snap: dict) -> str:
+    """Digest of a snapshot's content, ignoring any integrity block.
+
+    Deterministic, so the value ``approve`` prints can be compared by eye against
+    the value ``verify`` prints later. That comparison is the only thing here that
+    survives an attacker who owns the state directory.
+    """
+    body = {k: v for k, v in snap.items() if k != _INTEGRITY_FIELD}
+    return _sha_bytes(json.dumps(body, sort_keys=True, separators=(",", ":")).encode())
+
+
+def attach_integrity(snap: dict) -> dict:
+    """Return a copy of ``snap`` carrying its digest and an HMAC tag over it."""
+    digest = state_digest(snap)
+    return {**snap, _INTEGRITY_FIELD: {
+        "alg": "HMAC-SHA256",
+        "digest": digest,
+        "tag": hmac.new(_tag_key(), digest.encode(), hashlib.sha256).hexdigest(),
+        "tagged_at": _now_iso(),
+    }}
+
+
+def check_integrity(snap: dict | None) -> str:
+    """Verify a baseline's tag. Never raises.
+
+    What this catches: accidental corruption, a hand-edit, and anyone who can
+    write baseline.json without being able to read the tag secret.
+
+    What it does not catch: anyone who can read ``~/.claude/agentrust``, because
+    the secret lives there and they can retag whatever they like. Defending
+    against that needs the digest recorded off-box, which is why ``approve``
+    prints it. Claiming more than this would make the check theatre.
+    """
+    if snap is None:
+        return INTEGRITY_UNTAGGED
+    block = snap.get(_INTEGRITY_FIELD)
+    if not isinstance(block, dict) or not isinstance(block.get("tag"), str):
+        return INTEGRITY_UNTAGGED
+    if not BASELINE_TAG_KEY.is_file():
+        # Without the secret the tag cannot be checked. Report untagged rather
+        # than broken: a missing secret is not evidence of tampering, and raising
+        # a tamper alarm on a benign state teaches the user to dismiss the real
+        # one.
+        return INTEGRITY_UNTAGGED
+    expected = hmac.new(_tag_key(), state_digest(snap).encode(), hashlib.sha256).hexdigest()
+    return INTEGRITY_OK if hmac.compare_digest(expected, block["tag"]) else INTEGRITY_BROKEN
+
+
+# --------------------------------------------------------------------------- #
 # state helpers
 # --------------------------------------------------------------------------- #
 def _save(path: Path, obj: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(obj, indent=2), encoding="utf-8")
+
+
+def _save_baseline(snap: dict) -> dict:
+    """Write the approved baseline with an integrity tag. Returns what was written."""
+    tagged = attach_integrity(snap)
+    _save(BASELINE, tagged)
+    return tagged
 
 
 def _load(path: Path) -> dict | None:
@@ -608,10 +734,19 @@ def _hook_body() -> None:
 
     base = _load(BASELINE)
     if base is None:
-        _save(BASELINE, snap)
+        _save_baseline(snap)
         msg = ("AgenTrust: baseline established for this Claude agent "
                f"({len(snap['skills'])} skills, {len(snap['mcp_servers'])} MCP on disk). "
                "Future sessions are checked against it. Run /manifest approve to re-baseline.")
+    elif check_integrity(base) == INTEGRITY_BROKEN:
+        # Report this ahead of any drift. If the baseline was altered, the
+        # comparison against it means nothing, so a "no changes" result would be
+        # worse than no result at all.
+        msg = ("AgenTrust WARNING: your approved baseline failed its integrity "
+               "check. baseline.json was modified outside this tool, so any drift "
+               "comparison against it is unreliable. Run /manifest verify, and "
+               "re-approve only once you are satisfied the current setup is what "
+               "you intend.")
     else:
         changes = diff(base, snap)
         if not changes:
@@ -653,16 +788,26 @@ def cmd_verify(args) -> int:
     if base is None:
         print("No approved baseline yet. Run /manifest approve to establish one.")
         return 0
-    print(render_report(snap, diff(base, snap), False))
+    integrity = check_integrity(base)
+    print(render_report(snap, diff(base, snap), False, integrity=integrity,
+                        baseline_digest=state_digest(base)))
     return 0
 
 
 def cmd_approve(args) -> int:
     snap = snapshot(_live_from(args))
     _save(LATEST, snap)
-    _save(BASELINE, snap)
-    print(render_report(snap, [], False))
+    tagged = _save_baseline(snap)
+    digest = tagged[_INTEGRITY_FIELD]["digest"]
+    print(render_report(snap, [], False, integrity=INTEGRITY_OK, baseline_digest=digest))
     print(f"\nApproved baseline updated: {BASELINE}")
+    # The tag secret sits in the same directory as the baseline, so it only stops
+    # someone who cannot read that directory. Recording this digest somewhere off
+    # the machine is what makes a silent re-baseline detectable by a human.
+    print(f"Baseline digest: {digest}")
+    print("Record that digest somewhere off this machine. `verify` prints the")
+    print("digest of the baseline it read, so a mismatch tells you the baseline")
+    print("was replaced even by someone who could retag it.")
     if args.sign:
         _, _ = sign_all(snap, Path(args.out))
         print(f"Signed manifest + trace written to {args.out}")

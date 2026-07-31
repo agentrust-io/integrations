@@ -351,3 +351,124 @@ def test_manifest_is_externally_verifiable_and_tamper_evident(tmp_path, monkeypa
     tampered["artifacts"]["policy_bundle"]["hash"] = "sha256:" + "0" * 64
     bad = verify_manifest(tampered, ctx, RevocationStore())
     assert bad.signature_verified is False
+
+
+# ---------------------------------------------------------------------------
+# Baseline integrity: the baseline is what every comparison is made against, so
+# a baseline that can be rewritten unnoticed makes the drift check pass forever.
+# ---------------------------------------------------------------------------
+def _isolate_tagging(tmp_path, monkeypatch):
+    """Point baseline, latest and the tag secret at a temp dir."""
+    state = tmp_path / "agentrust"
+    monkeypatch.setattr(capture, "STATE_DIR", state)
+    monkeypatch.setattr(capture, "BASELINE", state / "baseline.json")
+    monkeypatch.setattr(capture, "LATEST", state / "session-latest.json")
+    monkeypatch.setattr(capture, "BASELINE_TAG_KEY", state / "baseline_tag_key")
+    return state
+
+
+class TestBaselineIntegrity:
+    def test_a_freshly_written_baseline_verifies(self, tmp_path, monkeypatch):
+        _isolate_tagging(tmp_path, monkeypatch)
+        written = capture._save_baseline(_base())
+        assert capture.check_integrity(written) == capture.INTEGRITY_OK
+        assert capture.check_integrity(capture._load(capture.BASELINE)) == capture.INTEGRITY_OK
+
+    def test_editing_the_baseline_is_detected(self, tmp_path, monkeypatch):
+        """The whole point: a rewritten baseline must not read as intact."""
+        _isolate_tagging(tmp_path, monkeypatch)
+        capture._save_baseline(_base())
+        tampered = capture._load(capture.BASELINE)
+        # An attacker adds their skill to the approved set so drift goes quiet.
+        tampered["skills"]["exfil"] = "sha256:" + "e" * 64
+        capture._save(capture.BASELINE, tampered)
+        assert capture.check_integrity(capture._load(capture.BASELINE)) == capture.INTEGRITY_BROKEN
+
+    def test_stripping_the_tag_reads_as_untagged_not_intact(self, tmp_path, monkeypatch):
+        _isolate_tagging(tmp_path, monkeypatch)
+        capture._save_baseline(_base())
+        stripped = capture._load(capture.BASELINE)
+        del stripped["integrity"]
+        capture._save(capture.BASELINE, stripped)
+        assert capture.check_integrity(capture._load(capture.BASELINE)) == capture.INTEGRITY_UNTAGGED
+
+    def test_a_forged_tag_is_detected(self, tmp_path, monkeypatch):
+        _isolate_tagging(tmp_path, monkeypatch)
+        capture._save_baseline(_base())
+        forged = capture._load(capture.BASELINE)
+        forged["skills"]["exfil"] = "sha256:" + "e" * 64
+        forged["integrity"]["tag"] = "0" * 64
+        capture._save(capture.BASELINE, forged)
+        assert capture.check_integrity(capture._load(capture.BASELINE)) == capture.INTEGRITY_BROKEN
+
+    def test_older_untagged_baseline_is_not_reported_as_tampering(self, tmp_path, monkeypatch):
+        """A baseline predating tagging is benign. Crying tamper over it would
+        teach the user to dismiss the real alarm."""
+        _isolate_tagging(tmp_path, monkeypatch)
+        capture._save(capture.BASELINE, _base())  # untagged, as an old version wrote it
+        assert capture.check_integrity(capture._load(capture.BASELINE)) == capture.INTEGRITY_UNTAGGED
+
+    def test_missing_secret_reads_as_untagged_not_broken(self, tmp_path, monkeypatch):
+        """A deleted secret is not evidence of tampering."""
+        state = _isolate_tagging(tmp_path, monkeypatch)
+        capture._save_baseline(_base())
+        loaded = capture._load(capture.BASELINE)
+        (state / "baseline_tag_key").unlink()
+        assert capture.check_integrity(loaded) == capture.INTEGRITY_UNTAGGED
+
+    def test_none_reads_as_untagged(self):
+        assert capture.check_integrity(None) == capture.INTEGRITY_UNTAGGED
+
+    def test_digest_ignores_the_integrity_block(self, tmp_path, monkeypatch):
+        """Otherwise the digest would have to cover a tag computed over itself."""
+        _isolate_tagging(tmp_path, monkeypatch)
+        snap = _base()
+        assert capture.state_digest(capture.attach_integrity(snap)) == capture.state_digest(snap)
+
+    def test_digest_changes_when_content_changes(self, tmp_path, monkeypatch):
+        _isolate_tagging(tmp_path, monkeypatch)
+        assert capture.state_digest(_base()) != capture.state_digest(
+            _base(skills={"other": "sha256:" + "d" * 64})
+        )
+
+    def test_tag_secret_is_not_the_manifest_signing_key(self):
+        """The hook is stdlib-only, so the tag must be checkable without the
+        crypto packages the Ed25519 signing key needs."""
+        assert capture.BASELINE_TAG_KEY != capture.SIGNING_KEY
+
+
+class TestIntegrityIsSurfacedBeforeDrift:
+    """A broken baseline makes the drift comparison meaningless, so it is stated
+    first rather than buried under a reassuring result."""
+
+    def _snap(self):
+        return _report_snap(["skills", "policy", "prompt", "mcp", "tools"])
+
+    def test_broken_baseline_is_called_out_before_the_drift_section(self):
+        out = capture.render_report(self._snap(), [], False,
+                                    integrity=capture.INTEGRITY_BROKEN)
+        assert "FAILED its integrity check" in out
+        assert out.index("FAILED its integrity check") < out.index("NOTHING ADDED")
+
+    def test_clean_verdict_still_prints_but_is_qualified(self):
+        out = capture.render_report(self._snap(), [], False,
+                                    integrity=capture.INTEGRITY_BROKEN)
+        assert "nothing added, nothing subtracted" in out
+        assert "unreliable" in out
+
+    def test_untagged_baseline_prompts_a_re_approve(self):
+        out = capture.render_report(self._snap(), [], False,
+                                    integrity=capture.INTEGRITY_UNTAGGED)
+        assert "no integrity tag" in out
+        assert "FAILED" not in out
+
+    def test_verified_tag_is_reported_together_with_its_limit(self):
+        out = capture.render_report(self._snap(), [], False, integrity=capture.INTEGRITY_OK,
+                                    baseline_digest="sha256:" + "a" * 64)
+        assert "integrity tag verified" in out
+        # The limit must travel with the claim, or the claim is theatre.
+        assert "not someone who can" in out
+        assert "sha256:" + "a" * 64 in out
+
+    def test_section_is_omitted_when_integrity_was_not_checked(self):
+        assert "BASELINE ITSELF INTACT" not in capture.render_report(self._snap(), None, False)

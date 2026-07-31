@@ -182,6 +182,22 @@ This plugin is honest about what it is. On a normal developer machine:
   the live tool roster, so the SessionStart check compares skills, permissions,
   and the instruction layer. The full tool and MCP diff runs in `/manifest
   verify`, where the agent supplies the live roster.
+- **The live roster is self-reported.** In `/manifest verify` the agent supplies
+  its own model, tools, and MCP servers. Nothing verifies that report, so an
+  agent motivated to hide a connected server could simply omit it. Closing this
+  needs an observer outside the agent and cannot be done from inside it.
+- **The baseline tag stops a writer, not a reader.** `baseline.json` carries an
+  HMAC tag, so corruption, a hand-edit, or anyone who can write the file without
+  reading `~/.claude/agentrust` is caught. The secret lives in that same
+  directory, so anyone who can read it can retag a baseline they rewrote. This is
+  tamper *evidence* against a limited adversary, not tamper *proofing* against a
+  full home-directory compromise, and it is not presented as the latter.
+
+  The mitigation that does survive that adversary is off-box: `approve` prints a
+  baseline digest and `verify` prints the digest of the baseline it read. Record
+  the first somewhere else and compare. A silent re-baseline changes the digest
+  even when the attacker can produce a valid tag. An anchor in an append-only log
+  would automate that comparison and is the natural next step.
 
 ## Layout
 
