@@ -28,6 +28,118 @@ def _base(**over):
     return snap
 
 
+def _report_snap(observed, **over):
+    """A snapshot shaped for render_report, with `observed` under test."""
+    snap = {
+        "observed": observed,
+        "agent_id": "spiffe://claude-code.local/u/h",
+        "captured_at": "2026-07-31T00:00:00Z",
+        "model": {"provider": "anthropic", "model_id": "unknown", "version": "unknown"},
+        "skills": {"trace": "sha256:" + "a" * 64},
+        "allow_rules": [],
+        "mcp_servers": [],
+        "tools": [],
+        "hashes": {
+            "system_prompt": "sha256:" + "1" * 64,
+            "policy_bundle": "sha256:" + "2" * 64,
+            "skills_set": "sha256:" + "3" * 64,
+            "tool_catalog": "sha256:" + "4" * 64,
+        },
+    }
+    snap.update(over)
+    return snap
+
+
+class TestUnmeasuredIsNotReportedAsEmpty:
+    """
+    An integrity report must not let "we did not check" read like "we checked
+    and there is nothing". A shell hook cannot see the model or the live tool
+    roster, so those categories must be labelled unmeasured rather than
+    rendered as zero.
+    """
+
+    def test_hook_snapshot_labels_model_and_tools_unmeasured(self):
+        out = capture.render_report(_report_snap(["skills", "policy", "prompt"]), None, False)
+        assert "0 built-in" not in out
+        assert "anthropic/unknown" not in out
+        assert out.count(capture._UNMEASURED) >= 3  # model, tools, tool catalog
+        assert "unchecked, not verified as empty" in out
+
+    def test_unmeasured_tool_catalog_hash_is_not_shown_as_a_fingerprint(self):
+        """The hash of an empty roster is a constant; showing it invites a
+        reader to treat it as evidence."""
+        out = capture.render_report(_report_snap(["skills", "policy", "prompt"]), None, False)
+        assert "sha256:" + "4" * 23 not in out
+        assert f"tool catalog      : {capture._UNMEASURED}" in out
+
+    def test_disk_found_servers_are_shown_without_claiming_measurement(self):
+        snap = _report_snap(["skills", "policy", "prompt"], mcp_servers=["Slack"])
+        out = capture.render_report(snap, None, False)
+        assert "Slack" in out            # do not hide what was found
+        assert capture._UNMEASURED in out  # but do not call it measured
+
+    def test_fully_measured_snapshot_reports_real_values(self):
+        snap = _report_snap(
+            ["skills", "policy", "prompt", "mcp", "tools"],
+            model={"provider": "anthropic", "model_id": "claude-opus-5", "version": "1m"},
+            mcp_servers=["Slack"],
+            tools=["Bash", "mcp:Slack"],
+        )
+        out = capture.render_report(snap, None, False)
+        assert "anthropic/claude-opus-5 1m" in out
+        assert "1 built-in + 1 MCP server(s)" in out
+        assert capture._UNMEASURED not in out
+        assert "unchecked, not verified as empty" not in out
+
+    def test_clean_verdict_is_qualified_when_coverage_is_partial(self):
+        partial = capture.render_report(_report_snap(["skills", "policy", "prompt"]), [], False)
+        assert "nothing subtracted in the categories checked." in partial
+
+    def test_clean_verdict_is_unqualified_when_coverage_is_complete(self):
+        full = capture.render_report(
+            _report_snap(["skills", "policy", "prompt", "mcp", "tools"]), [], False
+        )
+        assert "nothing subtracted." in full
+        assert "in the categories checked" not in full
+
+
+class TestLiveContextLoading:
+    """A live-context file is written by the agent, so bad input is realistic.
+    It must fail loudly: silently treating it as absent would leave the caller
+    believing it supplied a measurement it did not."""
+
+    def test_missing_file_exits_with_a_message(self, tmp_path):
+        with pytest.raises(SystemExit, match="could not be read"):
+            capture._live_from(_Args(live_context=str(tmp_path / "nope.json")))
+
+    def test_malformed_json_exits_with_a_message(self, tmp_path):
+        bad = tmp_path / "live.json"
+        bad.write_text("{not json", encoding="utf-8")
+        with pytest.raises(SystemExit, match="not valid JSON"):
+            capture._live_from(_Args(live_context=str(bad)))
+
+    def test_non_object_json_exits_with_a_message(self, tmp_path):
+        bad = tmp_path / "live.json"
+        bad.write_text('["a", "list"]', encoding="utf-8")
+        with pytest.raises(SystemExit, match="must contain a JSON object"):
+            capture._live_from(_Args(live_context=str(bad)))
+
+    def test_absent_flag_is_not_an_error(self):
+        assert capture._live_from(_Args(live_context=None)) is None
+
+    def test_valid_file_marks_tools_and_mcp_observed(self, tmp_path):
+        good = tmp_path / "live.json"
+        good.write_text(
+            json.dumps({"model_id": "claude-opus-5", "builtin_tools": ["Bash"],
+                        "mcp_servers": ["Slack"]}),
+            encoding="utf-8",
+        )
+        live = capture._live_from(_Args(live_context=str(good)))
+        snap = capture.snapshot(live)
+        assert "tools" in snap["observed"] and "mcp" in snap["observed"]
+        assert snap["model"]["model_id"] == "claude-opus-5"
+
+
 def test_identical_snapshots_have_no_diff():
     assert capture.diff(_base(), _base()) == []
 
@@ -86,6 +198,10 @@ class _Args:
     out = "."
     json = False
     sign = False
+
+    def __init__(self, **over):
+        for key, value in over.items():
+            setattr(self, key, value)
 
 
 def test_verify_detects_drift_introduced_after_baseline(tmp_path, monkeypatch, capsys):
