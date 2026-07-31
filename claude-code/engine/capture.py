@@ -32,10 +32,8 @@ from __future__ import annotations
 import argparse
 import base64
 import hashlib
-import hmac
 import json
 import os
-import secrets
 import stat
 import sys
 import time
@@ -524,16 +522,17 @@ def render_report(
                   "     outside this tool, so the comparison below is unreliable.",
                   "     Re-approve only once you are satisfied the current setup is",
                   "     what you intend."]
-        elif integrity == INTEGRITY_UNTAGGED:
-            L.append("  ~  baseline carries no integrity tag (written by an older "
-                     "version). Re-approve to tag it.")
+        elif integrity == INTEGRITY_UNSEALED:
+            L.append("  ~  baseline carries no digest (written by an older version). "
+                     "Re-approve to seal it.")
         else:
-            L.append("  >> baseline integrity tag verified.")
+            L.append("  >> baseline digest verified.")
         if baseline_digest:
             L.append(f"     digest: {baseline_digest}")
-        L += ["     A co-located tag stops anyone who cannot read this directory,",
-              "     not someone who can. Compare the digest above against the one",
-              "     you recorded off-box to catch a silent re-baseline.", ""]
+        L += ["     A digest stored beside the content catches corruption and a",
+              "     hand-edit, not an attacker who owns this directory and can",
+              "     recompute it. Compare the digest above against the one you",
+              "     recorded off-box: that is what catches a silent re-baseline.", ""]
 
     if changes is not None:
         L += ["  NOTHING ADDED, NOTHING SUBTRACTED?  (vs approved baseline)",
@@ -562,43 +561,36 @@ def render_report(
 # --------------------------------------------------------------------------- #
 # baseline integrity
 # --------------------------------------------------------------------------- #
-#: Local secret used to tag the baseline. Separate from SIGNING_KEY, which needs
-#: the crypto packages: the SessionStart hook is deliberately standard-library
-#: only, so the tag has to be verifiable without them. Hence HMAC, not Ed25519.
-BASELINE_TAG_KEY = STATE_DIR / "baseline_tag_key"
+# A note on what this is, because the obvious design is worse than it looks.
+#
+# The first version of this used an HMAC over the baseline with a 32-byte secret
+# stored beside it. CodeQL flagged the stored secret, correctly, and the flag was
+# worth more than a suppression: the only adversary an HMAC defeats here is one
+# who can WRITE ~/.claude/agentrust without being able to READ it. On a developer
+# machine that adversary is close to fictional, since anything that can write your
+# home directory can read it and would simply retag. So the secret bought almost
+# no coverage while adding a credential to leak, a file to manage, and a claim
+# that invites a reader to assume more protection than exists.
+#
+# A bare digest gives the same real coverage with nothing to steal: it catches
+# corruption, truncation and a hand-edit that does not recompute it. Neither a
+# digest nor an HMAC catches an attacker who owns the directory.
+#
+# The control that does survive that attacker is off-box: `approve` prints the
+# digest, `verify` prints the digest of the baseline it read, and a human who
+# recorded the first sees a silent re-baseline. That is where the security lives,
+# so the code keeps the cheap local check and points at the real one.
 
 #: Excluded from the digest it carries, since including it would be circular.
 _INTEGRITY_FIELD = "integrity"
 
 #: Integrity verdicts for a loaded baseline.
 INTEGRITY_OK = "ok"
-INTEGRITY_UNTAGGED = "untagged"  # no tag: written before tagging existed
-INTEGRITY_BROKEN = "broken"      # tag present and wrong: edited outside this tool
+INTEGRITY_UNSEALED = "unsealed"  # no digest: written before sealing existed
+INTEGRITY_BROKEN = "broken"      # digest present and wrong: edited outside this tool
 
-
-def _tag_key() -> bytes:
-    """Return the baseline tag secret, creating it on first use."""
-    existing = _load(BASELINE_TAG_KEY)
-    if existing and isinstance(existing.get("secret_b64"), str):
-        try:
-            return base64.urlsafe_b64decode(existing["secret_b64"])
-        except (ValueError, TypeError):
-            pass  # corrupt secret: mint a fresh one below
-    secret = secrets.token_bytes(32)
-    BASELINE_TAG_KEY.parent.mkdir(parents=True, exist_ok=True)
-    BASELINE_TAG_KEY.write_text(
-        json.dumps({
-            "alg": "HMAC-SHA256",
-            "secret_b64": base64.urlsafe_b64encode(secret).decode(),
-            "created_at": _now_iso(),
-        }, indent=2),
-        encoding="utf-8",
-    )
-    try:  # best-effort owner-only permissions
-        os.chmod(BASELINE_TAG_KEY, stat.S_IRUSR | stat.S_IWUSR)
-    except OSError:
-        pass
-    return secret
+#: Retained so an older caller keeps working; UNSEALED is the current name.
+INTEGRITY_UNTAGGED = INTEGRITY_UNSEALED
 
 
 def state_digest(snap: dict) -> str:
@@ -613,40 +605,28 @@ def state_digest(snap: dict) -> str:
 
 
 def attach_integrity(snap: dict) -> dict:
-    """Return a copy of ``snap`` carrying its digest and an HMAC tag over it."""
-    digest = state_digest(snap)
+    """Return a copy of ``snap`` sealed with a digest over its content."""
     return {**snap, _INTEGRITY_FIELD: {
-        "alg": "HMAC-SHA256",
-        "digest": digest,
-        "tag": hmac.new(_tag_key(), digest.encode(), hashlib.sha256).hexdigest(),
-        "tagged_at": _now_iso(),
+        "alg": "SHA-256",
+        "digest": state_digest(snap),
+        "sealed_at": _now_iso(),
     }}
 
 
 def check_integrity(snap: dict | None) -> str:
-    """Verify a baseline's tag. Never raises.
+    """Recompute a baseline's digest and compare. Never raises.
 
-    What this catches: accidental corruption, a hand-edit, and anyone who can
-    write baseline.json without being able to read the tag secret.
-
-    What it does not catch: anyone who can read ``~/.claude/agentrust``, because
-    the secret lives there and they can retag whatever they like. Defending
-    against that needs the digest recorded off-box, which is why ``approve``
-    prints it. Claiming more than this would make the check theatre.
+    Catches accidental corruption, truncation, and a hand-edit that does not
+    recompute the digest. Does not catch an attacker who owns
+    ``~/.claude/agentrust``, who can recompute it as easily as this function can.
+    Off-box comparison of the printed digest is what covers that case.
     """
     if snap is None:
-        return INTEGRITY_UNTAGGED
+        return INTEGRITY_UNSEALED
     block = snap.get(_INTEGRITY_FIELD)
-    if not isinstance(block, dict) or not isinstance(block.get("tag"), str):
-        return INTEGRITY_UNTAGGED
-    if not BASELINE_TAG_KEY.is_file():
-        # Without the secret the tag cannot be checked. Report untagged rather
-        # than broken: a missing secret is not evidence of tampering, and raising
-        # a tamper alarm on a benign state teaches the user to dismiss the real
-        # one.
-        return INTEGRITY_UNTAGGED
-    expected = hmac.new(_tag_key(), state_digest(snap).encode(), hashlib.sha256).hexdigest()
-    return INTEGRITY_OK if hmac.compare_digest(expected, block["tag"]) else INTEGRITY_BROKEN
+    if not isinstance(block, dict) or not isinstance(block.get("digest"), str):
+        return INTEGRITY_UNSEALED
+    return INTEGRITY_OK if block["digest"] == state_digest(snap) else INTEGRITY_BROKEN
 
 
 # --------------------------------------------------------------------------- #
@@ -801,13 +781,13 @@ def cmd_approve(args) -> int:
     digest = tagged[_INTEGRITY_FIELD]["digest"]
     print(render_report(snap, [], False, integrity=INTEGRITY_OK, baseline_digest=digest))
     print(f"\nApproved baseline updated: {BASELINE}")
-    # The tag secret sits in the same directory as the baseline, so it only stops
-    # someone who cannot read that directory. Recording this digest somewhere off
-    # the machine is what makes a silent re-baseline detectable by a human.
+    # The digest sits beside the content it describes, so on its own it catches
+    # accidents rather than adversaries. Recorded off this machine, it is what
+    # makes a silent re-baseline visible to a human.
     print(f"Baseline digest: {digest}")
     print("Record that digest somewhere off this machine. `verify` prints the")
     print("digest of the baseline it read, so a mismatch tells you the baseline")
-    print("was replaced even by someone who could retag it.")
+    print("was replaced even by someone who could recompute the digest locally.")
     if args.sign:
         _, _ = sign_all(snap, Path(args.out))
         print(f"Signed manifest + trace written to {args.out}")
