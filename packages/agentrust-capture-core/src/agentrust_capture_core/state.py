@@ -28,12 +28,17 @@ class StatePaths:
     latest: Path
 
 
-def atomic_write(path: Path, content: str) -> None:
+def atomic_write(path: Path, content: str, *, mode: int | None = None) -> None:
     """Write via a temporary file and replace, so a crash cannot truncate state.
 
     A half-written baseline is worse than a missing one: the engine would treat it
     as corrupt on every future session, and a user who sees a broken check often
     enough stops reading it.
+
+    ``mode`` is applied to the temporary file before the replace, so the file is
+    never briefly readable at wider permissions than intended. Callers that write
+    a private key pass ``0o600``. Best-effort, since not every filesystem carries
+    POSIX permissions.
     """
     path.parent.mkdir(parents=True, exist_ok=True)
     handle, tmp_name = tempfile.mkstemp(dir=str(path.parent), prefix=path.name, suffix=".tmp")
@@ -43,6 +48,11 @@ def atomic_write(path: Path, content: str) -> None:
             fh.write(content)
             fh.flush()
             os.fsync(fh.fileno())
+        if mode is not None:
+            try:
+                os.chmod(tmp, mode)
+            except OSError:
+                pass
         os.replace(tmp, path)
     except BaseException:
         tmp.unlink(missing_ok=True)
