@@ -1,0 +1,45 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "agentrust-capture-core"
+version = "0.1.0"
+description = "Shared fingerprinting, comparison and baseline-sealing core for AgenTrust agent-integrity capture engines"
+readme = "README.md"
+license = { text = "Apache-2.0" }
+authors = [{ name = "AgenTrust Contributors", email = "oss@agentrust-io.com" }]
+keywords = ["agent", "integrity", "drift", "attestation", "agent-manifest", "trace"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Security",
+    "Typing :: Typed",
+]
+# 3.9 is the floor because the scheduled-agents CI matrix tests it.
+requires-python = ">=3.9"
+# Deliberately empty. The capture engines run from shell hooks at session start,
+# before anything is installed, so the core cannot depend on a third-party package.
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.4",
+]
+
+[project.urls]
+Homepage = "https://github.com/agentrust-io/integrations"
+Source = "https://github.com/agentrust-io/integrations/tree/main/packages/agentrust-capture-core"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/agentrust_capture_core"]
+
+[tool.ruff]
+line-length = 100
