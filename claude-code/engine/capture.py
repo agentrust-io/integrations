@@ -595,7 +595,13 @@ _UNMEASURED = "not measured this run"
 _ENRICH_HINT = "run /manifest verify to include model, tools and MCP"
 
 
-def render_report(cur: dict, changes: list[dict] | None, signed: bool) -> str:
+def render_report(
+    cur: dict,
+    changes: list[dict] | None,
+    signed: bool,
+    integrity: str | None = None,
+    baseline_digest: str | None = None,
+) -> str:
     m = cur["model"]
     observed = set(cur.get("observed", []))
     # The hook runs in a shell and cannot introspect the live tool roster or the
@@ -654,6 +660,28 @@ def render_report(cur: dict, changes: list[dict] | None, signed: bool) -> str:
     if not (tools_seen and mcp_seen and model_seen):
         L += ["  Categories marked \"not measured\" are NOT part of this comparison.",
               "  They are unchecked, not verified as empty.", ""]
+    if integrity is not None and changes is not None:
+        L += ["  IS THE BASELINE ITSELF INTACT?", "  " + "-" * 62]
+        if integrity == INTEGRITY_BROKEN:
+            # Stated before the drift section on purpose: if the baseline was
+            # altered, a "nothing changed" result below is meaningless, and
+            # letting the reader see it first would be actively misleading.
+            L += ["  !! baseline.json FAILED its integrity check. It was modified",
+                  "     outside this tool, so the comparison below is unreliable.",
+                  "     Re-approve only once you are satisfied the current setup is",
+                  "     what you intend."]
+        elif integrity == INTEGRITY_UNSEALED:
+            L.append("  ~  baseline carries no digest (written by an older version). "
+                     "Re-approve to seal it.")
+        else:
+            L.append("  >> baseline digest verified.")
+        if baseline_digest:
+            L.append(f"     digest: {baseline_digest}")
+        L += ["     A digest stored beside the content catches corruption and a",
+              "     hand-edit, not an attacker who owns this directory and can",
+              "     recompute it. Compare the digest above against the one you",
+              "     recorded off-box: that is what catches a silent re-baseline.", ""]
+
     if changes is not None:
         L += ["  NOTHING ADDED, NOTHING SUBTRACTED?  (vs approved baseline)",
               "  " + "-" * 62]
@@ -679,11 +707,89 @@ def render_report(cur: dict, changes: list[dict] | None, signed: bool) -> str:
 
 
 # --------------------------------------------------------------------------- #
+# baseline integrity
+# --------------------------------------------------------------------------- #
+# A note on what this is, because the obvious design is worse than it looks.
+#
+# The first version of this used an HMAC over the baseline with a 32-byte secret
+# stored beside it. CodeQL flagged the stored secret, correctly, and the flag was
+# worth more than a suppression: the only adversary an HMAC defeats here is one
+# who can WRITE ~/.claude/agentrust without being able to READ it. On a developer
+# machine that adversary is close to fictional, since anything that can write your
+# home directory can read it and would simply retag. So the secret bought almost
+# no coverage while adding a credential to leak, a file to manage, and a claim
+# that invites a reader to assume more protection than exists.
+#
+# A bare digest gives the same real coverage with nothing to steal: it catches
+# corruption, truncation and a hand-edit that does not recompute it. Neither a
+# digest nor an HMAC catches an attacker who owns the directory.
+#
+# The control that does survive that attacker is off-box: `approve` prints the
+# digest, `verify` prints the digest of the baseline it read, and a human who
+# recorded the first sees a silent re-baseline. That is where the security lives,
+# so the code keeps the cheap local check and points at the real one.
+
+#: Excluded from the digest it carries, since including it would be circular.
+_INTEGRITY_FIELD = "integrity"
+
+#: Integrity verdicts for a loaded baseline.
+INTEGRITY_OK = "ok"
+INTEGRITY_UNSEALED = "unsealed"  # no digest: written before sealing existed
+INTEGRITY_BROKEN = "broken"      # digest present and wrong: edited outside this tool
+
+#: Retained so an older caller keeps working; UNSEALED is the current name.
+INTEGRITY_UNTAGGED = INTEGRITY_UNSEALED
+
+
+def state_digest(snap: dict) -> str:
+    """Digest of a snapshot's content, ignoring any integrity block.
+
+    Deterministic, so the value ``approve`` prints can be compared by eye against
+    the value ``verify`` prints later. That comparison is the only thing here that
+    survives an attacker who owns the state directory.
+    """
+    body = {k: v for k, v in snap.items() if k != _INTEGRITY_FIELD}
+    return _sha_bytes(json.dumps(body, sort_keys=True, separators=(",", ":")).encode())
+
+
+def attach_integrity(snap: dict) -> dict:
+    """Return a copy of ``snap`` sealed with a digest over its content."""
+    return {**snap, _INTEGRITY_FIELD: {
+        "alg": "SHA-256",
+        "digest": state_digest(snap),
+        "sealed_at": _now_iso(),
+    }}
+
+
+def check_integrity(snap: dict | None) -> str:
+    """Recompute a baseline's digest and compare. Never raises.
+
+    Catches accidental corruption, truncation, and a hand-edit that does not
+    recompute the digest. Does not catch an attacker who owns
+    ``~/.claude/agentrust``, who can recompute it as easily as this function can.
+    Off-box comparison of the printed digest is what covers that case.
+    """
+    if snap is None:
+        return INTEGRITY_UNSEALED
+    block = snap.get(_INTEGRITY_FIELD)
+    if not isinstance(block, dict) or not isinstance(block.get("digest"), str):
+        return INTEGRITY_UNSEALED
+    return INTEGRITY_OK if block["digest"] == state_digest(snap) else INTEGRITY_BROKEN
+
+
+# --------------------------------------------------------------------------- #
 # state helpers
 # --------------------------------------------------------------------------- #
 def _save(path: Path, obj: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(obj, indent=2), encoding="utf-8")
+
+
+def _save_baseline(snap: dict) -> dict:
+    """Write the approved baseline with an integrity tag. Returns what was written."""
+    tagged = attach_integrity(snap)
+    _save(BASELINE, tagged)
+    return tagged
 
 
 def _load(path: Path) -> dict | None:
@@ -756,10 +862,19 @@ def _hook_body() -> None:
 
     base = _load(BASELINE)
     if base is None:
-        _save(BASELINE, snap)
+        _save_baseline(snap)
         msg = ("AgenTrust: baseline established for this Claude agent "
                f"({len(snap['skills'])} skills, {len(snap['mcp_servers'])} MCP on disk). "
                "Future sessions are checked against it. Run /manifest approve to re-baseline.")
+    elif check_integrity(base) == INTEGRITY_BROKEN:
+        # Report this ahead of any drift. If the baseline was altered, the
+        # comparison against it means nothing, so a "no changes" result would be
+        # worse than no result at all.
+        msg = ("AgenTrust WARNING: your approved baseline failed its integrity "
+               "check. baseline.json was modified outside this tool, so any drift "
+               "comparison against it is unreliable. Run /manifest verify, and "
+               "re-approve only once you are satisfied the current setup is what "
+               "you intend.")
     else:
         changes = diff(base, snap)
         if not changes:
@@ -801,16 +916,26 @@ def cmd_verify(args) -> int:
     if base is None:
         print("No approved baseline yet. Run /manifest approve to establish one.")
         return 0
-    print(render_report(snap, diff(base, snap), False))
+    integrity = check_integrity(base)
+    print(render_report(snap, diff(base, snap), False, integrity=integrity,
+                        baseline_digest=state_digest(base)))
     return 0
 
 
 def cmd_approve(args) -> int:
     snap = snapshot(_live_from(args))
     _save(LATEST, snap)
-    _save(BASELINE, snap)
-    print(render_report(snap, [], False))
+    tagged = _save_baseline(snap)
+    digest = tagged[_INTEGRITY_FIELD]["digest"]
+    print(render_report(snap, [], False, integrity=INTEGRITY_OK, baseline_digest=digest))
     print(f"\nApproved baseline updated: {BASELINE}")
+    # The digest sits beside the content it describes, so on its own it catches
+    # accidents rather than adversaries. Recorded off this machine, it is what
+    # makes a silent re-baseline visible to a human.
+    print(f"Baseline digest: {digest}")
+    print("Record that digest somewhere off this machine. `verify` prints the")
+    print("digest of the baseline it read, so a mismatch tells you the baseline")
+    print("was replaced even by someone who could recompute the digest locally.")
     if args.sign:
         _, _ = sign_all(snap, Path(args.out))
         print(f"Signed manifest + trace written to {args.out}")
