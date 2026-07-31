@@ -437,31 +437,84 @@ def _load_or_create_manifest_keypair():
 # --------------------------------------------------------------------------- #
 # report rendering
 # --------------------------------------------------------------------------- #
+#: Shown wherever a category was not measured. An integrity report must not let
+#: "we did not check" read like "we checked and there is nothing", because a
+#: reader who cannot tell them apart will treat an absent measurement as a pass.
+_UNMEASURED = "not measured this run"
+
+#: How a reader gets the categories a shell hook cannot see. Rendered next to the
+#: unmeasured lines so the report says what to do rather than only what is absent.
+_ENRICH_HINT = "run /manifest verify to include model, tools and MCP"
+
+
 def render_report(cur: dict, changes: list[dict] | None, signed: bool) -> str:
     m = cur["model"]
+    observed = set(cur.get("observed", []))
+    # The hook runs in a shell and cannot introspect the live tool roster or the
+    # model, so those arrive only via --live-context. `observed` records what this
+    # snapshot actually measured; anything outside it is reported as unmeasured
+    # rather than as a count of zero.
+    tools_seen = "tools" in observed
+    mcp_seen = "mcp" in observed
+    model_seen = m.get("model_id") not in (None, "", "unknown")
+
     n_builtin = len([t for t in cur["tools"] if not t.startswith("mcp:")])
+    model_line = (
+        f"{m['provider']}/{m['model_id']} {m['version']}" if model_seen
+        else f"{_UNMEASURED}  ({_ENRICH_HINT})"
+    )
+    if tools_seen or mcp_seen:
+        builtin_part = f"{n_builtin} built-in" if tools_seen else f"built-in {_UNMEASURED}"
+        mcp_part = (
+            f"{len(cur['mcp_servers'])} MCP server(s)" if mcp_seen
+            else f"MCP {_UNMEASURED}"
+        )
+        tools_line = f"{builtin_part} + {mcp_part}"
+    else:
+        tools_line = f"{_UNMEASURED}  ({_ENRICH_HINT})"
+    mcp_line = (
+        (", ".join(cur["mcp_servers"]) or "none connected") if mcp_seen
+        else f"{_UNMEASURED}. Servers found on disk: "
+             f"{', '.join(cur['mcp_servers']) or 'none'}"
+    )
+
+    # A tool-catalog hash over an unmeasured roster is just the hash of an empty
+    # list, the same value on every run. Printing it as a fingerprint invites a
+    # reader to treat a constant as evidence, so name it for what it is.
+    catalog_line = (
+        f"{cur['hashes']['tool_catalog'][:23]}..." if tools_seen or mcp_seen
+        else _UNMEASURED
+    )
+
     L = ["=" * 66,
          "  AGENT INTEGRITY REPORT  --  your Claude Code session",
          "=" * 66, "",
          f"  Agent identity : {cur['agent_id']}",
-         f"  Model          : {m['provider']}/{m['model_id']} {m['version']}",
+         f"  Model          : {model_line}",
          f"  Captured       : {cur['captured_at']}", "",
          "  WHAT THIS AGENT IS  (agent-manifest -- signed composition)",
          "  " + "-" * 62,
          f"  Skills loaded  : {len(cur['skills'])}  ({', '.join(cur['skills']) or 'none'})",
-         f"  Tools exposed  : {n_builtin} built-in + {len(cur['mcp_servers'])} MCP server(s)",
-         f"  MCP servers    : {', '.join(cur['mcp_servers']) or 'none on disk'}",
+         f"  Tools exposed  : {tools_line}",
+         f"  MCP servers    : {mcp_line}",
          f"  Permissions    : {len(cur['allow_rules'])} allow-rule(s), enforce mode", "",
          "  Fingerprints (change here == your agent changed):",
          f"    instruction layer : {cur['hashes']['system_prompt'][:23]}...",
          f"    permissions       : {cur['hashes']['policy_bundle'][:23]}...",
          f"    skills set        : {cur['hashes']['skills_set'][:23]}...",
-         f"    tool catalog      : {cur['hashes']['tool_catalog'][:23]}...", ""]
+         f"    tool catalog      : {catalog_line}", ""]
+    if not (tools_seen and mcp_seen and model_seen):
+        L += ["  Categories marked \"not measured\" are NOT part of this comparison.",
+              "  They are unchecked, not verified as empty.", ""]
     if changes is not None:
         L += ["  NOTHING ADDED, NOTHING SUBTRACTED?  (vs approved baseline)",
               "  " + "-" * 62]
         if not changes:
-            L.append("  >> Verified: nothing added, nothing subtracted.")
+            # "Nothing added, nothing subtracted" is only true of what was
+            # compared. Qualifying it keeps a partial check from reading as a
+            # clean bill of health.
+            scope = "" if (tools_seen and mcp_seen) else " in the categories checked"
+            L.append(f"  >> Verified: nothing added, nothing subtracted{scope}.")
         else:
             sym = {"added": "+", "removed": "-", "changed": "~"}
             for c in changes:
@@ -502,9 +555,29 @@ def _load(path: Path) -> dict | None:
 
 
 def _live_from(args) -> dict | None:
-    if args.live_context:
-        return json.loads(Path(args.live_context).read_text(encoding="utf-8"))
-    return None
+    """Load the live-context file, or exit with a clear message.
+
+    The file is written by the agent, so a missing path or malformed JSON is a
+    realistic failure. Reporting it plainly beats a traceback, and silently
+    treating it as absent would be worse than both: the run would proceed with
+    model, tools, and MCP unmeasured while the caller believed it had supplied
+    them, which is exactly the false-assurance this tool exists to prevent.
+    """
+    if not args.live_context:
+        return None
+    path = Path(args.live_context)
+    try:
+        loaded = json.loads(path.read_text(encoding="utf-8"))
+    except OSError as exc:
+        raise SystemExit(f"live-context file could not be read: {path}: {exc}") from exc
+    except json.JSONDecodeError as exc:
+        raise SystemExit(f"live-context file is not valid JSON: {path}: {exc}") from exc
+    if not isinstance(loaded, dict):
+        raise SystemExit(
+            f"live-context file must contain a JSON object, got "
+            f"{type(loaded).__name__}: {path}"
+        )
+    return loaded
 
 
 # --------------------------------------------------------------------------- #
