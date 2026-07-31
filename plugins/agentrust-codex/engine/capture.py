@@ -855,12 +855,34 @@ def sign_all(
     return manifest, trace
 
 
+#: Shown wherever a category was not measured. An integrity report must not let
+#: "we did not check" read like "we checked and there is nothing", because a
+#: reader who cannot tell them apart will treat an absent measurement as a pass.
+UNMEASURED = "not measured this run"
+
+
 def render_report(
     current: Mapping[str, Any],
     changes: Optional[Sequence[Mapping[str, str]]],
     signed: bool,
 ) -> str:
     model = current["model"]
+    # The model and the live tool roster are runtime facts a shell hook cannot
+    # see; they enter only via a live context. `observed` records what this
+    # snapshot actually measured, so anything outside it is labelled rather than
+    # rendered as a real value.
+    observed = set(current.get("observed", []))
+    model_line = (
+        "%s/%s" % (model["provider"], model["model_id"]) if "model" in observed
+        else UNMEASURED
+    )
+    # A tool-catalog hash over an unmeasured roster is the hash of an empty list,
+    # identical on every run. Presenting it as a fingerprint invites a reader to
+    # treat a constant as evidence.
+    catalog_line = (
+        "%s..." % current["hashes"]["tool_catalog"][:23] if "tools" in observed
+        else UNMEASURED
+    )
     lines = [
         "=" * 68,
         "  AGENTRUST CODEX INTEGRITY REPORT",
@@ -868,7 +890,7 @@ def render_report(
         "",
         "  Workspace      : %s" % current["workspace_id"][:16],
         "  Agent identity : %s" % current["agent_id"],
-        "  Model          : %s/%s" % (model["provider"], model["model_id"]),
+        "  Model          : %s" % model_line,
         "  Permission mode: %s" % current["permission_mode"],
         "  Captured       : %s" % current["captured_at"],
         "",
@@ -884,13 +906,22 @@ def render_report(
         "    policy bundle     : %s..." % current["hashes"]["policy_bundle"][:23],
         "    skills set        : %s..." % current["hashes"]["skills_set"][:23],
         "    plugin set        : %s..." % current["hashes"]["plugin_set"][:23],
-        "    tool catalog      : %s..." % current["hashes"]["tool_catalog"][:23],
+        "    tool catalog      : %s" % catalog_line,
         "",
     ]
+    if not {"model", "tools"} <= observed:
+        lines += [
+            "  Categories marked \"%s\" are NOT part of this comparison." % UNMEASURED,
+            "  They are unchecked, not verified as empty.",
+            "",
+        ]
     if changes is not None:
         lines += ["  Baseline comparison", "  " + "-" * 64]
         if not changes:
-            lines.append("  Verified: no composition changes.")
+            # "No changes" is only true of what was compared. Qualifying it keeps
+            # a partial check from reading as a clean bill of health.
+            scope = "" if {"model", "tools"} <= observed else " in the categories checked"
+            lines.append("  Verified: no composition changes%s." % scope)
         else:
             symbols = {"added": "+", "removed": "-", "changed": "~"}
             for change in changes:
