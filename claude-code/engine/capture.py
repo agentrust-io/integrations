@@ -41,6 +41,19 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+#: Version of WHAT this engine measures, distinct from what it found.
+#:
+#: Bump it whenever a change makes a fingerprint incomparable to one written by
+#: an earlier version, so an upgrade cannot be mistaken for drift. A baseline at
+#: an older scope is reported as needing a one-time re-approve instead of showing
+#: every affected category as changed: an alarm the user knows is false is worse
+#: than no alarm, because it teaches them to dismiss the next one.
+#:
+#: 1  skills fingerprinted by SKILL.md alone; instruction layer as a single hash
+#: 2  skills fingerprinted across their whole directory; per-file instruction
+#:    hashes added alongside the rollup
+MEASUREMENT_SCOPE = 2
+
 CLAUDE_HOME = Path(os.path.expanduser("~")) / ".claude"
 STATE_DIR = CLAUDE_HOME / "agentrust"
 BASELINE = STATE_DIR / "baseline.json"
@@ -88,6 +101,65 @@ def _now_iso() -> str:
 # --------------------------------------------------------------------------- #
 # snapshot: read the real box (stdlib only)
 # --------------------------------------------------------------------------- #
+#: Directory names skipped when fingerprinting a skill. These hold state a skill
+#: writes as it runs, so hashing them would report drift on ordinary use, and a
+#: tool that cries wolf on every run trains its user to ignore it.
+#:
+#: The list is controlled here rather than by a file inside the skill on purpose.
+#: A per-skill ignore file would let the thing being measured decide what gets
+#: measured, so a hostile skill could ship an ignore rule covering its own
+#: payload. Adding a name here is a reviewed change to this repo.
+SKILL_EXCLUDE_DIRS = frozenset({
+    "state", ".cache", "__pycache__", ".git", ".pytest_cache", "node_modules",
+})
+
+#: File suffixes skipped for the same reason: run artifacts, not behaviour.
+SKILL_EXCLUDE_SUFFIXES = frozenset({".log", ".tmp", ".pyc", ".pyo"})
+
+
+def _skill_fingerprint(skill_dir: Path) -> str | None:
+    """Hash every behavioural file in one skill directory, or None if unreadable.
+
+    Covers the whole tree rather than SKILL.md alone. A skill is not just its
+    manifest: these directories carry scripts, tools, templates and reference
+    docs that decide what the skill actually does. Hashing only SKILL.md meant a
+    payload could be swapped into scripts/ and the integrity check would report
+    nothing added and nothing subtracted, which is the exact scenario this
+    integration exists to catch.
+
+    Relative paths are hashed alongside contents so a rename or a move is drift,
+    and traversal order is sorted so the digest is stable across platforms.
+    """
+    h = hashlib.sha256()
+    try:
+        paths = sorted(p for p in skill_dir.rglob("*") if p.is_file())
+    except OSError:
+        return None
+    for f in paths:
+        try:
+            rel = f.relative_to(skill_dir)
+        except ValueError:  # pragma: no cover - rglob results are always relative
+            continue
+        if SKILL_EXCLUDE_DIRS & set(rel.parts[:-1]):
+            continue
+        if f.suffix in SKILL_EXCLUDE_SUFFIXES:
+            continue
+        try:
+            body = f.read_bytes()
+        except OSError:
+            # An unreadable file inside a skill is itself worth recording: bind
+            # its path into the digest so the file appearing or vanishing moves
+            # the fingerprint, instead of being silently skipped.
+            h.update(rel.as_posix().encode())
+            h.update(b"\0<unreadable>\0")
+            continue
+        h.update(rel.as_posix().encode())
+        h.update(b"\0")
+        h.update(body)
+        h.update(b"\0")
+    return "sha256:" + h.hexdigest()
+
+
 def _skills() -> dict[str, str]:
     out: dict[str, str] = {}
     sdir = CLAUDE_HOME / "skills"
@@ -99,12 +171,44 @@ def _skills() -> dict[str, str]:
     except OSError:
         return out
     for d in entries:
-        sk = d / "SKILL.md"
         try:
-            if sk.is_file():
-                out[d.name] = _sha_file(sk)
+            # SKILL.md is what makes a directory a skill; without it the
+            # directory is not loaded as one and is not measured as one.
+            if not (d / "SKILL.md").is_file():
+                continue
         except OSError:
             continue  # unreadable skill file: skip it, never crash the hook
+        fp = _skill_fingerprint(d)
+        if fp is not None:
+            out[d.name] = fp
+    return out
+
+
+def _instruction_files(pattern: str = "*.md") -> dict[str, str]:
+    """Hash each instruction file separately, keyed by path relative to the tree.
+
+    The rollup in ``hashes.system_prompt`` says only that something in the
+    instruction layer moved. Across a real memory directory that is one bit of
+    signal over dozens of files, which leaves a reader unable to act on the
+    warning. Per-file digests let a diff name the file that changed.
+
+    Scoped to ``*.md`` deliberately: this tree also holds session transcripts and
+    other machine-written state that changes constantly, and folding those in
+    would make the instruction layer permanently dirty.
+    """
+    out: dict[str, str] = {}
+    root = CLAUDE_HOME / "projects"
+    if not root.is_dir():
+        return out
+    try:
+        paths = sorted(p for p in root.rglob(pattern) if p.is_file())
+    except OSError:
+        return out
+    for f in paths:
+        try:
+            out[f.relative_to(root).as_posix()] = _sha_file(f)
+        except (OSError, ValueError):
+            continue  # unreadable file: skip it, never crash the hook
     return out
 
 
@@ -182,7 +286,7 @@ def snapshot(live: dict | None = None) -> dict:
     # -- and diffed -- only when a live context supplies them. `observed` marks
     # which categories this snapshot actually measured, so a disk-only hook
     # snapshot is never diffed against the live categories of a richer baseline.
-    observed = ["skills", "policy", "prompt"]
+    observed = ["skills", "policy", "prompt", "instructions"]
     mcp_live = live.get("mcp_servers")
     mcp = mcp_live if mcp_live is not None else _mcp_from_config()
     builtin = live.get("builtin_tools") or []
@@ -194,6 +298,7 @@ def snapshot(live: dict | None = None) -> dict:
 
     return {
         "captured_at": _now_iso(),
+        "scope": MEASUREMENT_SCOPE,
         "observed": observed,
         "agent_id": _identity(),
         "model": {
@@ -203,6 +308,7 @@ def snapshot(live: dict | None = None) -> dict:
             "capability_level": live.get("capability_level"),
         },
         "skills": skills,
+        "instruction_files": _instruction_files(),
         "policy_hash": policy_hash,
         "allow_rules": allow,
         "prompt_hash": prompt_hash,
@@ -221,19 +327,61 @@ def snapshot(live: dict | None = None) -> dict:
 # --------------------------------------------------------------------------- #
 # diff: nothing added, nothing subtracted
 # --------------------------------------------------------------------------- #
+def _instruction_file_changes(base: dict, cur: dict) -> list[dict]:
+    """Per-file additions, removals and edits in the instruction layer."""
+    b_f, c_f = base.get("instruction_files", {}), cur.get("instruction_files", {})
+    if not b_f and not c_f:
+        return []
+    out: list[dict] = []
+    for name in sorted(set(c_f) - set(b_f)):
+        out.append({"change": "added", "what": "instruction file", "detail": name})
+    for name in sorted(set(b_f) - set(c_f)):
+        out.append({"change": "removed", "what": "instruction file", "detail": name})
+    for name in sorted(set(b_f) & set(c_f)):
+        if b_f[name] != c_f[name]:
+            out.append({"change": "changed", "what": "instruction file", "detail": name})
+    return out
+
+
 def diff(base: dict, cur: dict) -> list[dict]:
     """Return a list of {change, what, detail}, change in {added,removed,changed}.
 
     Only categories BOTH snapshots observed are compared, so a disk-only hook
     snapshot never reports the live tool roster of a richer baseline as removed.
+
+    Categories whose fingerprints became incomparable because the engine widened
+    what it measures are reported once as a scope change needing re-approval,
+    rather than as drift that never happened.
     """
     out: list[dict] = []
     obs = set(base.get("observed", ["skills", "policy", "prompt"])) & set(
         cur.get("observed", ["skills", "policy", "prompt"])
     )
 
+    # A baseline written before MEASUREMENT_SCOPE 2 holds skill fingerprints over
+    # SKILL.md alone, so comparing them against whole-directory digests would
+    # report every skill as changed. Drop skills from the comparison and say why.
+    base_scope = base.get("scope", 1)
+    if base_scope != MEASUREMENT_SCOPE:
+        out.append({
+            "change": "changed",
+            "what": "measurement scope",
+            "detail": (
+                f"widened from {base_scope} to {MEASUREMENT_SCOPE}; skill "
+                "fingerprints now cover the whole skill directory. Re-approve "
+                "once to compare on the new scope."
+            ),
+        })
+        obs.discard("skills")
+
     if "prompt" in obs and base["hashes"].get("system_prompt") != cur["hashes"].get("system_prompt"):
-        out.append({"change": "changed", "what": "instruction layer", "detail": "system_prompt"})
+        # Name the files when both snapshots carry per-file digests. The rollup
+        # only says the layer moved, which over dozens of files gives a reader
+        # nothing to act on. Fall back to the rollup against a scope-1 baseline
+        # that has no per-file detail to compare against.
+        per_file = _instruction_file_changes(base, cur) if "instructions" in obs else []
+        out.extend(per_file or
+                   [{"change": "changed", "what": "instruction layer", "detail": "system_prompt"}])
     if "policy" in obs and base["hashes"].get("policy_bundle") != cur["hashes"].get("policy_bundle"):
         out.append({"change": "changed", "what": "permissions", "detail": "policy_bundle"})
 
