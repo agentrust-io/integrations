@@ -41,24 +41,9 @@ jobs:
             exit 1
           fi
 
-  # The vendored copies inside each engine must match what is about to be
-  # published, or the installed path and the fallback path would ship different
-  # code under the same version.
-  consistency:
-    name: Vendored copies match the package
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: "3.12"
-      - run: python scripts/sync_vendored_core.py --check
-
   build:
     name: Build distribution
-    needs: [guard, consistency]
+    needs: [guard]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

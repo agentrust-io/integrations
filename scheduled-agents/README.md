@@ -25,7 +25,8 @@ you the moment any of them drifts from a baseline you approved:
 /plugin install agentrust-scheduled-agents
 ```
 
-The `SessionStart` hook is dependency-free (Python standard library only), so it
+The `SessionStart` hook needs only `agentrust-capture-core`, which has no
+dependencies of its own, so it
 never blocks a session. On first run it records a baseline. After that it stays
 quiet until something moves, then prints one line:
 

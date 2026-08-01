@@ -39,7 +39,9 @@ I'd know within one session if it wasn't."
 ```
 
 That's the whole install for drift detection. The SessionStart hook is
-dependency-free (Python standard library only), so it never blocks a session.
+needs one package, `agentrust-capture-core`, which itself has no dependencies, so
+the install stays a single lightweight step rather than a tree. Without it the hook
+tells you what to install rather than silently skipping the check.
 
 On your **first** session after install, it records your baseline and tells you:
 

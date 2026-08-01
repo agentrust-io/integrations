@@ -4,15 +4,11 @@ on:
   pull_request:
     paths:
       - "packages/agentrust-capture-core/**"
-      - "scripts/sync_vendored_core.py"
-      - "**/_vendor/agentrust_capture_core/**"
       - ".github/workflows/capture-core-tests.yml"
   push:
     branches: [main]
     paths:
       - "packages/agentrust-capture-core/**"
-      - "scripts/sync_vendored_core.py"
-      - "**/_vendor/agentrust_capture_core/**"
       - ".github/workflows/capture-core-tests.yml"
 
 permissions:
@@ -40,10 +36,10 @@ jobs:
           pip install pytest
           python -m pytest tests -q
 
-  # Each engine keeps a pinned copy of the core so a bare plugin install still
-  # gets drift detection. Copies are free to rot, which is the failure this whole
-  # package exists to end, so they are generated and checked rather than trusted.
-  vendored-in-sync:
+  # The engines import the core as a hard dependency now, so the thing worth
+  # proving is that a fresh install of the built package actually satisfies every
+  # engine. Previously this job asserted the opposite, that they worked WITHOUT it.
+  engines-import-against-the-installed-core:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -52,35 +48,44 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
-      - name: Vendored copies must match the package
-        run: python scripts/sync_vendored_core.py --check
-
-  # The fallback is the path most users are on, since it is what runs before any
-  # pip install. Exercising it explicitly stops it rotting behind the installed
-  # path, which nothing else would catch.
-  bare-install-fallback:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: "3.12"
-      - name: Engines must import with the core NOT installed
+      - name: Install the core from source, then import every engine
         run: |
+          pip install ./packages/agentrust-capture-core
           python - <<'PY'
-          import importlib.util, sys
-          assert importlib.util.find_spec("agentrust_capture_core") is None, (
-              "the core is installed; this job must test the vendored fallback"
-          )
+          import importlib.util
           for path in (
               "claude-code/engine/capture.py",
               "plugins/agentrust-codex/engine/capture.py",
               "scheduled-agents/engine/capture.py",
+              "copilot/engine/capture.py",
           ):
               spec = importlib.util.spec_from_file_location("cap_" + path.replace("/", "_"), path)
               module = importlib.util.module_from_spec(spec)
               spec.loader.exec_module(module)
-              print("ok:", path)
+              assert "_vendor" not in module.core.__file__, path + " still loaded a vendored copy"
+              print("ok:", path, "->", module.core.__version__)
           PY
+
+  # A missing core must fail loudly. The engines previously fell back to a vendored
+  # copy; now they must tell the user what to install rather than emitting a vague
+  # "integrity check skipped".
+  missing-core-fails-clearly:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - name: Engine must name the missing package
+        run: |
+          set +e
+          out="$(python claude-code/engine/capture.py verify 2>&1)"
+          code=$?
+          set -e
+          echo "$out"
+          if [ "$code" -eq 0 ]; then
+            echo "::error::engine succeeded without the core installed"; exit 1
+          fi
+          echo "$out" | grep -q "pip install agentrust-capture-core"             || { echo "::error::error message does not say what to install"; exit 1; }

@@ -130,9 +130,8 @@ python copilot/engine/capture.py verify     # diff against the baseline, exit 1 
 python copilot/engine/capture.py approve    # write the baseline
 ```
 
-No install step. The engine and its vendored copy of
-[`agentrust-capture-core`](../packages/agentrust-capture-core) are standard library
-only.
+One dependency: [`agentrust-capture-core`](../packages/agentrust-capture-core),
+which has none of its own. The action installs it before running the check.
 
 ## License
 

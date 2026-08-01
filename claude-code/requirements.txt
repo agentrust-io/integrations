@@ -1,5 +1,10 @@
-# The SessionStart hook and drift check (snapshot / verify / approve) use only
-# the Python standard library -- nothing here is needed for them.
+# REQUIRED for everything, including the SessionStart hook and the drift check.
+# agentrust-capture-core carries the fingerprinting, comparison, sealing and report
+# rules the engine is built on. It has no dependencies of its own, so this stays a
+# single lightweight install rather than a tree.
+agentrust-capture-core>=0.1,<0.2
+
+# Signing only, below the core:
 #
 # These are required only to generate SIGNED records (/trace, /manifest approve
 # --sign): the Agent Manifest and the TRACE Trust Record. Verified against the

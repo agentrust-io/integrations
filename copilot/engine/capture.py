@@ -43,13 +43,17 @@ import json
 import sys
 from pathlib import Path
 
-# Prefer the installed package; fall back to the pinned vendored copy, so the
-# action works without an install step.
+# agentrust-capture-core is a declared dependency, not an optional one. A clear
+# failure beats a vague one: the hook's own guard would otherwise report "integrity
+# check skipped" and leave the user guessing, so say exactly what is missing.
 try:
     import agentrust_capture_core as core
-except ImportError:  # pragma: no cover - exercised by the bare-install path
-    sys.path.insert(0, str(Path(__file__).resolve().parent / "_vendor"))
-    import agentrust_capture_core as core
+except ImportError as _exc:  # pragma: no cover - install-time failure path
+    raise SystemExit(
+        "AgenTrust needs agentrust-capture-core, which is not installed.\n"
+        "Install it with:  pip install agentrust-capture-core\n"
+        "Drift detection cannot run without it."
+    ) from _exc
 
 VERSION = "0.1.0"
 

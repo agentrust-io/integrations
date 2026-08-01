@@ -19,7 +19,7 @@ permissions:
   contents: read
 
 jobs:
-  stdlib:
+  drift-without-signing:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -32,9 +32,9 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "${{ matrix.python-version }}"
-      - name: Run dependency-free capture tests
+      - name: Run capture tests without the signing packages
         run: |
-          pip install pytest
+          pip install ./packages/agentrust-capture-core pytest
           python -m pytest plugins/agentrust-codex/tests -q
 
   signing:
@@ -52,7 +52,7 @@ jobs:
           python-version: "${{ matrix.python-version }}"
       - name: Run signing and conformance tests
         run: |
-          pip install pytest -r plugins/agentrust-codex/requirements.txt
+          pip install ./packages/agentrust-capture-core pytest -r plugins/agentrust-codex/requirements.txt
           python -m pytest plugins/agentrust-codex/tests -q
 
   structure:

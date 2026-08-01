@@ -29,7 +29,8 @@ A fourth engine would have meant writing both bugs a fourth time.
 ## What it does not do
 
 No dependencies. The engines are invoked by shell hooks at session start and must
-run before anything is installed, so this package is standard library only and a
+the smallest possible install for a drift check, so this package is standard
+library only and a
 test asserts it.
 
 No opinion on where an agent keeps its files, what its categories are called, or
