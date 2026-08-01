@@ -1,0 +1,55 @@
+name: copilot tests
+
+on:
+  pull_request:
+    paths:
+      - "copilot/**"
+      - ".github/workflows/copilot-tests.yml"
+  push:
+    branches: [main]
+    paths:
+      - "copilot/**"
+      - ".github/workflows/copilot-tests.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  # Standard library only, so the composite action needs no install step. 3.9 is
+  # the floor the shared core supports.
+  stdlib:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Run tests with no dependencies installed
+        working-directory: copilot
+        run: |
+          pip install pytest
+          python -m pytest tests -q
+
+  # The check runs against this repository, which carries the surfaces it looks
+  # for: AGENTS.md files, .github/instructions, and skill directories. So it is
+  # both a smoke test and a dogfood.
+  self-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - name: Snapshot this repository's Copilot composition
+        run: python copilot/engine/capture.py snapshot
+      - name: Verify against the baseline, reporting without failing
+        # No baseline is committed for this repo yet, so verify exits 0 and says
+        # so. Once one is committed this becomes a real gate on ourselves.
+        run: python copilot/engine/capture.py verify
