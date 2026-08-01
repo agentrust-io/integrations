@@ -1,0 +1,137 @@
+name: Publish agentrust-capture-core to PyPI
+
+# Tag-scoped to this package, because this repository holds several. A bare
+# python-v* pattern would fire this job for an unrelated package's release.
+on:
+  push:
+    tags: ["capture-core-v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # The tag must agree with the version in pyproject.toml. Otherwise a mistyped
+  # tag publishes a version nobody asked for, and PyPI will not let you replace
+  # it: a version number is claimed forever the moment it uploads.
+  guard:
+    name: Tag matches the packaged version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - name: Compare tag to pyproject version
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF#refs/tags/capture-core-v}"
+          packaged="$(python -c "
+          import tomllib, pathlib
+          print(tomllib.loads(pathlib.Path(
+              'packages/agentrust-capture-core/pyproject.toml'
+          ).read_text())['project']['version'])
+          ")"
+          echo "tag=$tag packaged=$packaged"
+          if [ "$tag" != "$packaged" ]; then
+            echo "::error::Tag capture-core-v$tag does not match pyproject version $packaged."
+            exit 1
+          fi
+
+  # The vendored copies inside each engine must match what is about to be
+  # published, or the installed path and the fallback path would ship different
+  # code under the same version.
+  consistency:
+    name: Vendored copies match the package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - run: python scripts/sync_vendored_core.py --check
+
+  build:
+    name: Build distribution
+    needs: [guard, consistency]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - run: pip install build twine
+      - name: Build wheel and sdist
+        working-directory: packages/agentrust-capture-core
+        run: python -m build
+      - name: Verify dist
+        working-directory: packages/agentrust-capture-core
+        run: twine check dist/*
+      # A package whose whole job is fingerprinting should not ship an artifact
+      # nobody imported. This installs the built wheel into a clean environment,
+      # asserts nothing third-party came with it, and runs the suite against the
+      # installed copy rather than the source tree.
+      - name: Smoke test the built wheel
+        working-directory: packages/agentrust-capture-core
+        run: |
+          set -euo pipefail
+          python -m venv /tmp/smoke
+          /tmp/smoke/bin/pip install --quiet dist/*.whl pytest
+          /tmp/smoke/bin/python - <<'PY'
+          import agentrust_capture_core as core
+          import sys
+          assert callable(core.tree_digest)
+          assert core.check_seal(core.attach_seal({"a": 1})) == core.INTEGRITY_OK
+          leaked = [m for m in sys.modules
+                    if m.split(".")[0] in {"pydantic", "cryptography", "requests", "yaml"}]
+          assert not leaked, "third-party imports leaked into the core: %s" % leaked
+          print("installed core OK:", core.__version__)
+          PY
+          cd tests && /tmp/smoke/bin/python -m pytest . -q
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: dist
+          path: packages/agentrust-capture-core/dist/
+
+  publish:
+    name: Publish to PyPI
+    needs: build
+    runs-on: ubuntu-latest
+    # Trusted Publishing: PyPI verifies this workflow's OIDC identity, so no API
+    # token exists to leak or rotate. Requires a Trusted Publisher configured on
+    # PyPI for this repository, workflow filename and environment.
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@ba38be9e461d3875417946c167d0b5f3d385a247 # v1.14.1
+
+  github-release:
+    name: Create GitHub Release
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: dist
+          path: dist/
+      - uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
+        with:
+          files: dist/*
+          generate_release_notes: true
