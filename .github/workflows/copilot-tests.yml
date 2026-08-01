@@ -17,7 +17,7 @@ permissions:
 jobs:
   # Standard library only, so the composite action needs no install step. 3.9 is
   # the floor the shared core supports.
-  stdlib:
+  tests:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -29,10 +29,10 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Run tests with no dependencies installed
-        working-directory: copilot
+      - name: Run the suite against the core in this checkout
         run: |
-          pip install pytest
+          pip install ./packages/agentrust-capture-core pytest
+          cd copilot
           python -m pytest tests -q
 
   # The check runs against this repository, which carries the surfaces it looks
@@ -47,6 +47,8 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
+      - name: Install the core from this checkout
+        run: pip install ./packages/agentrust-capture-core
       - name: Snapshot this repository's Copilot composition
         run: python copilot/engine/capture.py snapshot
       - name: Verify against the baseline, reporting without failing
