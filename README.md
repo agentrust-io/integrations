@@ -33,6 +33,17 @@ TRACE only works as a standard if it is genuinely neutral. Integrations are list
 | [claude-code](claude-code/) | agentrust-io | agent-manifest, trace | community |
 | [agentrust-codex](plugins/agentrust-codex/) | agentrust-io | agent-manifest, trace | community |
 | [scheduled-agents](scheduled-agents/) | agentrust-io | trace | community |
+| [copilot](copilot/) | agentrust-io | (drift check only, see note) | community |
+
+All four engines share [`agentrust-capture-core`](packages/agentrust-capture-core),
+which owns fingerprinting, comparison, baseline sealing and the report honesty rules.
+
+**Note on the Copilot entry.** It is a pull-request status check rather than a
+session hook, because Copilot's composition lives in the repository. It emits no
+TRACE record and no Agent Manifest yet, so it claims neither: `integrates_with` in
+the manifest schema offers only `cmcp`, `trace` and `agent-manifest`, and asserting
+one of those today would be an unverifiable claim. Emitting a TRACE record per
+checked pull request is the intended next step and is what would make one true.
 
 ## Community
 
