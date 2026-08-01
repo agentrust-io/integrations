@@ -95,6 +95,23 @@ two other engines in this repo, so the shared core covers the tree.
   outside the repository and are invisible to a check that runs inside it. If your
   organisation sets Copilot instructions centrally, this check does not see them.
 - **It is not a sandbox.** It reports composition, it does not constrain execution.
+- **It emits no signed record**, unlike the other integrations here, and that is a
+  spec question rather than a missing feature. See
+  [agent-manifest#256](https://github.com/agentrust-io/agent-manifest/issues/256).
+
+  A TRACE record is the wrong artifact: TRACE describes an execution, and this check
+  describes a composition. Agent Manifest is the right one, and every level requires
+  `artifacts.model_identity`. A repository cannot know the model. Copilot chooses it
+  at session time from the user's plan and settings, so the same repository serves
+  every model with an identical contributed composition.
+
+  `provider: github, model_id: copilot` would describe a product rather than a
+  model, and `model_id: unknown` would assert a binding to a thing called "unknown".
+  Either is the sort of unverifiable claim this repository's contributing rules
+  exclude, so the check ships without a record until the spec can express a
+  composition whose model is unknowable when it is authored. Notably the verifier
+  vocabulary already has `NOT_BOUND` for every artifact, and no conformant manifest
+  can currently produce it.
 
 ## Inputs
 
