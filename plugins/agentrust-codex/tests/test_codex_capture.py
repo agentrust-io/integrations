@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import io
+import importlib.util
 import json
 import os
 import subprocess
@@ -12,8 +13,16 @@ from pathlib import Path
 import pytest
 
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "engine"))
-import capture  # noqa: E402
+# Loaded by path under a unique module name rather than through sys.path.
+#
+# Four engines in this repository each define a module called `capture`. With
+# sys.path insertion, `import capture` resolves to whichever suite pytest collected
+# first, so a single root-level `pytest` ran each suite against another engine's
+# code. Importing by path makes this suite independent of collection order.
+_ENGINE = Path(__file__).resolve().parent.parent / "engine" / "capture.py"
+_spec = importlib.util.spec_from_file_location("agentrust_codex_capture", _ENGINE)
+capture = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(capture)
 
 
 def _isolated_layout(tmp_path, monkeypatch):
@@ -506,3 +515,63 @@ class TestMeasurementScopeMigration:
     def test_snapshot_records_the_current_scope(self, tmp_path, monkeypatch):
         _isolated_layout(tmp_path, monkeypatch)
         assert capture.snapshot()["scope"] == capture.MEASUREMENT_SCOPE
+
+
+# ---------------------------------------------------------------------------
+# Baseline sealing. Codex keeps one baseline per workspace, so each one is a
+# separate thing that could be rewritten unnoticed.
+# ---------------------------------------------------------------------------
+class TestBaselineSealing:
+    def test_approve_seals_the_workspace_baseline(self, tmp_path, monkeypatch, capsys):
+        _home, _codex_home, _state, workspace = _isolated_layout(tmp_path, monkeypatch)
+        capture.cmd_approve(_SealArgs(cwd=str(workspace)))
+        current = capture.snapshot({"cwd": str(workspace)})
+        baseline_path, _latest = capture._workspace_state(current["workspace_id"])
+        base, _status = capture._load(baseline_path)
+        assert capture.core.check_seal(base) == capture.core.INTEGRITY_OK
+
+    def test_approve_prints_the_digest_for_off_box_recording(self, tmp_path, monkeypatch, capsys):
+        _home, _codex_home, _state, workspace = _isolated_layout(tmp_path, monkeypatch)
+        capture.cmd_approve(_SealArgs(cwd=str(workspace)))
+        out = capsys.readouterr().out
+        assert "Baseline digest:" in out
+        assert "off this machine" in out
+
+    def test_an_edited_baseline_is_detected(self, tmp_path, monkeypatch):
+        _home, _codex_home, _state, workspace = _isolated_layout(tmp_path, monkeypatch)
+        capture.cmd_approve(_SealArgs(cwd=str(workspace)))
+        current = capture.snapshot({"cwd": str(workspace)})
+        baseline_path, _latest = capture._workspace_state(current["workspace_id"])
+        tampered, _status = capture._load(baseline_path)
+        tampered["skills"]["user:codex:exfil"] = "sha256:" + "e" * 64
+        capture._save(baseline_path, tampered)
+        base, _status = capture._load(baseline_path)
+        assert capture.core.check_seal(base) == capture.core.INTEGRITY_BROKEN
+
+    def test_verify_states_integrity_before_drift(self, tmp_path, monkeypatch, capsys):
+        _home, _codex_home, _state, workspace = _isolated_layout(tmp_path, monkeypatch)
+        capture.cmd_approve(_SealArgs(cwd=str(workspace)))
+        capsys.readouterr()
+        capture.cmd_verify(_SealArgs(cwd=str(workspace)))
+        out = capsys.readouterr().out
+        assert "BASELINE ITSELF INTACT" in out
+        assert out.index("BASELINE ITSELF INTACT") < out.index("Baseline comparison")
+
+
+class _SealArgs:
+    """The argparse surface the codex commands read, with safe defaults."""
+
+    sign = False
+    out = "."
+    json = False
+    cwd = None
+    live_context = None
+    model = None
+    permission_mode = None
+    tool = None
+    mcp_server = None
+    data_class = None
+
+    def __init__(self, **over):
+        for key, value in over.items():
+            setattr(self, key, value)

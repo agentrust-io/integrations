@@ -1040,7 +1040,7 @@ def _hook_body() -> None:
     baseline, status = _load(baseline_path)
 
     if status == "missing":
-        _save(baseline_path, current)
+        core.save_baseline(baseline_path, current)
         _emit_context(
             "AgenTrust established a baseline for this workspace "
             "(%d skills, %d plugins, %d configured MCP servers)."
@@ -1055,6 +1055,19 @@ def _hook_body() -> None:
         _emit_context(
             "AgenTrust WARNING: the workspace baseline is unreadable and was not "
             "replaced. Verify the current composition, then approve a new baseline.",
+            warning=True,
+        )
+        return
+
+    if core.check_seal(baseline) == core.INTEGRITY_BROKEN:
+        # Reported ahead of any drift. If the baseline was altered then the
+        # comparison against it means nothing, so a reassuring "no changes" below
+        # would be worse than no result at all.
+        _emit_context(
+            "AgenTrust WARNING: the workspace baseline failed its integrity check. "
+            "It was modified outside this tool, so any drift comparison against it "
+            "is unreliable. Verify the current composition and re-approve only once "
+            "you are satisfied it is what you intend.",
             warning=True,
         )
         return
@@ -1101,6 +1114,10 @@ def cmd_verify(args: argparse.Namespace) -> int:
             "The workspace baseline is unreadable. Review the snapshot before approving a replacement."
         )
         return 2
+    integrity = core.check_seal(baseline)
+    # Before the drift section: an altered baseline makes the comparison below
+    # meaningless, and a reader who sees "no changes" first would be misled.
+    print("\n".join(core.seal_section(integrity, core.state_digest(baseline or {}))))
     print(render_report(current, diff(baseline or {}, current), False))
     return 0
 
@@ -1109,9 +1126,17 @@ def cmd_approve(args: argparse.Namespace) -> int:
     current = _snapshot_for_args(args)
     baseline_path, latest_path = _workspace_state(current["workspace_id"])
     _save(latest_path, current)
-    _save(baseline_path, current)
+    sealed = core.save_baseline(baseline_path, current)
     print(render_report(current, [], False))
     print("\nApproved baseline: %s" % baseline_path)
+    # The digest sits beside the content it describes, so on its own it catches
+    # accidents rather than adversaries. Recorded off this machine it is what makes
+    # a silent re-baseline visible.
+    digest = sealed[core.SEAL_FIELD]["digest"]
+    print("Baseline digest: %s" % digest)
+    print("Record that digest somewhere off this machine. `verify` prints the digest")
+    print("of the baseline it read, so a mismatch means the baseline was replaced")
+    print("even by someone who could recompute the digest locally.")
     if args.sign:
         sign_all(current, Path(args.out))
         print("Signed records: %s" % Path(args.out).resolve())
