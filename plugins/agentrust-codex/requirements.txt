@@ -1,5 +1,10 @@
-# Snapshot, drift detection, and SessionStart use the Python standard library.
-# Install these released packages only when generating signed records.
+# REQUIRED for everything, including the SessionStart hook and the drift check.
+# agentrust-capture-core carries the fingerprinting, comparison, sealing and report
+# rules the engine is built on. It has no dependencies of its own, so this stays a
+# single lightweight install rather than a tree.
+agentrust-capture-core>=0.1,<0.2
+
+# Signing only, below the core: install these to generate signed records.
 agent-manifest==0.3.0
 agentrust-trace>=0.5
 agentrust-trace-tests>=0.4,<0.5

@@ -4,9 +4,5 @@
 # single lightweight install rather than a tree.
 agentrust-capture-core>=0.1,<0.2
 
-# Signing only, below the core:
-#
-# Required only to sign a TRACE record (/schedule-trace, /schedule-manifest
-# approve --sign). Verified against the PyPI releases below in a clean virtualenv.
-agentrust-trace>=0.5
-agentrust-trace-tests>=0.4,<0.5
+# The check emits no signed record, so nothing else is needed. See
+# README.md for why, and agent-manifest#256 for the spec question behind it.

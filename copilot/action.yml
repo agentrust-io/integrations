@@ -38,8 +38,12 @@ outputs:
 runs:
   using: composite
   steps:
-    # No install step. The engine and its vendored core are standard library
-    # only, which is the whole reason the core carries no dependencies.
+    # The engine imports agentrust-capture-core, which has no dependencies of its
+    # own, so this stays one small install rather than a tree. Pinned to a minor
+    # range so a core release cannot silently change what this check measures.
+    - shell: bash
+      run: pip install --quiet "agentrust-capture-core>=0.1,<0.2"
+
     - id: check
       shell: bash
       run: |
