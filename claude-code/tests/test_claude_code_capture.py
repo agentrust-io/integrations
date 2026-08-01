@@ -5,15 +5,22 @@ network or signing dependencies, so it runs in CI without the crypto packages.
 """
 from __future__ import annotations
 
+import importlib.util
 import json
-import sys
 from pathlib import Path
 
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "engine"))
-
-import capture  # noqa: E402
+# Loaded by path under a unique module name rather than through sys.path.
+#
+# Four engines in this repository each define a module called `capture`. With
+# sys.path insertion, `import capture` resolves to whichever suite pytest collected
+# first, so a single root-level `pytest` ran each suite against another engine's
+# code. Importing by path makes this suite independent of collection order.
+_ENGINE = Path(__file__).resolve().parent.parent / "engine" / "capture.py"
+_spec = importlib.util.spec_from_file_location("agentrust_claude_code_capture", _ENGINE)
+capture = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(capture)
 
 
 def _base(**over):

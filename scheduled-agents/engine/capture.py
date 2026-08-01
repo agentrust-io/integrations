@@ -440,10 +440,19 @@ def _hook_body() -> None:
     base = _load(BASELINE)
     n_routines, n_hooks = len(snap["routines"]), sum(len(v) for v in snap["hooks"].values())
     if base is None:
-        _save(BASELINE, snap)
+        core.save_baseline(BASELINE, snap)
         msg = (f"AgenTrust: scheduled-agent baseline established "
                f"({n_routines} routine(s), {n_hooks} auto-run hook command(s)). "
                "Future sessions are checked against it. Run /schedule-manifest approve to re-baseline.")
+    elif core.check_seal(base) == core.INTEGRITY_BROKEN:
+        # Ahead of any drift: if the baseline was altered then the comparison
+        # against it means nothing, and "nothing changed" would be worse than no
+        # result at all. This surface matters more than most, because these are the
+        # things that run when nobody is watching.
+        msg = ("AgenTrust WARNING: your scheduled-agent baseline failed its integrity "
+               "check. It was modified outside this tool, so any comparison against it "
+               "is unreliable. Run /schedule-manifest verify, and re-approve only once "
+               "you are satisfied the current setup is what you intend.")
     else:
         changes = diff(base, snap)
         if not changes:
@@ -480,6 +489,8 @@ def cmd_verify(args) -> int:
     if base is None:
         print("No approved baseline yet. Run /schedule-manifest approve to establish one.")
         return 0
+    # Before the drift section: an altered baseline makes what follows meaningless.
+    print("\n".join(core.seal_section(core.check_seal(base), core.state_digest(base))))
     print(render_report(snap, diff(base, snap), False))
     return 0
 
@@ -487,9 +498,16 @@ def cmd_verify(args) -> int:
 def cmd_approve(args) -> int:
     snap = snapshot()
     _save(LATEST, snap)
-    _save(BASELINE, snap)
+    sealed = core.save_baseline(BASELINE, snap)
     print(render_report(snap, [], False))
     print(f"\nApproved baseline updated: {BASELINE}")
+    # Recorded off this machine, the digest is what makes a silent re-baseline
+    # visible. Beside the content it describes it only catches accidents.
+    digest = sealed[core.SEAL_FIELD]["digest"]
+    print(f"Baseline digest: {digest}")
+    print("Record that digest somewhere off this machine. `verify` prints the digest")
+    print("of the baseline it read, so a mismatch means the baseline was replaced")
+    print("even by someone who could recompute the digest locally.")
     if args.sign:
         sign_all(snap, Path(args.out))
         print(f"Signed TRACE record written to {args.out}")
