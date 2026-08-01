@@ -40,10 +40,20 @@ which owns fingerprinting, comparison, baseline sealing and the report honesty r
 
 **Note on the Copilot entry.** It is a pull-request status check rather than a
 session hook, because Copilot's composition lives in the repository. It emits no
-TRACE record and no Agent Manifest yet, so it claims neither: `integrates_with` in
-the manifest schema offers only `cmcp`, `trace` and `agent-manifest`, and asserting
-one of those today would be an unverifiable claim. Emitting a TRACE record per
-checked pull request is the intended next step and is what would make one true.
+TRACE record and no Agent Manifest, so it claims neither: `integrates_with` offers
+only `cmcp`, `trace` and `agent-manifest`, and asserting one today would be an
+unverifiable claim.
+
+That is currently blocked on a spec question rather than on implementation, tracked
+in [agent-manifest#256](https://github.com/agentrust-io/agent-manifest/issues/256).
+TRACE describes an execution and this check describes a composition, so a TRACE
+record is the wrong artifact. Agent Manifest is the right one, but every level
+requires `artifacts.model_identity`, and a repository cannot know the model: Copilot
+picks it at session time from the user's plan and settings. The same repository
+serves every model, with an identical contributed composition. Manufacturing a
+model to satisfy the field would be exactly the kind of unverifiable claim
+`CONTRIBUTING.md` rules out, so the integration ships without one until the spec
+has a way to express a composition whose model is unknowable at authoring time.
 
 ## Community
 
