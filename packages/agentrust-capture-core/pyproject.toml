@@ -7,7 +7,8 @@ name = "agentrust-capture-core"
 version = "0.1.0"
 description = "Shared fingerprinting, comparison and baseline-sealing core for AgenTrust agent-integrity capture engines"
 readme = "README.md"
-license = { text = "Apache-2.0" }
+license = "Apache-2.0"
+license-files = ["LICENSE"]
 authors = [{ name = "AgenTrust Contributors", email = "oss@agentrust-io.com" }]
 keywords = ["agent", "integrity", "drift", "attestation", "agent-manifest", "trace"]
 classifiers = [
@@ -40,6 +41,11 @@ Source = "https://github.com/agentrust-io/integrations/tree/main/packages/agentr
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/agentrust_capture_core"]
+
+# py.typed ships so the "Typing :: Typed" classifier is a true claim rather than a
+# decoration: consumers get the annotations this package is written with.
+[tool.hatch.build.targets.wheel.force-include]
+"src/agentrust_capture_core/py.typed" = "agentrust_capture_core/py.typed"
 
 [tool.ruff]
 line-length = 100
