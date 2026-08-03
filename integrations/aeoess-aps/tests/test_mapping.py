@@ -11,13 +11,14 @@ expire five minutes after evaluation and the mapper refuses expired input.
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
+from urllib.parse import quote
 
 import agentrust_trace
 import pytest
 from agent_passport.crypto import generate_key_pair
 from agent_passport.policy import FloorValidatorV1, create_action_intent, evaluate_intent
 
-from aps_trace import EAT_PROFILE, VERDICT_TO_APPRAISAL, build_trace_record
+from aps_trace import EAT_PROFILE, TRUST_DOMAIN, VERDICT_TO_APPRAISAL, build_trace_record
 
 FLOOR_VERSION = "floor-1.0"
 
@@ -103,9 +104,12 @@ def test_eat_profile_is_the_v02_string(record):
 
 
 def test_subject_is_a_spiffe_uri_naming_evaluator_and_decision(record, permit_decision):
-    assert record["subject"].startswith("spiffe://agent-passport.org/")
-    assert permit_decision["evaluatorId"] in record["subject"]
-    assert permit_decision["decisionId"] in record["subject"]
+    expected = (
+        f"spiffe://{TRUST_DOMAIN}"
+        f"/evaluator/{quote(permit_decision['evaluatorId'], safe='')}"
+        f"/decision/{quote(permit_decision['decisionId'], safe='')}"
+    )
+    assert record["subject"] == expected
 
 
 def test_iat_comes_from_evaluated_at(record, permit_decision):
