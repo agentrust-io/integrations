@@ -1,7 +1,7 @@
 """ramen_ai_trace — TRACE Trust Record mapper for ramen-ai V5 receipts.
 
 Maps a ramen-ai V5 Ed25519 receipt onto a TRACE Trust Record dict
-(EAT profile tag:agentrust.io,2026:trace-v0.1).
+(EAT profile tag:agentrust-io.com,2026:trace-v0.2).
 
 This is the self-contained copy for the agentrust-io/integrations submission.
 The canonical implementation lives at:
@@ -11,7 +11,7 @@ Field mapping
 ─────────────
 TRACE field                 ← ramen-ai V5 source
 ──────────────────────────────────────────────────────────────
-eat_profile                 constant "tag:agentrust.io,2026:trace-v0.1"
+eat_profile                 constant "tag:agentrust-io.com,2026:trace-v0.2"
 iat                         caller-supplied (int, Unix seconds)
 subject                     "spiffe://ramenai.dev/evaluation/<receipt.id>"
 cnf.jwk                     caller-supplied (public JWK for signing)
@@ -36,7 +36,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-EAT_PROFILE = "tag:agentrust.io,2026:trace-v0.1"
+EAT_PROFILE = "tag:agentrust-io.com,2026:trace-v0.2"
 VERIFIER = "ramen-ai-core"
 
 

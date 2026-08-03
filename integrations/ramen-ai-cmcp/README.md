@@ -4,13 +4,13 @@ Intercepts tool calls at the [cMCP](https://github.com/agentrust-io/cmcp)
 boundary, evaluates their semantic intent against configured compliance policies
 via the [ramen-ai](https://ramenai.dev) API, and maps the resulting V5
 Ed25519-signed receipt onto a TRACE Trust Record (EAT profile
-`tag:agentrust.io,2026:trace-v0.1`).
+`tag:agentrust-io.com,2026:trace-v0.2`).
 
 Source: [ramen-ai-dev/ramen-ai-integrations — plugins/cmcp-python](https://github.com/ramen-ai-dev/ramen-ai-integrations/tree/master/plugins/cmcp-python)
 
 ## Run it
 
-Against released packages (`agentrust-trace` 0.3.0, `cmcp-runtime` 0.3.0):
+Against released packages (`agentrust-trace` >= 0.5, `agentrust-trace-tests` >= 0.4):
 
 ```bash
 pip install agentrust-trace agentrust-trace-tests cmcp-runtime

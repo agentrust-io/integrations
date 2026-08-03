@@ -43,7 +43,7 @@ def record():
 # ── field mapping ───────────────────────────────────────────────────────────
 
 def test_eat_profile(record):
-    assert record["eat_profile"] == "tag:agentrust.io,2026:trace-v0.1"
+    assert record["eat_profile"] == "tag:agentrust-io.com,2026:trace-v0.2"
 
 
 def test_subject_is_spiffe_uri(record):
