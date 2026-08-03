@@ -18,5 +18,5 @@ tier: community
 # the gradable record and verifies via agentrust_trace.verify_record.
 trace_conformance_level: 0
 tested_against:
-  agentrust-trace: "0.3.0"
+  agentrust-trace: "0.5.1"
   cmcp-runtime: "0.3.0"
