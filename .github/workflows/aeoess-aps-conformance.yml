@@ -1,0 +1,51 @@
+# Agent Passport System TRACE exporter conformance workflow.
+# Lives at repo root because GitHub Actions only discovers workflows there.
+# Scoped to this integration via the paths filter.
+name: aeoess-aps conformance
+on:
+  push:
+    paths:
+      - "integrations/aeoess-aps/**"
+      - ".github/workflows/aeoess-aps-conformance.yml"
+  pull_request:
+    paths:
+      - "integrations/aeoess-aps/**"
+      - ".github/workflows/aeoess-aps-conformance.yml"
+  schedule:
+    - cron: "0 6 * * 1"   # weekly: catch drift against the latest released packages
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  conformance:
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12", "3.13", "3.14"]
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install released agentrust-io packages
+        run: |
+          python -m pip install --upgrade pip
+          pip install agentrust-trace agentrust-trace-tests agent-passport-system
+      - name: Install this integration
+        run: pip install -e "integrations/aeoess-aps[test]"
+      - name: Integration tests
+        run: pytest integrations/aeoess-aps/tests -q
+      - name: Emit a sample TRACE record
+        run: python integrations/aeoess-aps/examples/emit_record.py --out trust-record.jwt
+      - name: TRACE conformance level 0
+        run: trace-tests verify --record trust-record.jwt --level 0
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: conformance-${{ matrix.os }}-py${{ matrix.python }}
+          path: |
+            trust-record.jwt
+            trust-record.jwt.signed.json
