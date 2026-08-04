@@ -1,0 +1,51 @@
+# agentrust-io conformance workflow for the comply54 integration.
+# Lives in the repository root because GitHub Actions only discovers workflows
+# in the root .github/workflows directory; scoped to this integration via paths.
+name: comply54 conformance
+on:
+  push:
+    paths:
+      - "integrations/comply54/**"
+      - ".github/workflows/comply54-conformance.yml"
+  pull_request:
+    paths:
+      - "integrations/comply54/**"
+      - ".github/workflows/comply54-conformance.yml"
+  schedule:
+    - cron: "0 6 * * 1"   # weekly: catch drift against the latest released packages
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  conformance:
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12", "3.13"]
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v4
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install released agentrust-io packages
+        run: |
+          python -m pip install --upgrade pip
+          pip install agentrust-trace-tests
+      - name: Install this integration
+        run: pip install -e "integrations/comply54[test]"
+      - name: Integration tests
+        run: pytest integrations/comply54/tests -q
+      - name: Emit a sample TRACE record
+        run: python integrations/comply54/examples/emit_record.py --out trust-record.jwt
+      - name: TRACE conformance
+        run: trace-tests verify --record trust-record.jwt --level 0
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: conformance-${{ matrix.os }}-py${{ matrix.python }}
+          path: |
+            trust-record.jwt
+            trust-record.jwt.signed.jwt
