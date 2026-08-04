@@ -1,0 +1,20 @@
+name: Agent Passport System
+vendor: aeoess
+integrates_with:
+  - trace
+description: >-
+  Maps one Ed25519-signed Agent Passport System policy decision onto a TRACE
+  Trust Record, refusing decisions that fail signature or expiry verification.
+maintainer:
+  github: aeoess
+repository: https://github.com/aeoess/agent-passport-python
+homepage: https://agent-passport.org
+license: Apache-2.0
+tier: community
+# Level 0 passes with an explicit TR-SIG-005 UNVERIFIED finding: the graded
+# artifact is the unsigned record, so trace-tests reports it as not
+# cryptographically verified. The signed form is written alongside it and
+# verifies via agentrust_trace.verify_record (see README).
+trace_conformance_level: 0
+tested_against:
+  agentrust-trace: "0.5.1"

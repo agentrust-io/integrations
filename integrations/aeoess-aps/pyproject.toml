@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aeoess-aps-integration"
+version = "0.1.0"
+description = "Maps signed Agent Passport System policy decisions onto TRACE Trust Records"
+requires-python = ">=3.11"
+license = "Apache-2.0"
+dependencies = [
+  "agentrust-trace>=0.5",
+  "agent-passport-system>=2.10",
+]
+
+[project.optional-dependencies]
+test = [
+  "pytest",
+  "agentrust-trace-tests>=0.4",
+]
+
+[tool.setuptools]
+py-modules = ["aps_trace"]
