@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "comply54-agentrust-integration"
+version = "0.1.0"
+description = "Converts comply54 ComplianceResult decisions into signed TRACE Trust Records"
+requires-python = ">=3.11"
+license = "Apache-2.0"
+dependencies = [
+    "PyJWT>=2.8.0",
+    "cryptography>=42.0.0",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=7.0.0",
+    "jsonschema>=4.0.0",
+    "agentrust-trace-tests>=0.4,<0.5",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+py-modules = ["comply54_to_trace"]

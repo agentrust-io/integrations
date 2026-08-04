@@ -1,0 +1,27 @@
+{
+  "overall": "deny",
+  "audit_id": "example-audit-001",
+  "decisions": [
+    {
+      "pack": "nigeria/cbn",
+      "regulation": "CBN Transaction Controls",
+      "jurisdiction": "NG",
+      "action": "deny",
+      "messages": ["CBN NIP cap exceeded: ₦15,000,000 > ₦10,000,000 limit"]
+    },
+    {
+      "pack": "nigeria/nfiu-aml",
+      "regulation": "NFIU AML Guidelines",
+      "jurisdiction": "NG",
+      "action": "deny",
+      "messages": ["Currency Transaction Report required for amounts above ₦5,000,000"]
+    },
+    {
+      "pack": "universal/human-approval",
+      "regulation": "OWASP LLM09",
+      "jurisdiction": "UNIVERSAL",
+      "action": "deny",
+      "messages": ["High-value transfer requires human approval before execution"]
+    }
+  ]
+}
