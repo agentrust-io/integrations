@@ -82,6 +82,7 @@
       "properties": {
         "cmcp-runtime": { "type": "string" },
         "agentrust-trace": { "type": "string" },
+        "agentrust-trace-tests": { "type": "string" },
         "agent-manifest": { "type": "string" }
       },
       "description": "Released package versions the integration was last tested against."
