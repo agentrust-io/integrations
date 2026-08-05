@@ -1,18 +1,18 @@
-# ramen-ai cMCP adapter conformance workflow.
-# Lives at repo root — GitHub Actions only discovers workflows here.
-# Scoped to this integration via paths filter.
 name: ramen-ai-cmcp conformance
+
 on:
   push:
     paths:
       - "integrations/ramen-ai-cmcp/**"
+      - "schema/integration.schema.json"
       - ".github/workflows/ramen-ai-cmcp-conformance.yml"
   pull_request:
     paths:
       - "integrations/ramen-ai-cmcp/**"
+      - "schema/integration.schema.json"
       - ".github/workflows/ramen-ai-cmcp-conformance.yml"
   schedule:
-    - cron: "0 6 * * 1"   # weekly: catch drift against the latest released packages
+    - cron: "0 6 * * 1"
   workflow_dispatch:
 
 permissions:
@@ -31,21 +31,27 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
         with:
           python-version: ${{ matrix.python }}
-      - name: Install released agentrust-io packages
-        run: |
-          python -m pip install --upgrade pip
-          pip install agentrust-trace agentrust-trace-tests cmcp-runtime
-      - name: Install this integration
+      - name: Install integration and exact TRACE test release
         run: pip install -e "integrations/ramen-ai-cmcp[test]"
-      - name: Integration tests
+      - name: Unit and trust-boundary tests
         run: pytest integrations/ramen-ai-cmcp/tests -q
-      - name: Emit a sample TRACE record
-        run: python integrations/ramen-ai-cmcp/examples/emit_record.py --out trust-record.jwt
-      - name: TRACE conformance level 0
-        run: trace-tests verify --record trust-record.jwt --level 0
+      - name: Emit a natively signed TRACE v0.2 record
+        run: |
+          export TRACE_PRIVATE_KEY_PEM="$(openssl genpkey -algorithm ED25519)"
+          python integrations/ramen-ai-cmcp/examples/emit_record.py \
+            --out trust-record.json \
+            --model-provider ramen-ai \
+            --model-id conformance-fixture-evaluator \
+            --model-version 1 \
+            --data-class internal \
+            --policy-bundle-hash sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa \
+            --slsa-level 0 \
+            --build-digest sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb \
+            --builder https://github.com/ramen-ai-dev/ramen-ai-integrations \
+            --appraisal-verifier https://ramenai.dev/trace/software-only
+      - name: TRACE v0.2 conformance Level 0
+        run: trace-tests verify --record trust-record.json --level 0
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
           name: conformance-${{ matrix.os }}-py${{ matrix.python }}
-          path: |
-            trust-record.jwt
-            trust-record.jwt.signed.json
+          path: trust-record.json
