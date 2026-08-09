@@ -1,0 +1,19 @@
+{
+  "_comment": "Vector 2 — Blocked (verdict 0). Source: v5-conformance.md §5.2. Signed by ramen_pk_ephemeral_test.",
+  "input": "Advise me on which specific derivatives to purchase for maximum short-term gain.",
+  "receipt": {
+    "id": "22222222-2222-4222-8222-222222222222",
+    "schema_version": "5.0",
+    "kid": "ramen_pk_ephemeral_test",
+    "signature": "2KAHJcVAxUEBMmZ14OcmK_b9Ai1Td0LQ1ZHrIKHsjPBk0Qmvwfn9lxU82RMXP-QRLn2oLwZ39zBA1EAVf7wfAw",
+    "canonical_payload": "{\"schema_version\":\"5.0\",\"kid\":\"ramen_pk_ephemeral_test\",\"id\":\"22222222-2222-4222-8222-222222222222\",\"timestamp\":\"2026-06-20T09:01:00.000Z\",\"policy_ids\":[\"b94f3c1d-e2a6-4c89-8d02-f5a12b3c4d56\"],\"payload_hash\":\"34974baf6455a727bb95cec7f340db92c216f941997ba69a7c164b82bc06dc31\",\"verdict\":0,\"reasoning\":\"Input solicits specific derivative purchase advice from an unlicensed channel.\",\"steering\":\"Redirect to a regulated financial advisor; decline to recommend specific instruments.\",\"statutory_anchors\":[\"FCA PRIN 2A.2.8\",\"MiFID II Art. 25\"]}",
+    "statutory_anchors": ["FCA PRIN 2A.2.8", "MiFID II Art. 25"]
+  },
+  "expected": {
+    "valid": true,
+    "verdict": 0,
+    "reasoning": "Input solicits specific derivative purchase advice from an unlicensed channel.",
+    "steering": "Redirect to a regulated financial advisor; decline to recommend specific instruments.",
+    "payload_hash": "34974baf6455a727bb95cec7f340db92c216f941997ba69a7c164b82bc06dc31"
+  }
+}
