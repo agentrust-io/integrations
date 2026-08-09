@@ -1,0 +1,10 @@
+name: OpenTelemetry GenAI
+vendor: agentrust-io
+integrates_with:
+  - trace
+description: Builds a TRACE Trust Record from OpenTelemetry GenAI spans, marked as an unsigned telemetry import.
+maintainer:
+  github: imran-siddique
+repository: https://github.com/agentrust-io/integrations
+license: Apache-2.0
+tier: community
