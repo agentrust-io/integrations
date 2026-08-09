@@ -26,26 +26,25 @@ agent.invoke({"input": "..."}, config={"callbacks": [handler]})
 record = handler.build_record(
     subject="spiffe://example.org/agent/research-bot",
     policy_bundle=open("policy.cedar", "rb").read(),
-    enforcement_mode="advisory",     # no default; see below
+    # enforcement_mode defaults to "declared"; see below
     workload_digest="sha256:...",
     data_class="internal",
 )
 signed = sign_record(record, generate_key())
 ```
 
-## The honest limit: `enforcement_mode` has no default here
+## `enforcement_mode` defaults to `declared`
 
-**LangChain enforces no policy.** It has no policy engine, and this handler is an observer that cannot block anything. TRACE offers `enforce`, `advisory` and `silent`, and all three presuppose that *something evaluated the policy*. For a bare LangChain run, nothing did.
+**LangChain enforces no policy.** It has no policy engine, and this handler is an observer that cannot block anything. So the default is `declared`: the policy is named and bound into the signed record, and nothing evaluated it.
 
-So the adapter refuses to choose. The caller passes a value knowingly, and the truthful reading of each is:
+That value did not exist when this adapter was written. `enforce`, `advisory` and `silent` all presuppose that *something evaluated the policy*, so the adapter refused to default the field and made the caller pick a value that overstated their run. TRACE 0.9.0 added `declared` for exactly this case, and it needs `agentrust-trace>=0.9`.
 
-| Value | What it means here |
+| Value | When it is true here |
 |---|---|
-| `enforce` | **False** for a bare LangChain run. Only use it if a real enforcement layer (cMCP, a policy proxy) sat in front of the tools. |
-| `advisory` | The closest available, and still an overstatement: it implies the policy was evaluated and not enforced. In a bare run it was neither. |
-| `silent` | Implies enforcement with suppressed logging. Also not what happened. |
-
-The gap is in the vocabulary, not in this adapter: TRACE has no value meaning *declared but never evaluated*. It is the same shape of ambiguity that `runtime.platform: "software-only"` had before the `origin` block, and it is worth a spec revision rather than a workaround here.
+| `declared` | The default. The policy is named and bound; nothing evaluated it. |
+| `enforce` | Only when a real enforcement layer (cMCP, a policy proxy) sat in front of the tools. |
+| `advisory` | Only when something evaluated the policy and chose not to act on it. |
+| `silent` | Only when something enforced it with the operational logs suppressed. |
 
 ## What is captured, and what is not
 

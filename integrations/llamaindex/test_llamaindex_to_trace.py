@@ -158,8 +158,15 @@ def test_transcript_is_order_sensitive() -> None:
 # --- refusals --------------------------------------------------------------
 
 
-def test_enforcement_mode_has_no_default() -> None:
-    with pytest.raises(MissingEvidence, match="overstates a bare run"):
+def test_enforcement_mode_defaults_to_declared() -> None:
+    """TRACE 0.9.0 added the value that is actually true of a framework run."""
+    kwargs = _kwargs()
+    del kwargs["enforcement_mode"]
+    assert _handler().build_record(**kwargs)["policy"]["enforcement_mode"] == "declared"
+
+
+def test_unknown_enforcement_mode_is_still_refused() -> None:
+    with pytest.raises(MissingEvidence, match="enforcement_mode must be one of"):
         _handler().build_record(**_kwargs(enforcement_mode="monitor"))
 
 

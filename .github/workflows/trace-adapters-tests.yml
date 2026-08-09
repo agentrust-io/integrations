@@ -115,5 +115,5 @@ jobs:
           # agentrust-trace only: the adapter deliberately does not import
           # langchain at module level, so the honesty rules stay testable without
           # pulling a framework into CI.
-          pip install "agentrust-trace>=0.7" pytest
+          pip install "agentrust-trace>=0.9" pytest
           python -m pytest integrations/langchain/test_langchain_to_trace.py integrations/llamaindex/test_llamaindex_to_trace.py -q

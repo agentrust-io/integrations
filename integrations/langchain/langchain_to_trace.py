@@ -15,10 +15,15 @@ adapter in ``agentrust-trace`` does. Nothing else about the call changes.
 
 **The honest limit, stated where you cannot miss it.** LangChain enforces no
 policy. It has no policy engine, and this handler is an observer with no ability
-to block anything. So ``enforcement_mode`` has no truthful default here and this
-module refuses to pick one: the caller states it, and the README explains why
-even ``advisory`` overstates a bare LangChain run. A record claiming ``enforce``
-from this adapter would be describing enforcement that did not happen.
+to block anything. ``enforcement_mode`` therefore defaults to ``declared``: the
+policy is named and bound into the signed record, and nothing evaluated it.
+
+That value did not exist when this adapter was written. The three original modes
+all assert that something evaluated the policy, so the adapter refused to default
+the field and made the caller choose a value that overstated their run. TRACE
+0.9.0 added ``declared`` for exactly this case. Override the default only when a
+real enforcement layer sat in front of the tools; a record claiming ``enforce``
+from a bare LangChain run describes enforcement that did not happen.
 
 Callback signatures are taken from ``langchain_core.callbacks.base`` and are the
 public, documented API. Payloads never enter the record: ``on_tool_start``
@@ -39,7 +44,7 @@ __all__ = ["TraceCallbackHandler", "ToolCall", "build_record"]
 
 _DIGEST_PREFIX = "sha256:"
 TRACE_PROFILE = "tag:agentrust-io.com,2026:trace-v0.2"
-ENFORCEMENT_MODES = ("enforce", "advisory", "silent")
+ENFORCEMENT_MODES = ("enforce", "advisory", "silent", "declared")
 
 
 class MissingEvidence(ValueError):
@@ -191,7 +196,7 @@ class TraceCallbackHandler:
         *,
         subject: str,
         policy_bundle: bytes,
-        enforcement_mode: str,
+        enforcement_mode: str = "declared",
         workload_digest: str,
         data_class: str,
         model_provider: str | None = None,
@@ -233,7 +238,7 @@ def build_record(
     *,
     subject: str,
     policy_bundle: bytes,
-    enforcement_mode: str,
+    enforcement_mode: str = "declared",
     workload_digest: str,
     data_class: str,
     model_provider: str | None,
@@ -260,9 +265,9 @@ def build_record(
         )
     if enforcement_mode not in ENFORCEMENT_MODES:
         raise MissingEvidence(
-            f"enforcement_mode must be one of {', '.join(ENFORCEMENT_MODES)} and is "
-            "not defaulted here, because LangChain enforces nothing and every value "
-            "overstates a bare run. Choose knowingly."
+            f"enforcement_mode must be one of {', '.join(ENFORCEMENT_MODES)}. The default "
+            "is 'declared', which is what a LangChain run actually is: the policy is named "
+            "and bound, and nothing evaluated it."
         )
     if not model_provider or not model_id:
         raise MissingEvidence(

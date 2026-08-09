@@ -119,10 +119,28 @@ def test_transcript_is_order_sensitive() -> None:
 # --- refusals --------------------------------------------------------------
 
 
-def test_enforcement_mode_has_no_default() -> None:
-    """LangChain enforces nothing, so every value overstates a bare run."""
-    with pytest.raises(MissingEvidence, match="overstates a bare run"):
-        _handler_with_two_tools().build_record(**_kwargs(enforcement_mode=""))
+def test_enforcement_mode_defaults_to_declared() -> None:
+    """TRACE 0.9.0 added the value that is actually true of a framework run.
+
+    Before it, the three modes all asserted that something evaluated the policy,
+    so this adapter refused to default the field and made the caller pick a value
+    that overstated their run.
+    """
+    kwargs = _kwargs()
+    del kwargs["enforcement_mode"]
+    record = _handler_with_two_tools().build_record(**kwargs)
+    assert record["policy"]["enforcement_mode"] == "declared"
+
+
+def test_unknown_enforcement_mode_is_still_refused() -> None:
+    with pytest.raises(MissingEvidence, match="enforcement_mode must be one of"):
+        _handler_with_two_tools().build_record(**_kwargs(enforcement_mode="monitor"))
+
+
+def test_enforce_can_still_be_stated_explicitly() -> None:
+    """For a deployment that did put a real enforcement layer in front."""
+    record = _handler_with_two_tools().build_record(**_kwargs(enforcement_mode="enforce"))
+    assert record["policy"]["enforcement_mode"] == "enforce"
 
 
 def test_policy_bundle_bytes_are_required() -> None:
