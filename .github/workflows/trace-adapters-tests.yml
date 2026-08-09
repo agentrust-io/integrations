@@ -6,6 +6,7 @@ on:
       - "packages/agentrust-trace-adapters/**"
       - "integrations/decisionassure/**"
       - "integrations/otel-genai/**"
+      - "integrations/langchain/**"
       - ".github/workflows/trace-adapters-tests.yml"
   push:
     branches: [main]
@@ -13,6 +14,7 @@ on:
       - "packages/agentrust-trace-adapters/**"
       - "integrations/decisionassure/**"
       - "integrations/otel-genai/**"
+      - "integrations/langchain/**"
       - ".github/workflows/trace-adapters-tests.yml"
 
 permissions:
@@ -96,3 +98,20 @@ jobs:
         run: |
           pip install ./packages/agentrust-trace-adapters pytest
           python -m pytest integrations/otel-genai/test_otel_to_trace.py -q
+
+  langchain-adapter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - name: Test the LangChain adapter
+        run: |
+          # agentrust-trace only: the adapter deliberately does not import
+          # langchain at module level, so the honesty rules stay testable without
+          # pulling a framework into CI.
+          pip install "agentrust-trace>=0.7" pytest
+          python -m pytest integrations/langchain/test_langchain_to_trace.py -q

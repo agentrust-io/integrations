@@ -36,6 +36,7 @@ TRACE only works as a standard if it is genuinely neutral. Integrations are list
 | [copilot](copilot/) | agentrust-io | (drift check only, see note) | community |
 | [decisionassure](integrations/decisionassure/) | DecisionAssure (a1k7) | trace | community |
 | [otel-genai](integrations/otel-genai/) | agentrust-io | trace | community |
+| [langchain](integrations/langchain/) | agentrust-io | trace | community |
 
 All four engines share [`agentrust-capture-core`](packages/agentrust-capture-core),
 which owns fingerprinting, comparison, baseline sealing and the report honesty rules.
