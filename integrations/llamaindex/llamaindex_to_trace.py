@@ -36,7 +36,7 @@ from typing import Any
 __all__ = ["MissingEvidence", "ToolCall", "TraceEventHandler", "build_record"]
 
 TRACE_PROFILE = "tag:agentrust-io.com,2026:trace-v0.2"
-ENFORCEMENT_MODES = ("enforce", "advisory", "silent")
+ENFORCEMENT_MODES = ("enforce", "advisory", "silent", "declared")
 _DIGEST_RE = re.compile(r"^sha(256:[0-9a-f]{64}|384:[0-9a-f]{96})$")
 _SUBJECT_RE = re.compile(r"^(spiffe://[^/]+/.+|did:[a-z0-9]+:.+)$")
 
@@ -139,7 +139,7 @@ class TraceEventHandler:
         *,
         subject: str,
         policy_bundle: bytes,
-        enforcement_mode: str,
+        enforcement_mode: str = "declared",
         workload_digest: str,
         data_class: str,
         model_provider: str | None = None,
@@ -170,7 +170,7 @@ def build_record(
     *,
     subject: str,
     policy_bundle: bytes,
-    enforcement_mode: str,
+    enforcement_mode: str = "declared",
     workload_digest: str,
     data_class: str,
     model_provider: str | None,
@@ -182,8 +182,10 @@ def build_record(
 ) -> dict[str, Any]:
     """Assemble the unsigned record. Raises rather than inventing a field.
 
-    ``enforcement_mode`` has no default. LlamaIndex enforces no policy, so every
-    available value overstates a bare run; see the README.
+    ``enforcement_mode`` defaults to ``declared``: the policy is named and bound
+    into the signed record and nothing evaluated it, which is what a LlamaIndex
+    run is. TRACE 0.9.0 added that value; before it, every available value
+    overstated a bare run and this adapter refused to default the field.
     """
     if not _SUBJECT_RE.match(subject or ""):
         raise MissingEvidence(
@@ -198,9 +200,9 @@ def build_record(
         )
     if enforcement_mode not in ENFORCEMENT_MODES:
         raise MissingEvidence(
-            f"enforcement_mode must be one of {', '.join(ENFORCEMENT_MODES)} and is not "
-            "defaulted here, because LlamaIndex enforces nothing and every value "
-            "overstates a bare run. Choose knowingly."
+            f"enforcement_mode must be one of {', '.join(ENFORCEMENT_MODES)}. The default "
+            "is 'declared', which is what a LlamaIndex run actually is: the policy is named "
+            "and bound, and nothing evaluated it."
         )
     if not model_provider or not model_id:
         raise MissingEvidence(

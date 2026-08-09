@@ -43,15 +43,15 @@ get_dispatcher().add_event_handler(Bridge())
 record = tracker.build_record(
     subject="spiffe://example.org/agent/index-bot",
     policy_bundle=open("policy.cedar", "rb").read(),
-    enforcement_mode="advisory",   # no default; see below
+    # enforcement_mode defaults to "declared"; see below
     workload_digest="sha256:...",
     data_class="internal",
 )
 ```
 
-## `enforcement_mode` has no default
+## `enforcement_mode` defaults to `declared`
 
-**LlamaIndex enforces no policy.** TRACE offers `enforce`, `advisory` and `silent`, and all three presuppose that something *evaluated* the policy. For a bare run, nothing did, and TRACE has no value meaning *declared but never evaluated*. The adapter refuses to choose; `advisory` is the closest and still an overstatement. Same gap the LangChain adapter documents.
+**LlamaIndex enforces no policy.** `enforce`, `advisory` and `silent` all presuppose that something *evaluated* the policy; for a bare run, nothing did. TRACE 0.9.0 added `declared` for that case, so the default is now truthful rather than the closest available overstatement. Needs `agentrust-trace>=0.9`.
 
 ## Conformance
 
