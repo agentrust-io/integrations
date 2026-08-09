@@ -34,9 +34,16 @@ TRACE only works as a standard if it is genuinely neutral. Integrations are list
 | [agentrust-codex](plugins/agentrust-codex/) | agentrust-io | agent-manifest, trace | community |
 | [scheduled-agents](scheduled-agents/) | agentrust-io | trace | community |
 | [copilot](copilot/) | agentrust-io | (drift check only, see note) | community |
+| [decisionassure](integrations/decisionassure/) | DecisionAssure (a1k7) | trace | community |
 
 All four engines share [`agentrust-capture-core`](packages/agentrust-capture-core),
 which owns fingerprinting, comparison, baseline sealing and the report honesty rules.
+
+Adapters that build a Trust Record from evidence **another system produced** share
+[`agentrust-trace-adapters`](packages/agentrust-trace-adapters). Records built through it
+carry `origin.kind: third-party-control-plane`, `runtime.platform: software-only` and
+`appraisal.status: none`, so the assurance downgrade is something a consumer reads from
+the record rather than from a README. None of the three is a parameter.
 
 **Note on the Copilot entry.** It is a pull-request status check rather than a
 session hook, because Copilot's composition lives in the repository. It emits no
