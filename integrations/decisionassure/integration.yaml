@@ -1,0 +1,10 @@
+name: DecisionAssure
+vendor: DecisionAssure (a1k7)
+integrates_with:
+  - trace
+description: Converts a DecisionAssure runtime governance trace into a TRACE v0.2 Trust Record, marked as third-party-asserted.
+maintainer:
+  github: a1k7
+repository: https://github.com/a1k7/DecisionAssure-Runtime-Governance
+license: MIT
+tier: community

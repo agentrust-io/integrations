@@ -1,0 +1,82 @@
+name: trace-adapters tests
+
+on:
+  pull_request:
+    paths:
+      - "packages/agentrust-trace-adapters/**"
+      - "integrations/decisionassure/**"
+      - ".github/workflows/trace-adapters-tests.yml"
+  push:
+    branches: [main]
+    paths:
+      - "packages/agentrust-trace-adapters/**"
+      - "integrations/decisionassure/**"
+      - ".github/workflows/trace-adapters-tests.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Test against the released TRACE model
+        working-directory: packages/agentrust-trace-adapters
+        run: |
+          pip install pytest .
+          python -m pytest tests -q
+
+  # The job that would have caught the defect this package was written to prevent.
+  # The adapter it replaces emitted records failing TrustRecord validation on seven
+  # counts, and nothing here validated its output.
+  adapter-output-validates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - name: Build a record with the DecisionAssure adapter and validate it
+        run: |
+          pip install ./packages/agentrust-trace-adapters
+          python - <<'PY'
+          import importlib.util, json
+          from agentrust_trace.models import TrustRecord
+
+          spec = importlib.util.spec_from_file_location(
+              "da", "integrations/decisionassure/da_to_trace.py"
+          )
+          da = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(da)
+
+          record = da.map_trace(
+              {"trace_id": "t-1", "final_decision": "ALLOW",
+               "steps": [{"tool": "pay"}], "data_class": "pii"},
+              subject="spiffe://example.org/agent/da-1",
+              policy_bundle=b'{"rules":["deny-egress"]}',
+              workload_digest="sha256:" + "c" * 64,
+              jwk={"kty": "OKP", "crv": "Ed25519",
+                   "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo"},
+              model_provider="anthropic", model_id="claude-sonnet-4-6",
+          )
+          parsed = TrustRecord.model_validate(record)
+
+          # The three signals the downgrade rests on. A refactor that made any of
+          # them settable would pass the schema and lose the argument.
+          assert parsed.runtime.platform == "software-only", parsed.runtime.platform
+          assert parsed.appraisal.status == "none", parsed.appraisal.status
+          assert parsed.origin and parsed.origin.kind == "third-party-control-plane"
+          assert "transparency" not in record, "unanchored records omit transparency"
+          print(json.dumps(record, indent=2))
+          PY
