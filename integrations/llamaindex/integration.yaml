@@ -1,0 +1,10 @@
+name: LlamaIndex
+vendor: agentrust-io
+integrates_with:
+  - trace
+description: Emits a TRACE Trust Record from LlamaIndex instrumentation events, reading an allow-list so payloads cannot leak.
+maintainer:
+  github: imran-siddique
+repository: https://github.com/agentrust-io/integrations
+license: Apache-2.0
+tier: community

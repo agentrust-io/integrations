@@ -1,0 +1,236 @@
+"""Tests for the LlamaIndex adapter.
+
+The risk here is structurally different from LangChain's. LlamaIndex delivers
+every event to one method, and several event types carry payloads:
+``AgentToolCallEvent`` has ``arguments``, ``LLMChatStartEvent`` has the whole
+message list, the completion events carry prompt and response. So the tests that
+matter are the ones proving the handler reads an allow-list rather than the
+event.
+"""
+
+from __future__ import annotations
+
+import pathlib
+import sys
+
+import pytest
+
+sys.path.insert(0, str(pathlib.Path(__file__).parent))
+
+from llamaindex_to_trace import (  # noqa: E402
+    MissingEvidence,
+    TraceEventHandler,
+    build_record,
+)
+
+DIGEST = "sha256:" + "f" * 64
+SUBJECT = "spiffe://example.org/agent/index-bot"
+IBAN = "GB33BUKB20201555555555"
+
+
+class _Event:
+    """Stands in for a LlamaIndex event: a class_name() plus attributes."""
+
+    def __init__(self, class_name: str, **attrs):
+        self._class_name = class_name
+        for k, v in attrs.items():
+            setattr(self, k, v)
+        type(self).class_name = classmethod(lambda cls, n=class_name: n)
+
+
+class _ToolMeta:
+    def __init__(self, name: str):
+        self.name = name
+
+
+def _tool_event(name: str, event_id: str, *, arguments: str = "{}"):
+    return _Event(
+        "AgentToolCallEvent",
+        tool=_ToolMeta(name),
+        arguments=arguments,
+        id_=event_id,
+        span_id="span-1",
+    )
+
+
+def _chat_event(model_dict: dict, messages=None):
+    return _Event(
+        "LLMChatStartEvent",
+        model_dict=model_dict,
+        messages=messages or [],
+        additional_kwargs={},
+        id_="e-llm",
+        span_id="span-1",
+    )
+
+
+def _handler():
+    h = TraceEventHandler()
+    h.handle(_chat_event({"class_name": "Anthropic_LLM", "model": "claude-sonnet-4-6"}))
+    h.handle(_tool_event("search", "e-1"))
+    h.handle(_tool_event("send_email", "e-2"))
+    return h
+
+
+def _kwargs(**over):
+    base = {
+        "subject": SUBJECT,
+        "policy_bundle": b'{"rules":["no-egress"]}',
+        "enforcement_mode": "advisory",
+        "workload_digest": DIGEST,
+        "data_class": "internal",
+    }
+    base.update(over)
+    return base
+
+
+# --- the allow-list, which is this adapter's whole safety story ------------
+
+
+def test_tool_arguments_never_reach_the_transcript() -> None:
+    h = TraceEventHandler()
+    h.handle(_tool_event("pay", "e-1", arguments=f'{{"iban":"{IBAN}"}}'))
+    body = h.transcript_bytes().decode()
+    assert IBAN not in body
+    assert "pay" in body
+
+
+def test_chat_messages_never_reach_the_record() -> None:
+    h = TraceEventHandler()
+    h.handle(
+        _chat_event(
+            {"class_name": "OpenAI", "model": "gpt-4"},
+            messages=[{"role": "user", "content": f"wire to {IBAN}"}],
+        )
+    )
+    h.handle(_tool_event("noop", "e-1"))
+    record = h.build_record(**_kwargs())
+    assert IBAN not in str(record)
+
+
+def test_an_unknown_future_field_is_ignored_not_captured() -> None:
+    """The handler reads an allow-list, so an added payload field cannot leak."""
+    h = TraceEventHandler()
+    event = _tool_event("pay", "e-1")
+    event.new_upstream_field = f"secret {IBAN}"  # a field a later version might add
+    h.handle(event)
+    assert IBAN not in h.transcript_bytes().decode()
+
+
+def test_unrelated_event_types_are_ignored() -> None:
+    h = TraceEventHandler()
+    h.handle(_Event("LLMCompletionEndEvent", prompt=f"pay {IBAN}", response="done", id_="e-9"))
+    assert h.tool_calls == []
+    assert IBAN not in h.transcript_bytes().decode()
+
+
+# --- observation -----------------------------------------------------------
+
+
+def test_tool_calls_are_captured_in_order() -> None:
+    assert [c.name for c in _handler().tool_calls] == ["search", "send_email"]
+
+
+def test_model_is_read_from_model_dict() -> None:
+    record = _handler().build_record(**_kwargs())
+    assert record["model"] == {"provider": "anthropic", "model_id": "claude-sonnet-4-6"}
+
+
+def test_caller_overrides_a_guessed_provider() -> None:
+    record = _handler().build_record(**_kwargs(), model_provider="bedrock", model_id="x")
+    assert record["model"]["provider"] == "bedrock"
+
+
+def test_unnamed_tool_is_labelled_not_dropped() -> None:
+    h = TraceEventHandler()
+    h.handle(_Event("AgentToolCallEvent", tool=None, arguments="{}", id_="e-1", span_id=None))
+    assert h.tool_calls[0].name == "<unnamed>"
+
+
+def test_transcript_is_order_sensitive() -> None:
+    a = _handler().transcript_bytes()
+    h = TraceEventHandler()
+    h.handle(_tool_event("send_email", "e-2"))
+    h.handle(_tool_event("search", "e-1"))
+    assert h.transcript_bytes() != a
+
+
+# --- refusals --------------------------------------------------------------
+
+
+def test_enforcement_mode_has_no_default() -> None:
+    with pytest.raises(MissingEvidence, match="overstates a bare run"):
+        _handler().build_record(**_kwargs(enforcement_mode="monitor"))
+
+
+def test_policy_bundle_bytes_are_required() -> None:
+    with pytest.raises(MissingEvidence, match="digest of a bundle"):
+        _handler().build_record(**_kwargs(policy_bundle=b""))
+
+
+def test_subject_must_be_spiffe_or_did() -> None:
+    with pytest.raises(MissingEvidence, match="may invent"):
+        _handler().build_record(**_kwargs(subject="index-bot"))
+
+
+def test_workload_digest_is_checked() -> None:
+    with pytest.raises(MissingEvidence, match="nothing truthful to default"):
+        _handler().build_record(**_kwargs(workload_digest="sha256:placeholder"))
+
+
+def test_unidentified_model_is_refused() -> None:
+    h = TraceEventHandler()
+    h.handle(_tool_event("search", "e-1"))
+    with pytest.raises(MissingEvidence, match="names no model"):
+        h.build_record(**_kwargs())
+
+
+def test_attestation_may_not_claim_software_only() -> None:
+    with pytest.raises(MissingEvidence, match="attests nothing"):
+        _handler().build_record(
+            **_kwargs(), attestation={"platform": "software-only", "measurement": DIGEST}
+        )
+
+
+# --- the record ------------------------------------------------------------
+
+
+def test_record_validates_after_signing() -> None:
+    TrustRecord = pytest.importorskip("agentrust_trace.models").TrustRecord
+    sign = pytest.importorskip("agentrust_trace.sign")
+    record = sign.sign_record(_handler().build_record(**_kwargs()), sign.generate_key())
+    parsed = TrustRecord.model_validate(record)
+    assert parsed.runtime.platform == "software-only"
+    assert parsed.tool_transcript.call_count == 2
+
+
+def test_first_party_records_carry_no_origin_block() -> None:
+    assert "origin" not in _handler().build_record(**_kwargs())
+
+
+def test_attestation_lifts_the_same_record_to_hardware() -> None:
+    record = _handler().build_record(
+        **_kwargs(), attestation={"platform": "intel-tdx", "measurement": DIGEST}
+    )
+    assert record["runtime"] == {"platform": "intel-tdx", "measurement": DIGEST}
+
+
+def test_no_tools_omits_the_transcript_block() -> None:
+    h = TraceEventHandler()
+    record = h.build_record(**_kwargs(), model_provider="openai", model_id="gpt-4")
+    assert "tool_transcript" not in record
+
+
+def test_build_record_is_usable_without_the_handler() -> None:
+    record = build_record(
+        subject=SUBJECT,
+        policy_bundle=b"{}",
+        enforcement_mode="advisory",
+        workload_digest=DIGEST,
+        data_class="internal",
+        model_provider="openai",
+        model_id="gpt-4",
+        transcript=b"[]",
+        tool_count=0,
+    )
+    assert record["appraisal"]["status"] == "none"
