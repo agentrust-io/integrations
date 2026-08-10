@@ -11,4 +11,4 @@ agentrust-capture-core>=0.1,<0.2
 # PyPI releases below in a clean virtualenv.
 agent-manifest>=0.7.0
 agentrust-trace>=0.5.1
-agentrust-trace-tests>=0.4,<0.5
+agentrust-trace-tests>=0.4.1,<0.5
