@@ -9,6 +9,6 @@ agentrust-capture-core>=0.1,<0.2
 # These are required only to generate SIGNED records (/trace, /manifest approve
 # --sign): the Agent Manifest and the TRACE Trust Record. Verified against the
 # PyPI releases below in a clean virtualenv.
-agent-manifest>=0.7.0
+agent-manifest>=0.10.0
 agentrust-trace>=0.5.1
 agentrust-trace-tests>=0.4,<0.5
