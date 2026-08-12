@@ -25,6 +25,10 @@ jobs:
             --no-progress
             --exclude-path .nox
             --exclude-path .pytest_cache
+            --exclude-path integrations/_template
+            --exclude 'https://dcbadge\.limes\.pink/.*'
+            --exclude 'https://www\.npmjs\.com/.*'
+            --exclude 'https://agent-passport\.org/.*'
             --max-retries 3
             '**/*.md'
             '**/integration.yaml'
