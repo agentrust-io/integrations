@@ -21,25 +21,20 @@ jobs:
       - name: Validate integration manifests against schema
         run: |
           pip install jsonschema pyyaml
-          python - <<'PY'
-          import json, sys, pathlib, yaml, jsonschema
-          schema = json.loads(pathlib.Path("schema/integration.schema.json").read_text())
-          failures = 0
-          dirs = [d for d in pathlib.Path("integrations").iterdir() if d.is_dir() and not d.name.startswith("_")]
-          for d in dirs:
-              manifest = d / "integration.yaml"
-              readme = d / "README.md"
-              if not manifest.exists():
-                  print(f"FAIL {d.name}: missing integration.yaml"); failures += 1; continue
-              if not readme.exists():
-                  print(f"FAIL {d.name}: missing README.md"); failures += 1; continue
-              try:
-                  jsonschema.validate(yaml.safe_load(manifest.read_text()), schema)
-                  print(f"OK   {d.name}")
-              except jsonschema.ValidationError as e:
-                  print(f"FAIL {d.name}: {e.message}"); failures += 1
-          print(f"{len(dirs)} integration(s), {failures} failure(s)")
-          sys.exit(1 if failures else 0)
-          PY
+          python scripts/validate_integrations.py
+      - name: Test manifest validation
+        run: |
+          pip install pytest
+          python -m pytest tests/test_validate_integrations.py -q
+      - name: Test conditional schema rules
+        run: |
+          pip install pytest
+          python -m pytest tests/test_integration_schema.py -q
+      - name: Validate compatibility declarations
+        run: |
+          pip install packaging
+          python scripts/validate_compatibility.py
+          pip install pytest
+          python -m pytest tests/test_validate_compatibility.py -q
       - name: Check generated integration index
         run: python scripts/generate_integration_index.py --check

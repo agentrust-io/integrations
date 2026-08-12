@@ -13,3 +13,5 @@ repository: https://github.com/arian-gogani/nobulex
 homepage: https://nobulex.com
 license: MIT
 tier: community
+trace_roles:
+  - external-evidence-source
