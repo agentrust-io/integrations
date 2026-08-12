@@ -17,3 +17,16 @@ updates:
       interval: "weekly"
       day: "monday"
     open-pull-requests-limit: 5
+
+  - package-ecosystem: "pip"
+    directories:
+      - "/packages/agentrust-capture-core"
+      - "/packages/agentrust-trace-adapters"
+      - "/integrations/aeoess-aps"
+      - "/integrations/comply54"
+      - "/integrations/ramen-ai-cmcp"
+      - "/integrations/spendguard"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
