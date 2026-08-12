@@ -1,0 +1,13 @@
+# Repository-wide support policy. Exact integration runs remain recorded in
+# each integration.yaml under tested_against.
+python:
+  supported: ["3.11", "3.12", "3.13"]
+packages:
+  agentrust-trace:
+    minimum: "0.5.0"
+  agentrust-trace-tests:
+    minimum: "0.4.0"
+  cmcp-runtime:
+    minimum: "0.2.0"
+  agent-manifest:
+    minimum: "0.3.0"
