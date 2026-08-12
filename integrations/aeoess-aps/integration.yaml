@@ -16,5 +16,7 @@ tier: community
 # cryptographically verified. The signed form is written alongside it and
 # verifies via agentrust_trace.verify_record (see README).
 trace_conformance_level: 0
+trace_roles:
+  - record-producer
 tested_against:
   agentrust-trace: "0.5.1"

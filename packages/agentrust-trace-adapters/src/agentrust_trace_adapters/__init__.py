@@ -15,6 +15,7 @@ descriptions of bytes, and raises ``MissingEvidence`` rather than degrading.
 
 from __future__ import annotations
 
+from .appraisal import AppraisalEvidence, appraisal_from_evidence
 from .builder import TRACE_PROFILE, build_record, software_measurement
 from .evidence import (
     DIGEST_RE,
@@ -25,11 +26,13 @@ from .evidence import (
 )
 
 __all__ = [
+    "AppraisalEvidence",
     "DIGEST_RE",
     "MissingEvidence",
     "PolicyEvidence",
     "SourceSystem",
     "TRACE_PROFILE",
+    "appraisal_from_evidence",
     "build_record",
     "digest_bytes",
     "software_measurement",

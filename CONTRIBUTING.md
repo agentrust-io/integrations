@@ -30,6 +30,12 @@ Every PR runs: schema validation of `integration.yaml`, link checking, and the c
 
 Want the **Verified** tier? Say so in the PR and include exact reproduction steps. We run it end-to-end; if the documented behavior holds, the tier flips and the index badge follows.
 
+Package support floors are declared once in `compatibility.yaml`. An
+integration's `tested_against` block records an exact run, not a version range,
+and CI rejects declarations below the repository floor. Raising a floor is a
+separate compatibility change and must update affected integrations or explain
+their archival path.
+
 ## What this repo is not
 
 - Not a place to ship product code that *requires* changes to core repos - propose those upstream as issues first.

@@ -76,6 +76,16 @@
       "maximum": 2,
       "description": "Required if the integration emits or consumes TRACE records: the agentrust-trace-tests level it passes."
     },
+    "trace_roles": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": ["record-producer", "record-consumer", "external-evidence-source"]
+      },
+      "description": "How the integration relates to TRACE. Evidence sources do not claim to emit or verify TRACE records."
+    },
     "tested_against": {
       "type": "object",
       "additionalProperties": false,
@@ -87,5 +97,27 @@
       },
       "description": "Released package versions the integration was last tested against."
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "integrates_with": { "contains": { "const": "trace" } }
+        },
+        "required": ["integrates_with"]
+      },
+      "then": { "required": ["trace_roles"] }
+    },
+    {
+      "if": {
+        "properties": {
+          "trace_roles": {
+            "contains": { "enum": ["record-producer", "record-consumer"] }
+          }
+        },
+        "required": ["trace_roles"]
+      },
+      "then": { "required": ["trace_conformance_level"] }
+    }
+  ]
 }
