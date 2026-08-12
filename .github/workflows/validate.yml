@@ -36,3 +36,5 @@ jobs:
           python scripts/validate_compatibility.py
           pip install pytest
           python -m pytest tests/test_validate_compatibility.py -q
+      - name: Check generated integration index
+        run: python scripts/generate_integration_index.py --check
