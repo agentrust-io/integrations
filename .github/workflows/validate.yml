@@ -41,3 +41,7 @@ jobs:
           print(f"{len(dirs)} integration(s), {failures} failure(s)")
           sys.exit(1 if failures else 0)
           PY
+      - name: Test conditional schema rules
+        run: |
+          pip install pytest
+          python -m pytest tests/test_integration_schema.py -q
