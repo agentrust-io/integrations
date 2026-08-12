@@ -14,6 +14,12 @@ An adapter over someone else's runtime governance product is worth building for 
 
 None of the three is a parameter. An adapter that could set them would eventually set them wrong.
 
+If the source separately produces a signed appraisal result, use
+`AppraisalEvidence` / `appraisal_from_evidence` only after verifying that
+signature. The contract requires a named verifier and appraisal-policy
+reference. A vendor's bare ALLOW/DENY result is still a policy decision, not an
+appraisal of the evidence behind that decision.
+
 That argument only holds if the rest of the record is true, which is the harder half.
 
 ## The failure this package prevents
