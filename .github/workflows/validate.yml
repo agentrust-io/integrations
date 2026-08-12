@@ -41,3 +41,5 @@ jobs:
           print(f"{len(dirs)} integration(s), {failures} failure(s)")
           sys.exit(1 if failures else 0)
           PY
+      - name: Check generated integration index
+        run: python scripts/generate_integration_index.py --check
