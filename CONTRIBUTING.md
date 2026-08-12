@@ -30,6 +30,17 @@ Every PR runs: schema validation of `integration.yaml`, link checking, and the c
 
 Want the **Verified** tier? Say so in the PR and include exact reproduction steps. We run it end-to-end; if the documented behavior holds, the tier flips and the index badge follows.
 
+## Running first-party tests locally
+
+Install [nox](https://nox.thea.codes/) and run `nox`. Each suite gets an
+isolated virtual environment, matching the repository's split package model and
+avoiding import collisions between integration-local test packages. Use
+`nox -s <session>` for one area; `nox -l` lists the available sessions.
+
+Community/vendor integrations continue to use their integration-specific
+conformance workflows. The root matrix intentionally does not turn the
+community tier into a claim that maintainers run or certify vendor code.
+
 ## What this repo is not
 
 - Not a place to ship product code that *requires* changes to core repos - propose those upstream as issues first.
