@@ -17,6 +17,8 @@ tier: community
 # Level the cMCP-RuntimeClaim (envelope) path passes; the bare C-2 TRACE record is not graded
 # by agentrust-trace-tests (LoadError), so it carries no conformance level — see README.
 trace_conformance_level: 0
+trace_roles:
+  - record-consumer
 tested_against:
   cmcp-runtime: "0.2.1"
   agentrust-trace: "0.5.0"

@@ -26,3 +26,7 @@ jobs:
         run: |
           pip install pytest
           python -m pytest tests/test_validate_integrations.py -q
+      - name: Test conditional schema rules
+        run: |
+          pip install pytest
+          python -m pytest tests/test_integration_schema.py -q
