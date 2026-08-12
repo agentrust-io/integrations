@@ -30,6 +30,12 @@ Every PR runs: schema validation of `integration.yaml`, link checking, and the c
 
 Want the **Verified** tier? Say so in the PR and include exact reproduction steps. We run it end-to-end; if the documented behavior holds, the tier flips and the index badge follows.
 
+Package support floors are declared once in `compatibility.yaml`. An
+integration's `tested_against` block records an exact run, not a version range,
+and CI rejects declarations below the repository floor. Raising a floor is a
+separate compatibility change and must update affected integrations or explain
+their archival path.
+
 ## Running first-party tests locally
 
 Install [nox](https://nox.thea.codes/) and run `nox`. Each suite gets an
@@ -40,7 +46,6 @@ avoiding import collisions between integration-local test packages. Use
 Community/vendor integrations continue to use their integration-specific
 conformance workflows. The root matrix intentionally does not turn the
 community tier into a claim that maintainers run or certify vendor code.
-
 ## What this repo is not
 
 - Not a place to ship product code that *requires* changes to core repos - propose those upstream as issues first.

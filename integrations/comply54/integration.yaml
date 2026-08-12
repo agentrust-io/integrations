@@ -13,5 +13,7 @@ homepage: https://comply54.io
 license: Apache-2.0
 tier: community
 trace_conformance_level: 0
+trace_roles:
+  - record-producer
 tested_against:
   agentrust-trace: "0.5.0"

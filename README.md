@@ -9,7 +9,7 @@ The ecosystem front door for cMCP, TRACE, and Agent Manifest. Vendors and commun
 
 | Repo | What belongs there | Who contributes |
 |---|---|---|
-| [cmcp](https://github.com/agentrust-io/cmcp), [agent-manifest](https://github.com/agentrust-io/agent-manifest), [trace-spec](https://github.com/agentrust-io/trace-spec), [trace-tests](https://github.com/agentrust-io/trace-tests), [trace-registry](https://github.com/agentrust-io/trace-registry) | The standard and reference implementation. Bug fixes and spec feedback welcome; no vendor product code. | Maintainers; community fixes |
+| [cmcp](https://github.com/agentrust-io/cmcp), [agent-manifest](https://github.com/agentrust-io/agent-manifest), [trace-spec](https://github.com/agentrust-io/trace-spec), [trace-tests](https://github.com/agentrust-io/trace-tests) | The standard and reference implementation. Bug fixes and spec feedback welcome; no vendor product code. | Maintainers; community fixes |
 | [examples](https://github.com/agentrust-io/examples) | First-party, end-to-end runnable examples, plus flagship partner examples by invitation. Every line is reviewed and every claim verified before merge. | Maintainers; invited partners |
 | **this repo** | Your product's integration with cMCP, TRACE, or Agent Manifest: adapters, exporters, dashboards, policy packs, verifiers. Vendor-maintained. | Anyone, self-serve |
 | [awesome-ai-governance](https://github.com/agentrust-io/awesome-ai-governance) | Neutral listings of notable agent-governance tools, including ones that do not integrate with this stack. | Anyone meeting the listing criteria |
@@ -28,16 +28,29 @@ TRACE only works as a standard if it is genuinely neutral. Integrations are list
 
 ## Index
 
+<!-- integration-index:start -->
 | Integration | Vendor | Integrates with | Tier |
 |---|---|---|---|
 | [claude-code](claude-code/) | agentrust-io | agent-manifest, trace | community |
+| [Agent Passport System](integrations/aeoess-aps/) | aeoess | trace | community |
+| [comply54](integrations/comply54/) | comply54 | trace | community |
+| [DecisionAssure](integrations/decisionassure/) | DecisionAssure (a1k7) | trace | community |
+| [LangChain](integrations/langchain/) | agentrust-io | trace | community |
+| [LlamaIndex](integrations/llamaindex/) | agentrust-io | trace | community |
+| [Nobulex](integrations/nobulex/) | Nobulex | trace | community |
+| [OpenTelemetry GenAI](integrations/otel-genai/) | agentrust-io | trace | community |
+| [ramen-ai cMCP Adapter](integrations/ramen-ai-cmcp/) | ramen-ai | cmcp, trace | community |
+| [SAGE AgenTrust Bridge](integrations/sage-agenttrust/) | SAGE AgenTrust Bridge | cmcp, trace | community |
+| [Agent Sentinel](integrations/sentinel/) | a1k7 | trace | community |
+| [Shadow AI Discovery](integrations/shadow-ai/) | agentrust-io | cmcp, agent-manifest | community |
+| [Agentic SpendGuard](integrations/spendguard/) | SpendGuard | trace | community |
 | [agentrust-codex](plugins/agentrust-codex/) | agentrust-io | agent-manifest, trace | community |
 | [scheduled-agents](scheduled-agents/) | agentrust-io | trace | community |
-| [copilot](copilot/) | agentrust-io | (drift check only, see note) | community |
-| [decisionassure](integrations/decisionassure/) | DecisionAssure (a1k7) | trace | community |
-| [otel-genai](integrations/otel-genai/) | agentrust-io | trace | community |
-| [langchain](integrations/langchain/) | agentrust-io | trace | community |
-| [llamaindex](integrations/llamaindex/) | agentrust-io | trace | community |
+<!-- integration-index:end -->
+
+The [Copilot drift check](copilot/) is intentionally outside this manifest index:
+it emits neither TRACE nor Agent Manifest today, so it cannot truthfully select
+an `integrates_with` value from the current schema. See the note below.
 
 All four engines share [`agentrust-capture-core`](packages/agentrust-capture-core),
 which owns fingerprinting, comparison, baseline sealing and the report honesty rules.

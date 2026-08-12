@@ -8,7 +8,7 @@ description: >-
   catalog.json, emitting DiscoveryEvents that map to Agent Manifest records
   for remediation or quarantine.
 maintainer:
-  github: imransiddique-opaque
+  github: imran-siddique
 repository: https://github.com/agentrust-io/integrations
 license: Apache-2.0
 tier: community

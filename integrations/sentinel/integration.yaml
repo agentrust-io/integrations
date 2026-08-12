@@ -10,3 +10,5 @@ repository: https://github.com/agentrust-io/integrations/tree/main/integrations/
 license: MIT
 tier: community
 trace_conformance_level: 0
+trace_roles:
+  - record-producer

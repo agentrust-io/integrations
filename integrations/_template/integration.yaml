@@ -13,5 +13,7 @@ license: Apache-2.0
 tier: community   # set by maintainers during review; submissions start here
 # Required if you emit or consume TRACE records:
 # trace_conformance_level: 1
+# trace_roles:
+#   - record-producer  # or record-consumer / external-evidence-source
 tested_against:
   cmcp-runtime: "0.2.0"
