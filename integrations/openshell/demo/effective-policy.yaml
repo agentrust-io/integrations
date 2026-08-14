@@ -1,0 +1,9 @@
+version: 1
+filesystem_policy:
+  read_only:
+    - /workspace
+network_policies:
+  default:
+    endpoints:
+      - host: api.openai.com
+        port: 443

@@ -5,6 +5,11 @@ export, the effective OpenShell policy, and AGT Agent Control Specification
 decisions. It does not claim that imported control-plane logs are hardware
 attestation.
 
+Compatibility is tested against NVIDIA OpenShell `v0.0.105`, including its
+OCSF v1.7.0 product identity (`OpenShell Sandbox Supervisor`, vendor
+`OpenShell`). The adapter also binds every event's `metadata.uid` and product
+version to the declared sandbox execution instead of trusting caller metadata.
+
 ## Evidence contract
 
 The adapter requires:
@@ -64,6 +69,21 @@ record = build_openshell_record(
 Pass the result to `agentrust_trace.sign_record`. Signing is deliberately
 separate from evidence assembly.
 
+## Reproduce the signed proof
+
+The `demo/` directory contains a release-shaped OpenShell v0.0.105 OCSF fixture,
+an effective policy, an AGT ACS manifest, and correlated decisions. After the
+adapter package is published:
+
+```bash
+pip install agentrust-trace-adapters==0.1.0
+python integrations/openshell/demo/build_signed_record.py --output signed-record.json
+```
+
+The command builds the imported-evidence record, signs it with an ephemeral
+Ed25519 key, verifies the signature with the released `agentrust-trace` package,
+and writes the record. The key is intentionally not persisted.
+
 ## What the record claims
 
 | TRACE field | Value |
@@ -94,3 +114,6 @@ The emitted record targets TRACE Level 0:
 pip install agentrust-trace-tests
 trace-tests verify --record signed-record.json --level 0
 ```
+
+For the small upstream surface that would make production collection portable,
+see the [vendor-neutral evidence export proposal](upstream-evidence-export-proposal.md).

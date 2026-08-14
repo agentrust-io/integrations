@@ -83,7 +83,9 @@ def build_policy_bundle(
     return _canonical_json(bundle), mode
 
 
-def _parse_ocsf_jsonl(data: bytes) -> list[dict[str, Any]]:
+def _parse_ocsf_jsonl(
+    data: bytes, *, sandbox_id: str, openshell_version: str
+) -> list[dict[str, Any]]:
     raw = _required_bytes("ocsf_jsonl", data)
     events: list[dict[str, Any]] = []
     for line_number, line in enumerate(raw.decode("utf-8").splitlines(), start=1):
@@ -106,10 +108,21 @@ def _parse_ocsf_jsonl(data: bytes) -> list[dict[str, Any]]:
             raise ValueError(
                 f"OCSF JSONL line {line_number} metadata.product must be an object"
             )
-        if product.get("vendor_name") != "NVIDIA" or "OpenShell" not in str(
-            product.get("name", "")
+        if (
+            product.get("vendor_name") != "OpenShell"
+            or product.get("name") != "OpenShell Sandbox Supervisor"
         ):
             raise ValueError(f"OCSF JSONL line {line_number} is not OpenShell evidence")
+        product_version = str(product.get("version", "")).removeprefix("v")
+        if product_version != openshell_version.removeprefix("v"):
+            raise ValueError(
+                f"OCSF JSONL line {line_number} product version {product_version!r} "
+                f"does not match declared OpenShell version {openshell_version!r}"
+            )
+        if metadata.get("uid") != sandbox_id:
+            raise ValueError(
+                f"OCSF JSONL line {line_number} sandbox uid does not match {sandbox_id!r}"
+            )
         events.append(event)
     if not events:
         raise MissingEvidence("ocsf_jsonl contains no OpenShell events")
@@ -125,6 +138,7 @@ def build_transcript(
     capture_start: int,
     capture_end: int,
     capture_complete: bool,
+    openshell_version: str,
 ) -> tuple[bytes, int]:
     """Build the canonical transcript and return its bytes and action count."""
     if not sandbox_id or not sandbox_id.strip():
@@ -133,7 +147,13 @@ def build_transcript(
         raise MissingEvidence("capture is incomplete; refusing to present a partial log as a transcript")
     if capture_start < 0 or capture_end < capture_start:
         raise ValueError("capture_start and capture_end must be ordered Unix milliseconds")
-    events = _parse_ocsf_jsonl(ocsf_jsonl)
+    if not openshell_version or not openshell_version.strip():
+        raise MissingEvidence("openshell_version is required to validate OCSF provenance")
+    events = _parse_ocsf_jsonl(
+        ocsf_jsonl,
+        sandbox_id=sandbox_id,
+        openshell_version=openshell_version,
+    )
     decisions = [dict(item) for item in acs_decisions]
     if any(not item for item in decisions):
         raise ValueError("ACS decisions must be non-empty mappings")
@@ -209,6 +229,7 @@ def build_openshell_record(
         capture_start=evidence.capture_start,
         capture_end=evidence.capture_end,
         capture_complete=evidence.capture_complete,
+        openshell_version=evidence.openshell_version,
     )
     return build_record(
         source=SourceSystem(
