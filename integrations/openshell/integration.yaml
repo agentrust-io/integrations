@@ -1,0 +1,17 @@
+name: OpenShell TRACE Adapter
+vendor: agentrust-io
+integrates_with:
+  - trace
+description: Builds a software-only TRACE record from NVIDIA OpenShell OCSF events and AGT ACS policy decisions.
+maintainer:
+  github: imran-siddique
+repository: https://github.com/agentrust-io/integrations
+homepage: https://github.com/NVIDIA/OpenShell
+license: Apache-2.0
+tier: community
+trace_roles:
+  - record-producer
+trace_conformance_level: 0
+tested_against:
+  agentrust-trace: "0.9.0"
+  agentrust-trace-tests: "0.5.0"

@@ -1,0 +1,9 @@
+agent_control_specification_version: 0.3.0-alpha-agt
+agent:
+  id: support-bot
+tools:
+  shell.execute:
+    effect: allow
+    constraints:
+      command_prefixes:
+        - python

@@ -1,0 +1,97 @@
+name: Verify agentrust-trace-adapters release provenance
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Published agentrust-trace-adapters version
+        required: true
+        default: "0.1.0"
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify PyPI attestations and released package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - name: Install independent provenance verifier
+        run: python -m pip install --disable-pip-version-check pypi-attestations==0.0.30
+      - name: Resolve the published wheel and source distribution
+        id: distributions
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          python - <<'PY' > /tmp/distribution-urls.txt
+          import json
+          import os
+          import urllib.request
+
+          version = os.environ["VERSION"]
+          url = f"https://pypi.org/pypi/agentrust-trace-adapters/{version}/json"
+          with urllib.request.urlopen(url, timeout=30) as response:
+              release = json.load(response)
+
+          files = release["urls"]
+          wheels = [item for item in files if item["packagetype"] == "bdist_wheel"]
+          sdists = [item for item in files if item["packagetype"] == "sdist"]
+          if len(wheels) != 1 or len(sdists) != 1:
+              raise SystemExit(
+                  f"expected one wheel and one sdist, got {len(wheels)} wheel(s) "
+                  f"and {len(sdists)} sdist(s)"
+              )
+
+          for item in (*wheels, *sdists):
+              print(item["url"])
+          PY
+          {
+            echo 'urls<<EOF'
+            cat /tmp/distribution-urls.txt
+            echo EOF
+          } >> "$GITHUB_OUTPUT"
+      - name: Verify every distribution's PyPI provenance
+        env:
+          DISTRIBUTION_URLS: ${{ steps.distributions.outputs.urls }}
+        run: |
+          set -euo pipefail
+          while IFS= read -r distribution_url; do
+            test -n "$distribution_url"
+            pypi-attestations verify pypi \
+              --repository https://github.com/agentrust-io/integrations \
+              "$distribution_url"
+          done <<< "$DISTRIBUTION_URLS"
+      - name: Install the public wheel without a package cache
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          python -m venv /tmp/released-package
+          /tmp/released-package/bin/pip install \
+            --disable-pip-version-check \
+            --no-cache-dir \
+            "agentrust-trace-adapters==$VERSION" \
+            agentrust-trace-tests==0.5.0 \
+            pytest
+      - name: Exercise the released adapter with the signed OpenShell proof
+        run: |
+          set -euo pipefail
+          /tmp/released-package/bin/python -c \
+            "from agentrust_trace_adapters import build_openshell_record; assert callable(build_openshell_record)"
+          /tmp/released-package/bin/python \
+            integrations/openshell/demo/build_signed_record.py \
+            --output /tmp/signed-record.json
+          /tmp/released-package/bin/trace-tests verify \
+            --record /tmp/signed-record.json \
+            --level 0
+          /tmp/released-package/bin/python -m pytest \
+            integrations/openshell/test_demo.py \
+            -q

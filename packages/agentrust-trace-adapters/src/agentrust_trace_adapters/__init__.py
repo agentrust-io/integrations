@@ -24,16 +24,26 @@ from .evidence import (
     SourceSystem,
     digest_bytes,
 )
+from .openshell import (
+    OpenShellEvidence,
+    build_openshell_record,
+    build_policy_bundle,
+    build_transcript,
+)
 
 __all__ = [
     "AppraisalEvidence",
     "DIGEST_RE",
     "MissingEvidence",
+    "OpenShellEvidence",
     "PolicyEvidence",
     "SourceSystem",
     "TRACE_PROFILE",
     "appraisal_from_evidence",
     "build_record",
+    "build_openshell_record",
+    "build_policy_bundle",
+    "build_transcript",
     "digest_bytes",
     "software_measurement",
 ]
