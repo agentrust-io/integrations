@@ -38,6 +38,7 @@ TRACE only works as a standard if it is genuinely neutral. Integrations are list
 | [LangChain](integrations/langchain/) | agentrust-io | trace | community |
 | [LlamaIndex](integrations/llamaindex/) | agentrust-io | trace | community |
 | [Nobulex](integrations/nobulex/) | Nobulex | trace | community |
+| [OpenShell TRACE Adapter](integrations/openshell/) | agentrust-io | trace | community |
 | [OpenTelemetry GenAI](integrations/otel-genai/) | agentrust-io | trace | community |
 | [ramen-ai cMCP Adapter](integrations/ramen-ai-cmcp/) | ramen-ai | cmcp, trace | community |
 | [SAGE AgenTrust Bridge](integrations/sage-agenttrust/) | SAGE AgenTrust Bridge | cmcp, trace | community |

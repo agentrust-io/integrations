@@ -69,6 +69,41 @@ record = build_record(
 )
 ```
 
+## NVIDIA OpenShell
+
+`OpenShellEvidence` binds the two policy layers and the complete machine-readable
+runtime transcript into one Level 0 record:
+
+```python
+from agentrust_trace_adapters import OpenShellEvidence, build_openshell_record
+
+evidence = OpenShellEvidence(
+    sandbox_id="sbx-123",
+    policy_revision="42",
+    openshell_policy=open("effective-policy.yaml", "rb").read(),
+    acs_manifest=open("agent-control.yaml", "rb").read(),
+    ocsf_jsonl=open("openshell-ocsf.jsonl", "rb").read(),
+    acs_decisions=tuple(acs_decisions),
+    capture_start=1775014138000,
+    capture_end=1775014199000,
+    capture_complete=True,
+    openshell_version="0.0.105",
+)
+record = build_openshell_record(
+    evidence,
+    subject="spiffe://example.org/agent/support-bot",
+    model_provider="anthropic",
+    model_id="claude-sonnet-4-6",
+    data_class="internal",
+    workload_digest="sha256:...",
+    jwk=public_jwk,
+)
+```
+
+The adapter refuses incomplete capture, malformed or non-OpenShell OCSF events,
+missing policy bytes, or a missing policy revision. It does not infer hardware
+attestation from an OpenShell compute driver.
+
 Signing is not here. It belongs to `agentrust_trace.sign`, and an adapter that both assembles and signs invites a caller to skip looking at what it assembled.
 
 ## Two questions worth answering before you write an adapter

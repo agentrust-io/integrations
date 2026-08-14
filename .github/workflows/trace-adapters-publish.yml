@@ -1,0 +1,99 @@
+name: Publish agentrust-trace-adapters to PyPI
+
+on:
+  push:
+    tags: ["trace-adapters-v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  guard:
+    name: Tag matches the packaged version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - name: Compare tag to pyproject version
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF#refs/tags/trace-adapters-v}"
+          packaged="$(python -c "
+          import tomllib, pathlib
+          print(tomllib.loads(pathlib.Path(
+              'packages/agentrust-trace-adapters/pyproject.toml'
+          ).read_text())['project']['version'])
+          ")"
+          test "$tag" = "$packaged" || {
+            echo "::error::Tag version $tag does not match package $packaged"
+            exit 1
+          }
+
+  build:
+    name: Build and smoke-test distribution
+    needs: guard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - run: pip install build twine
+      - name: Build and inspect artifacts
+        working-directory: packages/agentrust-trace-adapters
+        run: |
+          python -m build
+          twine check dist/*
+      - name: Smoke-test installed wheel and signed OpenShell proof
+        run: |
+          python -m venv /tmp/smoke
+          /tmp/smoke/bin/pip install --quiet packages/agentrust-trace-adapters/dist/*.whl agentrust-trace-tests==0.5.0 pytest
+          /tmp/smoke/bin/python -c "from agentrust_trace_adapters import build_openshell_record; assert callable(build_openshell_record)"
+          /tmp/smoke/bin/python integrations/openshell/demo/build_signed_record.py --output /tmp/signed-record.json
+          /tmp/smoke/bin/trace-tests verify --record /tmp/signed-record.json --level 0
+          /tmp/smoke/bin/python -m pytest integrations/openshell/test_demo.py -q
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: trace-adapters-dist
+          path: packages/agentrust-trace-adapters/dist/
+
+  publish:
+    name: Publish to PyPI
+    needs: build
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: trace-adapters-dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
+
+  github-release:
+    name: Create GitHub Release
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: trace-adapters-dist
+          path: dist/
+      - uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
+        with:
+          files: dist/*
+          generate_release_notes: true
