@@ -1,0 +1,8 @@
+[
+  {
+    "decision": "allow",
+    "decision_id": "acs-001",
+    "sandbox_id": "sandbox-abc123",
+    "tool": "shell.execute"
+  }
+]

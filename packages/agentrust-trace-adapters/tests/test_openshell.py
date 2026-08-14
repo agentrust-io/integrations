@@ -28,10 +28,11 @@ def event(*, action: str = "Allowed", time: int = 1_775_014_138_811) -> dict:
         "metadata": {
             "product": {
                 "name": "OpenShell Sandbox Supervisor",
-                "vendor_name": "NVIDIA",
-                "version": "0.3.0",
+                "vendor_name": "OpenShell",
+                "version": "0.0.105",
             },
             "version": "1.7.0",
+            "uid": "sbx-123",
         },
     }
 
@@ -51,7 +52,7 @@ def evidence(**overrides) -> OpenShellEvidence:
         "capture_start": 1_775_014_138_000,
         "capture_end": 1_775_014_139_000,
         "capture_complete": True,
-        "openshell_version": "0.3.0",
+        "openshell_version": "0.0.105",
     }
     values.update(overrides)
     return OpenShellEvidence(**values)
@@ -74,7 +75,7 @@ def test_builds_honest_software_only_record() -> None:
     record = build()
     assert record["origin"] == {
         "kind": "third-party-control-plane",
-        "producer": "nvidia-openshell/0.3.0",
+        "producer": "nvidia-openshell/0.0.105",
         "source_event_id": "sbx-123",
     }
     assert record["runtime"]["platform"] == "software-only"
@@ -138,6 +139,45 @@ def test_incomplete_capture_is_rejected() -> None:
         build(evidence(capture_complete=False))
 
 
+def test_accepts_released_openshell_0_0_105_event_contract() -> None:
+    record = build()
+    assert record["origin"]["producer"] == "nvidia-openshell/0.0.105"
+
+
+@pytest.mark.parametrize(
+    "product",
+    [
+        {
+            "name": "OpenShell Sandbox Supervisor",
+            "vendor_name": "NVIDIA",
+            "version": "0.0.105",
+        },
+        {
+            "name": "OpenShell Sandbox Supervisor",
+            "vendor_name": "OpenShell",
+            "version": "0.0.104",
+        },
+        {
+            "name": "Not OpenShell",
+            "vendor_name": "OpenShell",
+            "version": "0.0.105",
+        },
+    ],
+)
+def test_rejects_wrong_product_identity_or_version(product: dict) -> None:
+    bad_event = event()
+    bad_event["metadata"]["product"] = product
+    with pytest.raises(ValueError):
+        build(evidence(ocsf_jsonl=jsonl(bad_event)))
+
+
+def test_rejects_event_from_a_different_sandbox() -> None:
+    bad_event = event()
+    bad_event["metadata"]["uid"] = "sbx-other"
+    with pytest.raises(ValueError, match="sandbox uid"):
+        build(evidence(ocsf_jsonl=jsonl(bad_event)))
+
+
 @pytest.mark.parametrize(
     "bad",
     [
@@ -158,12 +198,13 @@ def test_event_order_changes_transcript_commitment() -> None:
     allowed = event(action="Allowed", time=1)
     denied = event(action="Denied", time=2)
     common = {
-        "sandbox_id": "s",
+        "sandbox_id": "sbx-123",
         "policy_bundle_hash": "sha256:" + "b" * 64,
         "acs_decisions": (),
         "capture_start": 0,
         "capture_end": 3,
         "capture_complete": True,
+        "openshell_version": "0.0.105",
     }
     forward, _ = build_transcript(ocsf_jsonl=jsonl(allowed, denied), **common)
     reverse, _ = build_transcript(ocsf_jsonl=jsonl(denied, allowed), **common)

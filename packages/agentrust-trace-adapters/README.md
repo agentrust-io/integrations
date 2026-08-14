@@ -87,7 +87,7 @@ evidence = OpenShellEvidence(
     capture_start=1775014138000,
     capture_end=1775014199000,
     capture_complete=True,
-    openshell_version="0.3.0",
+    openshell_version="0.0.105",
 )
 record = build_openshell_record(
     evidence,

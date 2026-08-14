@@ -115,7 +115,8 @@ jobs:
       - name: Test OpenShell evidence mapping against released TRACE
         run: |
           pip install ./packages/agentrust-trace-adapters pytest
-          python -m pytest packages/agentrust-trace-adapters/tests/test_openshell.py -q
+          python -m pytest packages/agentrust-trace-adapters/tests/test_openshell.py integrations/openshell/test_demo.py -q
+          python integrations/openshell/demo/build_signed_record.py --output /tmp/signed-record.json
 
   langchain-adapter:
     runs-on: ubuntu-latest
