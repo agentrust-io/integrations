@@ -51,7 +51,5 @@ jobs:
         run: pip install ./packages/agentrust-capture-core
       - name: Snapshot this repository's Copilot composition
         run: python copilot/engine/capture.py snapshot
-      - name: Verify against the baseline, reporting without failing
-        # No baseline is committed for this repo yet, so verify exits 0 and says
-        # so. Once one is committed this becomes a real gate on ourselves.
+      - name: Verify against the committed baseline
         run: python copilot/engine/capture.py verify
