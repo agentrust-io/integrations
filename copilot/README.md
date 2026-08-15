@@ -69,9 +69,9 @@ Verified against GitHub's documentation for what Copilot actually reads.
 
 | Category | Paths |
 |---|---|
-| Instructions | `.github/copilot-instructions.md`, `.github/instructions/**/*.instructions.md`, **`AGENTS.md` anywhere in the tree**, root `CLAUDE.md` and `GEMINI.md` |
+| Instructions and custom agents | `.github/copilot-instructions.md`, `.github/instructions/**/*.instructions.md`, `.github/agents/**/*.agent.md`, **`AGENTS.md` anywhere in the tree**, root `CLAUDE.md` and `GEMINI.md` |
 | Skills | `.github/skills/<name>/`, `.claude/skills/<name>/`, `.agents/skills/<name>/` |
-| MCP | `copilot/mcp-config.json`, `.vscode/mcp.json` |
+| MCP | `.vscode/mcp.json` (VS Code workspace configuration) |
 
 Two of those deserve a note.
 
@@ -84,6 +84,15 @@ skipped, so a dependency shipping its own `AGENTS.md` is not counted as yours.
 **Skills are digested across the whole directory**, not just `SKILL.md`. A skill's
 `scripts/` decide what it does. Digesting the manifest alone was a live bypass in
 two other engines in this repo, so the shared core covers the tree.
+
+**MCP configuration depends on the Copilot surface.** VS Code reads the
+repository's `.vscode/mcp.json`, so it is measured here. Copilot cloud-agent MCP
+servers are configured in the repository's GitHub settings and are not stored in
+a repository file, so this file-based check cannot measure them. A custom cloud
+agent may embed `mcp-servers` in `.github/agents/*.agent.md`; those profiles are
+measured in full with the instruction surface. Copilot CLI instead reads the
+user-level `~/.copilot/mcp-config.json`, outside this repository check. There is
+no documented repository-level `copilot/mcp-config.json` path.
 
 ## What it does not do
 

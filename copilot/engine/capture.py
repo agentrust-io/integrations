@@ -22,10 +22,11 @@ What Copilot reads, verified against GitHub's documentation:
                  .github/instructions/**/*.instructions.md  path-scoped, applyTo
                  AGENTS.md anywhere in the tree           nearest wins
                  CLAUDE.md, GEMINI.md at the root         alternatives to AGENTS.md
+                 .github/agents/**/*.agent.md             custom cloud agents
   skills         .github/skills/<name>/SKILL.md           plus supporting files
                  .claude/skills/<name>/SKILL.md
                  .agents/skills/<name>/SKILL.md
-  mcp            copilot/mcp-config.json, .vscode/mcp.json
+  mcp            .vscode/mcp.json                         VS Code workspace
 
 Standard library only, so the action needs no install step.
 
@@ -78,6 +79,7 @@ INSTRUCTION_FILES = (
 #: there without touching anything at the root.
 INSTRUCTION_GLOBS = (
     ".github/instructions/**/*.instructions.md",
+    ".github/agents/**/*.agent.md",
     "**/AGENTS.md",
 )
 
@@ -90,7 +92,6 @@ SKILL_ROOTS = (
 
 #: MCP server configuration Copilot may read from the repository.
 MCP_FILES = (
-    "copilot/mcp-config.json",
     ".vscode/mcp.json",
 )
 
