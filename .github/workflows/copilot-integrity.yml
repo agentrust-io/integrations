@@ -9,13 +9,6 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      # Only granted so the comment can be posted on pull requests from this
-      # repository. GITHUB_TOKEN is read-only on fork pull requests regardless,
-      # which is why commenting is switched off for those below rather than left
-      # to fail a contribution that did nothing wrong.
-      pull-requests: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -26,9 +19,7 @@ jobs:
       - name: Verify the approved Copilot composition
         uses: ./copilot
         with:
-          # On for pull requests from this repository, off for forks, where the
-          # token is read-only and the comment step would 403. The job summary
-          # carries the same result either way, so a fork contributor loses the
-          # comment and nothing else.
-          comment: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+          # Keep fork pull requests read-only. The job summary carries the same
+          # result without requiring pull-requests: write.
+          comment: "false"
           fail-on-drift: "true"
