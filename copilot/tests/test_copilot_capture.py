@@ -161,15 +161,26 @@ class TestSkillSurface:
 
 
 class TestMcpSurface:
-    def test_vscode_mcp_config_is_measured(self, tmp_path):
+    @pytest.mark.parametrize("name", [
+        ".mcp.json",
+        ".github/mcp.json",
+        ".vscode/mcp.json",
+        ".devcontainer/devcontainer.json",
+        ".devcontainer.json",
+        ".devcontainer/python/devcontainer.json",
+    ])
+    def test_mcp_config_is_measured(self, tmp_path, name):
         root = _repo(tmp_path)
-        name = ".vscode/mcp.json"
         target = root / name
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text('{"servers": {}}', encoding="utf-8")
         assert name in capture.snapshot(root)["mcp"]
 
     def test_undocumented_repository_mcp_path_is_not_measured(self, tmp_path):
+        """``copilot/mcp-config.json`` was measured once and reads like
+        ``~/.copilot/mcp-config.json``, Copilot CLI's user config, with the tilde
+        filed off. A repository directory of that name is not agent configuration
+        and must not be counted as any."""
         root = _repo(tmp_path)
         target = root / "copilot" / "mcp-config.json"
         target.parent.mkdir(parents=True)
@@ -178,14 +189,27 @@ class TestMcpSurface:
 
     def test_a_new_mcp_server_is_reported(self, tmp_path):
         root = _repo(tmp_path)
-        target = root / ".vscode" / "mcp.json"
-        target.parent.mkdir(parents=True)
+        target = root / ".github" / "mcp.json"
+        target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text('{"servers": {}}', encoding="utf-8")
         before = capture.snapshot(root)
         target.write_text('{"servers": {"shadow": {"command": "x"}}}', encoding="utf-8")
         changes = capture.diff(before, capture.snapshot(root))
         assert {"change": "changed", "what": "MCP config",
-                "detail": ".vscode/mcp.json"} in changes
+                "detail": ".github/mcp.json"} in changes
+
+    def test_widening_the_path_list_is_not_reported_as_drift(self, tmp_path):
+        """A baseline written on scope 1 cannot tell a file that was always there
+        from one this run started measuring, so it must ask for a re-approval
+        rather than accuse the pull request of adding an MCP server."""
+        root = _repo(tmp_path)
+        target = root / ".github" / "mcp.json"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text('{"servers": {}}', encoding="utf-8")
+        stale = dict(capture.snapshot(root), scope=1, mcp={})
+        changes = capture.diff(stale, capture.snapshot(root))
+        assert [c for c in changes if c["what"] == "measurement scope"]
+        assert not [c for c in changes if c["what"] == "MCP config"]
 
 
 class TestVerifyAsAStatusCheck:

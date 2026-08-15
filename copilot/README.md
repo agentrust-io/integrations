@@ -71,9 +71,9 @@ Verified against GitHub's documentation for what Copilot actually reads.
 |---|---|
 | Instructions and custom agents | `.github/copilot-instructions.md`, `.github/instructions/**/*.instructions.md`, `.github/agents/**/*.agent.md`, **`AGENTS.md` anywhere in the tree**, root `CLAUDE.md` and `GEMINI.md` |
 | Skills | `.github/skills/<name>/`, `.claude/skills/<name>/`, `.agents/skills/<name>/` |
-| MCP | `.vscode/mcp.json` (VS Code workspace configuration) |
+| MCP | `.mcp.json`, `.github/mcp.json`, `.vscode/mcp.json`, `.devcontainer/devcontainer.json`, `.devcontainer.json`, `.devcontainer/*/devcontainer.json` |
 
-Two of those deserve a note.
+Four of those deserve a note.
 
 **`AGENTS.md` is matched anywhere**, because Copilot resolves the nearest one. A
 file added three directories down changes how the agent behaves in that subtree
@@ -85,14 +85,23 @@ skipped, so a dependency shipping its own `AGENTS.md` is not counted as yours.
 `scripts/` decide what it does. Digesting the manifest alone was a live bypass in
 two other engines in this repo, so the shared core covers the tree.
 
-**MCP configuration depends on the Copilot surface.** VS Code reads the
-repository's `.vscode/mcp.json`, so it is measured here. Copilot cloud-agent MCP
-servers are configured in the repository's GitHub settings and are not stored in
-a repository file, so this file-based check cannot measure them. A custom cloud
-agent may embed `mcp-servers` in `.github/agents/*.agent.md`; those profiles are
-measured in full with the instruction surface. Copilot CLI instead reads the
-user-level `~/.copilot/mcp-config.json`, outside this repository check. There is
-no documented repository-level `copilot/mcp-config.json` path.
+**MCP configuration depends on the Copilot surface**, and only some of it is a
+repository file. VS Code reads `.vscode/mcp.json`. Copilot CLI reads `.mcp.json`
+per checkout and `.github/mcp.json` as the committed shared form, on top of the
+user-level `~/.copilot/mcp-config.json` on the developer's own machine. All the
+repository ones are measured; the home-directory one is what the Claude Code and
+Codex engines here watch instead. Copilot cloud-agent MCP servers are entered as
+JSON in the repository's GitHub settings and live in no file, so a file-based
+check cannot see them at all. A custom cloud agent may embed `mcp-servers` in
+`.github/agents/*.agent.md`, and those profiles are measured in full with the
+instruction surface. There is no `copilot/mcp-config.json` path in any of this.
+
+**Dev container definitions are digested whole**, not parsed for the one key that
+matters. `devcontainer.json` carries MCP servers under `customizations.vscode.mcp`,
+but the file is JSONC, and a parser that mishandles a comment or a trailing comma
+would report "nothing changed" about a file it failed to read. So an unrelated
+devcontainer edit shows up as an MCP config change. That is a false positive a
+reviewer settles by reading the diff, and it is the direction worth being wrong in.
 
 ## What it does not do
 
@@ -103,6 +112,13 @@ no documented repository-level `copilot/mcp-config.json` path.
 - **It does not cover organisation-level or personal instructions.** Those are set
   outside the repository and are invisible to a check that runs inside it. If your
   organisation sets Copilot instructions centrally, this check does not see them.
+- **It does not cover MCP servers configured outside the repository**, and there are
+  two such places. `~/.copilot/mcp-config.json` is a developer's own machine, which
+  is what the Claude Code and Codex engines here watch instead. The coding agent's
+  MCP configuration is entered as JSON in repository settings on github.com, so it
+  never appears in a diff and no check running inside the repository can see it.
+  Both are real gaps in coverage. Neither is something this check can close, and
+  saying so is better than a green tick that means less than a reader assumes.
 - **It is not a sandbox.** It reports composition, it does not constrain execution.
 - **It emits no signed record**, unlike the other integrations here, and that is a
   spec question rather than a missing feature. See
