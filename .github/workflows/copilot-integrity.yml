@@ -1,0 +1,39 @@
+name: copilot integrity
+
+# The gate this repository ships for other people's repositories, run on itself.
+#
+# Unlike copilot-tests.yml, this cannot be scoped to `copilot/**`. What it guards
+# is spread across the tree: AGENTS.md resolves to the nearest one, so a file added
+# three directories down changes what Copilot reads there. A path filter would mean
+# the gate is absent exactly when it matters.
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  integrity:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # For the pull-request comment. GITHUB_TOKEN is read-only on pull requests
+      # from forks, so commenting is disabled for those below rather than left to
+      # fail the job on a contribution that did nothing wrong.
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+
+      - name: Fail if this pull request changes what Copilot reads
+        uses: ./copilot
+        with:
+          # Enforcing, not advisory. The baseline is empty because this repository
+          # has none of these surfaces yet, so the first thing this can fire on is
+          # someone adding one, which is the event the check exists for.
+          fail-on-drift: "true"
+          comment: ${{ github.event.pull_request.head.repo.full_name == github.repository }}

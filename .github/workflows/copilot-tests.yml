@@ -35,9 +35,10 @@ jobs:
           cd copilot
           python -m pytest tests -q
 
-  # The check runs against this repository, which carries the surfaces it looks
-  # for: AGENTS.md files, .github/instructions, and skill directories. So it is
-  # both a smoke test and a dogfood.
+  # A smoke test that the engine runs end to end against a real repository. The
+  # enforcing gate is copilot-integrity.yml, which runs on every pull request
+  # rather than only when copilot/** changes; verifying here as well would mean
+  # two jobs enforcing one rule on different triggers.
   self-check:
     runs-on: ubuntu-latest
     steps:
@@ -51,7 +52,3 @@ jobs:
         run: pip install ./packages/agentrust-capture-core
       - name: Snapshot this repository's Copilot composition
         run: python copilot/engine/capture.py snapshot
-      - name: Verify against the baseline, reporting without failing
-        # No baseline is committed for this repo yet, so verify exits 0 and says
-        # so. Once one is committed this becomes a real gate on ourselves.
-        run: python copilot/engine/capture.py verify

@@ -4,6 +4,13 @@ All notable changes to the AgenTrust Copilot drift check.
 
 ## Unreleased
 
+### Added
+- **This repository now runs the check on itself, enforcing.** `.agentrust/copilot-baseline.json`
+  is committed and `copilot-integrity.yml` gates every pull request with
+  `fail-on-drift: true`. The baseline is empty because this repository has none of
+  the surfaces yet, so the first thing it can fire on is someone adding one, which
+  is the event the check exists for.
+
 ### Fixed
 - **The MCP path list was wrong.** It measured `copilot/mcp-config.json`, which no
   tool reads. The real Copilot CLI user config is `~/.copilot/mcp-config.json`, in
