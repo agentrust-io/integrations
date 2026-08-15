@@ -26,7 +26,11 @@ What Copilot reads, verified against GitHub's documentation:
   skills         .github/skills/<name>/SKILL.md           plus supporting files
                  .claude/skills/<name>/SKILL.md
                  .agents/skills/<name>/SKILL.md
-  mcp            .vscode/mcp.json                         VS Code workspace
+  mcp            .mcp.json                                 Copilot CLI, per checkout
+                 .github/mcp.json                          Copilot CLI, committed
+                 .vscode/mcp.json                          VS Code workspace
+                 .devcontainer/devcontainer.json           customizations.vscode.mcp
+                 .devcontainer.json, .devcontainer/*/devcontainer.json
 
 Standard library only, so the action needs no install step.
 
@@ -60,7 +64,13 @@ VERSION = "0.1.0"
 
 #: Version of WHAT this engine measures. See the other engines for why this
 #: exists: widening coverage must not be reported as drift that happened.
-MEASUREMENT_SCOPE = 1
+#:
+#: 2 widened the MCP path list. #116 removed ``copilot/mcp-config.json``, which
+#: nothing reads, and that needed no bump because no baseline could hold a path
+#: that never matched. This adds four that repositories really do carry, and a
+#: baseline written before them cannot tell a file that was always present from
+#: one this run started measuring.
+MEASUREMENT_SCOPE = 2
 
 #: Where the approved baseline lives, relative to the repository root. In the
 #: repository on purpose: it is reviewed like code, and git carries its provenance.
@@ -90,9 +100,42 @@ SKILL_ROOTS = (
     ".agents/skills",
 )
 
-#: MCP server configuration Copilot may read from the repository.
+#: MCP server configuration Copilot may read from the repository. Every path here
+#: is checked against vendor documentation, because the first version of this list
+#: carried ``copilot/mcp-config.json``, which nothing reads: the real Copilot CLI
+#: user config is ``~/.copilot/mcp-config.json``, in the home directory, which is
+#: another engine's problem and not a repository surface at all.
+#:
+#: What each one is, and who reads it:
+#:   .mcp.json         Copilot CLI, per checkout; takes precedence over the next
+#:   .github/mcp.json  Copilot CLI, the committed form meant to be shared
+#:   .vscode/mcp.json  VS Code agent mode; documented as source control material
+#:
+#: Deliberately absent: ``~/.copilot/mcp-config.json`` and the coding agent's MCP
+#: configuration, which lives in repository settings on github.com rather than in
+#: a file. Neither arrives by pull request, so neither is reviewable here, and a
+#: check that implied otherwise would be worse than one that says nothing.
 MCP_FILES = (
+    ".mcp.json",
+    ".github/mcp.json",
     ".vscode/mcp.json",
+    ".devcontainer/devcontainer.json",
+    ".devcontainer.json",
+)
+
+#: Dev container definitions carry MCP servers under ``customizations.vscode.mcp``,
+#: and the specification allows one per single-level subfolder as well as the two
+#: fixed paths above.
+#:
+#: These are digested whole rather than parsed for that one key. devcontainer.json
+#: is JSONC, so reading the key means tolerating comments and trailing commas, and
+#: a parser that quietly gets that wrong reports "nothing changed" about a file it
+#: failed to understand. The cost is that an unrelated devcontainer edit, a new
+#: feature or a forwarded port, reports as an MCP config change. That is a false
+#: positive a reviewer resolves by looking at the diff, which is the direction to
+#: be wrong in.
+MCP_GLOBS = (
+    ".devcontainer/*/devcontainer.json",
 )
 
 #: Directories never walked when looking for instruction files. Without this,
@@ -171,6 +214,20 @@ def _mcp(root: Path) -> dict:
             digest = core.safe_sha_file(path)
             if digest:
                 found[name] = digest
+    for pattern in MCP_GLOBS:
+        try:
+            matches = sorted(root.glob(pattern))
+        except OSError:
+            continue
+        for path in matches:
+            if path.is_symlink() or not path.is_file():
+                continue
+            relative = path.relative_to(root)
+            if _is_skipped(relative):
+                continue
+            digest = core.safe_sha_file(path)
+            if digest:
+                found[relative.as_posix()] = digest
     return dict(sorted(found.items()))
 
 
@@ -193,11 +250,14 @@ def load_baseline(root: Path) -> dict | None:
 def diff(base: dict, current: dict) -> list:
     common = core.observed_categories(base, current, CATEGORIES)
     changes: list = []
-    scope = core.scope_change(base, MEASUREMENT_SCOPE, affected=["skills"],
-                              reason="skill digests changed shape.")
+    scope = core.scope_change(
+        base, MEASUREMENT_SCOPE, affected=["mcp"],
+        reason="the MCP path list was corrected, so a baseline written on the old "
+               "list cannot distinguish a file that was always there from one this "
+               "run started measuring.")
     if scope is not None:
         changes.append(scope)
-        common.discard("skills")
+        common.discard("mcp")
     if "instructions" in common:
         changes += core.diff_maps(base.get("instructions", {}),
                                  current.get("instructions", {}), "instruction file")
