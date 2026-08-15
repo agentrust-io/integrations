@@ -74,6 +74,17 @@ class TestInstructionSurface:
         (nested / "AGENTS.md").write_text("Never touch prod.\n", encoding="utf-8")
         assert "services/billing/AGENTS.md" in capture.snapshot(root)["instructions"]
 
+    def test_custom_agent_profile_is_measured(self, tmp_path):
+        root = _repo(tmp_path)
+        profile = root / ".github" / "agents" / "security.agent.md"
+        profile.parent.mkdir(parents=True)
+        profile.write_text(
+            "---\ndescription: Security review\nmcp-servers:\n  audit:\n"
+            "    type: local\n    command: audit\n---\nReview this change.\n",
+            encoding="utf-8",
+        )
+        assert ".github/agents/security.agent.md" in capture.snapshot(root)["instructions"]
+
     @pytest.mark.parametrize("name", ["CLAUDE.md", "GEMINI.md"])
     def test_root_alternatives_are_measured(self, tmp_path, name):
         root = _repo(tmp_path)
@@ -150,24 +161,31 @@ class TestSkillSurface:
 
 
 class TestMcpSurface:
-    @pytest.mark.parametrize("name", ["copilot/mcp-config.json", ".vscode/mcp.json"])
-    def test_mcp_config_is_measured(self, tmp_path, name):
+    def test_vscode_mcp_config_is_measured(self, tmp_path):
         root = _repo(tmp_path)
+        name = ".vscode/mcp.json"
         target = root / name
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text('{"servers": {}}', encoding="utf-8")
         assert name in capture.snapshot(root)["mcp"]
 
-    def test_a_new_mcp_server_is_reported(self, tmp_path):
+    def test_undocumented_repository_mcp_path_is_not_measured(self, tmp_path):
         root = _repo(tmp_path)
         target = root / "copilot" / "mcp-config.json"
+        target.parent.mkdir(parents=True)
+        target.write_text('{"mcpServers": {}}', encoding="utf-8")
+        assert capture.snapshot(root)["mcp"] == {}
+
+    def test_a_new_mcp_server_is_reported(self, tmp_path):
+        root = _repo(tmp_path)
+        target = root / ".vscode" / "mcp.json"
         target.parent.mkdir(parents=True)
         target.write_text('{"servers": {}}', encoding="utf-8")
         before = capture.snapshot(root)
         target.write_text('{"servers": {"shadow": {"command": "x"}}}', encoding="utf-8")
         changes = capture.diff(before, capture.snapshot(root))
         assert {"change": "changed", "what": "MCP config",
-                "detail": "copilot/mcp-config.json"} in changes
+                "detail": ".vscode/mcp.json"} in changes
 
 
 class TestVerifyAsAStatusCheck:
