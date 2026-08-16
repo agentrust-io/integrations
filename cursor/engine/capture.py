@@ -6,8 +6,8 @@ request, so this is a status check rather than a local warning.
 
   Does this pull request change what Cursor reads, without saying so?
 
-What Cursor reads, verified against cursor.com/docs (Customize > Rules and
-Customize > MCP):
+What Cursor reads, verified against cursor.com/docs (Customize > Rules,
+Customize > Skills, Customize > MCP):
 
   rules   .cursor/rules/**/*.mdc          nested folders are an intended
                                            organisational pattern, per the
@@ -48,18 +48,25 @@ Customize > MCP):
           .claude/skills/<name>/SKILL.md  anywhere in the tree, compatibility
           .codex/skills/<name>/SKILL.md   anywhere in the tree, compatibility
 
-                                           Unlike rules, Cursor's documentation
-                                           describes this as intentional:
+                                           Confirmed directly against
+                                           cursor.com/docs (Customize >
+                                           Skills), which describes both of
+                                           these as intended, unlike rules:
+                                           "Cursor walks the skills root
+                                           recursively and picks up any
+                                           SKILL.md it finds", and separately,
                                            a skills root "anywhere inside your
                                            repository is picked up, so
                                            monorepos can colocate skills with
-                                           the package they apply to", and a
-                                           root itself is walked recursively
-                                           for category subfolders such as
-                                           .cursor/skills/shipping/deploy/.
-                                           So this looks for a skills root at
-                                           any depth, then for SKILL.md at any
-                                           depth beneath each root found.
+                                           the package they apply to". So this
+                                           looks for a skills root at any
+                                           depth, then for SKILL.md at any
+                                           depth beneath each root found. The
+                                           category folder itself carries no
+                                           meaning to Cursor beyond
+                                           organisation, so it is kept as
+                                           part of this engine's own key
+                                           rather than discarded.
 
   mcp     .cursor/mcp.json                "Project Configuration: Create
                                            .cursor/mcp.json in your project

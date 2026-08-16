@@ -45,7 +45,8 @@ baseline is settled.
 
 ## What it measures
 
-Verified against cursor.com/docs (Customize > Rules, Customize > MCP).
+Verified against cursor.com/docs (Customize > Rules, Customize > Skills,
+Customize > MCP).
 
 | Category | Paths |
 |---|---|
@@ -76,18 +77,21 @@ Cursor has actually stopped reading it. Still measured: a false positive here
 be a silent miss if it turns out to still work.
 
 **Skill roots are measured anywhere in the tree, on purpose, the opposite
-adjustment from the old `.cursor/rules` assumption this replaced.** Cursor's
-docs describe this as intentional: a `.cursor/skills/` (or `.agents/skills/`,
-`.claude/skills/`, `.codex/skills/`) folder anywhere inside the repository is
-picked up, so a monorepo package can colocate its own skills with the code it
-applies to, for example `apps/web/.cursor/skills/`. A root is also walked
-recursively beneath itself for category subfolders, for example
-`.cursor/skills/shipping/deploy-staging/`, with the skill's name coming from
-the folder that holds `SKILL.md`, not the category folder above it. Both of
-Cursor's Claude- and Codex-compatible skill roots are measured for the same
-reason Copilot measures them: whichever directories Cursor actually reads are
-this repository's Cursor composition, regardless of which vendor's name is on
-the directory.
+adjustment from the old `.cursor/rules` assumption this replaced.** Confirmed
+directly: "Cursor walks the skills root recursively and picks up any
+`SKILL.md` it finds", and separately, a `.cursor/skills/` (or
+`.agents/skills/`, `.claude/skills/`, `.codex/skills/`) folder "anywhere
+inside your repository is picked up, so monorepos can colocate skills with
+the package they apply to", for example `apps/web/.cursor/skills/`. Both
+behaviours are documented, not inferred. The category folder itself carries
+no meaning to Cursor beyond organisation, for example
+`.cursor/skills/shipping/land-it/`, with the skill's identity coming from the
+folder that holds `SKILL.md`, so this engine keeps the category in its own
+key for precision even though Cursor itself does not use it for identity.
+Both of Cursor's Claude- and Codex-compatible skill roots are measured for
+the same reason Copilot measures them: whichever directories Cursor actually
+reads are this repository's Cursor composition, regardless of which vendor's
+name is on the directory.
 
 ## What it does not do
 
@@ -102,6 +106,10 @@ the directory.
   dashboard and apply org-wide. Neither is a file in this repository, so
   neither arrives by pull request and neither is visible to a check that runs
   inside it.
+- **It does not cover Cursor's built-in skills** (`/automate`, `/babysit`,
+  `/review`, and the rest of the shipped set). Those ship with the product
+  itself, not as files in any repository, so there is nothing here for a
+  file-based check to see.
 - **It is not a sandbox.** It reports composition, it does not constrain
   execution.
 - **It emits no signed record.** Same reasoning as Copilot: a repository cannot
