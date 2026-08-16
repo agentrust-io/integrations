@@ -1,0 +1,9 @@
+# REQUIRED for the drift check.
+# agentrust-capture-core carries the fingerprinting, comparison and report rules
+# the engine is built on. It has no dependencies of its own, so this stays a
+# single lightweight install rather than a tree.
+agentrust-capture-core>=0.1,<0.2
+
+# The check emits no signed record. See copilot/README.md for the reasoning,
+# which applies here unchanged: a repository cannot know which model a
+# developer's Windsurf session used.
