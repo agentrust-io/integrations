@@ -28,13 +28,13 @@ Customize > Skills, Customize > MCP):
                                            gives for the same file
           .cursorrules                    Not in current official docs (four
                                            rule types listed: Project, User,
-                                           Team, AGENTS.md; this isn't one).
-                                           Whether Cursor still reads it is
-                                           unconfirmed either way. Still
-                                           measured: dropping it risks a
-                                           silent miss if it does, and
-                                           tracking it costs nothing if it
-                                           does not.
+                                           Team, AGENTS.md; this isn't one),
+                                           but multiple independent community
+                                           sources describe it as still read,
+                                           applied globally, just deprioritised
+                                           in favour of .mdc files. No
+                                           official source confirms this
+                                           directly. Measured either way.
 
   skills  .cursor/skills/<name>/SKILL.md  anywhere in the tree
           .agents/skills/<name>/SKILL.md  anywhere in the tree
