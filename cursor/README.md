@@ -45,44 +45,49 @@ baseline is settled.
 
 ## What it measures
 
-cursor.com itself could not be reached directly during this research (every
-fetch attempt was refused), so this is verified against Cursor's own community
-forum plus multiple independent guides that converge on the same specifics.
-Two of these paths turned out to be shaped differently from what a naive
-reading of the issue's original table would suggest.
+Verified against cursor.com/docs (Customize > Rules, Customize > MCP).
 
 | Category | Paths |
 |---|---|
-| Rules | `.cursorrules` (repository root), `.cursor/rules/*.mdc` (**one level only**, see below) |
+| Rules | `.cursor/rules/**/*.mdc` (**nested folders included**, see below), `AGENTS.md` (**anywhere in the tree**), `.cursorrules` (legacy, see below) |
 | Skills | `.cursor/skills/<name>/`, `.agents/skills/<name>/`, `.claude/skills/<name>/`, `.codex/skills/<name>/` (**anywhere in the tree**, see below) |
 | MCP | `.cursor/mcp.json` |
 
-Two of those deserve a note, because they were the two places where trusting a
-table instead of checking would have gotten this wrong.
+Three of those deserve a note.
 
-**`.cursor/rules/*.mdc` is measured one level deep, not recursively.** Cursor's
-own community forum documents `.cursor/rules/x.mdc` working and
-`.cursor/rules/sub/x.mdc` not being reliably read. Globbing recursively would
-create a false negative, a rule reported unchanged forever that Cursor never
-actually loads, rather than a false positive, and that is the wrong direction to
-be wrong in for a drift check. `.cursorrules` at the repository root is measured
-too: it is legacy, and a forum thread claims a future deprecation, but no
-Cursor staff response confirms that anywhere in the thread, so this measures
-what is read today rather than repeating an unconfirmed claim about the future.
+**`.cursor/rules` is walked recursively, and includes `AGENTS.md`.** The docs'
+own example organises rules in folders, `.cursor/rules/frontend/components.mdc`,
+presented as a normal pattern rather than an edge case, so this globs
+recursively rather than one level. A plain `.md` file in `.cursor/rules` is
+ignored by Cursor itself for having the wrong extension, and is not measured
+either. `AGENTS.md` is one of exactly four documented rule types ("a simple
+alternative to `.cursor/rules`"), read from the project root and
+subdirectories, with "Nested AGENTS.md support" listed as a shipped
+improvement, so it is matched anywhere in the tree, the same reasoning
+Copilot's own engine gives for the same file.
+
+**`.cursorrules` does not appear in current official docs at all.** The docs
+enumerate exactly four rule types, Project Rules, User Rules, Team Rules and
+`AGENTS.md`, and `.cursorrules` is not one of them. A community forum thread
+claims a past deprecation with no staff confirmation anywhere in it, and its
+absence from current docs is consistent with that, though neither proves
+Cursor has actually stopped reading it. Still measured: a false positive here
+(tracking a file Cursor no longer reads) is harmless, while dropping it would
+be a silent miss if it turns out to still work.
 
 **Skill roots are measured anywhere in the tree, on purpose, the opposite
-adjustment from rules.** Cursor's docs describe this as intentional: a
-`.cursor/skills/` (or `.agents/skills/`, `.claude/skills/`, `.codex/skills/`)
-folder anywhere inside the repository is picked up, so a monorepo package can
-colocate its own skills with the code it applies to, for example
-`apps/web/.cursor/skills/`. A root is also walked recursively beneath itself for
-category subfolders, for example
-`.cursor/skills/shipping/deploy-staging/`, with the skill's name coming from the
-folder that holds `SKILL.md`, not the category folder above it. Both of Cursor's
-Claude- and Codex-compatible skill roots are measured for the same reason
-Copilot measures them: whichever directories Cursor actually reads are this
-repository's Cursor composition, regardless of which vendor's name is on the
-directory.
+adjustment from the old `.cursor/rules` assumption this replaced.** Cursor's
+docs describe this as intentional: a `.cursor/skills/` (or `.agents/skills/`,
+`.claude/skills/`, `.codex/skills/`) folder anywhere inside the repository is
+picked up, so a monorepo package can colocate its own skills with the code it
+applies to, for example `apps/web/.cursor/skills/`. A root is also walked
+recursively beneath itself for category subfolders, for example
+`.cursor/skills/shipping/deploy-staging/`, with the skill's name coming from
+the folder that holds `SKILL.md`, not the category folder above it. Both of
+Cursor's Claude- and Codex-compatible skill roots are measured for the same
+reason Copilot measures them: whichever directories Cursor actually reads are
+this repository's Cursor composition, regardless of which vendor's name is on
+the directory.
 
 ## What it does not do
 
@@ -92,9 +97,11 @@ directory.
   Copilot's README gives for `~/.copilot/mcp-config.json`.
 - **It does not evaluate whether a rule is good.** It tells you one changed and
   who changed it. Judgement is the reviewer's.
-- **It does not cover Cursor's global rules or skills**, set outside the
-  repository in a developer's own Cursor settings. Those are invisible to a check
-  that runs inside the repository.
+- **It does not cover Cursor's User Rules or Team Rules.** User Rules are a
+  developer's own global settings; Team Rules are managed from the Cursor
+  dashboard and apply org-wide. Neither is a file in this repository, so
+  neither arrives by pull request and neither is visible to a check that runs
+  inside it.
 - **It is not a sandbox.** It reports composition, it does not constrain
   execution.
 - **It emits no signed record.** Same reasoning as Copilot: a repository cannot

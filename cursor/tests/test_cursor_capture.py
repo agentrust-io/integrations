@@ -48,17 +48,52 @@ class TestRuleSurface:
                           "Use function components.\n", encoding="utf-8")
         assert ".cursor/rules/react.mdc" in capture.snapshot(root)["rules"]
 
-    def test_nested_mdc_rule_is_not_measured(self, tmp_path):
-        """Cursor's own forum documents nested .cursor/rules/x/y.mdc as not
-        reliably read. Globbing it anyway would report a rule as present that
-        Cursor never actually loads, which is the wrong direction to be wrong
-        in, so this must glob one level only."""
+    def test_nested_mdc_rule_is_measured(self, tmp_path):
+        """cursor.com/docs shows nested folders under .cursor/rules as an
+        intended organisational pattern (.cursor/rules/frontend/components.mdc
+        in the docs' own example), not an edge case, so this must glob
+        recursively rather than one level."""
         root = _repo(tmp_path)
         target = root / ".cursor" / "rules" / "backend" / "api.mdc"
         target.parent.mkdir(parents=True)
         target.write_text("---\ndescription: API rules\n---\nBe strict.\n", encoding="utf-8")
+        assert ".cursor/rules/backend/api.mdc" in capture.snapshot(root)["rules"]
+
+    def test_plain_md_file_in_rules_dir_is_not_measured(self, tmp_path):
+        """cursor.com/docs is explicit: a plain .md file in .cursor/rules is
+        ignored by Cursor itself for having the wrong extension."""
+        root = _repo(tmp_path)
+        target = root / ".cursor" / "rules" / "api-guidelines.md"
+        target.parent.mkdir(parents=True)
+        target.write_text("Use REST.\n", encoding="utf-8")
         found = capture.snapshot(root)["rules"]
-        assert not any("backend" in key for key in found)
+        assert not any("api-guidelines" in key for key in found)
+
+    def test_root_agents_md_is_measured(self, tmp_path):
+        """AGENTS.md is one of Cursor's four documented rule types, "a simple
+        alternative to .cursor/rules"."""
+        root = _repo(tmp_path)
+        (root / "AGENTS.md").write_text("Be careful.\n", encoding="utf-8")
+        assert "AGENTS.md" in capture.snapshot(root)["rules"]
+
+    def test_nested_agents_md_is_measured(self, tmp_path):
+        """cursor.com/docs lists "Nested AGENTS.md support" as a shipped
+        improvement, so a subdirectory's own AGENTS.md must be caught too."""
+        root = _repo(tmp_path)
+        nested = root / "services" / "billing"
+        nested.mkdir(parents=True)
+        (nested / "AGENTS.md").write_text("Never touch prod.\n", encoding="utf-8")
+        assert "services/billing/AGENTS.md" in capture.snapshot(root)["rules"]
+
+    def test_vendored_agents_md_is_not_counted_as_ours(self, tmp_path):
+        root = _repo(tmp_path)
+        for skipped in ("node_modules", "vendor", ".venv"):
+            nested = root / skipped / "pkg"
+            nested.mkdir(parents=True)
+            (nested / "AGENTS.md").write_text("theirs\n", encoding="utf-8")
+        found = capture.snapshot(root)["rules"]
+        assert not any("node_modules" in key or "vendor" in key or ".venv" in key
+                       for key in found)
 
     def test_an_edited_rule_file_is_reported_by_name(self, tmp_path):
         root = _repo(tmp_path)

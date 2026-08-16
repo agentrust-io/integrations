@@ -6,33 +6,42 @@ request, so this is a status check rather than a local warning.
 
   Does this pull request change what Cursor reads, without saying so?
 
-What Cursor reads. cursor.com itself could not be reached directly during this
-research (every fetch attempt was refused), so this is verified against
-Cursor's own community forum at forum.cursor.com, plus multiple independent
-guides that converge on the same specifics, rather than a single docs page:
+What Cursor reads, verified against cursor.com/docs (Customize > Rules and
+Customize > MCP):
 
-  rules   .cursorrules                    repository root, single file
-                                           legacy, still read today. A forum
-                                           thread claims a future deprecation,
-                                           but no Cursor staff response
-                                           confirms it anywhere in that
-                                           thread, so that claim is not
-                                           repeated here: this measures what
-                                           is read now, not a rumoured future
-          .cursor/rules/*.mdc             flat only, one level
-
-                                           Nested subdirectories under
-                                           .cursor/rules are NOT reliably read:
-                                           Cursor's forum documents
-                                           .cursor/rules/x.mdc working and
-                                           .cursor/rules/sub/x.mdc not, so this
-                                           globs one level rather than
-                                           recursively. Globbing recursively
-                                           would create false negatives (a rule
-                                           Cursor never actually loads reported
-                                           as unchanged forever) rather than
-                                           false positives, and that is the
-                                           wrong direction to be wrong in.
+  rules   .cursor/rules/**/*.mdc          nested folders are an intended
+                                           organisational pattern, per the
+                                           docs' own example
+                                           (.cursor/rules/frontend/components.mdc),
+                                           so this globs recursively rather
+                                           than one level. A plain .md file
+                                           here is ignored by Cursor itself
+                                           (wrong extension), and so is not
+                                           measured.
+          AGENTS.md                       project root and subdirectories,
+                                           "a simple alternative to
+                                           .cursor/rules"; the docs changelog
+                                           separately lists "Nested AGENTS.md
+                                           support", so this is matched
+                                           anywhere in the tree, the same
+                                           reasoning Copilot's own engine
+                                           gives for the same file
+          .cursorrules                    NOT in current official docs.
+                                           The docs enumerate exactly four
+                                           rule types (Project, User, Team,
+                                           AGENTS.md) and this is not one of
+                                           them. A community forum thread
+                                           claims a past deprecation with no
+                                           staff confirmation, and its
+                                           absence from current docs is
+                                           consistent with that, though
+                                           neither proves Cursor has actually
+                                           stopped reading it. Still
+                                           measured, since a false positive
+                                           here (tracking a file Cursor no
+                                           longer reads) is harmless, while
+                                           dropping it would be a silent miss
+                                           if it turns out to still work.
 
   skills  .cursor/skills/<name>/SKILL.md  anywhere in the tree
           .agents/skills/<name>/SKILL.md  anywhere in the tree
@@ -52,9 +61,12 @@ guides that converge on the same specifics, rather than a single docs page:
                                            any depth, then for SKILL.md at any
                                            depth beneath each root found.
 
-  mcp     .cursor/mcp.json                repository root, single file
+  mcp     .cursor/mcp.json                "Project Configuration: Create
+                                           .cursor/mcp.json in your project
+                                           for project-specific tools."
 
-                                           ~/.cursor/mcp.json (global) is a
+                                           ~/.cursor/mcp.json is the docs'
+                                           own "Global Configuration", a
                                            home-directory file, not a
                                            repository surface, and is deliberately
                                            not measured here for the same reason
@@ -101,9 +113,12 @@ BASELINE_PATH = Path(".agentrust") / "cursor-baseline.json"
 #: Single files Cursor reads as rules, relative to the repository root.
 RULE_FILES = (".cursorrules",)
 
-#: Globs for rule files. One level only: see the module docstring for why this
-#: does not glob .cursor/rules recursively.
-RULE_GLOBS = (".cursor/rules/*.mdc",)
+#: Globs for rule files. .cursor/rules is walked recursively: cursor.com/docs
+#: shows nested folders (.cursor/rules/frontend/components.mdc) as an intended
+#: organisational pattern, not an edge case. AGENTS.md is matched anywhere in
+#: the tree for the same reason Copilot's own engine matches it: the docs
+#: describe subdirectory support explicitly, and a nearest-file resolution.
+RULE_GLOBS = (".cursor/rules/**/*.mdc", "**/AGENTS.md")
 
 #: Directory names that hold one subdirectory per skill, matched at any depth
 #: in the tree so a monorepo package can colocate its own skills root.
