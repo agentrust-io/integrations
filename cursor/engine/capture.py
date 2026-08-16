@@ -26,22 +26,15 @@ Customize > Skills, Customize > MCP):
                                            anywhere in the tree, the same
                                            reasoning Copilot's own engine
                                            gives for the same file
-          .cursorrules                    NOT in current official docs.
-                                           The docs enumerate exactly four
-                                           rule types (Project, User, Team,
-                                           AGENTS.md) and this is not one of
-                                           them. A community forum thread
-                                           claims a past deprecation with no
-                                           staff confirmation, and its
-                                           absence from current docs is
-                                           consistent with that, though
-                                           neither proves Cursor has actually
-                                           stopped reading it. Still
-                                           measured, since a false positive
-                                           here (tracking a file Cursor no
-                                           longer reads) is harmless, while
-                                           dropping it would be a silent miss
-                                           if it turns out to still work.
+          .cursorrules                    Not in current official docs (four
+                                           rule types listed: Project, User,
+                                           Team, AGENTS.md; this isn't one).
+                                           Whether Cursor still reads it is
+                                           unconfirmed either way. Still
+                                           measured: dropping it risks a
+                                           silent miss if it does, and
+                                           tracking it costs nothing if it
+                                           does not.
 
   skills  .cursor/skills/<name>/SKILL.md  anywhere in the tree
           .agents/skills/<name>/SKILL.md  anywhere in the tree

@@ -68,13 +68,10 @@ improvement, so it is matched anywhere in the tree, the same reasoning
 Copilot's own engine gives for the same file.
 
 **`.cursorrules` does not appear in current official docs at all.** The docs
-enumerate exactly four rule types, Project Rules, User Rules, Team Rules and
-`AGENTS.md`, and `.cursorrules` is not one of them. A community forum thread
-claims a past deprecation with no staff confirmation anywhere in it, and its
-absence from current docs is consistent with that, though neither proves
-Cursor has actually stopped reading it. Still measured: a false positive here
-(tracking a file Cursor no longer reads) is harmless, while dropping it would
-be a silent miss if it turns out to still work.
+list four rule types, Project Rules, User Rules, Team Rules and `AGENTS.md`,
+and `.cursorrules` isn't one of them. Whether Cursor still reads it is
+unconfirmed either way. Still measured: dropping it risks a silent miss if it
+does, and tracking it costs nothing if it does not.
 
 **Skill roots are measured anywhere in the tree, on purpose, the opposite
 adjustment from the old `.cursor/rules` assumption this replaced.** Confirmed
