@@ -1,7 +1,7 @@
 [build-system]
 # Hatchling 1.29+ emits Core Metadata 2.5, which Twine 6.2 cannot yet validate.
 # Pin the backend so release artifacts remain reproducible and inspectable.
-requires = ["hatchling==1.27.0"]
+requires = ["hatchling==1.32.0"]
 build-backend = "hatchling.build"
 
 [project]
