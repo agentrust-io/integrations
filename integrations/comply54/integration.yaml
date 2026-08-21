@@ -12,6 +12,10 @@ repository: https://github.com/comply54/comply54
 homepage: https://comply54.io
 license: Apache-2.0
 tier: community
+marketplace:
+  category: Compliance
+  mark: C5
+  keywords: [Africa, regulation, compliance]
 trace_conformance_level: 0
 trace_roles:
   - record-producer

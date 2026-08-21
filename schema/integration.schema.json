@@ -4,7 +4,7 @@
   "title": "agentrust-io integration manifest",
   "type": "object",
   "additionalProperties": false,
-  "required": ["name", "vendor", "integrates_with", "description", "maintainer", "repository", "license", "tier"],
+  "required": ["name", "vendor", "integrates_with", "description", "maintainer", "repository", "license", "tier", "marketplace"],
   "properties": {
     "name": {
       "type": "string",
@@ -69,6 +69,43 @@
       "type": "string",
       "enum": ["community", "verified"],
       "description": "Set by maintainers during review, never self-declared. New submissions use community."
+    },
+    "marketplace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["category", "mark"],
+      "properties": {
+        "display_name": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 64,
+          "description": "Optional human-facing name when the package identifier is not suitable for display."
+        },
+        "category": {
+          "type": "string",
+          "enum": ["Compliance", "Developer tools", "Evidence & receipts", "Frameworks", "Identity & trust", "Observability", "Security & policy"]
+        },
+        "mark": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 3,
+          "pattern": "^[A-Za-z0-9$]+$",
+          "description": "Short text mark shown when a listing has no approved logo asset."
+        },
+        "featured": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10,
+          "description": "Optional maintainer-curated display order; lower values appear first."
+        },
+        "keywords": {
+          "type": "array",
+          "maxItems": 10,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 2, "maxLength": 32 }
+        }
+      },
+      "description": "Discoverability metadata for the AgenTrust Marketplace."
     },
     "trace_conformance_level": {
       "type": "integer",

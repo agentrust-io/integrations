@@ -8,6 +8,11 @@ maintainer:
 repository: https://github.com/agentrust-io/integrations
 license: Apache-2.0
 tier: community
+marketplace:
+  category: Frameworks
+  mark: LI
+  featured: 4
+  keywords: [instrumentation, framework, events]
 trace_roles:
   - record-producer
 trace_conformance_level: 0

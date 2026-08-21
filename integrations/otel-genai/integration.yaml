@@ -8,6 +8,11 @@ maintainer:
 repository: https://github.com/agentrust-io/integrations
 license: Apache-2.0
 tier: community
+marketplace:
+  category: Observability
+  mark: OT
+  featured: 6
+  keywords: [OpenTelemetry, spans, telemetry]
 trace_roles:
   - record-producer
 trace_conformance_level: 0

@@ -1,0 +1,363 @@
+{
+  "catalog_version": 1,
+  "count": 16,
+  "integrations": [
+    {
+      "name": "Claude Code",
+      "package_name": "claude-code",
+      "vendor": "agentrust-io",
+      "description": "Claude Code plugin that emits a signed Agent Manifest and TRACE record per session and detects agent composition drift from an approved baseline.",
+      "path": "claude-code",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/claude-code",
+      "homepage": null,
+      "repository": "https://github.com/agentrust-io/integrations",
+      "tier": "community",
+      "stack": [
+        "Agent Manifest",
+        "TRACE"
+      ],
+      "category": "Developer tools",
+      "mark": "CC",
+      "featured": 1,
+      "keywords": [
+        "Claude",
+        "session",
+        "drift"
+      ]
+    },
+    {
+      "name": "Codex",
+      "package_name": "agentrust-codex",
+      "vendor": "agentrust-io",
+      "description": "Codex plugin that fingerprints agent configuration, detects workspace-scoped drift, and emits signed Agent Manifest and TRACE Level 0 records.",
+      "path": "plugins/agentrust-codex",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/plugins/agentrust-codex",
+      "homepage": null,
+      "repository": "https://github.com/agentrust-io/integrations",
+      "tier": "community",
+      "stack": [
+        "Agent Manifest",
+        "TRACE"
+      ],
+      "category": "Developer tools",
+      "mark": "CX",
+      "featured": 2,
+      "keywords": [
+        "Codex",
+        "workspace",
+        "drift"
+      ]
+    },
+    {
+      "name": "LangChain",
+      "package_name": "LangChain",
+      "vendor": "agentrust-io",
+      "description": "Emits a TRACE Trust Record from LangChain callbacks, including LangGraph tool runs, with tool identity but no payloads.",
+      "path": "integrations/langchain",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/langchain",
+      "homepage": null,
+      "repository": "https://github.com/agentrust-io/integrations",
+      "tier": "community",
+      "stack": [
+        "TRACE"
+      ],
+      "category": "Frameworks",
+      "mark": "LC",
+      "featured": 3,
+      "keywords": [
+        "callback",
+        "framework",
+        "tools"
+      ]
+    },
+    {
+      "name": "LlamaIndex",
+      "package_name": "LlamaIndex",
+      "vendor": "agentrust-io",
+      "description": "Emits a TRACE Trust Record from LlamaIndex instrumentation events, reading an allow-list so payloads cannot leak.",
+      "path": "integrations/llamaindex",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/llamaindex",
+      "homepage": null,
+      "repository": "https://github.com/agentrust-io/integrations",
+      "tier": "community",
+      "stack": [
+        "TRACE"
+      ],
+      "category": "Frameworks",
+      "mark": "LI",
+      "featured": 4,
+      "keywords": [
+        "instrumentation",
+        "framework",
+        "events"
+      ]
+    },
+    {
+      "name": "OpenShell TRACE Adapter",
+      "package_name": "OpenShell TRACE Adapter",
+      "vendor": "agentrust-io",
+      "description": "Builds a software-only TRACE record from NVIDIA OpenShell OCSF events and AGT ACS policy decisions.",
+      "path": "integrations/openshell",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/openshell",
+      "homepage": "https://github.com/NVIDIA/OpenShell",
+      "repository": "https://github.com/agentrust-io/integrations",
+      "tier": "community",
+      "stack": [
+        "TRACE"
+      ],
+      "category": "Security & policy",
+      "mark": "OS",
+      "featured": 5,
+      "keywords": [
+        "OpenShell",
+        "NVIDIA",
+        "OCSF"
+      ]
+    },
+    {
+      "name": "OpenTelemetry GenAI",
+      "package_name": "OpenTelemetry GenAI",
+      "vendor": "agentrust-io",
+      "description": "Builds a TRACE Trust Record from OpenTelemetry GenAI spans, marked as an unsigned telemetry import.",
+      "path": "integrations/otel-genai",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/otel-genai",
+      "homepage": null,
+      "repository": "https://github.com/agentrust-io/integrations",
+      "tier": "community",
+      "stack": [
+        "TRACE"
+      ],
+      "category": "Observability",
+      "mark": "OT",
+      "featured": 6,
+      "keywords": [
+        "OpenTelemetry",
+        "spans",
+        "telemetry"
+      ]
+    },
+    {
+      "name": "Agent Passport System",
+      "package_name": "Agent Passport System",
+      "vendor": "aeoess",
+      "description": "Maps one Ed25519-signed Agent Passport System policy decision onto a TRACE Trust Record, refusing decisions that fail signature or expiry verification.",
+      "path": "integrations/aeoess-aps",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/aeoess-aps",
+      "homepage": "https://agent-passport.org",
+      "repository": "https://github.com/aeoess/agent-passport-python",
+      "tier": "community",
+      "stack": [
+        "TRACE"
+      ],
+      "category": "Identity & trust",
+      "mark": "AP",
+      "featured": null,
+      "keywords": [
+        "passport",
+        "identity",
+        "policy"
+      ]
+    },
+    {
+      "name": "Agent Sentinel",
+      "package_name": "Agent Sentinel",
+      "vendor": "a1k7",
+      "description": "Runtime enforcement sidecar for agent fleets: detectors for delegation escalation, tool and identity drift, and policy avoidance, emitting Ed25519-signed TRACE Level 0 records.",
+      "path": "integrations/sentinel",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/sentinel",
+      "homepage": null,
+      "repository": "https://github.com/agentrust-io/integrations/tree/main/integrations/sentinel",
+      "tier": "community",
+      "stack": [
+        "TRACE"
+      ],
+      "category": "Security & policy",
+      "mark": "AS",
+      "featured": null,
+      "keywords": [
+        "fleet",
+        "enforcement",
+        "detection"
+      ]
+    },
+    {
+      "name": "Agentic SpendGuard",
+      "package_name": "Agentic SpendGuard",
+      "vendor": "SpendGuard",
+      "description": "Spend firewall for LLM agents that reserves budget and gates tool calls before the provider is called, with a signed, hash-chained decision record.",
+      "path": "integrations/spendguard",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/spendguard",
+      "homepage": null,
+      "repository": "https://github.com/m24927605/agentic-spendguard",
+      "tier": "community",
+      "stack": [
+        "TRACE"
+      ],
+      "category": "Security & policy",
+      "mark": "$G",
+      "featured": null,
+      "keywords": [
+        "budget",
+        "spend",
+        "cost"
+      ]
+    },
+    {
+      "name": "comply54",
+      "package_name": "comply54",
+      "vendor": "comply54",
+      "description": "Converts a comply54 ComplianceResult into a signed TRACE v0.1 JWT, mapping African regulatory policy decisions to verifiable attestation claims.",
+      "path": "integrations/comply54",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/comply54",
+      "homepage": "https://comply54.io",
+      "repository": "https://github.com/comply54/comply54",
+      "tier": "community",
+      "stack": [
+        "TRACE"
+      ],
+      "category": "Compliance",
+      "mark": "C5",
+      "featured": null,
+      "keywords": [
+        "Africa",
+        "regulation",
+        "compliance"
+      ]
+    },
+    {
+      "name": "DecisionAssure",
+      "package_name": "DecisionAssure",
+      "vendor": "DecisionAssure (a1k7)",
+      "description": "Converts a DecisionAssure runtime governance trace into a TRACE v0.2 Trust Record, marked as third-party-asserted.",
+      "path": "integrations/decisionassure",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/decisionassure",
+      "homepage": null,
+      "repository": "https://github.com/a1k7/DecisionAssure-Runtime-Governance",
+      "tier": "community",
+      "stack": [
+        "TRACE"
+      ],
+      "category": "Security & policy",
+      "mark": "DA",
+      "featured": null,
+      "keywords": [
+        "runtime",
+        "governance",
+        "policy"
+      ]
+    },
+    {
+      "name": "Nobulex",
+      "package_name": "Nobulex",
+      "vendor": "Nobulex",
+      "description": "Emits Ed25519-signed JCS-canonical action receipts; each carries action_ref = SHA-256(JCS({agent_id, action_type, scope, timestamp_ms})) usable as TRACE external execution evidence (trace-spec #34).",
+      "path": "integrations/nobulex",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/nobulex",
+      "homepage": "https://nobulex.com",
+      "repository": "https://github.com/arian-gogani/nobulex",
+      "tier": "community",
+      "stack": [
+        "TRACE"
+      ],
+      "category": "Evidence & receipts",
+      "mark": "NX",
+      "featured": null,
+      "keywords": [
+        "receipts",
+        "Ed25519",
+        "evidence"
+      ]
+    },
+    {
+      "name": "ramen-ai cMCP Adapter",
+      "package_name": "ramen-ai cMCP Adapter",
+      "vendor": "ramen-ai",
+      "description": "TRACE v0.2 exporter that verifies V5 Ed25519 receipts produced by the ramen-ai cMCP adapter and emits a natively signed software-only Trust Record.",
+      "path": "integrations/ramen-ai-cmcp",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/ramen-ai-cmcp",
+      "homepage": "https://ramenai.dev",
+      "repository": "https://github.com/ramen-ai-dev/ramen-ai-integrations",
+      "tier": "community",
+      "stack": [
+        "cMCP",
+        "TRACE"
+      ],
+      "category": "Evidence & receipts",
+      "mark": "RA",
+      "featured": null,
+      "keywords": [
+        "receipts",
+        "exporter",
+        "verification"
+      ]
+    },
+    {
+      "name": "SAGE AgenTrust Bridge",
+      "package_name": "SAGE AgenTrust Bridge",
+      "vendor": "SAGE AgenTrust Bridge",
+      "description": "Reverse proxy that edge-verifies a TRACE record (key-equal) or cMCP RuntimeClaim (gateway-asserted) before admitting a memory submit to a stock, unmodified SAGE consensus-memory node.",
+      "path": "integrations/sage-agenttrust",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/sage-agenttrust",
+      "homepage": "https://github.com/l33tdawg/sage",
+      "repository": "https://github.com/l33tdawg/sage-agenttrust",
+      "tier": "community",
+      "stack": [
+        "cMCP",
+        "TRACE"
+      ],
+      "category": "Security & policy",
+      "mark": "SG",
+      "featured": null,
+      "keywords": [
+        "memory",
+        "proxy",
+        "consensus"
+      ]
+    },
+    {
+      "name": "Scheduled Agents",
+      "package_name": "scheduled-agents",
+      "vendor": "agentrust-io",
+      "description": "Claude Code plugin that fingerprints scheduled-agent routine specs and auto-run hooks, warns when what runs without you watching drifts from an approved baseline, and emits a signed TRACE record.",
+      "path": "scheduled-agents",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/scheduled-agents",
+      "homepage": null,
+      "repository": "https://github.com/agentrust-io/integrations",
+      "tier": "community",
+      "stack": [
+        "TRACE"
+      ],
+      "category": "Developer tools",
+      "mark": "SA",
+      "featured": null,
+      "keywords": [
+        "scheduled",
+        "unattended",
+        "drift"
+      ]
+    },
+    {
+      "name": "Shadow AI Discovery",
+      "package_name": "Shadow AI Discovery",
+      "vendor": "agentrust-io",
+      "description": "Detects unregistered agents making MCP tool calls not declared in a cmcp catalog.json, emitting DiscoveryEvents that map to Agent Manifest records for remediation or quarantine.",
+      "path": "integrations/shadow-ai",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/shadow-ai",
+      "homepage": null,
+      "repository": "https://github.com/agentrust-io/integrations",
+      "tier": "community",
+      "stack": [
+        "cMCP",
+        "Agent Manifest"
+      ],
+      "category": "Identity & trust",
+      "mark": "SH",
+      "featured": null,
+      "keywords": [
+        "discovery",
+        "undeclared",
+        "remediation"
+      ]
+    }
+  ]
+}

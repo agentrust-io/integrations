@@ -13,6 +13,10 @@ repository: https://github.com/ramen-ai-dev/ramen-ai-integrations
 homepage: https://ramenai.dev
 license: MIT
 tier: community
+marketplace:
+  category: Evidence & receipts
+  mark: RA
+  keywords: [receipts, exporter, verification]
 trace_conformance_level: 0
 trace_roles:
   - record-producer

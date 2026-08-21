@@ -13,6 +13,11 @@ integrations/<vendor>-<product>/
 
 Start by copying `integrations/_template/`.
 
+The `marketplace` block in `integration.yaml` controls discovery in the public
+[AgenTrust Marketplace](https://agentrust-io.com/marketplace/). After editing a
+manifest, run `python scripts/generate_marketplace_catalog.py`; CI rejects a
+stale catalog so the repository index and public Marketplace cannot silently drift.
+
 ## Hard rules
 
 These come from operating large OSS governance projects. PRs that break them are closed, repeat offenses are banned, and merged integrations that turn out to break them are removed:

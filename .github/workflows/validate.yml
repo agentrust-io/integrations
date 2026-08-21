@@ -38,3 +38,7 @@ jobs:
           python -m pytest tests/test_validate_compatibility.py -q
       - name: Check generated integration index
         run: python scripts/generate_integration_index.py --check
+      - name: Test and check generated Marketplace catalog
+        run: |
+          python -m pytest tests/test_generate_marketplace_catalog.py -q
+          python scripts/generate_marketplace_catalog.py --check

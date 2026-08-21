@@ -11,6 +11,11 @@ maintainer:
 repository: https://github.com/example/example-product
 license: Apache-2.0
 tier: community   # set by maintainers during review; submissions start here
+marketplace:
+  category: Developer tools  # choose the closest category allowed by the schema
+  mark: EX                   # 1-3 letters/numbers shown when no logo is available
+# featured is maintainer-curated; do not add it to new submissions
+# keywords: [framework, use-case]
 # Required if you emit or consume TRACE records:
 # trace_conformance_level: 1
 # trace_roles:

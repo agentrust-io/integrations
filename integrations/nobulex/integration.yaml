@@ -13,5 +13,9 @@ repository: https://github.com/arian-gogani/nobulex
 homepage: https://nobulex.com
 license: MIT
 tier: community
+marketplace:
+  category: Evidence & receipts
+  mark: NX
+  keywords: [receipts, Ed25519, evidence]
 trace_roles:
   - external-evidence-source

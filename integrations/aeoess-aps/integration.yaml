@@ -11,6 +11,10 @@ repository: https://github.com/aeoess/agent-passport-python
 homepage: https://agent-passport.org
 license: Apache-2.0
 tier: community
+marketplace:
+  category: Identity & trust
+  mark: AP
+  keywords: [passport, identity, policy]
 # Level 0 passes with an explicit TR-SIG-005 UNVERIFIED finding: the graded
 # artifact is the unsigned record, so trace-tests reports it as not
 # cryptographically verified. The signed form is written alongside it and

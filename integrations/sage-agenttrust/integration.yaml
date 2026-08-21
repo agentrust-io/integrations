@@ -14,6 +14,10 @@ repository: https://github.com/l33tdawg/sage-agenttrust
 homepage: https://github.com/l33tdawg/sage
 license: Apache-2.0
 tier: community
+marketplace:
+  category: Security & policy
+  mark: SG
+  keywords: [memory, proxy, consensus]
 # Level the cMCP-RuntimeClaim (envelope) path passes; the bare C-2 TRACE record is not graded
 # by agentrust-trace-tests (LoadError), so it carries no conformance level — see README.
 trace_conformance_level: 0
