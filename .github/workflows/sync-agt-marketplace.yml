@@ -1,0 +1,46 @@
+name: Sync AGT Marketplace snapshot
+on:
+  schedule:
+    - cron: "17 7 * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: true
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: microsoft/agent-governance-toolkit
+          ref: main
+          fetch-depth: 1
+          path: .agt-source
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - name: Generate and verify snapshot
+        run: |
+          python scripts/generate_agt_marketplace_catalog.py --agt-root .agt-source
+          python -m pytest tests/test_generate_agt_marketplace_catalog.py -q
+      - name: Open refresh pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if git diff --quiet -- marketplace/agt-catalog.json; then
+            echo "AGT snapshot is current"
+            exit 0
+          fi
+          branch=automation/agt-marketplace-snapshot
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin "$branch:refs/remotes/origin/$branch" || true
+          git switch -C "$branch"
+          git add marketplace/agt-catalog.json
+          git commit -s -m "chore: refresh AGT marketplace snapshot"
+          git push --force-with-lease origin "$branch"
+          gh pr view "$branch" >/dev/null 2>&1 || gh pr create --base main --head "$branch" --title "chore: refresh AGT marketplace snapshot" --body "Automated, commit-pinned refresh of the Microsoft AGT integration inventory. Generated from package metadata and README headings; no AGT repository change is required."
