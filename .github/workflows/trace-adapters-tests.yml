@@ -127,10 +127,16 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
-      - name: Test the LangChain adapter
+      - name: Test evidence rules without framework extras
         run: |
-          # agentrust-trace only: the adapter deliberately does not import
-          # langchain at module level, so the honesty rules stay testable without
-          # pulling a framework into CI.
+          # Keep the record builder and honesty rules usable without installing
+          # an agent framework. Framework interoperability is a separate gate.
           pip install "agentrust-trace>=0.9" pytest
-          python -m pytest integrations/langchain/test_langchain_to_trace.py integrations/llamaindex/test_llamaindex_to_trace.py -q
+          python -m pytest \
+            integrations/langchain/test_langchain_to_trace.py \
+            integrations/llamaindex/test_llamaindex_to_trace.py \
+            -q
+      - name: Test released LangChain and LangGraph interoperability
+        run: |
+          pip install "langchain-core==1.6.0" "langgraph==1.2.11"
+          python -m pytest integrations/langchain/test_langgraph_interop.py -q

@@ -49,6 +49,18 @@ TRACE only works as a standard if it is genuinely neutral. Integrations are list
 | [scheduled-agents](scheduled-agents/) | agentrust-io | trace | community |
 <!-- integration-index:end -->
 
+### First-party framework coverage
+
+| Framework | Adapter | Released framework exercised in CI | Evidence boundary |
+|---|---|---|---|
+| LangChain | [LangChain](integrations/langchain/) | Yes — LangChain Core 1.6.0 callback contract | Tool identity and outcome plus model identity; no chain topology or runnable state |
+| LangGraph | [LangChain](integrations/langchain/) | Yes — LangGraph 1.2.11 `StateGraph` with a nested tool call | Propagated tool callbacks; no nodes, edges, state transitions, checkpoints, or rollback decisions |
+| LlamaIndex | [LlamaIndex](integrations/llamaindex/) | No — current tests use representative event objects | Allow-listed tool and model fields; released-framework interoperability remains unverified |
+
+“Adapter exists” and “released framework exercised” are separate claims here.
+The adapter README documents the evidence each callback surface can support; a
+missing graph or state concept is not inferred into the TRACE record.
+
 The [Copilot](copilot/), [Cursor](cursor/), [Windsurf](windsurf/) and
 [Gemini CLI](gemini-cli/) drift checks are intentionally outside this manifest
 index: none of them emit TRACE or Agent Manifest today, so none can truthfully

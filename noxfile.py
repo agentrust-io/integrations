@@ -37,7 +37,14 @@ def capture_engines(session: nox.Session) -> None:
 @nox.session(python="3.12")
 def framework_adapters(session: nox.Session) -> None:
     session.install("-e", "packages/agentrust-trace-adapters", "pytest>=8")
-    pytest(session, "integrations/otel-genai/test_otel_to_trace.py", "integrations/langchain/test_langchain_to_trace.py", "integrations/llamaindex/test_llamaindex_to_trace.py")
+    pytest(
+        session,
+        "integrations/otel-genai/test_otel_to_trace.py",
+        "integrations/langchain/test_langchain_to_trace.py",
+        "integrations/llamaindex/test_llamaindex_to_trace.py",
+    )
+    session.install("langchain-core==1.6.0", "langgraph==1.2.11")
+    pytest(session, "integrations/langchain/test_langgraph_interop.py")
 
 
 @nox.session(python="3.12")
