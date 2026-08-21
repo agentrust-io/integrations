@@ -8,6 +8,10 @@ maintainer:
 repository: https://github.com/a1k7/DecisionAssure-Runtime-Governance
 license: MIT
 tier: community
+marketplace:
+  category: Security & policy
+  mark: DA
+  keywords: [runtime, governance, policy]
 trace_roles:
   - record-producer
 trace_conformance_level: 0

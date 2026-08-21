@@ -9,6 +9,10 @@ maintainer:
 repository: https://github.com/agentrust-io/integrations/tree/main/integrations/sentinel
 license: MIT
 tier: community
+marketplace:
+  category: Security & policy
+  mark: AS
+  keywords: [fleet, enforcement, detection]
 trace_conformance_level: 0
 trace_roles:
   - record-producer

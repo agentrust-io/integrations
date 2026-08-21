@@ -9,6 +9,11 @@ repository: https://github.com/agentrust-io/integrations
 homepage: https://github.com/NVIDIA/OpenShell
 license: Apache-2.0
 tier: community
+marketplace:
+  category: Security & policy
+  mark: OS
+  featured: 5
+  keywords: [OpenShell, NVIDIA, OCSF]
 trace_roles:
   - record-producer
 trace_conformance_level: 0

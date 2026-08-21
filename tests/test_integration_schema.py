@@ -21,6 +21,7 @@ def manifest(**overrides: object) -> dict[str, object]:
         "repository": "https://example.com/repository",
         "license": "Apache-2.0",
         "tier": "community",
+        "marketplace": {"category": "Developer tools", "mark": "EX"},
     }
     value.update(overrides)
     return value
@@ -59,3 +60,14 @@ def test_external_evidence_source_does_not_claim_record_conformance() -> None:
             trace_roles=["external-evidence-source"],
         )
     )
+
+
+def test_marketplace_rejects_unknown_category() -> None:
+    value = manifest(marketplace={"category": "Whatever", "mark": "EX"})
+
+    try:
+        validate(value)
+    except jsonschema.ValidationError as exc:
+        assert "Whatever" in exc.message
+    else:
+        raise AssertionError("unknown Marketplace category was accepted")
