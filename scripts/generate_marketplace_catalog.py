@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import difflib
 import json
 from pathlib import Path
 
@@ -67,6 +68,8 @@ def main() -> int:
     if args.check:
         if not output.is_file() or output.read_text(encoding="utf-8") != expected:
             print("marketplace/catalog.json is stale; run scripts/generate_marketplace_catalog.py")
+            if output.is_file():
+                print("".join(difflib.unified_diff(output.read_text(encoding="utf-8").splitlines(True), expected.splitlines(True), fromfile="committed", tofile="generated")))
             return 1
         print(f"marketplace/catalog.json is current ({build_catalog(root)['count']} integrations)")
         return 0
