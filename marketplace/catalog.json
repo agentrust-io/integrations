@@ -52,7 +52,7 @@
       "name": "LangChain",
       "package_name": "LangChain",
       "vendor": "agentrust-io",
-      "description": "Emits a TRACE Trust Record from a LangChain run via a callback handler, with tool identity but no payloads.",
+      "description": "Emits a TRACE Trust Record from LangChain callbacks, including LangGraph tool runs, with tool identity but no payloads.",
       "path": "integrations/langchain",
       "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/langchain",
       "homepage": null,
