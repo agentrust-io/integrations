@@ -49,11 +49,24 @@ TRACE only works as a standard if it is genuinely neutral. Integrations are list
 | [scheduled-agents](scheduled-agents/) | agentrust-io | trace | community |
 <!-- integration-index:end -->
 
-The [Copilot drift check](copilot/) is intentionally outside this manifest index:
-it emits neither TRACE nor Agent Manifest today, so it cannot truthfully select
-an `integrates_with` value from the current schema. See the note below.
+### First-party framework coverage
 
-All four engines share [`agentrust-capture-core`](packages/agentrust-capture-core),
+| Framework | Adapter | Released framework exercised in CI | Evidence boundary |
+|---|---|---|---|
+| LangChain | [LangChain](integrations/langchain/) | Yes — LangChain Core 1.6.0 callback contract | Tool identity and outcome plus model identity; no chain topology or runnable state |
+| LangGraph | [LangChain](integrations/langchain/) | Yes — LangGraph 1.2.11 `StateGraph` with a nested tool call | Propagated tool callbacks; no nodes, edges, state transitions, checkpoints, or rollback decisions |
+| LlamaIndex | [LlamaIndex](integrations/llamaindex/) | No — current tests use representative event objects | Allow-listed tool and model fields; released-framework interoperability remains unverified |
+
+“Adapter exists” and “released framework exercised” are separate claims here.
+The adapter README documents the evidence each callback surface can support; a
+missing graph or state concept is not inferred into the TRACE record.
+
+The [Copilot](copilot/), [Cursor](cursor/), [Windsurf](windsurf/) and
+[Gemini CLI](gemini-cli/) drift checks are intentionally outside this manifest
+index: none of them emit TRACE or Agent Manifest today, so none can truthfully
+select an `integrates_with` value from the current schema. See the note below.
+
+All seven engines share [`agentrust-capture-core`](packages/agentrust-capture-core),
 which owns fingerprinting, comparison, baseline sealing and the report honesty rules.
 
 Adapters that build a Trust Record from evidence **another system produced** share
@@ -62,22 +75,24 @@ carry `origin.kind: third-party-control-plane`, `runtime.platform: software-only
 `appraisal.status: none`, so the assurance downgrade is something a consumer reads from
 the record rather than from a README. None of the three is a parameter.
 
-**Note on the Copilot entry.** It is a pull-request status check rather than a
-session hook, because Copilot's composition lives in the repository. It emits no
-TRACE record and no Agent Manifest, so it claims neither: `integrates_with` offers
-only `cmcp`, `trace` and `agent-manifest`, and asserting one today would be an
-unverifiable claim.
+**Note on the Copilot, Cursor, Windsurf and Gemini CLI entries.** Each is a
+pull-request status check rather than a session hook, because all four agents'
+composition lives in the repository rather than a developer's home directory.
+Each emits no TRACE record and no Agent Manifest, so each claims neither:
+`integrates_with` offers only `cmcp`, `trace` and `agent-manifest`, and asserting
+one today would be an unverifiable claim.
 
 That is currently blocked on a spec question rather than on implementation, tracked
 in [agent-manifest#256](https://github.com/agentrust-io/agent-manifest/issues/256).
-TRACE describes an execution and this check describes a composition, so a TRACE
+TRACE describes an execution and these checks describe a composition, so a TRACE
 record is the wrong artifact. Agent Manifest is the right one, but every level
-requires `artifacts.model_identity`, and a repository cannot know the model: Copilot
-picks it at session time from the user's plan and settings. The same repository
-serves every model, with an identical contributed composition. Manufacturing a
-model to satisfy the field would be exactly the kind of unverifiable claim
-`CONTRIBUTING.md` rules out, so the integration ships without one until the spec
-has a way to express a composition whose model is unknowable at authoring time.
+requires `artifacts.model_identity`, and a repository cannot know the model: each
+of these agents picks it at session time from the user's own plan and settings.
+The same repository serves every model, with an identical contributed composition.
+Manufacturing a model to satisfy the field would be exactly the kind of
+unverifiable claim `CONTRIBUTING.md` rules out, so all four integrations ship
+without one until the spec has a way to express a composition whose model is
+unknowable at authoring time.
 
 ## Community
 

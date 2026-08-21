@@ -37,8 +37,25 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import UUID
+
+if TYPE_CHECKING:
+    from langchain_core.callbacks.base import (
+        BaseCallbackHandler as _LangChainBaseCallbackHandler,
+    )
+else:
+    try:
+        from langchain_core.callbacks.base import (
+            BaseCallbackHandler as _LangChainBaseCallbackHandler,
+        )
+    except ModuleNotFoundError as exc:
+        if exc.name != "langchain_core":
+            raise
+
+        class _LangChainBaseCallbackHandler:
+            """Fallback that keeps record construction framework-optional."""
+
 
 __all__ = ["TraceCallbackHandler", "ToolCall", "build_record"]
 
@@ -91,16 +108,18 @@ def _name_from_serialized(serialized: dict[str, Any]) -> str | None:
     return None
 
 
-class TraceCallbackHandler:
+class TraceCallbackHandler(_LangChainBaseCallbackHandler):
     """Accumulates what a LangChain run did, for one record per run.
 
     Subclasses ``langchain_core.callbacks.base.BaseCallbackHandler`` when
-    LangChain is installed. The import is deferred so the module can be read,
-    tested and reviewed without it, which also keeps the honesty rules testable
-    without pulling a framework into CI.
+    LangChain is installed, so LangChain and LangGraph callback managers can
+    inspect the standard handler controls. The optional fallback keeps record
+    construction and the honesty rules usable without installing a framework;
+    it is not presented as a framework integration in that environment.
     """
 
     def __init__(self) -> None:
+        super().__init__()
         self._observed = _Observed()
 
     # --- LangChain callback surface ---------------------------------------
@@ -206,9 +225,9 @@ class TraceCallbackHandler:
     ) -> dict[str, Any]:
         """Assemble the unsigned Trust Record for this run.
 
-        ``enforcement_mode`` has no default. LangChain enforces nothing, so every
-        available value overstates a bare run to some degree and the caller has to
-        choose knowingly. See the README.
+        ``enforcement_mode`` defaults to ``declared`` because LangChain itself
+        evaluates no policy. Override it only when a separate enforcement layer
+        actually evaluated the declared bundle. See the README.
 
         ``attestation`` is ``{"platform": ..., "measurement": ...}`` when the
         deployment runs in a TEE, which lifts the record to Level 1. Absent, the

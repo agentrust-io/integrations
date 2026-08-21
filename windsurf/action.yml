@@ -1,0 +1,84 @@
+name: AgenTrust Windsurf integrity check
+description: >-
+  Fail a pull request that changes what Windsurf reads in this repository
+  (rules, skills) without updating the approved baseline in the same change.
+author: AgenTrust Contributors
+branding:
+  icon: shield
+  color: purple
+
+inputs:
+  root:
+    description: Repository root to inspect.
+    required: false
+    default: "."
+  comment:
+    description: >-
+      Post the result as a pull-request comment, updating the same comment on each
+      run rather than adding one per push. Needs pull-requests: write.
+    required: false
+    default: "true"
+  fail-on-drift:
+    description: >-
+      Fail the check when the composition changed. Set false to report without
+      blocking, which is the sensible first step when adopting this on a busy repo.
+    required: false
+    default: "true"
+  github-token:
+    description: Token used to post the comment.
+    required: false
+    default: ${{ github.token }}
+
+outputs:
+  changed:
+    description: "true when the composition drifted from the baseline"
+    value: ${{ steps.check.outputs.changed }}
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: pip install --quiet "agentrust-capture-core>=0.1,<0.2"
+
+    - id: check
+      shell: bash
+      run: |
+        set -o pipefail
+        comment_file="${RUNNER_TEMP}/agentrust-windsurf-comment.md"
+        if python "${{ github.action_path }}/engine/capture.py" verify \
+             --root "${{ inputs.root }}" --comment-file "$comment_file"; then
+          echo "changed=false" >> "$GITHUB_OUTPUT"
+        else
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+        fi
+        echo "comment-file=$comment_file" >> "$GITHUB_OUTPUT"
+        {
+          echo "## AgenTrust Windsurf integrity check"
+          echo
+          cat "$comment_file"
+        } >> "$GITHUB_STEP_SUMMARY"
+
+    - if: ${{ inputs.comment == 'true' && github.event_name == 'pull_request' }}
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        BODY_FILE: ${{ steps.check.outputs.comment-file }}
+        PR: ${{ github.event.pull_request.number }}
+        REPO: ${{ github.repository }}
+      run: |
+        marker="<!-- agentrust-windsurf-integrity -->"
+        body="$(printf '%s\n\n' "$marker"; cat "$BODY_FILE")"
+        existing="$(gh api "repos/$REPO/issues/$PR/comments" --paginate \
+          --jq "[.[] | select(.body | contains(\"$marker\")) | .id] | first // empty")"
+        if [ -n "$existing" ]; then
+          gh api --method PATCH "repos/$REPO/issues/comments/$existing" -f body="$body" >/dev/null
+        else
+          gh api --method POST "repos/$REPO/issues/$PR/comments" -f body="$body" >/dev/null
+        fi
+
+    - if: ${{ inputs.fail-on-drift == 'true' && steps.check.outputs.changed == 'true' }}
+      shell: bash
+      run: |
+        echo "::error::This pull request changes what Windsurf reads without updating"\
+             "the approved baseline. See the comment on this pull request."
+        exit 1

@@ -1,6 +1,8 @@
-# LangChain → TRACE
+# LangChain and LangGraph → TRACE
 
-Emits a TRACE v0.2 Trust Record from a LangChain run, using the documented `BaseCallbackHandler` surface.
+Emits a TRACE v0.2 Trust Record from LangChain callbacks, including callbacks
+propagated through a LangGraph run, using the documented `BaseCallbackHandler`
+surface.
 
 ## First-party, unlike the other adapters here
 
@@ -10,11 +12,33 @@ That is a different thing from [`agentrust-trace-adapters`](../../packages/agent
 
 Where the deployment runs inside a TEE, passing an attestation lifts the same record from Level 0 to Level 1 and nothing else about the call changes, the way the sandbox adapter in `agentrust-trace` works.
 
+## Framework coverage and limits
+
+| Runtime | What is exercised | What the record does not describe |
+|---|---|---|
+| LangChain | The released callback manager and tool lifecycle | Chain topology and intermediate runnable state |
+| LangGraph | A released `StateGraph` with a nested LangChain tool call | Graph nodes, conditional edges, state transitions, checkpoints, and rollback decisions |
+
+The LangGraph row is callback interoperability, not graph-native provenance.
+CI exercises a tool callback propagated by a graph. Model callbacks use the
+same LangChain handler surface, but the graph's state machine is not observed: a
+run with no tool callback has no tool transcript, and this adapter must not be
+cited as evidence of which edge ran or which state was restored. CI currently
+pins LangChain Core 1.6.0 and LangGraph 1.2.11 for the interoperability
+regression.
+
+The module remains importable without LangChain installed so record construction
+and the evidence rules can be tested independently. Framework callback support
+requires `langchain-core`, as the installation command below states.
+
 ## Run it
 
 ```bash
 pip install agentrust-trace langchain-core
 ```
+
+Install `langgraph` as well when the handler is attached to a LangGraph run. The
+same callback configuration is used by either framework:
 
 ```python
 from langchain_to_trace import TraceCallbackHandler
@@ -75,7 +99,9 @@ trace-tests report --record record.json --html report.html
 ## Tests
 
 ```bash
-python -m pytest test_langchain_to_trace.py -q
+pip install -r requirements.txt pytest langchain-core==1.6.0 langgraph==1.2.11
+python -m pytest test_langchain_to_trace.py test_langgraph_interop.py -q
 ```
 
-21 tests: observation, payload exclusion, every refusal, and the record parsed by the real `TrustRecord` model after signing.
+24 tests: observation, payload exclusion, every refusal, a real LangGraph tool
+run, and records parsed by the released `TrustRecord` model after signing.
