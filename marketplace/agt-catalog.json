@@ -1,0 +1,514 @@
+{
+  "catalog_version": 1,
+  "source": "https://github.com/microsoft/agent-governance-toolkit",
+  "source_commit": "b5705588883fac48b88cbe6fd0bd7d48c798453e",
+  "count": 22,
+  "integrations": [
+    {
+      "name": "A2A AgentMesh",
+      "package_name": "a2a_agentmesh",
+      "vendor": "Microsoft",
+      "description": "A2A protocol bridge for AgentMesh — trust-verified agent-to-agent communication via the A2A standard",
+      "path": "agent-governance-python/agentmesh-integrations/a2a-protocol",
+      "url": "https://github.com/microsoft/agent-governance-toolkit/tree/b5705588883fac48b88cbe6fd0bd7d48c798453e/agent-governance-python/agentmesh-integrations/a2a-protocol",
+      "homepage": null,
+      "repository": "https://github.com/microsoft/agent-governance-toolkit",
+      "tier": "project",
+      "stack": [
+        "AGT"
+      ],
+      "category": "AGT integrations",
+      "mark": "AA",
+      "featured": null,
+      "keywords": [
+        "a2a-protocol",
+        "a2a_agentmesh",
+        "Agent Governance Toolkit",
+        "AgentMesh"
+      ]
+    },
+    {
+      "name": "ADK AgentMesh",
+      "package_name": "adk_agentmesh",
+      "vendor": "Microsoft",
+      "description": "Deprecated. Previously published as adk-agentmesh. Install agent-governance-toolkit-integrations[adk] instead.",
+      "path": "agent-governance-python/agentmesh-integrations/adk-agentmesh",
+      "url": "https://github.com/microsoft/agent-governance-toolkit/tree/b5705588883fac48b88cbe6fd0bd7d48c798453e/agent-governance-python/agentmesh-integrations/adk-agentmesh",
+      "homepage": null,
+      "repository": "https://github.com/microsoft/agent-governance-toolkit",
+      "tier": "project",
+      "stack": [
+        "AGT"
+      ],
+      "category": "AGT integrations",
+      "mark": "AA",
+      "featured": null,
+      "keywords": [
+        "adk-agentmesh",
+        "adk_agentmesh",
+        "Agent Governance Toolkit",
+        "AgentMesh"
+      ]
+    },
+    {
+      "name": "Agent Veil Protocol Integration for AgentMesh",
+      "package_name": "avp_agentmesh",
+      "vendor": "Microsoft",
+      "description": "Deprecated. Previously published as avp-agentmesh. Install agent-governance-toolkit-integrations[avp] instead.",
+      "path": "agent-governance-python/agentmesh-integrations/agentmesh-avp",
+      "url": "https://github.com/microsoft/agent-governance-toolkit/tree/b5705588883fac48b88cbe6fd0bd7d48c798453e/agent-governance-python/agentmesh-integrations/agentmesh-avp",
+      "homepage": null,
+      "repository": "https://github.com/microsoft/agent-governance-toolkit",
+      "tier": "project",
+      "stack": [
+        "AGT"
+      ],
+      "category": "AGT integrations",
+      "mark": "AV",
+      "featured": null,
+      "keywords": [
+        "agentmesh-avp",
+        "avp_agentmesh",
+        "Agent Governance Toolkit",
+        "AgentMesh"
+      ]
+    },
+    {
+      "name": "AgentMesh Trust Extension for Dify",
+      "package_name": "dify",
+      "vendor": "Microsoft",
+      "description": "Cryptographic identity and trust verification for Dify agents and workflows.",
+      "path": "agent-governance-python/agentmesh-integrations/dify",
+      "url": "https://github.com/microsoft/agent-governance-toolkit/tree/b5705588883fac48b88cbe6fd0bd7d48c798453e/agent-governance-python/agentmesh-integrations/dify",
+      "homepage": null,
+      "repository": "https://github.com/microsoft/agent-governance-toolkit",
+      "tier": "project",
+      "stack": [
+        "AGT"
+      ],
+      "category": "AGT integrations",
+      "mark": "AT",
+      "featured": null,
+      "keywords": [
+        "dify",
+        "dify",
+        "Agent Governance Toolkit",
+        "AgentMesh"
+      ]
+    },
+    {
+      "name": "Audit Accountability Export",
+      "package_name": "agentmesh_audit_export",
+      "vendor": "Microsoft",
+      "description": "Example adapter from AgentMesh AuditEntry output to an external accountability export shape",
+      "path": "agent-governance-python/agentmesh-integrations/audit-accountability-export",
+      "url": "https://github.com/microsoft/agent-governance-toolkit/tree/b5705588883fac48b88cbe6fd0bd7d48c798453e/agent-governance-python/agentmesh-integrations/audit-accountability-export",
+      "homepage": null,
+      "repository": "https://github.com/microsoft/agent-governance-toolkit",
+      "tier": "project",
+      "stack": [
+        "AGT"
+      ],
+      "category": "AGT integrations",
+      "mark": "AA",
+      "featured": null,
+      "keywords": [
+        "audit-accountability-export",
+        "agentmesh_audit_export",
+        "Agent Governance Toolkit",
+        "AgentMesh"
+      ]
+    },
+    {
+      "name": "Copilot Governance",
+      "package_name": "@microsoft/agentmesh-copilot-governance",
+      "vendor": "Microsoft",
+      "description": "Public Preview — GitHub Copilot Extension for agent governance code review: detects missing policy checks, unguarded tool calls, and audit logging gaps",
+      "path": "agent-governance-python/agentmesh-integrations/copilot-governance",
+      "url": "https://github.com/microsoft/agent-governance-toolkit/tree/b5705588883fac48b88cbe6fd0bd7d48c798453e/agent-governance-python/agentmesh-integrations/copilot-governance",
+      "homepage": null,
+      "repository": "https://github.com/microsoft/agent-governance-toolkit",
+      "tier": "project",
+      "stack": [
+        "AGT"
+      ],
+      "category": "AGT integrations",
+      "mark": "CG",
+      "featured": null,
+      "keywords": [
+        "copilot-governance",
+        "@microsoft/agentmesh-copilot-governance",
+        "Agent Governance Toolkit",
+        "AgentMesh"
+      ]
+    },
+    {
+      "name": "CrewAI AgentMesh",
+      "package_name": "crewai_agentmesh",
+      "vendor": "Microsoft",
+      "description": "Deprecated. Previously published as crewai-agentmesh. Install agent-governance-toolkit-integrations[crewai] instead.",
+      "path": "agent-governance-python/agentmesh-integrations/crewai-agentmesh",
+      "url": "https://github.com/microsoft/agent-governance-toolkit/tree/b5705588883fac48b88cbe6fd0bd7d48c798453e/agent-governance-python/agentmesh-integrations/crewai-agentmesh",
+      "homepage": null,
+      "repository": "https://github.com/microsoft/agent-governance-toolkit",
+      "tier": "project",
+      "stack": [
+        "AGT"
+      ],
+      "category": "AGT integrations",
+      "mark": "CA",
+      "featured": null,
+      "keywords": [
+        "crewai-agentmesh",
+        "crewai_agentmesh",
+        "Agent Governance Toolkit",
+        "AgentMesh"
+      ]
+    },
+    {
+      "name": "Flowise",
+      "package_name": "flowise_agentmesh",
+      "vendor": "Microsoft",
+      "description": "Deprecated. Previously published as flowise-agentmesh. Install agent-governance-toolkit-integrations[flowise] instead.",
+      "path": "agent-governance-python/agentmesh-integrations/flowise-agentmesh",
+      "url": "https://github.com/microsoft/agent-governance-toolkit/tree/b5705588883fac48b88cbe6fd0bd7d48c798453e/agent-governance-python/agentmesh-integrations/flowise-agentmesh",
+      "homepage": null,
+      "repository": "https://github.com/microsoft/agent-governance-toolkit",
+      "tier": "project",
+      "stack": [
+        "AGT"
+      ],
+      "category": "AGT integrations",
+      "mark": "F",
+      "featured": null,
+      "keywords": [
+        "flowise-agentmesh",
+        "flowise_agentmesh",
+        "Agent Governance Toolkit",
+        "AgentMesh"
+      ]
+    },
+    {
+      "name": "Haystack",
+      "package_name": "haystack_agentmesh",
+      "vendor": "Microsoft",
+      "description": "Deprecated. Previously published as haystack-agentmesh. Install agent-governance-toolkit-integrations[haystack] instead.",
+      "path": "agent-governance-python/agentmesh-integrations/haystack-agentmesh",
+      "url": "https://github.com/microsoft/agent-governance-toolkit/tree/b5705588883fac48b88cbe6fd0bd7d48c798453e/agent-governance-python/agentmesh-integrations/haystack-agentmesh",
+      "homepage": null,
+      "repository": "https://github.com/microsoft/agent-governance-toolkit",
+      "tier": "project",
+      "stack": [
+        "AGT"
+      ],
+      "category": "AGT integrations",
+      "mark": "H",
+      "featured": null,
+      "keywords": [
+        "haystack-agentmesh",
+        "haystack_agentmesh",
+        "Agent Governance Toolkit",
+        "AgentMesh"
+      ]
+    },
+    {
+      "name": "LangChain AgentMesh Integration",
+      "package_name": "agentmesh_langchain",
+      "vendor": "Microsoft",
+      "description": "Deprecated. Previously published as agentmesh-langchain. Install agent-governance-toolkit-integrations[langchain] instead.",
+      "path": "agent-governance-python/agentmesh-integrations/langchain-agentmesh",
+      "url": "https://github.com/microsoft/agent-governance-toolkit/tree/b5705588883fac48b88cbe6fd0bd7d48c798453e/agent-governance-python/agentmesh-integrations/langchain-agentmesh",
+      "homepage": null,
+      "repository": "https://github.com/microsoft/agent-governance-toolkit",
+      "tier": "project",
+      "stack": [
+        "AGT"
+      ],
+      "category": "AGT integrations",
+      "mark": "LA",
+      "featured": null,
+      "keywords": [
+        "langchain-agentmesh",
+        "agentmesh_langchain",
+        "Agent Governance Toolkit",
+        "AgentMesh"
+      ]
+    },
+    {
+      "name": "Langflow",
+      "package_name": "langflow_agentmesh",
+      "vendor": "Microsoft",
+      "description": "Deprecated. Previously published as langflow-agentmesh. Install agent-governance-toolkit-integrations[langflow] instead.",
+      "path": "agent-governance-python/agentmesh-integrations/langflow-agentmesh",
+      "url": "https://github.com/microsoft/agent-governance-toolkit/tree/b5705588883fac48b88cbe6fd0bd7d48c798453e/agent-governance-python/agentmesh-integrations/langflow-agentmesh",
+      "homepage": null,
+      "repository": "https://github.com/microsoft/agent-governance-toolkit",
+      "tier": "project",
+      "stack": [
+        "AGT"
+      ],
+      "category": "AGT integrations",
+      "mark": "L",
+      "featured": null,
+      "keywords": [
+        "langflow-agentmesh",
+        "langflow_agentmesh",
+        "Agent Governance Toolkit",
+        "AgentMesh"
+      ]
+    },
+    {
+      "name": "Langgraph Trust",
+      "package_name": "langgraph_agentmesh",
+      "vendor": "Microsoft",
+      "description": "Deprecated. Previously published as langgraph-agentmesh. Install agent-governance-toolkit-integrations[langgraph] instead.",
+      "path": "agent-governance-python/agentmesh-integrations/langgraph-trust",
+      "url": "https://github.com/microsoft/agent-governance-toolkit/tree/b5705588883fac48b88cbe6fd0bd7d48c798453e/agent-governance-python/agentmesh-integrations/langgraph-trust",
+      "homepage": null,
+      "repository": "https://github.com/microsoft/agent-governance-toolkit",
+      "tier": "project",
+      "stack": [
+        "AGT"
+      ],
+      "category": "AGT integrations",
+      "mark": "LT",
+      "featured": null,
+      "keywords": [
+        "langgraph-trust",
+        "langgraph_agentmesh",
+        "Agent Governance Toolkit",
+        "AgentMesh"
+      ]
+    },
+    {
+      "name": "LlamaIndex",
+      "package_name": "llamaindex_agentmesh",
+      "vendor": "Microsoft",
+      "description": "Deprecated. Previously published as llamaindex-agentmesh. Install agent-governance-toolkit-integrations[llamaindex] instead.",
+      "path": "agent-governance-python/agentmesh-integrations/llamaindex-agentmesh",
+      "url": "https://github.com/microsoft/agent-governance-toolkit/tree/b5705588883fac48b88cbe6fd0bd7d48c798453e/agent-governance-python/agentmesh-integrations/llamaindex-agentmesh",
+      "homepage": null,
+      "repository": "https://github.com/microsoft/agent-governance-toolkit",
+      "tier": "project",
+      "stack": [
+        "AGT"
+      ],
+      "category": "AGT integrations",
+      "mark": "L",
+      "featured": null,
+      "keywords": [
+        "llamaindex-agentmesh",
+        "llamaindex_agentmesh",
+        "Agent Governance Toolkit",
+        "AgentMesh"
+      ]
+    },
+    {
+      "name": "Mastra",
+      "package_name": "@microsoft/agentmesh-mastra",
+      "vendor": "Microsoft",
+      "description": "Public Preview — Governance, trust verification, and audit middleware for Mastra AI agents",
+      "path": "agent-governance-python/agentmesh-integrations/mastra-agentmesh",
+      "url": "https://github.com/microsoft/agent-governance-toolkit/tree/b5705588883fac48b88cbe6fd0bd7d48c798453e/agent-governance-python/agentmesh-integrations/mastra-agentmesh",
+      "homepage": null,
+      "repository": "https://github.com/microsoft/agent-governance-toolkit",
+      "tier": "project",
+      "stack": [
+        "AGT"
+      ],
+      "category": "AGT integrations",
+      "mark": "M",
+      "featured": null,
+      "keywords": [
+        "mastra-agentmesh",
+        "@microsoft/agentmesh-mastra",
+        "Agent Governance Toolkit",
+        "AgentMesh"
+      ]
+    },
+    {
+      "name": "MCP Receipt Governed",
+      "package_name": "agentmesh_mcp_receipts",
+      "vendor": "Microsoft",
+      "description": "MCP tool-call receipt signing — Cedar policy decisions linked to governance receipts",
+      "path": "agent-governance-python/agentmesh-integrations/mcp-receipt-governed",
+      "url": "https://github.com/microsoft/agent-governance-toolkit/tree/b5705588883fac48b88cbe6fd0bd7d48c798453e/agent-governance-python/agentmesh-integrations/mcp-receipt-governed",
+      "homepage": null,
+      "repository": "https://github.com/microsoft/agent-governance-toolkit",
+      "tier": "project",
+      "stack": [
+        "AGT"
+      ],
+      "category": "AGT integrations",
+      "mark": "MR",
+      "featured": null,
+      "keywords": [
+        "mcp-receipt-governed",
+        "agentmesh_mcp_receipts",
+        "Agent Governance Toolkit",
+        "AgentMesh"
+      ]
+    },
+    {
+      "name": "MCP Trust Proxy",
+      "package_name": "agentmesh_mcp_proxy",
+      "vendor": "Microsoft",
+      "description": "MCP proxy that wraps any MCP tool with AgentMesh trust verification",
+      "path": "agent-governance-python/agentmesh-integrations/mcp-trust-proxy",
+      "url": "https://github.com/microsoft/agent-governance-toolkit/tree/b5705588883fac48b88cbe6fd0bd7d48c798453e/agent-governance-python/agentmesh-integrations/mcp-trust-proxy",
+      "homepage": null,
+      "repository": "https://github.com/microsoft/agent-governance-toolkit",
+      "tier": "project",
+      "stack": [
+        "AGT"
+      ],
+      "category": "AGT integrations",
+      "mark": "MT",
+      "featured": null,
+      "keywords": [
+        "mcp-trust-proxy",
+        "agentmesh_mcp_proxy",
+        "Agent Governance Toolkit",
+        "AgentMesh"
+      ]
+    },
+    {
+      "name": "Nostr Web of Trust Integration for AgentMesh",
+      "package_name": "nostr_wot_agentmesh",
+      "vendor": "Microsoft",
+      "description": "Deprecated. Previously published as nostr-wot-agentmesh. Install agent-governance-toolkit-integrations[nostr-wot] instead.",
+      "path": "agent-governance-python/agentmesh-integrations/nostr-wot",
+      "url": "https://github.com/microsoft/agent-governance-toolkit/tree/b5705588883fac48b88cbe6fd0bd7d48c798453e/agent-governance-python/agentmesh-integrations/nostr-wot",
+      "homepage": null,
+      "repository": "https://github.com/microsoft/agent-governance-toolkit",
+      "tier": "project",
+      "stack": [
+        "AGT"
+      ],
+      "category": "AGT integrations",
+      "mark": "NW",
+      "featured": null,
+      "keywords": [
+        "nostr-wot",
+        "nostr_wot_agentmesh",
+        "Agent Governance Toolkit",
+        "AgentMesh"
+      ]
+    },
+    {
+      "name": "OpenAI Agents AgentMesh",
+      "package_name": "openai_agents_agentmesh",
+      "vendor": "Microsoft",
+      "description": "Deprecated. Previously published as openai-agents-agentmesh. Install agent-governance-toolkit-integrations[openai-agents] instead.",
+      "path": "agent-governance-python/agentmesh-integrations/openai-agents-agentmesh",
+      "url": "https://github.com/microsoft/agent-governance-toolkit/tree/b5705588883fac48b88cbe6fd0bd7d48c798453e/agent-governance-python/agentmesh-integrations/openai-agents-agentmesh",
+      "homepage": null,
+      "repository": "https://github.com/microsoft/agent-governance-toolkit",
+      "tier": "project",
+      "stack": [
+        "AGT"
+      ],
+      "category": "AGT integrations",
+      "mark": "OA",
+      "featured": null,
+      "keywords": [
+        "openai-agents-agentmesh",
+        "openai_agents_agentmesh",
+        "Agent Governance Toolkit",
+        "AgentMesh"
+      ]
+    },
+    {
+      "name": "OpenAI Agents Trust",
+      "package_name": "agentmesh_openai_agents_trust",
+      "vendor": "Microsoft",
+      "description": "Deprecated. Previously published as agentmesh-openai-agents-trust. Install agent-governance-toolkit-integrations[openai-agents] instead.",
+      "path": "agent-governance-python/agentmesh-integrations/openai-agents-trust",
+      "url": "https://github.com/microsoft/agent-governance-toolkit/tree/b5705588883fac48b88cbe6fd0bd7d48c798453e/agent-governance-python/agentmesh-integrations/openai-agents-trust",
+      "homepage": null,
+      "repository": "https://github.com/microsoft/agent-governance-toolkit",
+      "tier": "project",
+      "stack": [
+        "AGT"
+      ],
+      "category": "AGT integrations",
+      "mark": "OA",
+      "featured": null,
+      "keywords": [
+        "openai-agents-trust",
+        "agentmesh_openai_agents_trust",
+        "Agent Governance Toolkit",
+        "AgentMesh"
+      ]
+    },
+    {
+      "name": "Openshell",
+      "package_name": "openshell-agentmesh",
+      "vendor": "Microsoft",
+      "description": "Deprecated. Previously published as openshell-agentmesh. Install agent-governance-toolkit-integrations[openshell] instead.",
+      "path": "agent-governance-python/agentmesh-integrations/openshell-skill",
+      "url": "https://github.com/microsoft/agent-governance-toolkit/tree/b5705588883fac48b88cbe6fd0bd7d48c798453e/agent-governance-python/agentmesh-integrations/openshell-skill",
+      "homepage": null,
+      "repository": "https://github.com/microsoft/agent-governance-toolkit",
+      "tier": "project",
+      "stack": [
+        "AGT"
+      ],
+      "category": "AGT integrations",
+      "mark": "O",
+      "featured": null,
+      "keywords": [
+        "openshell-skill",
+        "openshell-agentmesh",
+        "Agent Governance Toolkit",
+        "AgentMesh"
+      ]
+    },
+    {
+      "name": "Pydantic AI Governance",
+      "package_name": "pydantic_ai_agentmesh",
+      "vendor": "Microsoft",
+      "description": "Deprecated. Previously published as pydantic-ai-agentmesh. Install agent-governance-toolkit-integrations[pydantic-ai] instead.",
+      "path": "agent-governance-python/agentmesh-integrations/pydantic-ai-governance",
+      "url": "https://github.com/microsoft/agent-governance-toolkit/tree/b5705588883fac48b88cbe6fd0bd7d48c798453e/agent-governance-python/agentmesh-integrations/pydantic-ai-governance",
+      "homepage": null,
+      "repository": "https://github.com/microsoft/agent-governance-toolkit",
+      "tier": "project",
+      "stack": [
+        "AGT"
+      ],
+      "category": "AGT integrations",
+      "mark": "PA",
+      "featured": null,
+      "keywords": [
+        "pydantic-ai-governance",
+        "pydantic_ai_agentmesh",
+        "Agent Governance Toolkit",
+        "AgentMesh"
+      ]
+    },
+    {
+      "name": "Structural Authorization Gates",
+      "package_name": "structural_authz_agentmesh",
+      "vendor": "Microsoft",
+      "description": "Deprecated. Previously published as structural-authz-agentmesh. Install agent-governance-toolkit-integrations[structural-authz] instead.",
+      "path": "agent-governance-python/agentmesh-integrations/structural-authz-agentmesh",
+      "url": "https://github.com/microsoft/agent-governance-toolkit/tree/b5705588883fac48b88cbe6fd0bd7d48c798453e/agent-governance-python/agentmesh-integrations/structural-authz-agentmesh",
+      "homepage": null,
+      "repository": "https://github.com/microsoft/agent-governance-toolkit",
+      "tier": "project",
+      "stack": [
+        "AGT"
+      ],
+      "category": "AGT integrations",
+      "mark": "SA",
+      "featured": null,
+      "keywords": [
+        "structural-authz-agentmesh",
+        "structural_authz_agentmesh",
+        "Agent Governance Toolkit",
+        "AgentMesh"
+      ]
+    }
+  ]
+}

@@ -42,3 +42,5 @@ jobs:
         run: |
           python -m pytest tests/test_generate_marketplace_catalog.py -q
           python scripts/generate_marketplace_catalog.py --check
+      - name: Test AGT Marketplace snapshot generation
+        run: python -m pytest tests/test_generate_agt_marketplace_catalog.py -q
