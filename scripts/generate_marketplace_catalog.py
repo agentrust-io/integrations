@@ -71,7 +71,9 @@ def main() -> int:
         print(f"marketplace/catalog.json is current ({build_catalog(root)['count']} integrations)")
         return 0
     output.parent.mkdir(exist_ok=True)
-    output.write_text(expected, encoding="utf-8")
+    # Commit byte-stable LF JSON on every platform; Path.write_text translates
+    # newlines on Windows and makes the Linux CI parity check report false drift.
+    output.write_bytes(expected.encode("utf-8"))
     print(f"wrote {output.relative_to(root)}")
     return 0
 
