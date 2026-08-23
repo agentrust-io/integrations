@@ -5,6 +5,10 @@
 
 The ecosystem front door for cMCP, TRACE, and Agent Manifest. Vendors and community projects integrate here, on their own terms, under published rules - while the core repos stay first-party.
 
+Project support is recognized in [SPONSORS.md](SPONSORS.md). Sponsorship is
+separate from marketplace listing, verification tier, maintainership, and
+project governance.
+
 ## Where things live
 
 | Repo | What belongs there | Who contributes |
