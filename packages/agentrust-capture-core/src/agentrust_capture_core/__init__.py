@@ -29,11 +29,13 @@ from .compare import (
 from .hashing import (
     EXCLUDE_DIRS,
     EXCLUDE_SUFFIXES,
+    UNVERIFIABLE_PREFIX,
     now_iso,
     safe_sha_file,
     sha_bytes,
     sha_file,
     sha_mapping,
+    snapshot_has_unverifiable_fingerprint,
     tree_digest,
     uuid7,
 )
@@ -56,18 +58,19 @@ from .seal import (
 )
 from .state import StatePaths, atomic_write, load_state, save_baseline, save_state
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 __all__ = [
-    "Change",
     "EXCLUDE_DIRS",
     "EXCLUDE_SUFFIXES",
     "INTEGRITY_BROKEN",
     "INTEGRITY_OK",
     "INTEGRITY_UNSEALED",
     "SEAL_FIELD",
-    "StatePaths",
     "UNMEASURED",
+    "UNVERIFIABLE_PREFIX",
+    "Change",
+    "StatePaths",
     "__version__",
     "atomic_write",
     "attach_seal",
@@ -90,6 +93,7 @@ __all__ = [
     "sha_bytes",
     "sha_file",
     "sha_mapping",
+    "snapshot_has_unverifiable_fingerprint",
     "state_digest",
     "tree_digest",
     "unmeasured_footnote",

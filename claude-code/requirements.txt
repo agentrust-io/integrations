@@ -2,7 +2,7 @@
 # agentrust-capture-core carries the fingerprinting, comparison, sealing and report
 # rules the engine is built on. It has no dependencies of its own, so this stays a
 # single lightweight install rather than a tree.
-agentrust-capture-core>=0.1,<0.2
+agentrust-capture-core>=0.1.1,<0.2
 
 # Signing only, below the core:
 #

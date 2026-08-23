@@ -21,14 +21,18 @@ from pathlib import Path
 __all__ = [
     "EXCLUDE_DIRS",
     "EXCLUDE_SUFFIXES",
+    "UNVERIFIABLE_PREFIX",
     "now_iso",
+    "safe_sha_file",
     "sha_bytes",
     "sha_file",
     "sha_mapping",
-    "safe_sha_file",
+    "snapshot_has_unverifiable_fingerprint",
     "tree_digest",
     "uuid7",
 ]
+
+UNVERIFIABLE_PREFIX = "unverifiable:"
 
 #: Directory names skipped when fingerprinting a component tree. These hold state
 #: a component writes as it runs, so hashing them would report drift on ordinary
@@ -92,8 +96,10 @@ def tree_digest(
 
     Relative paths are bound into the digest alongside contents, so a rename or a
     move is drift. Traversal is sorted so the digest is stable across platforms.
-    Symlinks are skipped so a link out of the tree cannot pull unrelated content
-    into the fingerprint, and so a cycle cannot hang the hook.
+    Symlinks are never followed, so a link out of the tree cannot pull unrelated
+    content into the fingerprint and a cycle cannot hang the hook. Their presence
+    instead makes the whole tree unverifiable: otherwise an external executable
+    target could change while this digest remained clean.
     """
     digest = hashlib.sha256()
     try:
@@ -103,7 +109,15 @@ def tree_digest(
     saw_file = False
     for path in paths:
         if path.is_symlink():
-            continue
+            try:
+                relative = path.relative_to(root).as_posix()
+                target = os.readlink(path)
+            except (OSError, ValueError):
+                relative, target = "<unknown>", "<unreadable>"
+            marker = hashlib.sha256(
+                (relative + "\0" + target).encode("utf-8", errors="surrogateescape")
+            ).hexdigest()
+            return UNVERIFIABLE_PREFIX + "symlink:sha256:" + marker
         try:
             if not path.is_file():
                 continue
@@ -131,6 +145,17 @@ def tree_digest(
     if not saw_file:
         return None
     return "sha256:" + digest.hexdigest()
+
+
+def snapshot_has_unverifiable_fingerprint(value: object) -> bool:
+    """Return whether a snapshot contains a fingerprint that must not be approved."""
+    if isinstance(value, str):
+        return value.startswith(UNVERIFIABLE_PREFIX)
+    if isinstance(value, dict):
+        return any(snapshot_has_unverifiable_fingerprint(item) for item in value.values())
+    if isinstance(value, (list, tuple)):
+        return any(snapshot_has_unverifiable_fingerprint(item) for item in value)
+    return False
 
 
 def uuid7() -> str:

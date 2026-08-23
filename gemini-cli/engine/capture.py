@@ -264,7 +264,11 @@ def cmd_snapshot(args) -> int:
 def cmd_approve(args) -> int:
     root = _root(args)
     path = root / BASELINE_PATH
-    core.save_state(path, snapshot(root))
+    current = snapshot(root)
+    if core.snapshot_has_unverifiable_fingerprint(current):
+        print("Refusing approval: a captured component contains a symlink payload and cannot be verified.")
+        return 1
+    core.save_state(path, current)
     print("approved baseline written: %s" % BASELINE_PATH.as_posix())
     print("Commit it in the same change as the files it describes.")
     return 0

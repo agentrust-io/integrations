@@ -25,6 +25,8 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
 
+from .hashing import UNVERIFIABLE_PREFIX
+
 __all__ = [
     "Change",
     "diff_hash",
@@ -55,7 +57,12 @@ def diff_maps(base: Mapping[str, str], current: Mapping[str, str], what: str) ->
     for name in sorted(set(base) - set(current)):
         out.append(_change("removed", what, name))
     for name in sorted(set(base) & set(current)):
-        if base[name] != current[name]:
+        if (
+            base[name].startswith(UNVERIFIABLE_PREFIX)
+            or current[name].startswith(UNVERIFIABLE_PREFIX)
+        ):
+            out.append(_change("changed", what, name + " (unverifiable symlink payload)"))
+        elif base[name] != current[name]:
             out.append(_change("changed", what, name))
     return out
 

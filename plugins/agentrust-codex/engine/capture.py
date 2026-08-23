@@ -1128,6 +1128,9 @@ def cmd_approve(args: argparse.Namespace) -> int:
     current = _snapshot_for_args(args)
     baseline_path, latest_path = _workspace_state(current["workspace_id"])
     _save(latest_path, current)
+    if core.snapshot_has_unverifiable_fingerprint(current):
+        print("Refusing approval: a captured component contains a symlink payload and cannot be verified.")
+        return 1
     sealed = core.save_baseline(baseline_path, current)
     print(render_report(current, [], False))
     print("\nApproved baseline: %s" % baseline_path)

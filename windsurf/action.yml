@@ -38,7 +38,7 @@ runs:
   using: composite
   steps:
     - shell: bash
-      run: pip install --quiet "agentrust-capture-core>=0.1,<0.2"
+      run: pip install --quiet "$GITHUB_WORKSPACE/packages/agentrust-capture-core"
 
     - id: check
       shell: bash
