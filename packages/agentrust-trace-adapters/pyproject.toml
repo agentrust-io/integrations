@@ -11,7 +11,7 @@ description = "Build TRACE Trust Records from evidence another system produced, 
 readme = "README.md"
 license = "Apache-2.0"
 license-files = ["LICENSE"]
-authors = [{ name = "AgenTrust Contributors", email = "oss@agentrust-io.com" }]
+authors = [{ name = "AgenTrust Contributors", email = "imransiddique@live.com" }]
 keywords = ["trace", "attestation", "adapter", "agent", "governance"]
 classifiers = [
     "Development Status :: 3 - Alpha",
