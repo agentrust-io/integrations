@@ -125,6 +125,22 @@ class TestNoMcpSurface:
 
 
 class TestVerifyAsAStatusCheck:
+    def test_approve_refuses_unverifiable_symlink_payload(
+        self, tmp_path, monkeypatch, capsys
+    ):
+        root = _repo(tmp_path)
+        monkeypatch.setattr(
+            capture,
+            "snapshot",
+            lambda _root: {
+                "skills": {"deploy": "unverifiable:symlink:sha256:test"}
+            },
+        )
+
+        assert capture.cmd_approve(_Args(root=str(root))) == 1
+        assert not (root / capture.BASELINE_PATH).exists()
+        assert "Refusing approval" in capsys.readouterr().out
+
     def test_missing_baseline_does_not_fail_the_check(self, tmp_path, capsys):
         root = _repo(tmp_path)
         args = _Args(root=str(root))

