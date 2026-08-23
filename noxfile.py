@@ -6,7 +6,7 @@ import nox
 
 
 nox.options.default_venv_backend = "venv"
-nox.options.sessions = ["capture_core", "trace_adapters", "capture_engines", "framework_adapters", "shadow_ai"]
+nox.options.sessions = ["capture_core", "trace_adapters", "capture_engines", "framework_adapters", "google_adk_adapter", "shadow_ai"]
 
 
 def pytest(session: nox.Session, *paths: str) -> None:
@@ -45,6 +45,18 @@ def framework_adapters(session: nox.Session) -> None:
     )
     session.install("langchain-core==1.6.0", "langgraph==1.2.11")
     pytest(session, "integrations/langchain/test_langgraph_interop.py")
+
+
+@nox.session(python="3.12")
+def google_adk_adapter(session: nox.Session) -> None:
+    session.install("agentrust-trace==0.9.0", "pytest>=8")
+    pytest(session, "integrations/google-adk/test_google_adk_to_trace.py")
+    session.install("google-adk==2.7.1", "agentrust-trace-tests==0.5.0")
+    pytest(
+        session,
+        "integrations/google-adk/test_google_adk_to_trace.py",
+        "integrations/google-adk/test_google_adk_interop.py",
+    )
 
 
 @nox.session(python="3.12")

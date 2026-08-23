@@ -1,6 +1,6 @@
 {
   "catalog_version": 1,
-  "count": 16,
+  "count": 17,
   "integrations": [
     {
       "name": "Claude Code",
@@ -244,6 +244,28 @@
         "runtime",
         "governance",
         "policy"
+      ]
+    },
+    {
+      "name": "Google ADK",
+      "package_name": "Google ADK",
+      "vendor": "agentrust-io",
+      "description": "Emits a TRACE Trust Record from Google ADK callbacks using callback-visible tool and model identity without payloads.",
+      "path": "integrations/google-adk",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/google-adk",
+      "homepage": null,
+      "repository": "https://github.com/agentrust-io/integrations",
+      "tier": "community",
+      "stack": [
+        "TRACE"
+      ],
+      "category": "Frameworks",
+      "mark": "ADK",
+      "featured": null,
+      "keywords": [
+        "callback",
+        "framework",
+        "tools"
       ]
     },
     {

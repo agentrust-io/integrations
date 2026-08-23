@@ -39,6 +39,7 @@ TRACE only works as a standard if it is genuinely neutral. Integrations are list
 | [Agent Passport System](integrations/aeoess-aps/) | aeoess | trace | community |
 | [comply54](integrations/comply54/) | comply54 | trace | community |
 | [DecisionAssure](integrations/decisionassure/) | DecisionAssure (a1k7) | trace | community |
+| [Google ADK](integrations/google-adk/) | agentrust-io | trace | community |
 | [LangChain](integrations/langchain/) | agentrust-io | trace | community |
 | [LlamaIndex](integrations/llamaindex/) | agentrust-io | trace | community |
 | [Nobulex](integrations/nobulex/) | Nobulex | trace | community |
@@ -57,6 +58,7 @@ TRACE only works as a standard if it is genuinely neutral. Integrations are list
 
 | Framework | Adapter | Released framework exercised in CI | Evidence boundary |
 |---|---|---|---|
+| Google ADK | [Google ADK](integrations/google-adk/) | Yes - Google ADK 2.7.1 `InMemoryRunner` plugin lifecycle | Callback-visible invocation, model, and available tool identity; no payloads, retries, agent graph, function-body execution, or policy enforcement |
 | LangChain | [LangChain](integrations/langchain/) | Yes — LangChain Core 1.6.0 callback contract | Tool identity and outcome plus model identity; no chain topology or runnable state |
 | LangGraph | [LangChain](integrations/langchain/) | Yes — LangGraph 1.2.11 `StateGraph` with a nested tool call | Propagated tool callbacks; no nodes, edges, state transitions, checkpoints, or rollback decisions |
 | LlamaIndex | [LlamaIndex](integrations/llamaindex/) | No — current tests use representative event objects | Allow-listed tool and model fields; released-framework interoperability remains unverified |

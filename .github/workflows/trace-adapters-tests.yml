@@ -8,6 +8,7 @@ on:
       - "integrations/otel-genai/**"
       - "integrations/langchain/**"
       - "integrations/llamaindex/**"
+      - "integrations/google-adk/**"
       - "integrations/openshell/**"
       - ".github/workflows/trace-adapters-tests.yml"
   push:
@@ -18,6 +19,7 @@ on:
       - "integrations/otel-genai/**"
       - "integrations/langchain/**"
       - "integrations/llamaindex/**"
+      - "integrations/google-adk/**"
       - "integrations/openshell/**"
       - ".github/workflows/trace-adapters-tests.yml"
 
@@ -140,3 +142,24 @@ jobs:
         run: |
           pip install "langchain-core==1.6.0" "langgraph==1.2.11"
           python -m pytest integrations/langchain/test_langgraph_interop.py -q
+
+  google-adk-adapter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - name: Test evidence rules without Google ADK
+        run: |
+          pip install "agentrust-trace==0.9.0" pytest
+          python -m pytest integrations/google-adk/test_google_adk_to_trace.py -q
+      - name: Test released Google ADK interoperability and evidence rules
+        run: |
+          pip install "google-adk==2.7.1" "agentrust-trace-tests==0.5.0"
+          python -m pytest \
+            integrations/google-adk/test_google_adk_to_trace.py \
+            integrations/google-adk/test_google_adk_interop.py \
+            -q
