@@ -29,7 +29,7 @@ jobs:
           python-version: "3.12"
       - name: Run the drift suite without the signing packages
         run: |
-          pip install ./packages/agentrust-capture-core pytest
+          pip install ./packages/agentrust-capture-core pytest==9.1.1
           cd scheduled-agents
           python -m pytest tests -q
 
@@ -50,5 +50,5 @@ jobs:
       - name: Run full suite (with crypto packages)
         working-directory: scheduled-agents
         run: |
-          pip install ../packages/agentrust-capture-core pytest -r requirements.txt
+          pip install ../packages/agentrust-capture-core pytest==9.1.1 -r requirements.txt
           python -m pytest tests -q

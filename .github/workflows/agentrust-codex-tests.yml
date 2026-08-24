@@ -34,7 +34,7 @@ jobs:
           python-version: "${{ matrix.python-version }}"
       - name: Run capture tests without the signing packages
         run: |
-          pip install ./packages/agentrust-capture-core pytest
+          pip install ./packages/agentrust-capture-core pytest==8.4.2
           python -m pytest plugins/agentrust-codex/tests -q
 
   signing:
@@ -52,7 +52,7 @@ jobs:
           python-version: "${{ matrix.python-version }}"
       - name: Run signing and conformance tests
         run: |
-          pip install ./packages/agentrust-capture-core pytest -r plugins/agentrust-codex/requirements.txt
+          pip install ./packages/agentrust-capture-core pytest==9.1.1 -r plugins/agentrust-codex/requirements.txt
           python -m pytest plugins/agentrust-codex/tests -q
 
   structure:
@@ -66,5 +66,5 @@ jobs:
           python-version: "3.12"
       - name: Validate integration and plugin structure
         run: |
-          pip install jsonschema pyyaml
+          pip install jsonschema==4.26.0 pyyaml==6.0.3
           python plugins/agentrust-codex/tests/validate_structure.py
