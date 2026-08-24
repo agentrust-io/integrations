@@ -124,11 +124,12 @@ async def evaluate(request: Request):
                 inp = SentinelInput(**data)
                 result = engine.evaluate(inp)
                 return JSONResponse(content=result.model_dump(mode='json'))
-            except Exception as e:
-                return JSONResponse(content={"error": f"Invalid input: {str(e)}"}, status_code=400)
-    except Exception as e:
-        print("ERROR:", traceback.format_exc())
-        return JSONResponse(content={"error": str(e)}, status_code=400)
+            except Exception:
+                print("ERROR in evaluate (single input):", traceback.format_exc())
+                return JSONResponse(content={"error": "Invalid input"}, status_code=400)
+    except Exception:
+        print("ERROR in evaluate:", traceback.format_exc())
+        return JSONResponse(content={"error": "Invalid input"}, status_code=400)
 
 @app.post("/enforce/{claim_id}")
 async def enforce_action(claim_id: str, request: Request):
@@ -294,9 +295,9 @@ async def export_incident(claim_id: str, request: Request):
         report.signature = sign_payload(report_dict)
 
         return JSONResponse(content=report.model_dump(mode='json'))
-    except Exception as e:
+    except Exception:
         print("ERROR in export_incident:", traceback.format_exc())
-        return JSONResponse(content={"error": str(e)}, status_code=500)
+        return JSONResponse(content={"error": "Internal error"}, status_code=500)
 
 @app.post("/replay")
 async def replay_trace(request: Request):
@@ -307,8 +308,9 @@ async def replay_trace(request: Request):
         inp = SentinelInput(**trace_data)
         results = replay_engine.replay(inp, policy_versions)
         return JSONResponse(content=[r.model_dump(mode='json') for r in results])
-    except Exception as e:
-        return JSONResponse(content={"error": str(e)}, status_code=400)
+    except Exception:
+        print("ERROR in replay_trace:", traceback.format_exc())
+        return JSONResponse(content={"error": "Invalid input"}, status_code=400)
 
 @app.post("/verify/{claim_id}")
 async def verify_incident(claim_id: str, request: Request):
@@ -343,5 +345,6 @@ async def verify_incident(claim_id: str, request: Request):
                 "signature_valid": valid_signature
             }
         })
-    except Exception as e:
-        return JSONResponse(content={"error": str(e)}, status_code=500)
+    except Exception:
+        print("ERROR in verify_incident:", traceback.format_exc())
+        return JSONResponse(content={"error": "Internal error"}, status_code=500)
