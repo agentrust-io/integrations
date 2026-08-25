@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from pathlib import Path
 from sentinel.models import (
-    SentinelInput, Ticket, EnforcementResult, Action,
+    SentinelInput, EnforcementResult, Action,
     IncidentReport, ReplayResult, Receipt
 )
 from sentinel.risk_engine import RiskEngine
@@ -38,7 +38,7 @@ def normalize_risk_level(risk_level: str) -> str:
     return "low"
 
 def log_enforcement(action: str, claim_id: str, result: dict, status: str = "SUCCESS"):
-    print(f"\n[ENFORCE]")
+    print("\n[ENFORCE]")
     print(f"Claim: {claim_id}")
     print(f"Action: {action.upper()}")
     print(f"Result: {result.get('message', result)}")

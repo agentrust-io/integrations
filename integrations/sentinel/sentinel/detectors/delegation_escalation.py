@@ -1,5 +1,4 @@
-from typing import Optional
-from sentinel.models import SentinelInput, DetectionResult, Action, RiskLevel
+from sentinel.models import SentinelInput, DetectionResult, Action
 from sentinel.detectors.base import BaseDetector
 
 
