@@ -61,9 +61,12 @@ class CollusionDetector(BaseDetector):
         return patterns
 
     def _risk_level(self, score: float) -> RiskLevel:
-        if score < 0.3: return RiskLevel.LOW
-        if score < 0.6: return RiskLevel.MEDIUM
-        if score < 0.8: return RiskLevel.HIGH
+        if score < 0.3:
+            return RiskLevel.LOW
+        if score < 0.6:
+            return RiskLevel.MEDIUM
+        if score < 0.8:
+            return RiskLevel.HIGH
         return RiskLevel.CRITICAL
 if __name__ == "__main__":
     # Quick test

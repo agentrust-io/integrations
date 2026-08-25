@@ -1,7 +1,7 @@
 """
 Risk Engine for Agent Sentinel – evaluates traces and produces governance decisions.
 """
-from typing import List, Optional, Dict, Any, Set
+from typing import List, Dict, Any
 from datetime import datetime
 import json
 from sentinel.models import (

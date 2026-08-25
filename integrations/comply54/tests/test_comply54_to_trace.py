@@ -5,9 +5,7 @@ Run: pip install -r requirements.txt && python -m pytest tests/ -v
 
 import json
 import os
-import base64
 import tempfile
-import pytest
 import jsonschema
 import jwt as pyjwt
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
