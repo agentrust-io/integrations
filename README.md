@@ -41,6 +41,7 @@ TRACE only works as a standard if it is genuinely neutral. Integrations are list
 | [DecisionAssure](integrations/decisionassure/) | DecisionAssure (a1k7) | trace | community |
 | [Google ADK](integrations/google-adk/) | agentrust-io | trace | community |
 | [LangChain](integrations/langchain/) | agentrust-io | trace | community |
+| [SOVP](integrations/litzki-systems-sovp/) | Litzki Systems | trace | community |
 | [LlamaIndex](integrations/llamaindex/) | agentrust-io | trace | community |
 | [Nobulex](integrations/nobulex/) | Nobulex | trace | community |
 | [OpenShell TRACE Adapter](integrations/openshell/) | agentrust-io | trace | community |
