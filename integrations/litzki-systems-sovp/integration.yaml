@@ -10,7 +10,7 @@ maintainer:
   email: maintainers@litzki.systems
 repository: https://github.com/litzki-systems/sovp-agentrust-bridge
 license: Apache-2.0
-tier: community
+tier: verified
 marketplace:
   category: Evidence & receipts
   mark: SV

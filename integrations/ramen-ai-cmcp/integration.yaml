@@ -12,7 +12,7 @@ maintainer:
 repository: https://github.com/ramen-ai-dev/ramen-ai-integrations
 homepage: https://ramenai.dev
 license: MIT
-tier: community
+tier: verified
 marketplace:
   category: Evidence & receipts
   mark: RA
