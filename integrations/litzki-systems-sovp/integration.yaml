@@ -1,0 +1,23 @@
+name: SOVP
+vendor: Litzki Systems
+integrates_with:
+  - trace
+description: >-
+  Maps a SOVP attestation result onto an Ed25519-signed AgenTrust TRACE Trust
+  Record, signing only the fields the caller supplies and inferring no claims.
+maintainer:
+  github: litzki-systems
+  email: maintainers@litzki.systems
+repository: https://github.com/litzki-systems/sovp-agentrust-bridge
+license: Apache-2.0
+tier: community
+marketplace:
+  category: Evidence & receipts
+  mark: SV
+  keywords: [attestation, sovp, trace]
+trace_conformance_level: 0
+trace_roles:
+  - record-producer
+tested_against:
+  agentrust-trace: "0.9.0"
+  agentrust-trace-tests: "0.5.0"

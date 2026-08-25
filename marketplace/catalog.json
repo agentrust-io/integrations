@@ -1,6 +1,6 @@
 {
   "catalog_version": 1,
-  "count": 17,
+  "count": 18,
   "integrations": [
     {
       "name": "Claude Code",
@@ -379,6 +379,28 @@
         "discovery",
         "undeclared",
         "remediation"
+      ]
+    },
+    {
+      "name": "SOVP",
+      "package_name": "SOVP",
+      "vendor": "Litzki Systems",
+      "description": "Maps a SOVP attestation result onto an Ed25519-signed AgenTrust TRACE Trust Record, signing only the fields the caller supplies and inferring no claims.",
+      "path": "integrations/litzki-systems-sovp",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/litzki-systems-sovp",
+      "homepage": null,
+      "repository": "https://github.com/litzki-systems/sovp-agentrust-bridge",
+      "tier": "community",
+      "stack": [
+        "TRACE"
+      ],
+      "category": "Evidence & receipts",
+      "mark": "SV",
+      "featured": null,
+      "keywords": [
+        "attestation",
+        "sovp",
+        "trace"
       ]
     }
   ]
