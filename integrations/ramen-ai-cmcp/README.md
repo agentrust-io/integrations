@@ -109,9 +109,11 @@ See rules 2 and 4 in [CONTRIBUTING.md](../../CONTRIBUTING.md).
 
 ## Verified-tier review
 
-The manifest intentionally remains `tier: community`, as required by the
-registry schema. After reproducing the Level 0 result above, an AgentTrust
-maintainer must flip the tier to `verified` during review.
+Done. A maintainer reproduced the Level 0 result above on 2026-08-24 against
+released `agentrust-trace` and `agentrust-trace-tests` in an isolated
+environment (23 tests passed, `Result: PASS (8 checks, 0 skipped)`), and the
+manifest is now `tier: verified`. Re-verification happens at every release
+that touches this integration.
 
 ## Conformance CI
 

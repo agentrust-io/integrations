@@ -299,7 +299,7 @@
       "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/ramen-ai-cmcp",
       "homepage": "https://ramenai.dev",
       "repository": "https://github.com/ramen-ai-dev/ramen-ai-integrations",
-      "tier": "community",
+      "tier": "verified",
       "stack": [
         "cMCP",
         "TRACE"
@@ -390,7 +390,7 @@
       "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/litzki-systems-sovp",
       "homepage": null,
       "repository": "https://github.com/litzki-systems/sovp-agentrust-bridge",
-      "tier": "community",
+      "tier": "verified",
       "stack": [
         "TRACE"
       ],
