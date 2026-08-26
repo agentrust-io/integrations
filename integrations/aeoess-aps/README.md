@@ -57,13 +57,25 @@ permanently unmappable. No network access and no credentials are needed.
 | `policy.version` | `floorVersion` |
 | `runtime.platform` | `software-only` |
 | `runtime.measurement` | sha256 over the APS canonical bytes of the full signed decision |
-| `appraisal.status` | `permit` to `affirming`, `narrow` to `warning`, `deny` to `contraindicated` |
+| `appraisal.status` | constant `none` |
 | `appraisal.verifier` | `urn:aps:evaluator:<evaluatorId>` |
 | `appraisal.policy_ref` | `urn:aps:floor:<floorVersion>` |
 | `appraisal.timestamp` | `iat` |
 | `transparency` | `urn:aps:transparency:none` |
 
-An APS verdict this mapper does not know is refused rather than appraised.
+An APS verdict this mapper does not know is refused rather than transcribed.
+
+`appraisal.status` is `none` and is not a parameter. The
+`agentrust-trace-adapters` convention that landed on `main` in commit `e1aa231`
+(2026-08-08) sets it that way for any record assembled from evidence another
+system produced: "Nobody appraised the evidence. Transcribing is not
+appraising", and "A vendor's bare ALLOW/DENY result is still a policy decision,
+not an appraisal of the evidence behind that decision." An APS verdict is
+exactly such a policy decision. Our mapping was reviewed as defensible on
+2026-08-03. A clearer adapter convention landed on 2026-08-09 that separates
+policy decisions from evidence appraisal, and the exporter aligns to that
+convention here. The verdict is still carried, as `policy.enforcement_mode` and
+`policy.version`.
 
 ## What is verified
 
