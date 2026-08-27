@@ -70,4 +70,4 @@ jobs:
       - run: |
           python -m pytest \
             integrations/wcm-triton/test_wcm_triton.py \
-            -k artifact_digest_matches_the_hugging_face_gate -q
+            -k "use_the_sdk_implementation or recipe_id_comes_from_the_sdk" -q
