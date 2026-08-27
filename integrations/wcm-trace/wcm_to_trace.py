@@ -57,15 +57,18 @@ import hashlib
 import json
 import re
 import time
-from typing import Any, Iterable
+from typing import Any, Iterable, Sequence
 
 from wcm import (
     CheckResult,
     CompositeEvidence,
     ReleaseDecision,
+    RuntimeEvent,
+    RuntimeRecord,
     SessionState,
     WeightCustodyManifest,
     signing_pre_image,
+    verify_runtime_record_chain,
 )
 
 __all__ = [
@@ -75,6 +78,7 @@ __all__ = [
     "MissingEvidence",
     "build_release_record",
     "build_custody_record",
+    "build_custody_chain_record",
     "manifest_policy_bundle",
 ]
 
@@ -119,6 +123,17 @@ UNMAPPED_FIELDS = {
         "parties. Whether the sweep passed is in the check list."
     ),
 }
+
+#: Chain events meaning the runtime gave the key up.
+_TERMINAL_EVENTS = frozenset(
+    {
+        RuntimeEvent.lapse_detected.value,
+        RuntimeEvent.revocation_detected.value,
+        RuntimeEvent.wipe_requested.value,
+        RuntimeEvent.wipe_completed.value,
+        RuntimeEvent.process_terminated.value,
+    }
+)
 
 _SUBJECT_RE = re.compile(r"^(spiffe://[^/]+/.+|did:[a-z0-9]+:.+)$")
 _DIGEST_RE = re.compile(r"^sha(256:[0-9a-f]{64}|384:[0-9a-f]{96})$")
@@ -324,10 +339,11 @@ def build_custody_record(
     Layer 3 record as continued hardware attestation is exactly the mistake the
     field exists to prevent.
 
-    The signed, hash-chained ``RuntimeRecord`` in the WCM SDK is the stronger
-    artifact for this job. It is not in PyPI 0.26.0, so this function works from
-    the session state a caller can observe today. When the SDK publishes it, a
-    record built from a verified chain can carry a real appraisal instead.
+    ``build_custody_chain_record`` is the stronger path and should be preferred
+    where the runtime signs: it reads a hash-chained receipt rather than the
+    process's current opinion of itself. This one remains for a runtime with no
+    signing key, which is a real deployment and not a degraded one; it simply
+    proves less, and the appraisal says so by carrying no chain fields.
     """
     subject = subject or manifest.custody.enclave_id
     if not _SUBJECT_RE.match(subject or ""):
@@ -368,6 +384,128 @@ def build_custody_record(
             "lease_deadline": lease_deadline,
             "operations_used": operations_used,
         },
+    }
+
+
+def build_custody_chain_record(
+    *,
+    manifest: WeightCustodyManifest,
+    records: Sequence[RuntimeRecord],
+    runtime_public_key_b64url: str,
+    data_class: str,
+    model_provider: str,
+    model_id: str,
+    workload_digest: str,
+    subject: str | None = None,
+    require_terminal_sequence: bool = True,
+    iat: int | None = None,
+) -> dict[str, Any]:
+    """Build a Trust Record from a signed, hash-chained custody receipt.
+
+    This is the stronger of the two Layer 3 paths. ``build_custody_record`` reads
+    a session's current state, which is whatever the process says about itself
+    right now. This reads ``wcm.runtime_records``: an Ed25519-signed chain where
+    each record commits to the previous one's hash, so a record cannot be removed
+    from the middle without the chain failing to verify.
+
+    **What the chain proves, exactly.** That the runtime holding that key said
+    these things, in this order, and that nothing was excised. It does *not*
+    prove the runtime was attested at each step. Attestation happened once, at
+    release, and the broker verified it there. So ``runtime.platform`` is still
+    ``software-only``: a signature from a key the runtime holds is not a hardware
+    measurement, and treating it as one is the mistake that field exists to
+    prevent.
+
+    What does change is the appraisal. A verified chain lets this record say the
+    custody account is complete and tamper-evident, which the state-based path
+    cannot say at all.
+
+    ``require_terminal_sequence`` defaults to True because the usual reason to
+    build this record is that a lease ended and somebody wants the account of it.
+    Pass False for a chain collected from a server still running, where the
+    absence of a boundary is correct rather than suspicious.
+    """
+    if not records:
+        raise MissingEvidence(
+            "no runtime records. An empty chain is not a custody account, and a "
+            "record built from one would assert an outcome nothing witnessed."
+        )
+    subject = subject or manifest.custody.enclave_id
+    if not _SUBJECT_RE.match(subject or ""):
+        raise MissingEvidence(
+            f"subject {subject!r} must be a SPIFFE URI or a DID; pass subject= explicitly."
+        )
+    if not _DIGEST_RE.match(workload_digest or ""):
+        raise MissingEvidence("workload_digest must be a sha256:/sha384: digest.")
+
+    ordered = list(records)
+    bound = {record.weights_hash for record in ordered}
+    if bound != {manifest.weights_hash}:
+        raise MissingEvidence(
+            f"the chain binds {sorted(bound)} but this manifest binds "
+            f"{manifest.weights_hash}. A record pairing one lease's receipts with "
+            "another manifest would misattribute whatever the chain describes."
+        )
+
+    verified, reason = verify_runtime_record_chain(
+        ordered,
+        runtime_public_key_b64url,
+        require_terminal_sequence=require_terminal_sequence,
+    )
+    events = [record.event for record in ordered]
+    ended = _TERMINAL_EVENTS.intersection(events)
+
+    policy_bundle = manifest_policy_bundle(manifest)
+    appraisal: dict[str, Any] = {
+        "verifier": "wcm-runtime-record-chain",
+        "chain_verified": verified,
+        "chain_length": len(ordered),
+        "lease_id": ordered[0].lease_id,
+        "final_event": events[-1],
+    }
+    if not verified:
+        # An unverifiable chain is worse than no chain: it is an account that
+        # does not hold together. Report the SDK's reason rather than a summary,
+        # because "sequence is not contiguous" and "signature is invalid" send an
+        # investigator to different places.
+        appraisal["status"] = "contraindicated"
+        appraisal["reason"] = reason
+    elif ended:
+        # The chain verified and it records the runtime giving the key up. That
+        # is the gate working, and it is contraindicated for exactly the reason
+        # a wiped session is: inference attributed afterwards did not use these
+        # weights.
+        appraisal["status"] = "contraindicated"
+        appraisal["reason"] = reason
+    else:
+        appraisal["status"] = "affirming"
+        appraisal["reason"] = reason
+
+    return {
+        "eat_profile": TRACE_PROFILE,
+        "iat": int(iat if iat is not None else time.time()),
+        "subject": subject,
+        "model": {
+            "provider": model_provider,
+            "model_id": model_id,
+            "weights_digest": manifest.weights_hash,
+        },
+        "runtime": {
+            # Still software-only, and for the reason in the docstring. A signed
+            # chain is a stronger account, not a hardware root of trust.
+            "platform": "software-only",
+            "measurement": _digest(
+                workload_digest.encode() + b"\n" + _digest(policy_bundle).encode()
+            ),
+        },
+        "policy": {
+            "bundle_hash": _digest(policy_bundle),
+            "enforcement_mode": "enforce",
+            "version": manifest.manifest_version,
+        },
+        "data_class": data_class,
+        "build_provenance": {"slsa_level": 0, "digest": workload_digest},
+        "appraisal": appraisal,
     }
 
 

@@ -21,4 +21,4 @@ wcm_roles:
 wcm_conformance_levels:
   - L2
 tested_against:
-  weight-custody-manifest: "0.26.0"
+  weight-custody-manifest: "0.27.0"

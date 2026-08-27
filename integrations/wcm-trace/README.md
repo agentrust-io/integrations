@@ -75,10 +75,39 @@ a quote at release time; nothing re-verifies silicon on each lease tick, and
 reading a Layer 3 record as continued hardware attestation is the mistake the
 field exists to prevent.
 
-The signed, hash-chained `RuntimeRecord` in the WCM SDK is the stronger artifact
-for this. It is **not in PyPI 0.26.0**, so this module works from observable
-session state today. When the SDK publishes it, a record built from a verified
-chain can carry a real appraisal.
+### Two Layer 3 paths, and which to use
+
+`build_custody_chain_record` is the stronger one and reads a signed,
+hash-chained `wcm.runtime_records` receipt. Each record commits to the previous
+one's hash, so a record cannot be removed from the middle without the chain
+failing to verify.
+
+| | `build_custody_record` | `build_custody_chain_record` |
+|---|---|---|
+| Input | A session's current state | A signed chain |
+| Proves | What the process says about itself right now | The runtime said these things, in this order, with nothing excised |
+| Appraisal | Custody state only | Adds `chain_verified`, `chain_length`, `lease_id`, `final_event` |
+| `runtime.platform` | `software-only` | `software-only` |
+
+The state-based path stays for a runtime with no signing key, which is a real
+deployment rather than a degraded one. It proves less, and its appraisal says so
+by carrying no chain fields at all. There is a test asserting the weaker path
+cannot be mistaken for the stronger one.
+
+**A verified chain is still not attestation.** A signature from a key the runtime
+holds is not a hardware measurement. Attestation happened once, at release, and
+the broker verified it there, which is why `runtime.platform` is `software-only`
+on both paths without exception.
+
+An unverifiable chain is worse than no chain, because it is an account that does
+not hold together. Those become `contraindicated` carrying the SDK's own reason
+rather than a summary: "sequence is not contiguous" and "signature is invalid"
+send an investigator to different places.
+
+`require_terminal_sequence` defaults to `True`, because the usual reason to build
+this record is that a lease ended and somebody wants the account of it. Pass
+`False` for a chain from a server still running, where the absence of a boundary
+is correct rather than suspicious.
 
 ## Run it
 

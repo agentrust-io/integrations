@@ -6,10 +6,10 @@ name: WCM integrations tests
 # what CONTRIBUTING rule 1 requires an integration to target.
 #
 # weight-custody-manifest is pinned to an exact version. These adapters depend on
-# what the published package actually exports: 0.26.0 ships no runtime_records
-# module, and several of them are written around that absence. A silent upgrade
-# should surface here as a failing pin, next to the reason, rather than as
-# behaviour nobody attributed to a dependency.
+# what the published package actually exports, and 0.27.0 is the release that
+# first published wcm.artifact_digest, runtime_records and memory_sweep. A
+# silent upgrade should surface here as a failing pin, next to the reason,
+# rather than as behaviour nobody attributed to a dependency.
 
 on:
   pull_request:
@@ -44,7 +44,7 @@ jobs:
       - name: Install the published SDK and test-only extras
         run: |
           pip install \
-            "weight-custody-manifest==0.26.0" \
+            "weight-custody-manifest==0.27.0" \
             "agent-manifest>=0.11.1" \
             "pytest>=8" \
             pyyaml \
@@ -52,10 +52,11 @@ jobs:
       - name: Run the integration tests
         run: python -m pytest integrations/wcm-* -q
 
-  # A digest recipe implemented twice stops being one recipe silently, and
-  # nothing in either module notices. wcm-triton asserts byte equality with
-  # wcm-huggingface; this runs that check on its own so the failure is legible
-  # in the checks list rather than buried in a suite of 344.
+  # The recipe used to exist twice, kept in step by a byte-equality test. Since
+  # 0.27.0 it lives in the SDK and both integrations re-export it, so the check
+  # is now that neither has reintroduced a local copy to drift from. Still its
+  # own job: the failure should be legible in the checks list rather than buried
+  # in a suite of 349.
   digest-recipe-parity:
     runs-on: ubuntu-latest
     steps:
@@ -65,8 +66,8 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
-      - run: pip install "weight-custody-manifest==0.26.0" "pytest>=8"
+      - run: pip install "weight-custody-manifest==0.27.0" "pytest>=8"
       - run: |
           python -m pytest \
             integrations/wcm-triton/test_wcm_triton.py \
-            -k artifact_digest_matches_the_hugging_face_gate -q
+            -k "use_the_sdk_implementation or recipe_id_comes_from_the_sdk" -q

@@ -36,6 +36,27 @@ the current one, so a lease deadline is accurate to roughly one request's
 duration. Size the cadence accordingly; a 30-second cadence on a workload with
 90-second generations is a lease that means very little.
 
+**Signed receipts, and the one ordering constraint that matters.** Pass a
+``runtime_signing_key`` and the guard emits ``wcm.runtime_records``: an
+Ed25519-signed, hash-chained account of the lease, verifiable by anyone holding
+the public key. The SDK's terminal-chain contract is exact, and it is
+``lease_started``, then any number of ``renewal_succeeded``, then one boundary
+(``lapse_detected`` or ``revocation_detected``), then ``wipe_requested``,
+``wipe_completed`` and ``process_terminated`` in that order.
+
+That last record has to be written *before* the process leaves, which means
+before ``on_lapse`` runs, because the default ``on_lapse`` calls ``os._exit``
+and nothing after it executes. So ``process_terminated`` attests the intent to
+terminate, recorded immediately before the call that does it. A process killed
+from outside, by SIGKILL or a power cut, leaves a chain ending earlier, which
+verifies as a valid *partial* chain and not as a terminal one. That distinction
+is the useful part: a truncated chain says the runtime stopped without
+completing its own wipe sequence.
+
+The chain proves the runtime said these things, in this order, with nothing
+removed from the middle. It does not prove the runtime was attested at each
+step. Attestation happened once, at release, and the broker verified it there.
+
 **The wiring is deliberately thin.** ``CustodyGuard`` depends on nothing from
 vLLM, so it can be tested without a GPU and is unaffected when vLLM's plugin
 surface moves. The README shows the wiring against public entry points.
@@ -55,11 +76,13 @@ Usage::
 
 from __future__ import annotations
 
+import datetime as dt
+import hashlib
 import logging
 import os
 import threading
 from dataclasses import dataclass, field
-from typing import Any, Callable, Protocol
+from typing import Any, Callable, Optional, Protocol, Sequence
 
 from wcm import (
     AttestationProvider,
@@ -68,9 +91,15 @@ from wcm import (
     KeyWipedError,
     ReattestationRequired,
     ReleaseDecision,
+    RuntimeEvent,
+    RuntimeRecord,
     SessionState,
     WeightCustodyManifest,
+    canonical_hash,
     parse_cadence,
+    runtime_public_key,
+    sign_runtime_record,
+    verify_runtime_record_chain,
 )
 
 __all__ = [
@@ -79,6 +108,7 @@ __all__ = [
     "ServingHalted",
     "GuardState",
     "Broker",
+    "lease_id_for",
 ]
 
 logger = logging.getLogger("wcm.serving")
@@ -123,6 +153,23 @@ class GuardState:
     lapses: int = 0
     last_error: str | None = None
     failed_checks: tuple[str, ...] = field(default_factory=tuple)
+    #: How many signed runtime records exist. Zero when no signing key was given.
+    records_written: int = 0
+    #: The lease identifier the records are bound to, derived from the challenge.
+    lease_id: str | None = None
+
+
+def lease_id_for(nonce: str) -> str:
+    """Derive a lease identifier from the KBS challenge nonce.
+
+    The lease is the thing the attestation created, so identifying it by that
+    challenge is the honest binding. The nonce itself is not republished: a
+    runtime record is meant to be handed to a third party, and a single-use
+    replay-protection value is not something to scatter into artifacts that
+    outlive it. A digest correlates for anyone who holds the nonce and reveals
+    nothing to anyone who does not.
+    """
+    return hashlib.sha256(nonce.encode("utf-8")).hexdigest()[:32]
 
 
 def _terminate(reason: str) -> None:
@@ -159,6 +206,7 @@ class CustodyGuard:
         on_lapse: Callable[[str], None] = _terminate,
         max_operations: int | None = None,
         clock: Callable[[], Any] | None = None,
+        runtime_signing_key: Any = None,
     ) -> None:
         self._broker = broker
         self._manifest = manifest
@@ -167,6 +215,10 @@ class CustodyGuard:
         self._max_operations = max_operations
         self._clock = clock
         self._session: EnclaveSession | None = None
+        self._signing_key = runtime_signing_key
+        self._records: list[RuntimeRecord] = []
+        self._lease_id: str | None = None
+        self._manifest_hash = canonical_hash(manifest.model_dump(mode="json", exclude_none=True))
         self._thread: threading.Thread | None = None
         self._stop = threading.Event()
         self._lock = threading.Lock()
@@ -192,6 +244,75 @@ class CustodyGuard:
     def session(self) -> EnclaveSession | None:
         return self._session
 
+    @property
+    def records(self) -> tuple[RuntimeRecord, ...]:
+        """The signed chain so far. Empty when no signing key was supplied."""
+        return tuple(self._records)
+
+    @property
+    def runtime_public_key(self) -> str | None:
+        """The key a verifier needs. None when the guard is not signing."""
+        if self._signing_key is None:
+            return None
+        return runtime_public_key(self._signing_key)
+
+    def verify_chain(self, *, require_terminal_sequence: bool = False) -> tuple[bool, str]:
+        """Verify the guard's own chain.
+
+        ``require_terminal_sequence`` defaults to False, because a running
+        server has not lapsed yet and a live chain is legitimately partial.
+        Pass True when checking a chain collected after a process ended.
+        """
+        public_key = self.runtime_public_key
+        if public_key is None:
+            return False, "no runtime signing key was supplied, so no chain exists"
+        return verify_runtime_record_chain(
+            self._records, public_key, require_terminal_sequence=require_terminal_sequence
+        )
+
+    def _record(self, event: RuntimeEvent, **detail: Any) -> None:
+        """Append one signed record. A no-op when the guard is not signing.
+
+        Called with ``self._lock`` already held everywhere it matters, so the
+        sequence numbers cannot interleave between the lease thread and a
+        request thread. A gap or a repeat would make the chain unverifiable.
+        """
+        if self._signing_key is None or self._lease_id is None:
+            return
+        record = sign_runtime_record(
+            signing_key=self._signing_key,
+            sequence=len(self._records),
+            event=event,
+            occurred_at=dt.datetime.now(dt.timezone.utc).isoformat().replace("+00:00", "Z"),
+            weights_hash=self._manifest.weights_hash,
+            manifest_hash=self._manifest_hash,
+            lease_id=self._lease_id,
+            previous=self._records[-1] if self._records else None,
+            detail=detail or None,
+        )
+        self._records.append(record)
+        self.state.records_written = len(self._records)
+
+    def _record_terminal(self, reason: str, boundary: RuntimeEvent) -> None:
+        """Write the whole terminal sequence, then hand over to on_lapse.
+
+        Order is not a style choice. The SDK's terminal contract is boundary,
+        wipe_requested, wipe_completed, process_terminated, and the default
+        on_lapse calls os._exit, after which nothing runs. So every record is
+        written first and process_terminated attests the intent to terminate.
+
+        A process killed from outside leaves the chain short, which verifies as
+        a valid partial chain rather than a terminal one. That is the signal:
+        the runtime stopped without completing its own wipe sequence.
+        """
+        self._record(boundary, reason=reason)
+        self._record(RuntimeEvent.wipe_requested, reason=reason)
+        if self._session is not None:
+            self._session.zeroize()
+        self._record(RuntimeEvent.wipe_completed)
+        self._record(RuntimeEvent.process_terminated)
+        self._on_lapse(reason)
+
     def acquire(self) -> bytes:
         """Attest, request release, and return the key. Raises rather than degrading.
 
@@ -213,8 +334,15 @@ class CustodyGuard:
         self._session = EnclaveSession.from_release(
             self._manifest, decision, max_operations=self._max_operations, now=self._clock
         )
+        self._lease_id = lease_id_for(challenge.nonce)
         self.state.acquired = True
         self.state.state = SessionState.holding.value
+        self.state.lease_id = self._lease_id
+        self._record(
+            RuntimeEvent.lease_started,
+            cadence=self._manifest.custody.attestation_cadence,
+            serving_image=self._serving_image_measurement,
+        )
         logger.info(
             "wcm: key released for weights %s, lease cadence %s",
             self._manifest.weights_hash,
@@ -238,7 +366,7 @@ class CustodyGuard:
                 self.state.lapses += 1
                 self.state.state = SessionState.wiped.value
                 self.state.last_error = str(exc)
-                self._on_lapse(f"lease lapsed: {exc}")
+                self._record_terminal(f"lease lapsed: {exc}", RuntimeEvent.lapse_detected)
                 raise ServingHalted(str(exc)) from exc
             except ReattestationRequired as exc:
                 self.state.last_error = str(exc)
@@ -254,8 +382,39 @@ class CustodyGuard:
             self.state.state = state.value
             if state is SessionState.wiped:
                 self.state.lapses += 1
-                self._on_lapse("lease lapsed while idle")
+                self._record_terminal("lease lapsed while idle", RuntimeEvent.lapse_detected)
             return state
+
+    def renew(self, decision: Any) -> None:
+        """Apply a signed KBS renewal decision and record it.
+
+        Kept separate from ``tick`` because a renewal is something the broker
+        granted, not something the clock did. ``renewal_succeeded`` is only
+        written after ``apply_renewal`` returns, so a rejected renewal leaves no
+        record claiming one happened.
+        """
+        with self._lock:
+            if self._session is None:
+                raise ServingHalted("no key has been acquired; acquire() first")
+            self._session.apply_renewal(self._manifest, decision)
+            self.state.state = self._session.state.value
+            self._record(RuntimeEvent.renewal_succeeded)
+
+    def revoke(self, reason: str = "revocation received") -> None:
+        """Stop serving because the weights were revoked, not because time ran out.
+
+        Records ``revocation_detected`` rather than ``lapse_detected``. Both are
+        valid chain boundaries and they mean different things: a lapse is a lease
+        nobody renewed, a revocation is an authority withdrawing the release.
+        Collapsing them would lose that in the one artifact meant to explain what
+        happened.
+        """
+        with self._lock:
+            if self._session is None:
+                raise ServingHalted("no key has been acquired; acquire() first")
+            self.state.state = SessionState.wiped.value
+            self.state.last_error = reason
+            self._record_terminal(reason, RuntimeEvent.revocation_detected)
 
     def start(self, interval_seconds: float | None = None) -> None:
         """Run the lease clock in a daemon thread.
@@ -286,6 +445,12 @@ class CustodyGuard:
 
         This is shutdown, not a security boundary. See the module docstring: the
         decrypted weights are not reachable from here.
+
+        Deliberately writes no terminal records. An orderly shutdown is not a
+        lapse and not a revocation, and manufacturing a boundary event for one
+        would put a wipe-on-lapse story into the chain of every server that was
+        simply restarted. The chain ends where serving ended, and verifies as
+        partial, which is what happened.
         """
         self._stop.set()
         if self._thread is not None:

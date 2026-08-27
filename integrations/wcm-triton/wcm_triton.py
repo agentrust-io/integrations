@@ -22,11 +22,12 @@ takes a ``decrypt`` callable: the deployment owns the cipher and the container,
 and this owns the custody decisions around it.
 
 **What is verified after decryption.** The staged directory is hashed with
-``wcm-artifact-digest/v1``, the same recipe
-``integrations/wcm-huggingface`` uses, and compared with the manifest's
-``weights_hash``. A cross-check test asserts the two implementations agree
-byte for byte, because the failure mode of a digest recipe existing twice is that
-it quietly stops being one recipe.
+``wcm-artifact-digest/v1`` and compared with the manifest's ``weights_hash``.
+That recipe now comes from ``wcm.artifact_digest`` in the SDK
+(weight-custody-manifest 0.27.0). Until then it was implemented separately here
+and in ``integrations/wcm-huggingface``, kept in step only by a cross-check
+test, because the failure mode of a digest recipe existing twice is that it
+quietly stops being one recipe and the mismatch reads as tampered weights.
 
 Usage::
 
@@ -53,12 +54,16 @@ from dataclasses import dataclass
 from typing import Any, Callable, Protocol, Sequence
 
 from wcm import (
+    ArtifactDigestError,
     AttestationProvider,
     CompositeEvidence,
     ReleaseDecision,
     ServingImageStatus,
     WeightCustodyManifest,
+    artifact_digest,
+    artifact_files,
 )
+from wcm.artifact_digest import RECIPE_ID
 
 __all__ = [
     "ARTIFACT_DIGEST_RECIPE",
@@ -71,14 +76,13 @@ __all__ = [
     "prepare_repository",
 ]
 
-#: Must stay identical to integrations/wcm-huggingface. See the cross-check test.
-ARTIFACT_DIGEST_RECIPE = "wcm-artifact-digest/v1"
+#: Re-exported from the SDK, which is where this lives as of
+#: weight-custody-manifest 0.27.0. It was implemented separately here and in
+#: wcm-huggingface until then, kept in step only by a cross-check test.
+ARTIFACT_DIGEST_RECIPE = RECIPE_ID
 
 #: The conventional repository-agent name for a deployment that has a C agent.
 AGENT_NAME = "wcm"
-
-_EXCLUDED_PARTS = frozenset({".cache", ".git", ".gitattributes", ".huggingface"})
-
 
 class TritonStagingError(RuntimeError):
     """Raised rather than leaving Triton a directory it should not load."""
@@ -101,53 +105,6 @@ class StagingResult:
     expected_digest: str
     files_staged: int
     failed_checks: tuple[str, ...] = ()
-
-
-def artifact_files(path: pathlib.Path) -> list[pathlib.Path]:
-    """The deterministic file inventory a manifest binds."""
-    if path.is_file():
-        return [path]
-    files = [
-        candidate
-        for candidate in path.rglob("*")
-        if candidate.is_file()
-        and not _EXCLUDED_PARTS.intersection(candidate.relative_to(path).parts)
-    ]
-    if not files:
-        raise TritonStagingError(f"model artifact contains no files: {path}")
-    return sorted(files, key=lambda candidate: candidate.relative_to(path).as_posix())
-
-
-def artifact_digest(path: pathlib.Path, *, include: Sequence[str] | None = None) -> str:
-    """Hash a file or a complete model directory. See ARTIFACT_DIGEST_RECIPE.
-
-    Sorted by POSIX relative path; per file the length-prefixed relative path,
-    the 8-byte big-endian size, then the contents. Length prefixing stops two
-    directory layouts flattening to the same byte stream.
-    """
-    root = path if path.is_dir() else path.parent
-    files = artifact_files(path)
-
-    if include is not None:
-        wanted = set(include)
-        by_relative = {item.relative_to(root).as_posix(): item for item in files}
-        missing = sorted(wanted - by_relative.keys())
-        if missing:
-            raise TritonStagingError(
-                f"named files are absent from the artifact: {', '.join(missing)}"
-            )
-        files = [by_relative[name] for name in sorted(wanted)]
-
-    digest = hashlib.sha256()
-    for item in files:
-        relative = item.relative_to(root).as_posix().encode("utf-8")
-        digest.update(len(relative).to_bytes(8, "big"))
-        digest.update(relative)
-        digest.update(item.stat().st_size.to_bytes(8, "big"))
-        with item.open("rb") as handle:
-            for chunk in iter(lambda: handle.read(1 << 20), b""):
-                digest.update(chunk)
-    return "sha256:" + digest.hexdigest()
 
 
 def build_agent_stanza(
@@ -248,7 +205,12 @@ def prepare_repository(
     staging.mkdir(parents=True, exist_ok=True)
     try:
         decrypt(encrypted, staging, decision.key)
-        computed = artifact_digest(staging, include=include)
+        # follow_symlinks is left at the SDK default of False. Unlike a Hugging
+        # Face cache, this directory was produced moments ago by the
+        # deployment's own decrypt into an empty path, so a link in it is not a
+        # cache layout, it is something the decrypt routine put there and Triton
+        # would follow at load time.
+        computed = str(artifact_digest(staging, include=include))
         if computed != manifest.weights_hash:
             raise TritonStagingError(
                 f"decrypted model hashes to {computed}, manifest binds "
@@ -256,6 +218,9 @@ def prepare_repository(
                 f"or the manifest was produced with a recipe other than "
                 f"{ARTIFACT_DIGEST_RECIPE} or over a different file inventory."
             )
+    except ArtifactDigestError as exc:
+        shutil.rmtree(staging, ignore_errors=True)
+        raise TritonStagingError(str(exc)) from exc
     except Exception:
         # Triton scans its model repository; a half-written or wrong staging
         # directory is something it may load. Remove it before re-raising.
@@ -268,3 +233,4 @@ def prepare_repository(
         expected_digest=manifest.weights_hash,
         files_staged=len(artifact_files(staging)),
     )
+

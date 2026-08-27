@@ -45,19 +45,24 @@ half-written or wrong directory is loadable. So a failure removes it. A
 pre-existing non-empty staging directory is refused rather than cleaned, since
 those files are not ours to delete.
 
-## One digest recipe, two implementations, one test
+## One digest recipe, one implementation
 
-`ARTIFACT_DIGEST_RECIPE` is `wcm-artifact-digest/v1`, identical to the one in
-`wcm-huggingface`. It is duplicated because it is not in the published SDK.
+`ARTIFACT_DIGEST_RECIPE` is `wcm-artifact-digest/v1`, re-exported from
+`wcm.artifact_digest`.
 
-`test_artifact_digest_matches_the_hugging_face_gate_exactly` imports the other
-module and asserts both produce the same digest over the same tree, including the
-`include=` path and cache exclusion. The failure mode of a recipe existing twice
-is that it quietly stops being one recipe, a manifest produced by one path stops
-verifying on the other, and the failure looks like tampered weights. Nothing else
-in either module would notice.
+It used to be implemented separately here and in
+[`wcm-huggingface`](../wcm-huggingface), kept in step by a test asserting the two
+produced identical digests over the same tree. `weight-custody-manifest` 0.27.0
+published it, so both now re-export the SDK function and there is nothing left to
+drift. The test was replaced by a stronger one: it asserts neither module has a
+local implementation, rather than checking that two implementations happen to
+agree today.
 
-**This recipe belongs in the SDK.** A third copy should promote it instead.
+**Symlinks are refused here, unlike in the Hugging Face gate.** That gate follows
+them because a Hub cache is a symlink tree by design. This directory was produced
+moments ago by the deployment's own `decrypt` into an empty path, so a link in it
+is not a cache layout: it is something the decrypt routine put there, and Triton
+would follow it at load time.
 
 ## The agent stanza
 

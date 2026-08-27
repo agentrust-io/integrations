@@ -545,7 +545,7 @@
       "name": "vLLM Serving Guard",
       "package_name": "WCM Serving Guard for vLLM",
       "vendor": "agentrust-io",
-      "description": "Gates vLLM weight loading on WCM attestation and binds serving to a live lease, halting the process when the lease lapses.",
+      "description": "Gates vLLM weight loading on WCM attestation, binds serving to a live lease, and emits a signed hash-chained runtime record of the lease lifecycle.",
       "path": "integrations/wcm-vllm",
       "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/wcm-vllm",
       "homepage": "https://wcm.agentrust-io.com",
@@ -561,7 +561,8 @@
         "vllm",
         "inference",
         "lease",
-        "wipe-on-lapse"
+        "wipe-on-lapse",
+        "receipts"
       ]
     },
     {
@@ -706,7 +707,7 @@
       "name": "WCM to TRACE",
       "package_name": "WCM Key Release to TRACE",
       "vendor": "agentrust-io",
-      "description": "Turns a WCM Layer 2 release decision and Layer 3 custody state into signable TRACE v0.2 Trust Records, deriving assurance from the checks that passed.",
+      "description": "Turns a WCM Layer 2 release decision and a signed Layer 3 runtime record chain into TRACE v0.2 Trust Records, deriving assurance from what actually verified.",
       "path": "integrations/wcm-trace",
       "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/wcm-trace",
       "homepage": "https://wcm.agentrust-io.com",

@@ -16,4 +16,4 @@ packages:
   # github.com/agentrust-io/weight-custody-manifest URL: those 404 for every
   # anonymous reader.
   weight-custody-manifest:
-    minimum: "0.26.0"
+    minimum: "0.27.0"

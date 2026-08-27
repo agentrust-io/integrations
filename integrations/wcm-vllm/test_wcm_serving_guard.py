@@ -21,15 +21,19 @@ from wcm import (  # noqa: E402
     CompositeEvidence,
     CpuQuote,
     ReleaseDecision,
+    RuntimeEvent,
     SessionState,
     SoftwareProvider,
     WeightCustodyManifest,
+    generate_ed25519,
+    verify_runtime_record_chain,
 )
 
 from wcm_serving_guard import (  # noqa: E402
     CustodyGuard,
     ReleaseRefused,
     ServingHalted,
+    lease_id_for,
 )
 
 WEIGHTS = "sha256:" + "4a1c" * 16
@@ -344,3 +348,259 @@ def test_a_custom_broker_only_needs_the_protocol_surface() -> None:
     subject, _ = guard(broker=Remote())
 
     assert subject.acquire() == KEY
+
+
+# --------------------------------------------------------------------------
+# Signed runtime records (weight-custody-manifest 0.27.0)
+# --------------------------------------------------------------------------
+
+
+def signing_guard(**kwargs: object):
+    """A guard that signs, plus the keypair a verifier would hold."""
+    keypair = generate_ed25519()
+    subject, lapses = guard(runtime_signing_key=keypair.private_key, **kwargs)
+    return subject, keypair, lapses
+
+
+def events(subject: CustodyGuard) -> list[str]:
+    return [record.event for record in subject.records]
+
+
+def test_sdk_requires_a_terminal_chain_by_default_and_the_guard_does_not() -> None:
+    """A difference worth pinning, since both defaults are deliberate.
+
+    The SDK's caller is usually auditing a finished lease. The guard's caller is
+    usually a running server, which has legitimately not lapsed.
+    """
+    import inspect
+
+    from wcm import verify_runtime_record_chain as sdk
+
+    assert inspect.signature(sdk).parameters["require_terminal_sequence"].default is True
+    assert (
+        inspect.signature(CustodyGuard.verify_chain)
+        .parameters["require_terminal_sequence"]
+        .default
+        is False
+    )
+
+
+def test_no_signing_key_means_no_chain() -> None:
+    """The receipts are opt-in; nothing else changes without a key."""
+    subject, _ = guard()
+    subject.acquire()
+    subject.authorize_request()
+
+    assert subject.records == ()
+    assert subject.runtime_public_key is None
+    assert subject.state.records_written == 0
+    assert subject.verify_chain()[0] is False
+
+
+def test_acquire_opens_the_chain_with_lease_started() -> None:
+    subject, keypair, _ = signing_guard()
+
+    subject.acquire()
+
+    assert events(subject) == [RuntimeEvent.lease_started.value]
+    assert subject.records[0].sequence == 0
+    assert subject.records[0].previous_record_hash is None
+    assert subject.records[0].verify(subject.runtime_public_key)
+
+
+def test_lease_id_is_derived_from_the_challenge_not_the_raw_nonce() -> None:
+    """A single-use replay value should not outlive its challenge in an artifact."""
+    subject, _, _ = signing_guard()
+
+    subject.acquire()
+
+    assert subject.state.lease_id == lease_id_for("a" * 64)
+    assert "a" * 64 not in str(subject.records[0])
+
+
+def test_records_bind_the_manifest_and_the_weights() -> None:
+    subject, _, _ = signing_guard()
+
+    subject.acquire()
+
+    assert subject.records[0].weights_hash == WEIGHTS
+    assert len(subject.records[0].manifest_hash) > 0
+
+
+def test_live_chain_verifies_as_partial_not_terminal() -> None:
+    """A server that is still running has legitimately not lapsed."""
+    subject, _, _ = signing_guard()
+    subject.acquire()
+
+    assert subject.verify_chain()[0] is True
+    assert subject.verify_chain(require_terminal_sequence=True)[0] is False
+
+
+def test_lapse_writes_the_complete_terminal_sequence() -> None:
+    clock = Clock()
+    subject, keypair, lapses = signing_guard(manifest=make_manifest(cadence="5m"), clock=clock)
+    subject.acquire()
+    subject.authorize_request()
+    clock.advance(400)
+
+    with pytest.raises(ServingHalted):
+        subject.authorize_request()
+
+    assert events(subject) == [
+        RuntimeEvent.lease_started.value,
+        RuntimeEvent.lapse_detected.value,
+        RuntimeEvent.wipe_requested.value,
+        RuntimeEvent.wipe_completed.value,
+        RuntimeEvent.process_terminated.value,
+    ]
+    ok, reason = subject.verify_chain(require_terminal_sequence=True)
+    assert ok, reason
+
+
+def test_every_record_is_written_before_on_lapse_runs() -> None:
+    """The default on_lapse calls os._exit; anything after it never happens."""
+    clock = Clock()
+    subject, _, _ = signing_guard(manifest=make_manifest(cadence="5m"), clock=clock)
+    seen: list[int] = []
+    subject._on_lapse = lambda reason: seen.append(len(subject.records))
+    subject.acquire()
+    clock.advance(400)
+
+    subject.tick()
+
+    assert seen == [5], "on_lapse must observe the finished chain, not a partial one"
+
+
+def test_wipe_completed_follows_an_actual_zeroize() -> None:
+    clock = Clock()
+    subject, _, _ = signing_guard(manifest=make_manifest(cadence="5m"), clock=clock)
+    subject.acquire()
+    clock.advance(400)
+
+    subject.tick()
+
+    assert subject.session is not None and subject.session.is_wiped
+
+
+def test_revocation_is_a_different_boundary_from_a_lapse() -> None:
+    """A lease nobody renewed and an authority withdrawing release are not the same."""
+    subject, _, _ = signing_guard()
+    subject.acquire()
+
+    subject.revoke("builder revoked the release")
+
+    assert events(subject)[1] == RuntimeEvent.revocation_detected.value
+    assert RuntimeEvent.lapse_detected.value not in events(subject)
+    ok, reason = subject.verify_chain(require_terminal_sequence=True)
+    assert ok, reason
+
+
+def test_renewals_appear_between_start_and_boundary() -> None:
+    subject, _, _ = signing_guard()
+    subject.acquire()
+
+    applied = []
+    subject._session.apply_renewal = lambda manifest, decision: applied.append(decision)
+    subject.renew(object())
+    subject.renew(object())
+    subject.revoke()
+
+    assert events(subject) == [
+        RuntimeEvent.lease_started.value,
+        RuntimeEvent.renewal_succeeded.value,
+        RuntimeEvent.renewal_succeeded.value,
+        RuntimeEvent.revocation_detected.value,
+        RuntimeEvent.wipe_requested.value,
+        RuntimeEvent.wipe_completed.value,
+        RuntimeEvent.process_terminated.value,
+    ]
+    assert len(applied) == 2
+    ok, reason = subject.verify_chain(require_terminal_sequence=True)
+    assert ok, reason
+
+
+def test_a_rejected_renewal_writes_no_record() -> None:
+    subject, _, _ = signing_guard()
+    subject.acquire()
+
+    def refuse(manifest, decision):  # noqa: ANN001
+        raise ValueError("renewal decision did not verify")
+
+    subject._session.apply_renewal = refuse
+
+    with pytest.raises(ValueError):
+        subject.renew(object())
+
+    assert events(subject) == [RuntimeEvent.lease_started.value]
+
+
+def test_ordinary_shutdown_writes_no_terminal_records() -> None:
+    """A restart is not a lapse; manufacturing a boundary would fake one."""
+    subject, _, _ = signing_guard()
+    subject.acquire()
+
+    subject.stop()
+
+    assert events(subject) == [RuntimeEvent.lease_started.value]
+    assert subject.verify_chain(require_terminal_sequence=True)[0] is False
+    assert subject.verify_chain()[0] is True
+
+
+def test_a_truncated_chain_is_partial_and_says_so() -> None:
+    """What a SIGKILL leaves behind. The absence is the signal."""
+    subject, _, _ = signing_guard()
+    subject.acquire()
+    subject.revoke()
+    killed = subject.records[:3]
+
+    # The SDK requires a terminal chain by default; CustodyGuard.verify_chain
+    # deliberately does not, because a running server has not lapsed yet.
+    assert (
+        verify_runtime_record_chain(
+            killed, subject.runtime_public_key, require_terminal_sequence=False
+        )[0]
+        is True
+    )
+    assert (
+        verify_runtime_record_chain(
+            killed, subject.runtime_public_key, require_terminal_sequence=True
+        )[0]
+        is False
+    )
+
+
+def test_a_removed_middle_record_breaks_the_chain() -> None:
+    subject, _, _ = signing_guard()
+    subject.acquire()
+    subject.revoke()
+    tampered = [subject.records[0], *subject.records[2:]]
+
+    ok, reason = verify_runtime_record_chain(
+        tampered, subject.runtime_public_key, require_terminal_sequence=False
+    )
+
+    assert not ok, "a gap must fail structurally, not only on the terminal shape"
+    assert "contiguous" in reason or "previous hash" in reason
+
+
+def test_another_key_cannot_verify_the_chain() -> None:
+    from wcm import runtime_public_key
+
+    subject, _, _ = signing_guard()
+    subject.acquire()
+    subject.revoke()
+    other = generate_ed25519()
+
+    ok, _ = verify_runtime_record_chain(
+        subject.records, runtime_public_key(other.private_key), require_terminal_sequence=True
+    )
+
+    assert not ok
+
+
+def test_records_written_is_reported_in_state() -> None:
+    subject, _, _ = signing_guard()
+    subject.acquire()
+    subject.revoke()
+
+    assert subject.state.records_written == 5
