@@ -1,6 +1,6 @@
 {
   "catalog_version": 1,
-  "count": 28,
+  "count": 32,
   "integrations": [
     {
       "name": "Claude Code",
@@ -516,6 +516,98 @@
         "attestation",
         "sovp",
         "trace"
+      ]
+    },
+    {
+      "name": "Triton Repository Staging",
+      "package_name": "WCM Triton Repository Staging",
+      "vendor": "agentrust-io",
+      "description": "Prepares a Triton model repository under WCM attestation, verifying decrypted bytes against the bound weights hash before Triton can load them.",
+      "path": "integrations/wcm-triton",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/wcm-triton",
+      "homepage": "https://wcm.agentrust-io.com",
+      "repository": "https://github.com/agentrust-io/integrations",
+      "tier": "community",
+      "stack": [
+        "WCM"
+      ],
+      "category": "Frameworks",
+      "mark": "TR",
+      "featured": null,
+      "keywords": [
+        "triton",
+        "inference",
+        "model-repository",
+        "staging"
+      ]
+    },
+    {
+      "name": "vLLM Serving Guard",
+      "package_name": "WCM Serving Guard for vLLM",
+      "vendor": "agentrust-io",
+      "description": "Gates vLLM weight loading on WCM attestation and binds serving to a live lease, halting the process when the lease lapses.",
+      "path": "integrations/wcm-vllm",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/wcm-vllm",
+      "homepage": "https://wcm.agentrust-io.com",
+      "repository": "https://github.com/agentrust-io/integrations",
+      "tier": "community",
+      "stack": [
+        "WCM"
+      ],
+      "category": "Frameworks",
+      "mark": "VL",
+      "featured": null,
+      "keywords": [
+        "vllm",
+        "inference",
+        "lease",
+        "wipe-on-lapse"
+      ]
+    },
+    {
+      "name": "WCM Agent Manifest Binding",
+      "package_name": "WCM Agent Manifest Binding",
+      "vendor": "agentrust-io",
+      "description": "Binds an Agent Manifest model_identity artifact to a WCM manifest's weights hash, and reports what a matching digest does and does not establish.",
+      "path": "integrations/wcm-agent-manifest",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/wcm-agent-manifest",
+      "homepage": "https://wcm.agentrust-io.com",
+      "repository": "https://github.com/agentrust-io/integrations",
+      "tier": "community",
+      "stack": [
+        "WCM",
+        "Agent Manifest"
+      ],
+      "category": "Identity & trust",
+      "mark": "WAM",
+      "featured": null,
+      "keywords": [
+        "agent-manifest",
+        "model-identity",
+        "binding"
+      ]
+    },
+    {
+      "name": "WCM CycloneDX ML-BOM",
+      "package_name": "WCM CycloneDX ML-BOM",
+      "vendor": "agentrust-io",
+      "description": "Exports a WCM manifest as a CycloneDX 1.6 machine-learning-model component so custody terms reach licence review and procurement tooling.",
+      "path": "integrations/wcm-cyclonedx",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/wcm-cyclonedx",
+      "homepage": "https://wcm.agentrust-io.com",
+      "repository": "https://github.com/agentrust-io/integrations",
+      "tier": "community",
+      "stack": [
+        "WCM"
+      ],
+      "category": "Compliance",
+      "mark": "CDX",
+      "featured": null,
+      "keywords": [
+        "cyclonedx",
+        "ml-bom",
+        "procurement",
+        "licence"
       ]
     },
     {

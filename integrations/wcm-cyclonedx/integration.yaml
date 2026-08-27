@@ -1,0 +1,25 @@
+name: WCM CycloneDX ML-BOM
+vendor: agentrust-io
+integrates_with:
+  - wcm
+description: >-
+  Exports a WCM manifest as a CycloneDX 1.6 machine-learning-model component so
+  custody terms reach licence review and procurement tooling.
+maintainer:
+  github: imran-siddique
+repository: https://github.com/agentrust-io/integrations
+homepage: https://wcm.agentrust-io.com
+license: Apache-2.0
+tier: community
+marketplace:
+  display_name: WCM CycloneDX ML-BOM
+  category: Compliance
+  mark: CDX
+  keywords: [cyclonedx, ml-bom, procurement, licence]
+wcm_roles:
+  - manifest-verifier
+wcm_conformance_levels:
+  - L1
+  - L4
+tested_against:
+  weight-custody-manifest: "0.26.0"
