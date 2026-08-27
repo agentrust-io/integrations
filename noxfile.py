@@ -6,7 +6,7 @@ import nox
 
 
 nox.options.default_venv_backend = "venv"
-nox.options.sessions = ["capture_core", "trace_adapters", "capture_engines", "framework_adapters", "google_adk_adapter", "shadow_ai", "wcm_integrations"]
+nox.options.sessions = ["capture_core", "trace_adapters", "capture_engines", "framework_adapters", "openai_agents_adapter", "google_adk_adapter", "shadow_ai", "wcm_integrations"]
 
 
 def pytest(session: nox.Session, *paths: str) -> None:
@@ -45,6 +45,27 @@ def framework_adapters(session: nox.Session) -> None:
     )
     session.install("langchain-core==1.6.0", "langgraph==1.2.11")
     pytest(session, "integrations/langchain/test_langgraph_interop.py")
+
+    # Pydantic AI needs no adapter: it instruments through OpenTelemetry and
+    # emits the GenAI conventions otel-genai already maps. Verified against the
+    # released package rather than asserted, the same treatment LangGraph got.
+    session.install("pydantic-ai-slim==2.35.1", "opentelemetry-sdk>=1.25")
+    pytest(session, "integrations/otel-genai/test_pydantic_ai_interop.py")
+
+
+@nox.session(python="3.12")
+def openai_agents_adapter(session: nox.Session) -> None:
+    """The OpenAI Agents SDK adapter, unit tests then a real released run.
+
+    Two passes on purpose. The first runs without the SDK installed, because
+    record construction is where the honesty rules live and they should be
+    testable on their own. The second installs the pinned SDK and runs a real
+    agent, which is what catches a renamed span field.
+    """
+    session.install("agentrust-trace==0.9.0", "pytest>=8")
+    pytest(session, "integrations/openai-agents/test_openai_agents_to_trace.py")
+    session.install("openai-agents==0.22.0")
+    pytest(session, "integrations/openai-agents")
 
 
 @nox.session(python="3.12")

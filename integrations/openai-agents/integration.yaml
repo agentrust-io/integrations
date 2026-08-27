@@ -1,0 +1,21 @@
+name: OpenAI Agents SDK
+vendor: agentrust-io
+integrates_with:
+  - trace
+description: >-
+  Emits a first-party TRACE Trust Record from OpenAI Agents SDK tracing, carrying
+  tool and handoff identity with no payloads.
+maintainer:
+  github: imran-siddique
+repository: https://github.com/agentrust-io/integrations
+license: Apache-2.0
+tier: community
+marketplace:
+  category: Frameworks
+  mark: OA
+  keywords: [openai, agents, tracing, handoff]
+trace_roles:
+  - record-producer
+trace_conformance_level: 0
+tested_against:
+  agentrust-trace: "0.9.0"
