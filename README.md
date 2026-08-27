@@ -37,6 +37,7 @@ TRACE only works as a standard if it is genuinely neutral. Integrations are list
 |---|---|---|---|
 | [claude-code](claude-code/) | agentrust-io | agent-manifest, trace | community |
 | [Agent Passport System](integrations/aeoess-aps/) | aeoess | trace | community |
+| [cA2A Cross-Operator Delegation](integrations/agentrust-ca2a-cross-operator/) | agentrust-io | ca2a | community |
 | [comply54](integrations/comply54/) | comply54 | trace | community |
 | [DecisionAssure](integrations/decisionassure/) | DecisionAssure (a1k7) | trace | community |
 | [Google ADK](integrations/google-adk/) | agentrust-io | trace | community |
@@ -99,9 +100,9 @@ the record rather than from a README. None of the three is a parameter.
 **Note on the Copilot, Cursor, Windsurf and Gemini CLI entries.** Each is a
 pull-request status check rather than a session hook, because all four agents'
 composition lives in the repository rather than a developer's home directory.
-Each emits no TRACE record and no Agent Manifest, so each claims neither:
-`integrates_with` offers only `cmcp`, `trace` and `agent-manifest`, and asserting
-one today would be an unverifiable claim.
+Each emits no TRACE record and no Agent Manifest, so each claims neither. None
+currently produces or consumes one of the supported AgenTrust artifacts or
+protocols, and asserting otherwise would be an unverifiable claim.
 
 That is currently blocked on a spec question rather than on implementation, tracked
 in [agent-manifest#256](https://github.com/agentrust-io/agent-manifest/issues/256).
