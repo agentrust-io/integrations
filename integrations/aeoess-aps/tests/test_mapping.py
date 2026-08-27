@@ -18,7 +18,7 @@ import pytest
 from agent_passport.crypto import generate_key_pair
 from agent_passport.policy import FloorValidatorV1, create_action_intent, evaluate_intent
 
-from aps_trace import EAT_PROFILE, TRUST_DOMAIN, VERDICT_TO_APPRAISAL, build_trace_record
+from aps_trace import APPRAISAL_STATUS, EAT_PROFILE, KNOWN_VERDICTS, TRUST_DOMAIN, build_trace_record
 
 FLOOR_VERSION = "floor-1.0"
 
@@ -153,28 +153,29 @@ def test_record_carries_no_aps_signature(record):
 
 # --- verdict to appraisal ----------------------------------------------------
 
-def test_permit_maps_to_affirming(record):
-    assert record["appraisal"]["status"] == "affirming"
+def test_permit_does_not_appraise(record):
+    """The verdict is a policy decision, so it does not set an appraisal status."""
+    assert record["appraisal"]["status"] == "none"
 
 
-def test_narrow_maps_to_warning():
+def test_narrow_does_not_appraise():
     decision = _decide(
         {"scopeRequired": "repo:read", "spend": {"amount": 100, "currency": "USD"}},
         _context(scope=["repo:read"], spend_limit=50, spent=0),
     )
     assert decision["verdict"] == "narrow"
-    assert build_trace_record(decision, trace_jwk=_jwk())["appraisal"]["status"] == "warning"
+    assert build_trace_record(decision, trace_jwk=_jwk())["appraisal"]["status"] == "none"
 
 
-def test_deny_maps_to_contraindicated():
+def test_deny_does_not_appraise():
     decision = _decide({"scopeRequired": "repo:write"}, _context(scope=["repo:read"]))
     assert decision["verdict"] == "deny"
-    assert build_trace_record(decision, trace_jwk=_jwk())["appraisal"]["status"] == "contraindicated"
+    assert build_trace_record(decision, trace_jwk=_jwk())["appraisal"]["status"] == "none"
 
 
 def test_every_known_verdict_maps_to_a_valid_ear_status():
     valid = set(agentrust_trace.SCHEMA["properties"]["appraisal"]["properties"]["status"]["enum"])
-    assert set(VERDICT_TO_APPRAISAL.values()) <= valid
+    assert APPRAISAL_STATUS in valid
 
 
 def test_enforcement_mode_is_enforce_when_a_principle_is_inline(record, permit_decision):
@@ -256,9 +257,21 @@ def test_sign_verify_roundtrip(record):
 def test_tampered_signed_record_fails_verification(record):
     key = agentrust_trace.generate_key()
     signed = agentrust_trace.sign_record(dict(record), key)
-    signed["appraisal"]["status"] = "affirming" if signed["appraisal"]["status"] != "affirming" else "denying"
+    signed["appraisal"]["status"] = "affirming"  # any value != the emitted constant
     with pytest.raises(Exception):
         agentrust_trace.verify_record(signed, allow_embedded_key=True, max_age_seconds=None)
+
+
+def test_appraisal_status_is_a_constant_not_a_parameter():
+    """Every accepted verdict emits the same appraisal status.
+
+    The agentrust-trace-adapters convention (commit e1aa231, 2026-08-08) makes
+    appraisal.status a constant for records assembled from someone else's
+    evidence. If a future edit reintroduces a verdict-to-status mapping, this
+    fails.
+    """
+    assert APPRAISAL_STATUS == "none"
+    assert KNOWN_VERDICTS == {"permit", "narrow", "deny"}
 
 
 # --- conformance -------------------------------------------------------------

@@ -37,7 +37,7 @@ policy.version              ``floorVersion`` (omitted when empty)
 runtime.platform            "software-only"
 runtime.measurement         sha256 over the canonical bytes of the full signed
                             decision
-appraisal.status            ``verdict`` through VERDICT_TO_APPRAISAL
+appraisal.status            constant "none": nothing here appraised the evidence
 appraisal.verifier          urn:aps:evaluator:<evaluatorId>
 appraisal.policy_ref        urn:aps:floor:<floorVersion> (omitted when empty)
 appraisal.timestamp         iat
@@ -74,15 +74,22 @@ EAT_PROFILE = "tag:agentrust-io.com,2026:trace-v0.2"
 #: SPIFFE trust domain for APS workload identities.
 TRUST_DOMAIN = "agent-passport.org"
 
-#: APS verdict to EAR appraisal status (draft-ietf-rats-ar4si).
-#: permit authorizes the action, narrow authorizes it under added constraints,
-#: deny withholds authorization. TRACE has no "narrow", and "warning" is the
-#: EAR status for an appraisal that affirms with reservations.
-VERDICT_TO_APPRAISAL = {
-    "permit": "affirming",
-    "narrow": "warning",
-    "deny": "contraindicated",
-}
+#: APS verdicts this mapper accepts. permit authorizes the action, narrow
+#: authorizes it under added constraints, deny withholds authorization. The
+#: verdict is checked against this set so an unknown one is refused rather than
+#: transcribed, but it no longer selects an appraisal status: see APPRAISAL_STATUS.
+KNOWN_VERDICTS = frozenset({"permit", "narrow", "deny"})
+
+#: appraisal.status is a constant, not a parameter.
+#: The agentrust-trace-adapters convention (integrations packages/agentrust-
+#: trace-adapters/README.md, commit e1aa231, 2026-08-08) sets appraisal.status
+#: to "none" for a record assembled from evidence another system produced, on
+#: the grounds that "Nobody appraised the evidence. Transcribing is not
+#: appraising", and that "A vendor's bare ALLOW/DENY result is still a policy
+#: decision, not an appraisal of the evidence behind that decision."
+#: An APS verdict is exactly such a policy decision. It stays in the record as
+#: policy.enforcement_mode and policy.version; it is not an evidence appraisal.
+APPRAISAL_STATUS = "none"
 
 #: Keys a signed APS policy decision must carry. Checked before signature
 #: verification so a malformed input fails with a precise message.
@@ -129,7 +136,7 @@ def build_trace_record(decision: dict[str, Any], *, trace_jwk: dict[str, str]) -
     iat = _unix_seconds(decision["evaluatedAt"])
 
     appraisal: dict[str, Any] = {
-        "status": VERDICT_TO_APPRAISAL[decision["verdict"]],
+        "status": APPRAISAL_STATUS,
         "timestamp": iat,
         "verifier": f"urn:aps:evaluator:{quote(str(evaluator_id), safe='')}",
     }
@@ -190,10 +197,10 @@ def _validate_decision(decision: dict[str, Any]) -> None:
         )
 
     verdict = decision["verdict"]
-    if verdict not in VERDICT_TO_APPRAISAL:
+    if verdict not in KNOWN_VERDICTS:
         raise ValueError(
             f"unknown APS verdict {verdict!r}; expected one of "
-            f"{sorted(VERDICT_TO_APPRAISAL)}"
+            f"{sorted(KNOWN_VERDICTS)}"
         )
 
 
