@@ -24,7 +24,7 @@
       "uniqueItems": true,
       "items": {
         "type": "string",
-        "enum": ["cmcp", "trace", "agent-manifest", "wcm"]
+        "enum": ["cmcp", "trace", "agent-manifest", "wcm", "ca2a"]
       },
       "description": "Which parts of the stack this integrates with."
     },

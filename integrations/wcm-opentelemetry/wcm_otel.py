@@ -44,7 +44,7 @@ import argparse
 import json
 import sys
 import time
-from typing import Any, Callable, Iterator, Sequence
+from typing import Any, Sequence
 
 from wcm import (
     CompositeEvidence,

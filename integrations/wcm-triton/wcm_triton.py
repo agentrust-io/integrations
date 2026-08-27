@@ -47,7 +47,6 @@ Usage::
 
 from __future__ import annotations
 
-import hashlib
 import pathlib
 import shutil
 from dataclasses import dataclass

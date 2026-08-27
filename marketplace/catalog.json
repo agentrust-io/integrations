@@ -1,6 +1,6 @@
 {
   "catalog_version": 1,
-  "count": 32,
+  "count": 33,
   "integrations": [
     {
       "name": "Claude Code",
@@ -223,6 +223,30 @@
         "key-vault",
         "sev-snp",
         "attestation"
+      ]
+    },
+    {
+      "name": "cA2A Cross-Operator Delegation",
+      "package_name": "cA2A Cross-Operator Delegation",
+      "vendor": "agentrust-io",
+      "description": "Runnable 12-check tutorial for scoped delegation, local policy enforcement, sealed tasks, tamper detection, and offline provenance verification.",
+      "path": "integrations/agentrust-ca2a-cross-operator",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/agentrust-ca2a-cross-operator",
+      "homepage": null,
+      "repository": "https://github.com/agentrust-io/ca2a",
+      "tier": "community",
+      "stack": [
+        "cA2A"
+      ],
+      "category": "Developer tools",
+      "mark": "A2A",
+      "featured": null,
+      "keywords": [
+        "delegation",
+        "policy",
+        "provenance",
+        "tutorial",
+        "cross-operator"
       ]
     },
     {

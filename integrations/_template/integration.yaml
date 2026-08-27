@@ -3,7 +3,7 @@
 name: Example Product
 vendor: Example Corp
 integrates_with:
-  - cmcp        # one or more of: cmcp, trace, agent-manifest, wcm
+  - cmcp        # one or more of: cmcp, trace, agent-manifest, wcm, ca2a
 description: >-
   One technical sentence describing what this integration does.
 maintainer:
