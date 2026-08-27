@@ -279,7 +279,7 @@ def test_cli_reports_and_exits_on_a_local_snapshot(tmp_path: pathlib.Path, capsy
     for index, keypair in enumerate((builder, custodian)):
         path = tmp_path / f"key{index}.pub"
         path.write_text(keypair.public_bytes.hex(), encoding="utf-8")
-        keys += ["--key", str(path)]
+        keys += ["--public-key", str(path)]
 
     assert main([str(directory), "--local", *keys]) == 0
     assert json.loads(capsys.readouterr().out)["ok"] is True

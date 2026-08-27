@@ -51,6 +51,20 @@ TRACE only works as a standard if it is genuinely neutral. Integrations are list
 | [Agent Sentinel](integrations/sentinel/) | a1k7 | trace | community |
 | [Shadow AI Discovery](integrations/shadow-ai/) | agentrust-io | cmcp, agent-manifest | community |
 | [Agentic SpendGuard](integrations/spendguard/) | SpendGuard | trace | community |
+| [WCM Agent Manifest Binding](integrations/wcm-agent-manifest/) | agentrust-io | wcm, agent-manifest | community |
+| [WCM Azure Secure Key Release](integrations/wcm-azure-skr/) | agentrust-io | wcm | community |
+| [WCM Confidential Containers Trustee](integrations/wcm-coco-trustee/) | agentrust-io | wcm | community |
+| [WCM CycloneDX ML-BOM](integrations/wcm-cyclonedx/) | agentrust-io | wcm | community |
+| [WCM GCP Confidential Space](integrations/wcm-gcp-confidential-space/) | agentrust-io | wcm | community |
+| [Hugging Face WCM Download Gate](integrations/wcm-huggingface/) | agentrust-io | wcm | community |
+| [WCM in-toto Attestation](integrations/wcm-in-toto/) | agentrust-io | wcm | community |
+| [WCM Kyverno Policy Pack](integrations/wcm-kyverno/) | agentrust-io | wcm | community |
+| [WCM NVIDIA GPU Attestation](integrations/wcm-nvidia-nras/) | agentrust-io | wcm | community |
+| [WCM OCI Referrer](integrations/wcm-oci/) | agentrust-io | wcm | community |
+| [WCM OpenTelemetry](integrations/wcm-opentelemetry/) | agentrust-io | wcm | community |
+| [WCM Key Release to TRACE](integrations/wcm-trace/) | agentrust-io | wcm, trace | community |
+| [WCM Triton Repository Staging](integrations/wcm-triton/) | agentrust-io | wcm | community |
+| [WCM Serving Guard for vLLM](integrations/wcm-vllm/) | agentrust-io | wcm | community |
 | [agentrust-codex](plugins/agentrust-codex/) | agentrust-io | agent-manifest, trace | community |
 | [scheduled-agents](scheduled-agents/) | agentrust-io | trace | community |
 <!-- integration-index:end -->

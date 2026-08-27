@@ -336,7 +336,8 @@ def verify_referrer(
     )
 
 
-def _load_context(paths: Iterable[pathlib.Path]) -> VerificationContext:
+def _public_key_context(paths: Iterable[pathlib.Path]) -> VerificationContext:
+    """Trust the given raw Ed25519 PUBLIC keys. No private key is read here."""
     context = VerificationContext()
     for path in paths:
         raw = path.read_bytes().strip()
@@ -347,6 +348,26 @@ def _load_context(paths: Iterable[pathlib.Path]) -> VerificationContext:
             material = base64.urlsafe_b64decode(text + "=" * (-len(text) % 4))
         context.add_key(material)
     return context
+
+
+def _report(**fields: object) -> str:
+    """Serialize a CLI report from primitives only.
+
+    Every value is coerced to bool, str or None here rather than being passed
+    through from a result object. Nothing in this file puts key material in a
+    result, and this makes that structural instead of a property of the current
+    code: an attribute added later cannot reach stdout by being included in a
+    dict comprehension somebody wrote in a hurry.
+    """
+    safe: dict[str, object] = {}
+    for name, value in fields.items():
+        if isinstance(value, bool) or value is None:
+            safe[name] = value
+        elif isinstance(value, (list, tuple)):
+            safe[name] = [str(item) for item in value]
+        else:
+            safe[name] = str(value)
+    return json.dumps(safe, indent=2)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -364,7 +385,14 @@ def main(argv: list[str] | None = None) -> int:
     check = sub.add_parser("verify", help="Verify a fetched referrer and blob")
     check.add_argument("referrer", type=pathlib.Path)
     check.add_argument("--blob", type=pathlib.Path, required=True)
-    check.add_argument("--key", type=pathlib.Path, action="append", default=[])
+    check.add_argument(
+        "--public-key",
+        dest="public_key",
+        type=pathlib.Path,
+        action="append",
+        default=[],
+        help="raw Ed25519 PUBLIC key (hex or base64url); repeatable",
+    )
     check.add_argument("--expect-subject", help="model artifact digest you are pulling")
     check.add_argument("--subject-manifest", type=pathlib.Path, help="the model's OCI manifest")
 
@@ -396,21 +424,18 @@ def main(argv: list[str] | None = None) -> int:
     outcome = verify_referrer(
         json.loads(args.referrer.read_text(encoding="utf-8")),
         args.blob.read_bytes(),
-        _load_context(args.key),
+        _public_key_context(args.public_key),
         expected_subject_digest=args.expect_subject,
         subject_layers=subject_layers,
     )
     print(
-        json.dumps(
-            {
-                "trusted": outcome.trusted,
-                "subject_matches": outcome.subject_matches,
-                "manifest_verified": outcome.manifest_verified,
-                "weights_binding": outcome.weights_binding,
-                "reason": outcome.reason,
-                "notes": list(outcome.notes),
-            },
-            indent=2,
+        _report(
+            trusted=outcome.trusted,
+            subject_matches=outcome.subject_matches,
+            manifest_verified=outcome.manifest_verified,
+            weights_binding=outcome.weights_binding,
+            reason=outcome.reason,
+            notes=outcome.notes,
         )
     )
     return 0 if outcome.trusted else 1

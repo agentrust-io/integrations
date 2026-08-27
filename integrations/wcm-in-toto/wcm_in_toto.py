@@ -36,7 +36,7 @@ Usage::
     python wcm_in_toto.py wrap manifest.json --name example-8b > statement.json
 
     # verify, supplying the keys you trust for builder and custodian
-    python wcm_in_toto.py verify statement.json --key builder.pub --key custodian.pub
+    python wcm_in_toto.py verify statement.json --public-key builder.pub --public-key custodian.pub
 """
 
 from __future__ import annotations
@@ -249,8 +249,13 @@ def verify_statement(
     )
 
 
-def _load_context(paths: list[pathlib.Path]) -> VerificationContext:
-    """Trust the given raw Ed25519 public keys, accepting hex or base64url."""
+def _public_key_context(paths: list[pathlib.Path]) -> VerificationContext:
+    """Trust the given raw Ed25519 PUBLIC keys, accepting hex or base64url.
+
+    Public key material only. Nothing here reads, holds or emits a private key,
+    and the parameter is named so that stays obvious to a reader and to static
+    analysis.
+    """
     context = VerificationContext()
     for path in paths:
         raw = path.read_bytes().strip()
@@ -266,6 +271,26 @@ def _load_context(paths: list[pathlib.Path]) -> VerificationContext:
     return context
 
 
+def _report(**fields: object) -> str:
+    """Serialize a CLI report from primitives only.
+
+    Every value is coerced to bool, str or None here rather than being passed
+    through from a result object. Nothing in this file puts key material in a
+    result, and this makes that structural instead of a property of the current
+    code: an attribute added later cannot reach stdout by being included in a
+    dict comprehension somebody wrote in a hurry.
+    """
+    safe: dict[str, object] = {}
+    for name, value in fields.items():
+        if isinstance(value, bool) or value is None:
+            safe[name] = value
+        elif isinstance(value, (list, tuple)):
+            safe[name] = [str(item) for item in value]
+        else:
+            safe[name] = str(value)
+    return json.dumps(safe, indent=2)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="WCM manifest <-> in-toto Statement v1")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -277,11 +302,12 @@ def main(argv: list[str] | None = None) -> int:
     check = sub.add_parser("verify", help="Verify subject binding and manifest signatures")
     check.add_argument("statement", type=pathlib.Path)
     check.add_argument(
-        "--key",
+        "--public-key",
+        dest="public_key",
         type=pathlib.Path,
         action="append",
         default=[],
-        help="raw Ed25519 public key (hex or base64url); repeat for builder and custodian",
+        help="raw Ed25519 PUBLIC key (hex or base64url); repeat for builder and custodian",
     )
 
     args = parser.parse_args(argv)
@@ -294,17 +320,14 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     statement = json.loads(args.statement.read_text(encoding="utf-8"))
-    outcome = verify_statement(statement, _load_context(args.key))
+    outcome = verify_statement(statement, _public_key_context(args.public_key))
     print(
-        json.dumps(
-            {
-                "trusted": outcome.trusted,
-                "subject_matches": outcome.subject_matches,
-                "manifest_verified": outcome.manifest_verified,
-                "reason": outcome.reason,
-                "notes": list(outcome.notes),
-            },
-            indent=2,
+        _report(
+            trusted=outcome.trusted,
+            subject_matches=outcome.subject_matches,
+            manifest_verified=outcome.manifest_verified,
+            reason=outcome.reason,
+            notes=outcome.notes,
         )
     )
     return 0 if outcome.trusted else 1

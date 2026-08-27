@@ -91,7 +91,7 @@ python wcm_oci.py verify referrer.json \
   --blob wcm.manifest.json \
   --expect-subject sha256:<the model you are pulling> \
   --subject-manifest model-manifest.json \
-  --key builder.pub --key custodian.pub
+  --public-key builder.pub --public-key custodian.pub
 ```
 
 `--subject-manifest` is the model's own OCI manifest. Without it the best

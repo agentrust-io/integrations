@@ -32,7 +32,7 @@ Usage::
     pip install weight-custody-manifest huggingface_hub
 
     python wcm_hf_guard.py HuggingFaceTB/SmolLM2-135M \\
-        --revision <40-char-commit-sha> --key builder.pub --key custodian.pub
+        --revision <40-char-commit-sha> --public-key builder.pub --public-key custodian.pub
 """
 
 from __future__ import annotations
@@ -323,7 +323,8 @@ def guarded_snapshot_download(
     return directory, result
 
 
-def _load_context(paths: Iterable[pathlib.Path]) -> VerificationContext:
+def _public_key_context(paths: Iterable[pathlib.Path]) -> VerificationContext:
+    """Trust the given raw Ed25519 PUBLIC keys. No private key is read here."""
     context = VerificationContext()
     for path in paths:
         raw = path.read_bytes().strip()
@@ -336,17 +337,45 @@ def _load_context(paths: Iterable[pathlib.Path]) -> VerificationContext:
     return context
 
 
+def _report(**fields: object) -> str:
+    """Serialize a CLI report from primitives only.
+
+    Every value is coerced to bool, str or None here rather than being passed
+    through from a result object. Nothing in this file puts key material in a
+    result, and this makes that structural instead of a property of the current
+    code: an attribute added later cannot reach stdout by being included in a
+    dict comprehension somebody wrote in a hurry.
+    """
+    safe: dict[str, object] = {}
+    for name, value in fields.items():
+        if isinstance(value, bool) or value is None:
+            safe[name] = value
+        elif isinstance(value, (list, tuple)):
+            safe[name] = [str(item) for item in value]
+        else:
+            safe[name] = str(value)
+    return json.dumps(safe, indent=2)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Verify a Hugging Face snapshot against a WCM manifest")
     parser.add_argument("repo_id", help="Hub repo id, or a local snapshot path with --local")
     parser.add_argument("--revision", help="40-character commit sha")
     parser.add_argument("--local", action="store_true", help="repo_id is a local directory")
-    parser.add_argument("--key", type=pathlib.Path, action="append", default=[], required=True)
+    parser.add_argument(
+        "--public-key",
+        dest="public_key",
+        type=pathlib.Path,
+        action="append",
+        default=[],
+        required=True,
+        help="raw Ed25519 PUBLIC key (hex or base64url); repeatable",
+    )
     parser.add_argument("--include", action="append", help="POSIX relative path; repeatable")
     parser.add_argument("--allow-mutable-revision", action="store_true")
     args = parser.parse_args(argv)
 
-    context = _load_context(args.key)
+    context = _public_key_context(args.public_key)
     if args.local:
         result = verify_snapshot(
             pathlib.Path(args.repo_id), context, include=args.include, revision=args.revision
@@ -367,16 +396,13 @@ def main(argv: list[str] | None = None) -> int:
             return 1
 
     print(
-        json.dumps(
-            {
-                "ok": result.ok,
-                "signatures_verified": result.signatures_verified,
-                "computed_digest": result.computed_digest,
-                "expected_digest": result.expected_digest,
-                "reason": result.reason,
-                "notes": list(result.notes),
-            },
-            indent=2,
+        _report(
+            ok=result.ok,
+            signatures_verified=result.signatures_verified,
+            computed_digest=result.computed_digest,
+            expected_digest=result.expected_digest,
+            reason=result.reason,
+            notes=result.notes,
         )
     )
     return 0 if result.ok else 1

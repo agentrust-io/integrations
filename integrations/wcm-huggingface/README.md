@@ -107,8 +107,8 @@ air-gapped environment holding a copied snapshot.
 CLI, which exits non-zero on refusal:
 
 ```bash
-python wcm_hf_guard.py org/model --revision <sha> --key builder.pub --key custodian.pub
-python wcm_hf_guard.py ./snapshot --local --key builder.pub --key custodian.pub
+python wcm_hf_guard.py org/model --revision <sha> --public-key builder.pub --public-key custodian.pub
+python wcm_hf_guard.py ./snapshot --local --public-key builder.pub --public-key custodian.pub
 ```
 
 ## Publishing side

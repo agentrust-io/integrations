@@ -342,7 +342,7 @@ def test_cli_build_then_verify(tmp_path: pathlib.Path, capsys) -> None:
     for index, keypair in enumerate((builder, custodian)):
         path = tmp_path / f"key{index}.pub"
         path.write_text(keypair.public_bytes.hex(), encoding="utf-8")
-        keys += ["--key", str(path)]
+        keys += ["--public-key", str(path)]
 
     assert (
         main(

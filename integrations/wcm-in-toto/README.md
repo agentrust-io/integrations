@@ -75,7 +75,7 @@ pip install weight-custody-manifest
 python wcm_in_toto.py wrap manifest.json --name example-8b > statement.json
 
 # verify; supply the keys you trust for builder and custodian
-python wcm_in_toto.py verify statement.json --key builder.pub --key custodian.pub
+python wcm_in_toto.py verify statement.json --public-key builder.pub --public-key custodian.pub
 ```
 
 `verify` exits non-zero when the statement is not trusted, so it drops into CI
