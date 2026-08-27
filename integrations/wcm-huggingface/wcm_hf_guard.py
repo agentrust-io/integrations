@@ -48,15 +48,20 @@ from dataclasses import dataclass, field
 from typing import Any, Iterable, Sequence
 
 from wcm import (
+    ArtifactDigestError,
     BaseConfidentiality,
     VerificationContext,
     WeightCustodyManifest,
+    artifact_digest,
+    artifact_files,
     verify_manifest,
 )
+from wcm.artifact_digest import RECIPE_ID
 
 __all__ = [
     "SIDECAR_NAME",
     "ARTIFACT_DIGEST_RECIPE",
+    "FOLLOW_HUB_SYMLINKS",
     "GuardError",
     "GuardResult",
     "artifact_files",
@@ -71,30 +76,42 @@ __all__ = [
 #: fetches it like any other artifact.
 SIDECAR_NAME = "wcm.manifest.json"
 
-#: Directory entries that are Hub bookkeeping rather than part of the served
-#: model. Excluded from the digest because their contents differ between two
-#: caches holding byte-identical weights.
-_EXCLUDED_PARTS = frozenset({".cache", ".git", ".gitattributes", ".huggingface"})
+#: Named so a digest mismatch can be attributed to the recipe rather than the
+#: bytes. Re-exported from the SDK, which is where this now lives: it was
+#: implemented separately here and in wcm-triton until
+#: weight-custody-manifest 0.27.0 published ``wcm.artifact_digest``.
+ARTIFACT_DIGEST_RECIPE = RECIPE_ID
 
-#: Named so a mismatch can be attributed to the recipe rather than the bytes.
+#: Hub snapshots are symlink trees.
 #:
-#: Files sorted by POSIX relative path; for each, the length-prefixed relative
-#: path, then the 8-byte big-endian file size, then the contents. Length
-#: prefixing is what stops two different directory layouts from flattening to
-#: the same byte stream.
+#: ``snapshot_download`` populates ``snapshots/<revision>/`` with links into a
+#: content-addressed ``blobs/`` directory in the same cache (on Windows without
+#: developer mode it copies instead, so both layouts occur). The SDK refuses
+#: symlinks by default, which is right for an artifact directory somebody handed
+#: you and wrong here: refusing would make the gate fail on every Hub download
+#: that used the normal cache.
 #:
-#: This is the same construction the WCM examples use for a real open-weight
-#: model (agentrust-io/examples, weight-custody-manifest/real_open_model.py). It
-#: is duplicated here rather than imported because it is not part of the
-#: published SDK; it belongs there, and a second dialect of it is the thing to
-#: avoid. Anyone adding a third should promote this one instead.
-ARTIFACT_DIGEST_RECIPE = "wcm-artifact-digest/v1"
+#: Following them is safe in this specific case because the targets are inside
+#: the same locally-controlled cache and are named by their own content hash.
+#: ``verify_snapshot`` exposes the flag so a caller verifying a plain copied
+#: directory can tighten it back.
+FOLLOW_HUB_SYMLINKS = True
 
 _COMMIT_SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 
 
 class GuardError(RuntimeError):
-    """Raised when a snapshot must not be used."""
+    """Raised when a snapshot must not be used.
+
+    ``verify_snapshot`` and ``guarded_snapshot_download`` raise only this, so a
+    caller needs one except clause. The SDK's ``ArtifactDigestError`` is
+    translated inside them.
+
+    ``artifact_digest`` and ``artifact_files`` are re-exported from the SDK
+    unwrapped, and raise ``ArtifactDigestError`` as the SDK does. Wrapping a
+    re-export would claim the function is ours when it is not, and would hide
+    which layer rejected the inventory.
+    """
 
 
 @dataclass(frozen=True)
@@ -109,64 +126,6 @@ class GuardResult:
     reason: str | None = None
     #: Advisories that do not fail the gate but change what the result means.
     notes: tuple[str, ...] = field(default_factory=tuple)
-
-
-def artifact_files(path: pathlib.Path) -> list[pathlib.Path]:
-    """The deterministic file inventory a manifest binds.
-
-    A snapshot directory holds weights, shard indexes, configuration and
-    tokenizer assets, all of which change what the model does and all of which
-    are therefore in scope. Hub cache metadata is not: it differs between two
-    caches holding identical weights.
-    """
-    if path.is_file():
-        return [path]
-    files = [
-        candidate
-        for candidate in path.rglob("*")
-        if candidate.is_file()
-        and not _EXCLUDED_PARTS.intersection(candidate.relative_to(path).parts)
-    ]
-    if not files:
-        raise GuardError(f"model artifact contains no files: {path}")
-    return sorted(files, key=lambda candidate: candidate.relative_to(path).as_posix())
-
-
-def artifact_digest(path: pathlib.Path, *, include: Sequence[str] | None = None) -> str:
-    """Hash a file or a complete model directory. See ARTIFACT_DIGEST_RECIPE.
-
-    ``include`` restricts the inventory to an explicit list of POSIX relative
-    paths, for the case where a builder hashed only the weight shards rather than
-    the whole directory. Order in the argument is ignored; the recipe sorts.
-    A named file that is absent raises, because silently hashing fewer files than
-    the manifest bound would produce a digest that matched nothing and a message
-    blaming the weights.
-    """
-    root = path if path.is_dir() else path.parent
-    files = artifact_files(path)
-
-    if include is not None:
-        wanted = set(include)
-        by_relative = {item.relative_to(root).as_posix(): item for item in files}
-        missing = sorted(wanted - by_relative.keys())
-        if missing:
-            raise GuardError(
-                f"named files are absent from the snapshot: {', '.join(missing)}. "
-                "Hashing the remaining files would produce a digest that matches "
-                "nothing and a failure that blames the weights."
-            )
-        files = [by_relative[name] for name in sorted(wanted)]
-
-    digest = hashlib.sha256()
-    for item in files:
-        relative = item.relative_to(root).as_posix().encode("utf-8")
-        digest.update(len(relative).to_bytes(8, "big"))
-        digest.update(relative)
-        digest.update(item.stat().st_size.to_bytes(8, "big"))
-        with item.open("rb") as handle:
-            for chunk in iter(lambda: handle.read(1 << 20), b""):
-                digest.update(chunk)
-    return "sha256:" + digest.hexdigest()
 
 
 def load_sidecar_manifest(directory: pathlib.Path) -> WeightCustodyManifest:
@@ -208,6 +167,7 @@ def verify_snapshot(
     include: Sequence[str] | None = None,
     revision: str | None = None,
     manifest: WeightCustodyManifest | None = None,
+    follow_symlinks: bool = FOLLOW_HUB_SYMLINKS,
 ) -> GuardResult:
     """Check a downloaded snapshot against its manifest. Never raises on mismatch.
 
@@ -239,13 +199,21 @@ def verify_snapshot(
         )
 
     if include is None:
-        include = [
-            item.relative_to(directory).as_posix()
-            for item in artifact_files(directory)
-            if item.name != SIDECAR_NAME
-        ]
+        try:
+            include = [
+                item.relative_to(directory).as_posix()
+                for item in artifact_files(directory, follow_symlinks=follow_symlinks)
+                if item.name != SIDECAR_NAME
+            ]
+        except ArtifactDigestError as exc:
+            raise GuardError(str(exc)) from exc
 
-    computed = artifact_digest(directory, include=include)
+    try:
+        computed = str(
+            artifact_digest(directory, include=include, follow_symlinks=follow_symlinks)
+        )
+    except ArtifactDigestError as exc:
+        raise GuardError(str(exc)) from exc
     if computed != manifest.weights_hash:
         return GuardResult(
             ok=False,
@@ -280,6 +248,7 @@ def guarded_snapshot_download(
     revision: str,
     include: Sequence[str] | None = None,
     allow_mutable_revision: bool = False,
+    follow_symlinks: bool = FOLLOW_HUB_SYMLINKS,
     **snapshot_kwargs: Any,
 ) -> tuple[pathlib.Path, GuardResult]:
     """Download a snapshot and verify it, raising rather than returning bad weights.
@@ -314,7 +283,13 @@ def guarded_snapshot_download(
         ) from exc
 
     directory = pathlib.Path(snapshot_download(repo_id, revision=revision, **snapshot_kwargs))
-    result = verify_snapshot(directory, context, include=include, revision=revision)
+    result = verify_snapshot(
+        directory,
+        context,
+        include=include,
+        revision=revision,
+        follow_symlinks=follow_symlinks,
+    )
     if not result.ok:
         raise GuardError(
             f"{repo_id}@{revision} refused: {result.reason} "
@@ -373,12 +348,21 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--include", action="append", help="POSIX relative path; repeatable")
     parser.add_argument("--allow-mutable-revision", action="store_true")
+    parser.add_argument(
+        "--no-follow-symlinks",
+        action="store_true",
+        help="refuse symlinks; use for a plain copied directory, not a Hub cache",
+    )
     args = parser.parse_args(argv)
 
     context = _public_key_context(args.public_key)
     if args.local:
         result = verify_snapshot(
-            pathlib.Path(args.repo_id), context, include=args.include, revision=args.revision
+            pathlib.Path(args.repo_id),
+            context,
+            include=args.include,
+            revision=args.revision,
+            follow_symlinks=not args.no_follow_symlinks,
         )
     else:
         if not args.revision:
@@ -390,6 +374,7 @@ def main(argv: list[str] | None = None) -> int:
                 revision=args.revision,
                 include=args.include,
                 allow_mutable_revision=args.allow_mutable_revision,
+                follow_symlinks=not args.no_follow_symlinks,
             )
         except GuardError as exc:
             print(json.dumps({"ok": False, "reason": str(exc)}, indent=2))

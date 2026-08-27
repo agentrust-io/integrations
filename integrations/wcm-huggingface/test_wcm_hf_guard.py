@@ -22,8 +22,11 @@ from wcm import (  # noqa: E402
     generate_ed25519,
 )
 
+from wcm import ArtifactDigestError  # noqa: E402
+
 from wcm_hf_guard import (  # noqa: E402
     ARTIFACT_DIGEST_RECIPE,
+    FOLLOW_HUB_SYMLINKS,
     SIDECAR_NAME,
     GuardError,
     artifact_digest,
@@ -225,11 +228,17 @@ def test_include_order_does_not_change_the_digest(tmp_path: pathlib.Path) -> Non
     assert forward == backward
 
 
-def test_named_file_absent_from_the_snapshot_raises(tmp_path: pathlib.Path) -> None:
-    """Hashing fewer files would blame the weights for a missing-file problem."""
+def test_named_file_absent_raises_the_sdk_error_not_a_wrapped_one(
+    tmp_path: pathlib.Path,
+) -> None:
+    """artifact_digest is a re-export, so it raises what the SDK raises.
+
+    Wrapping it would claim the function is ours and hide which layer rejected
+    the inventory. verify_snapshot, which IS ours, translates instead.
+    """
     directory = make_snapshot(tmp_path)
 
-    with pytest.raises(GuardError, match="absent from the snapshot"):
+    with pytest.raises(ArtifactDigestError, match="absent from the artifact"):
         artifact_digest(directory, include=["model.safetensors", "not-there.bin"])
 
 
@@ -259,8 +268,27 @@ def test_empty_directory_raises_rather_than_hashing_nothing(tmp_path: pathlib.Pa
     empty = tmp_path / "empty"
     empty.mkdir()
 
-    with pytest.raises(GuardError, match="contains no files"):
+    with pytest.raises(ArtifactDigestError, match="contains no files"):
         artifact_digest(empty)
+
+
+def test_verify_snapshot_translates_the_sdk_error_to_a_guard_error(
+    tmp_path: pathlib.Path,
+) -> None:
+    """A caller of this module needs one except clause, not two."""
+    directory, context = publish(tmp_path)
+
+    with pytest.raises(GuardError, match="absent from the artifact"):
+        verify_snapshot(directory, context, include=["not-there.bin"])
+
+
+def test_hub_symlinks_are_followed_by_default() -> None:
+    """snapshot_download populates snapshots/<rev>/ with links into blobs/.
+
+    Refusing them, which is the SDK default and correct for a directory somebody
+    handed you, would make this gate fail on every normal Hub download.
+    """
+    assert FOLLOW_HUB_SYMLINKS is True
 
 
 def test_cli_reports_and_exits_on_a_local_snapshot(tmp_path: pathlib.Path, capsys) -> None:

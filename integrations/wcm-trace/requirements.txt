@@ -1,4 +1,4 @@
-weight-custody-manifest>=0.26.0
+weight-custody-manifest>=0.27.0
 # Only needed to sign the record this module builds; construction has no
 # agentrust-trace dependency, so the mapping stays testable on its own.
 agentrust-trace>=0.9.0

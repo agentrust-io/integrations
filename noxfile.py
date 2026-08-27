@@ -71,10 +71,11 @@ def wcm_integrations(session: nox.Session) -> None:
     """The Weight Custody Manifest integrations, against the published SDK.
 
     Pinned to an exact release rather than a floor. These adapters are sensitive
-    to what the published package actually exports: 0.26.0 ships no
-    runtime_records module, and several of them work around that. A silent
-    upgrade should show up as a failing pin here, where the reason is written
-    down, rather than as a behaviour change nobody attributed to a dependency.
+    to what the published package actually exports, and 0.27.0 is the release
+    that first published wcm.artifact_digest, runtime_records and memory_sweep.
+    A silent upgrade should show up as a failing pin here, where the reason is
+    written down, rather than as a behaviour change nobody attributed to a
+    dependency.
 
     pyyaml and opentelemetry-api are test-only. The Kyverno generator emits YAML
     without PyYAML on purpose and the OTel module is a no-op when the API is
@@ -82,7 +83,7 @@ def wcm_integrations(session: nox.Session) -> None:
     than a fake.
     """
     session.install(
-        "weight-custody-manifest==0.26.0",
+        "weight-custody-manifest==0.27.0",
         "agent-manifest>=0.11.1",
         "pytest>=8",
         "pyyaml",

@@ -1,4 +1,4 @@
-weight-custody-manifest>=0.26.0
+weight-custody-manifest>=0.27.0
 # Needed to BUILD a ModelIdentityBinding. verify_binding works on a plain
 # document without it, so an air-gapped checker does not need the SDK.
 agent-manifest>=0.11.1

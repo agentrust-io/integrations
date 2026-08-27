@@ -45,12 +45,26 @@ differs between two caches holding byte-identical weights. The manifest sidecar
 excludes itself: a manifest cannot bind a digest computed over a directory
 containing that manifest.
 
-This is the same construction the [WCM
-examples](https://github.com/agentrust-io/examples/tree/main/weight-custody-manifest)
-use for a real open-weight model. It is duplicated here because it is not part of
-the published SDK. **It belongs in the SDK**, and a third dialect of it is the
-thing to avoid; anyone needing it again should promote this one rather than write
-another.
+It comes from `wcm.artifact_digest` in the SDK. It was implemented separately
+here and in [`wcm-triton`](../wcm-triton) until
+`weight-custody-manifest` 0.27.0 published it, kept in step only by a
+byte-equality test. There is now nothing to drift.
+
+## Hub caches are symlink trees, so this follows them
+
+`snapshot_download` populates `snapshots/<revision>/` with links into a
+content-addressed `blobs/` directory in the same cache. On Windows without
+developer mode it copies instead, so both layouts occur in practice.
+
+The SDK refuses symlinks by default, which is right for an artifact directory
+somebody handed you: a link lets a digest cover bytes outside the tree, and lets
+those bytes change without the tree changing. It is wrong here, because refusing
+would make the gate fail on every normal Hub download.
+
+So `verify_snapshot` defaults `follow_symlinks=True`. Safe in this specific case:
+the targets are inside the same locally-controlled cache and are named by their
+own content hash. Pass `follow_symlinks=False`, or `--no-follow-symlinks` on the
+CLI, when verifying a plain copied directory where the strict default applies.
 
 A digest mismatch names the recipe in its failure message for exactly this
 reason. If a builder hashed only the weight shards and you hashed the whole
@@ -69,6 +83,12 @@ independent facts:
 
 A signature failure short-circuits: there is no point hashing several gigabytes
 under terms you do not trust, so `computed_digest` is `None`.
+
+`verify_snapshot` and `guarded_snapshot_download` raise only `GuardError`, so a
+caller needs one except clause. `artifact_digest` and `artifact_files` are
+re-exported from the SDK unwrapped and raise `ArtifactDigestError` as the SDK
+does: wrapping a re-export would claim the function is ours and hide which layer
+rejected the inventory.
 
 On a failed download the files are **left in place**, not deleted. Destroying
 them would destroy the evidence of what was served, which is what an

@@ -17,6 +17,7 @@ import pytest
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
 
 from wcm import (  # noqa: E402
+    ArtifactDigestError,
     Challenge,
     CheckResult,
     ReleaseDecision,
@@ -284,11 +285,12 @@ def test_agent_name_is_validated() -> None:
         build_agent_stanza(make_manifest(CURRENT), agent_name='x" }] } evil {')
 
 
-def test_empty_artifact_raises(tmp_path: pathlib.Path) -> None:
+def test_empty_artifact_raises_the_sdk_error(tmp_path: pathlib.Path) -> None:
+    """artifact_digest is a re-export, so it raises what the SDK raises."""
     empty = tmp_path / "empty"
     empty.mkdir()
 
-    with pytest.raises(TritonStagingError, match="contains no files"):
+    with pytest.raises(ArtifactDigestError, match="contains no files"):
         artifact_digest(empty)
 
 
@@ -301,8 +303,26 @@ def test_include_selects_an_explicit_inventory(tmp_path: pathlib.Path) -> None:
 def test_missing_named_file_raises(tmp_path: pathlib.Path) -> None:
     directory = write(tmp_path / "d", PLAINTEXT)
 
-    with pytest.raises(TritonStagingError, match="absent from the artifact"):
+    with pytest.raises(ArtifactDigestError, match="absent from the artifact"):
         artifact_digest(directory, include=["nope.plan"])
+
+
+def test_prepare_repository_translates_the_sdk_error(tmp_path: pathlib.Path) -> None:
+    """prepare_repository is ours, so a caller needs one except clause."""
+    manifest = make_manifest(expected_digest(tmp_path, PLAINTEXT))
+
+    with pytest.raises(TritonStagingError, match="absent from the artifact"):
+        prepare_repository(
+            manifest=manifest,
+            broker=FakeBroker(),
+            provider=SoftwareProvider(),
+            encrypted=tmp_path / "encrypted",
+            staging=tmp_path / "staging",
+            decrypt=decrypter(PLAINTEXT),
+            include=["not-there.plan"],
+        )
+
+    assert not (tmp_path / "staging").exists()
 
 
 def test_nested_files_are_included(tmp_path: pathlib.Path) -> None:
@@ -313,14 +333,17 @@ def test_nested_files_are_included(tmp_path: pathlib.Path) -> None:
     assert len(artifact_files(directory)) == 2
 
 
-def test_artifact_digest_matches_the_hugging_face_gate_exactly(tmp_path: pathlib.Path) -> None:
-    """One recipe, two implementations. This is the test that keeps them one.
+def test_both_integrations_use_the_sdk_implementation() -> None:
+    """The recipe must stay in one place.
 
-    wcm-huggingface and this module both implement wcm-artifact-digest/v1,
-    because it is not in the published SDK. If they ever disagree, a manifest
-    produced by one path stops verifying on the other and the failure looks like
-    tampered weights.
+    It lived here and in wcm-huggingface separately until the SDK published
+    wcm.artifact_digest in 0.27.0, kept in step only by a byte-equality test.
+    This replaces that test and is stronger: it asserts neither module has its
+    own implementation to drift from, rather than checking that two
+    implementations happen to agree today.
     """
+    import wcm
+
     hugging_face = pathlib.Path(__file__).resolve().parents[1] / "wcm-huggingface"
     sys.path.insert(0, str(hugging_face))
     try:
@@ -328,14 +351,43 @@ def test_artifact_digest_matches_the_hugging_face_gate_exactly(tmp_path: pathlib
     finally:
         sys.path.remove(str(hugging_face))
 
-    assert wcm_hf_guard.ARTIFACT_DIGEST_RECIPE == ARTIFACT_DIGEST_RECIPE
+    assert artifact_digest is wcm.artifact_digest
+    assert wcm_hf_guard.artifact_digest is wcm.artifact_digest
+    assert artifact_files is wcm.artifact_files
+    assert wcm_hf_guard.artifact_files is wcm.artifact_files
+    assert ARTIFACT_DIGEST_RECIPE == wcm_hf_guard.ARTIFACT_DIGEST_RECIPE
 
-    directory = write(tmp_path / "shared", PLAINTEXT)
-    write(directory / "nested", {"c.bin": b"3"})
-    (directory / ".cache").mkdir()
-    (directory / ".cache" / "junk").write_bytes(b"ignored")
 
-    assert wcm_hf_guard.artifact_digest(directory) == artifact_digest(directory)
-    assert wcm_hf_guard.artifact_digest(directory, include=["model.plan"]) == artifact_digest(
-        directory, include=["model.plan"]
-    )
+def test_recipe_id_comes_from_the_sdk() -> None:
+    from wcm.artifact_digest import RECIPE_ID
+
+    assert ARTIFACT_DIGEST_RECIPE == RECIPE_ID == "wcm-artifact-digest/v1"
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="symlink creation needs privilege")
+def test_staging_keeps_the_strict_symlink_default(tmp_path: pathlib.Path) -> None:
+    """Unlike a Hub cache, this directory was produced by the local decrypt.
+
+    A link in it is not a cache layout; it is something the decrypt routine put
+    there, and Triton would follow it at load time.
+    """
+    outside = tmp_path / "outside.plan"
+    outside.write_bytes(b"not part of the model")
+
+    def decrypt_with_link(encrypted, staging, key):  # noqa: ANN001
+        write(staging, PLAINTEXT)
+        (staging / "linked.plan").symlink_to(outside)
+
+    manifest = make_manifest(expected_digest(tmp_path, PLAINTEXT))
+
+    with pytest.raises(TritonStagingError, match="symbolic link"):
+        prepare_repository(
+            manifest=manifest,
+            broker=FakeBroker(),
+            provider=SoftwareProvider(),
+            encrypted=tmp_path / "encrypted",
+            staging=tmp_path / "staging",
+            decrypt=decrypt_with_link,
+        )
+
+    assert not (tmp_path / "staging").exists()

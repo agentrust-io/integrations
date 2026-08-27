@@ -1,4 +1,4 @@
-weight-custody-manifest>=0.26.0
+weight-custody-manifest>=0.27.0
 # vLLM is intentionally NOT a dependency. CustodyGuard imports nothing from it,
 # so the guard is testable without a GPU and unaffected when vLLM's plugin
 # surface moves. See the README for wiring.
