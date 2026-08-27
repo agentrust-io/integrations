@@ -1,0 +1,24 @@
+name: WCM Confidential Containers Trustee
+vendor: agentrust-io
+integrates_with:
+  - wcm
+description: >-
+  Generates a Confidential Containers Trustee Rego resource policy and key
+  resource layout from a WCM manifest, preferring the vTPM claim path.
+maintainer:
+  github: imran-siddique
+repository: https://github.com/agentrust-io/integrations
+homepage: https://wcm.agentrust-io.com
+license: Apache-2.0
+tier: community
+marketplace:
+  display_name: Confidential Containers Trustee
+  category: Model & weight custody
+  mark: CC
+  keywords: [confidential-containers, trustee, kbs, rego]
+wcm_roles:
+  - key-broker
+wcm_conformance_levels:
+  - L2
+tested_against:
+  weight-custody-manifest: "0.26.0"

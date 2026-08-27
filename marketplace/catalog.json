@@ -1,6 +1,6 @@
 {
   "catalog_version": 1,
-  "count": 25,
+  "count": 28,
   "integrations": [
     {
       "name": "Claude Code",
@@ -248,6 +248,29 @@
       ]
     },
     {
+      "name": "Confidential Containers Trustee",
+      "package_name": "WCM Confidential Containers Trustee",
+      "vendor": "agentrust-io",
+      "description": "Generates a Confidential Containers Trustee Rego resource policy and key resource layout from a WCM manifest, preferring the vTPM claim path.",
+      "path": "integrations/wcm-coco-trustee",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/wcm-coco-trustee",
+      "homepage": "https://wcm.agentrust-io.com",
+      "repository": "https://github.com/agentrust-io/integrations",
+      "tier": "community",
+      "stack": [
+        "WCM"
+      ],
+      "category": "Model & weight custody",
+      "mark": "CC",
+      "featured": null,
+      "keywords": [
+        "confidential-containers",
+        "trustee",
+        "kbs",
+        "rego"
+      ]
+    },
+    {
       "name": "DecisionAssure",
       "package_name": "DecisionAssure",
       "vendor": "DecisionAssure (a1k7)",
@@ -267,6 +290,29 @@
         "runtime",
         "governance",
         "policy"
+      ]
+    },
+    {
+      "name": "GCP Confidential Space",
+      "package_name": "WCM GCP Confidential Space",
+      "vendor": "agentrust-io",
+      "description": "Generates a GCP Confidential Space workload identity attribute condition from a WCM manifest, comparing accepted measurements against the container image digest.",
+      "path": "integrations/wcm-gcp-confidential-space",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/wcm-gcp-confidential-space",
+      "homepage": "https://wcm.agentrust-io.com",
+      "repository": "https://github.com/agentrust-io/integrations",
+      "tier": "community",
+      "stack": [
+        "WCM"
+      ],
+      "category": "Model & weight custody",
+      "mark": "GCS",
+      "featured": null,
+      "keywords": [
+        "gcp",
+        "confidential-space",
+        "kms",
+        "workload-identity"
       ]
     },
     {
@@ -334,6 +380,29 @@
         "receipts",
         "Ed25519",
         "evidence"
+      ]
+    },
+    {
+      "name": "NVIDIA GPU Attestation",
+      "package_name": "WCM NVIDIA GPU Attestation",
+      "vendor": "agentrust-io",
+      "description": "Adapts NVIDIA nvattest evidence and appraisal into a WCM GpuReport, refusing unless every RIM, nonce and live certificate check passed.",
+      "path": "integrations/wcm-nvidia-nras",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/wcm-nvidia-nras",
+      "homepage": "https://wcm.agentrust-io.com",
+      "repository": "https://github.com/agentrust-io/integrations",
+      "tier": "community",
+      "stack": [
+        "WCM"
+      ],
+      "category": "Model & weight custody",
+      "mark": "NV",
+      "featured": null,
+      "keywords": [
+        "nvidia",
+        "gpu",
+        "attestation",
+        "confidential-computing"
       ]
     },
     {
