@@ -1,6 +1,6 @@
 {
   "catalog_version": 1,
-  "count": 18,
+  "count": 22,
   "integrations": [
     {
       "name": "Claude Code",
@@ -269,6 +269,29 @@
       ]
     },
     {
+      "name": "Hugging Face Download Gate",
+      "package_name": "Hugging Face WCM Download Gate",
+      "vendor": "agentrust-io",
+      "description": "Refuses a Hugging Face model snapshot whose bytes do not hash to the weights_hash bound by a jointly-signed WCM manifest shipped in the repository.",
+      "path": "integrations/wcm-huggingface",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/wcm-huggingface",
+      "homepage": "https://wcm.agentrust-io.com",
+      "repository": "https://github.com/agentrust-io/integrations",
+      "tier": "community",
+      "stack": [
+        "WCM"
+      ],
+      "category": "Model & weight custody",
+      "mark": "HF",
+      "featured": null,
+      "keywords": [
+        "huggingface",
+        "registry",
+        "integrity",
+        "download"
+      ]
+    },
+    {
       "name": "Nobulex",
       "package_name": "Nobulex",
       "vendor": "Nobulex",
@@ -401,6 +424,75 @@
         "attestation",
         "sovp",
         "trace"
+      ]
+    },
+    {
+      "name": "WCM in-toto Attestation",
+      "package_name": "WCM in-toto Attestation",
+      "vendor": "agentrust-io",
+      "description": "Wraps a signed WCM manifest as an in-toto Statement v1 so custody terms ride existing supply-chain tooling, and verifies the subject binding on the way back.",
+      "path": "integrations/wcm-in-toto",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/wcm-in-toto",
+      "homepage": "https://wcm.agentrust-io.com",
+      "repository": "https://github.com/agentrust-io/integrations",
+      "tier": "community",
+      "stack": [
+        "WCM"
+      ],
+      "category": "Model & weight custody",
+      "mark": "IT",
+      "featured": null,
+      "keywords": [
+        "in-toto",
+        "slsa",
+        "supply-chain",
+        "dsse"
+      ]
+    },
+    {
+      "name": "WCM Kyverno Policy Pack",
+      "package_name": "WCM Kyverno Policy Pack",
+      "vendor": "agentrust-io",
+      "description": "Generates a Kyverno ClusterPolicy enforcing the deployment preconditions a WCM manifest implies, and states in the policy what admission cannot verify.",
+      "path": "integrations/wcm-kyverno",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/wcm-kyverno",
+      "homepage": "https://wcm.agentrust-io.com",
+      "repository": "https://github.com/agentrust-io/integrations",
+      "tier": "community",
+      "stack": [
+        "WCM"
+      ],
+      "category": "Security & policy",
+      "mark": "KY",
+      "featured": null,
+      "keywords": [
+        "kubernetes",
+        "kyverno",
+        "admission",
+        "confidential-containers"
+      ]
+    },
+    {
+      "name": "WCM to TRACE",
+      "package_name": "WCM Key Release to TRACE",
+      "vendor": "agentrust-io",
+      "description": "Turns a WCM Layer 2 release decision and Layer 3 custody state into signable TRACE v0.2 Trust Records, deriving assurance from the checks that passed.",
+      "path": "integrations/wcm-trace",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/wcm-trace",
+      "homepage": "https://wcm.agentrust-io.com",
+      "repository": "https://github.com/agentrust-io/integrations",
+      "tier": "community",
+      "stack": [
+        "WCM",
+        "TRACE"
+      ],
+      "category": "Evidence & receipts",
+      "mark": "WT",
+      "featured": null,
+      "keywords": [
+        "custody",
+        "key-release",
+        "evidence"
       ]
     }
   ]

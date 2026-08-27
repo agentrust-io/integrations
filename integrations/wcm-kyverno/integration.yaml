@@ -1,0 +1,22 @@
+name: WCM Kyverno Policy Pack
+vendor: agentrust-io
+integrates_with:
+  - wcm
+description: >-
+  Generates a Kyverno ClusterPolicy enforcing the deployment preconditions a WCM
+  manifest implies, and states in the policy what admission cannot verify.
+maintainer:
+  github: imran-siddique
+repository: https://github.com/agentrust-io/integrations
+homepage: https://wcm.agentrust-io.com
+license: Apache-2.0
+tier: community
+marketplace:
+  display_name: WCM Kyverno Policy Pack
+  category: Security & policy
+  mark: KY
+  keywords: [kubernetes, kyverno, admission, confidential-containers]
+wcm_roles:
+  - evidence-consumer
+tested_against:
+  weight-custody-manifest: "0.26.0"

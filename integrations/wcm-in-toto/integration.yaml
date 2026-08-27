@@ -1,0 +1,26 @@
+name: WCM in-toto Attestation
+vendor: agentrust-io
+integrates_with:
+  - wcm
+description: >-
+  Wraps a signed WCM manifest as an in-toto Statement v1 so custody terms ride
+  existing supply-chain tooling, and verifies the subject binding on the way back.
+maintainer:
+  github: imran-siddique
+repository: https://github.com/agentrust-io/integrations
+homepage: https://wcm.agentrust-io.com
+license: Apache-2.0
+tier: community
+marketplace:
+  display_name: WCM in-toto Attestation
+  category: Model & weight custody
+  mark: IT
+  keywords: [in-toto, slsa, supply-chain, dsse]
+wcm_roles:
+  - manifest-producer
+  - manifest-verifier
+wcm_conformance_levels:
+  - L1
+  - L4
+tested_against:
+  weight-custody-manifest: "0.26.0"
