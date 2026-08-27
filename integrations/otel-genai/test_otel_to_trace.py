@@ -8,7 +8,6 @@ common path and it has to be the well-tested one.
 
 from __future__ import annotations
 
-import json
 import pathlib
 import sys
 

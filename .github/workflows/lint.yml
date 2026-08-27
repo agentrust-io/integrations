@@ -1,0 +1,52 @@
+name: Lint
+
+# Issue #77 asked for a repo-wide ruff gate "once it is clean". It is clean now,
+# at ruff's DEFAULT rule set, so this is that gate.
+#
+# The default set (E4, E7, E9, F) is the deliberate scope. It catches the things
+# that are defects rather than preferences: undefined names, unused imports,
+# f-strings missing placeholders, duplicate arguments. Nine F401s were sitting in
+# this repository when the gate was added, eight of them introduced the same day
+# by integrations that were tested but never linted, which is exactly the gap a
+# gate closes and a code review does not.
+#
+# Wider selections (UP, I, ANN, D, FA) are style, and several of the
+# integrations here are contributed by their vendors under CONTRIBUTING rule 5,
+# "You maintain it". Failing somebody's pull request on import sorting is how a
+# self-serve submission path stops being self-serve. If a wider set is wanted
+# later it should be introduced with a fix pass, not by turning it on and
+# leaving the next contributor to discover it.
+#
+# .nox/ is excluded by ruff's own defaults; it holds installed site-packages,
+# and linting those produces thousands of findings about other people's code.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  ruff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - name: Install ruff
+        run: pip install "ruff==0.16.3"
+      - name: Lint first-party code
+        # Explicit paths rather than ".", so a vendored or generated tree added
+        # later does not silently join the gate.
+        run: |
+          ruff check \
+            integrations packages scripts tests \
+            claude-code copilot plugins scheduled-agents \
+            --target-version py39 \
+            --select E4,E7,E9,F \
+            --output-format github

@@ -41,7 +41,7 @@ import pathlib
 import sys
 from typing import Any, Sequence
 
-from wcm import BaseConfidentiality, WeightCustodyManifest, canonical_hash
+from wcm import WeightCustodyManifest, canonical_hash
 
 __all__ = [
     "SPEC_VERSION",

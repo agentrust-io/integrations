@@ -82,7 +82,7 @@ import logging
 import os
 import threading
 from dataclasses import dataclass, field
-from typing import Any, Callable, Optional, Protocol, Sequence
+from typing import Any, Callable, Protocol
 
 from wcm import (
     AttestationProvider,

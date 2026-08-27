@@ -46,7 +46,7 @@ import json
 import pathlib
 import re
 import sys
-from typing import Any, Sequence
+from typing import Sequence
 
 from wcm import AssuranceTier, ServingImageStatus, WeightCustodyManifest
 
