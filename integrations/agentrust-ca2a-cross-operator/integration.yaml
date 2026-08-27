@@ -1,0 +1,16 @@
+name: cA2A Cross-Operator Delegation
+vendor: agentrust-io
+integrates_with:
+  - ca2a
+description: >-
+  Runnable 12-check tutorial for scoped delegation, local policy enforcement,
+  sealed tasks, tamper detection, and offline provenance verification.
+maintainer:
+  github: imran-siddique
+repository: https://github.com/agentrust-io/ca2a
+license: Apache-2.0
+tier: community
+marketplace:
+  category: Developer tools
+  mark: A2A
+  keywords: [delegation, policy, provenance, tutorial, cross-operator]

@@ -62,6 +62,16 @@ def test_wcm_manifests_carry_the_wcm_stack_label(tmp_path: Path) -> None:
     assert catalog["integrations"][0]["category"] == "Model & weight custody"
 
 
+def test_ca2a_manifests_carry_the_ca2a_stack_label(tmp_path: Path) -> None:
+    document = _manifest("Cross-operator")
+    document["integrates_with"] = ["ca2a"]
+    _write_repository(tmp_path, [("integrations/cross-operator", document)])
+
+    catalog = build_catalog(tmp_path)
+
+    assert catalog["integrations"][0]["stack"] == ["cA2A"]
+
+
 def test_render_is_deterministic(tmp_path: Path) -> None:
     _write_repository(tmp_path, [("integrations/alpha", _manifest("Alpha"))])
     assert render(tmp_path) == render(tmp_path)
