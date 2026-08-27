@@ -40,6 +40,28 @@ def test_catalog_contains_every_manifest_and_prefers_featured_order(tmp_path: Pa
     assert catalog["integrations"][0]["url"].endswith("plugins/alpha")
 
 
+def test_wcm_manifests_carry_the_wcm_stack_label(tmp_path: Path) -> None:
+    """A stack the generator cannot label is a KeyError, not a missing filter.
+
+    The Marketplace derives its stack facet from this field, so an unmapped
+    identifier takes the whole catalog build down rather than silently listing
+    an integration with no technology.
+    """
+    document = _manifest("Custody Gate")
+    document["integrates_with"] = ["wcm", "trace"]
+    document["wcm_roles"] = ["manifest-verifier"]
+    document["wcm_conformance_levels"] = ["L1"]
+    document["trace_roles"] = ["record-producer"]
+    document["trace_conformance_level"] = 0
+    document["marketplace"] = {"category": "Model & weight custody", "mark": "CG"}
+    _write_repository(tmp_path, [("integrations/custody-gate", document)])
+
+    catalog = build_catalog(tmp_path)
+
+    assert catalog["integrations"][0]["stack"] == ["WCM", "TRACE"]
+    assert catalog["integrations"][0]["category"] == "Model & weight custody"
+
+
 def test_render_is_deterministic(tmp_path: Path) -> None:
     _write_repository(tmp_path, [("integrations/alpha", _manifest("Alpha"))])
     assert render(tmp_path) == render(tmp_path)

@@ -11,3 +11,9 @@ packages:
     minimum: "0.2.0"
   agent-manifest:
     minimum: "0.3.0"
+  # The WCM reference SDK. The GitHub repository is still private, so an
+  # integration cites the PyPI release and the documentation site, never a
+  # github.com/agentrust-io/weight-custody-manifest URL: those 404 for every
+  # anonymous reader.
+  weight-custody-manifest:
+    minimum: "0.26.0"
