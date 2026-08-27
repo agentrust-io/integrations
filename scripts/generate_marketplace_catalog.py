@@ -16,7 +16,7 @@ except ModuleNotFoundError:  # Direct execution puts scripts/ rather than the re
 
 
 CATALOG_VERSION = 1
-STACK_LABELS = {"trace": "TRACE", "cmcp": "cMCP", "agent-manifest": "Agent Manifest"}
+STACK_LABELS = {"trace": "TRACE", "cmcp": "cMCP", "agent-manifest": "Agent Manifest", "wcm": "WCM"}
 REPOSITORY_TREE = "https://github.com/agentrust-io/integrations/tree/main/"
 
 

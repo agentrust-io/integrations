@@ -3,7 +3,7 @@
 name: Example Product
 vendor: Example Corp
 integrates_with:
-  - cmcp        # one or more of: cmcp, trace, agent-manifest
+  - cmcp        # one or more of: cmcp, trace, agent-manifest, wcm
 description: >-
   One technical sentence describing what this integration does.
 maintainer:
@@ -20,5 +20,12 @@ marketplace:
 # trace_conformance_level: 1
 # trace_roles:
 #   - record-producer  # or record-consumer / external-evidence-source
+# Required if you integrate with WCM. Roles say what you do; levels say which
+# `wcm conformance` layers you pass. attestation-source and evidence-consumer
+# verify no manifest and therefore declare no level.
+# wcm_roles:
+#   - manifest-verifier  # or manifest-producer / key-broker / protected-runtime /
+#                        # attestation-source / evidence-consumer
+# wcm_conformance_levels: ["L1"]
 tested_against:
   cmcp-runtime: "0.2.0"

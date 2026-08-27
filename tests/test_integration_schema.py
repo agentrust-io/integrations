@@ -62,6 +62,73 @@ def test_external_evidence_source_does_not_claim_record_conformance() -> None:
     )
 
 
+def test_wcm_integration_declares_its_role() -> None:
+    value = manifest(integrates_with=["wcm"])
+
+    try:
+        validate(value)
+    except jsonschema.ValidationError as exc:
+        assert "wcm_roles" in exc.message
+    else:
+        raise AssertionError("WCM integration without wcm_roles was accepted")
+
+
+def test_wcm_key_broker_declares_conformance_levels() -> None:
+    value = manifest(integrates_with=["wcm"], wcm_roles=["key-broker"])
+
+    try:
+        validate(value)
+    except jsonschema.ValidationError as exc:
+        assert "wcm_conformance_levels" in exc.message
+    else:
+        raise AssertionError("WCM key broker without conformance levels was accepted")
+
+
+def test_wcm_attestation_source_does_not_claim_manifest_conformance() -> None:
+    """An evidence producer verifies no manifest, so it declares no level.
+
+    The same shape as external-evidence-source on the TRACE side: a hardware or
+    service adapter hands evidence to a verifier and must not be read as having
+    passed the manifest suite itself.
+    """
+    validate(manifest(integrates_with=["wcm"], wcm_roles=["attestation-source"]))
+
+
+def test_wcm_conformance_levels_are_per_layer_identifiers() -> None:
+    validate(
+        manifest(
+            integrates_with=["wcm"],
+            wcm_roles=["manifest-verifier"],
+            wcm_conformance_levels=["L1", "L4"],
+        )
+    )
+
+    value = manifest(
+        integrates_with=["wcm"], wcm_roles=["manifest-verifier"], wcm_conformance_levels=[1]
+    )
+    try:
+        validate(value)
+    except jsonschema.ValidationError:
+        pass
+    else:
+        raise AssertionError("a numeric WCM conformance level was accepted")
+
+
+def test_wcm_package_is_recordable_in_tested_against() -> None:
+    validate(
+        manifest(
+            integrates_with=["wcm"],
+            wcm_roles=["manifest-verifier"],
+            wcm_conformance_levels=["L1"],
+            tested_against={"weight-custody-manifest": "0.26.0"},
+        )
+    )
+
+
+def test_marketplace_accepts_the_weight_custody_category() -> None:
+    validate(manifest(marketplace={"category": "Model & weight custody", "mark": "WC"}))
+
+
 def test_marketplace_rejects_unknown_category() -> None:
     value = manifest(marketplace={"category": "Whatever", "mark": "EX"})
 

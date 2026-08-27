@@ -24,7 +24,7 @@
       "uniqueItems": true,
       "items": {
         "type": "string",
-        "enum": ["cmcp", "trace", "agent-manifest"]
+        "enum": ["cmcp", "trace", "agent-manifest", "wcm"]
       },
       "description": "Which parts of the stack this integrates with."
     },
@@ -83,7 +83,7 @@
         },
         "category": {
           "type": "string",
-          "enum": ["Compliance", "Developer tools", "Evidence & receipts", "Frameworks", "Identity & trust", "Observability", "Security & policy"]
+          "enum": ["Compliance", "Developer tools", "Evidence & receipts", "Frameworks", "Identity & trust", "Model & weight custody", "Observability", "Security & policy"]
         },
         "mark": {
           "type": "string",
@@ -123,6 +123,26 @@
       },
       "description": "How the integration relates to TRACE. Evidence sources do not claim to emit or verify TRACE records."
     },
+    "wcm_roles": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": ["manifest-producer", "manifest-verifier", "key-broker", "protected-runtime", "attestation-source", "evidence-consumer"]
+      },
+      "description": "How the integration relates to WCM. An attestation source produces evidence but verifies no manifest; an evidence consumer reads custody output and makes no cryptographic claim of its own."
+    },
+    "wcm_conformance_levels": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": ["L1", "L2", "L3", "L4"]
+      },
+      "description": "Required if the integration produces, verifies, brokers, or holds WCM material: the `wcm conformance` levels it passes. WCM levels are per-layer, so an integration may cover L1 without claiming L2."
+    },
     "tested_against": {
       "type": "object",
       "additionalProperties": false,
@@ -130,7 +150,8 @@
         "cmcp-runtime": { "type": "string" },
         "agentrust-trace": { "type": "string" },
         "agentrust-trace-tests": { "type": "string" },
-        "agent-manifest": { "type": "string" }
+        "agent-manifest": { "type": "string" },
+        "weight-custody-manifest": { "type": "string" }
       },
       "description": "Released package versions the integration was last tested against."
     }
@@ -155,6 +176,26 @@
         "required": ["trace_roles"]
       },
       "then": { "required": ["trace_conformance_level"] }
+    },
+    {
+      "if": {
+        "properties": {
+          "integrates_with": { "contains": { "const": "wcm" } }
+        },
+        "required": ["integrates_with"]
+      },
+      "then": { "required": ["wcm_roles"] }
+    },
+    {
+      "if": {
+        "properties": {
+          "wcm_roles": {
+            "contains": { "enum": ["manifest-producer", "manifest-verifier", "key-broker", "protected-runtime"] }
+          }
+        },
+        "required": ["wcm_roles"]
+      },
+      "then": { "required": ["wcm_conformance_levels"] }
     }
   ]
 }
