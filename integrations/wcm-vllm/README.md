@@ -88,6 +88,69 @@ that cannot be caught.
 already more than can be erased later; a second held for convenience would be one
 nobody remembers to drop. There is a test asserting the guard holds none.
 
+## Signed receipts, and the one ordering constraint
+
+Pass `runtime_signing_key` and the guard emits `wcm.runtime_records`: an
+Ed25519-signed, hash-chained account of the lease that anyone holding the public
+key can verify.
+
+```python
+from wcm import generate_ed25519
+
+keypair = generate_ed25519()
+guard = CustodyGuard(..., runtime_signing_key=keypair.private_key)
+...
+ok, reason = guard.verify_chain(require_terminal_sequence=True)
+```
+
+The SDK's terminal-chain contract is exact: `lease_started`, then any number of
+`renewal_succeeded`, then one boundary (`lapse_detected` or
+`revocation_detected`), then `wipe_requested`, `wipe_completed` and
+`process_terminated` in that order.
+
+**That last record has to be written before the process leaves**, which means
+before `on_lapse` runs, because the default `on_lapse` calls `os._exit` and
+nothing after it executes. So `process_terminated` attests the *intent* to
+terminate, recorded immediately before the call that does it. A test asserts
+`on_lapse` observes a finished five-record chain rather than a partial one.
+
+A process killed from outside, by SIGKILL or a power cut, leaves a chain that
+ends earlier. That verifies as a valid **partial** chain and not as a terminal
+one, and the distinction is the useful part: a truncated chain says the runtime
+stopped without completing its own wipe sequence.
+
+**What the chain proves.** That the runtime holding that key said these things,
+in this order, with nothing removed from the middle. Not that the runtime was
+attested at each step. Attestation happened once, at release.
+
+### Three deliberate choices
+
+`revoke()` writes `revocation_detected`, not `lapse_detected`. Both are valid
+boundaries and they mean different things: a lapse is a lease nobody renewed, a
+revocation is an authority withdrawing the release. Collapsing them would lose
+that in the one artifact meant to explain what happened.
+
+`renew()` writes `renewal_succeeded` only after `apply_renewal` returns, so a
+rejected renewal leaves no record claiming one happened.
+
+`stop()` writes **no** terminal records. An orderly shutdown is not a lapse and
+not a revocation, and manufacturing a boundary for one would put a
+wipe-on-lapse story into the chain of every server that was simply restarted.
+The chain ends where serving ended and verifies as partial, which is what
+happened.
+
+`CustodyGuard.verify_chain` defaults `require_terminal_sequence=False`, the
+opposite of the SDK's default, because a running server has legitimately not
+lapsed. There is a test pinning both defaults.
+
+The lease id is a digest of the KBS challenge nonce, not the nonce itself: the
+lease is what the attestation created, so identifying it by that challenge is
+the honest binding, but a single-use replay value should not outlive its
+challenge inside an artifact meant to be handed to someone.
+
+Feed the chain to [`wcm-trace`](../wcm-trace)'s `build_custody_chain_record` to
+turn it into a signable TRACE record.
+
 ## Wiring, and why it is thin
 
 `CustodyGuard` imports nothing from vLLM. It is testable without a GPU and is

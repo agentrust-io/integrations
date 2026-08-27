@@ -23,14 +23,20 @@ from wcm import (
     CpuQuote,
     GpuReport,
     ReleaseDecision,
+    RuntimeEvent,
     SessionState,
     WeightCustodyManifest,
+    canonical_hash,
+    generate_ed25519,
+    runtime_public_key,
+    sign_runtime_record,
 )
 
 from wcm_to_trace import (  # noqa: E402
     PLATFORM_MAP,
     UNMAPPED_FIELDS,
     MissingEvidence,
+    build_custody_chain_record,
     build_custody_record,
     build_release_record,
     decision_from_json,
@@ -339,3 +345,168 @@ def test_record_matches_the_shapes_the_trace_schema_requires() -> None:
     assert digest.match(value["model"]["weights_digest"])
     assert value["appraisal"]["status"] in {"affirming", "warning", "contraindicated", "none"}
     assert isinstance(value["iat"], int)
+
+
+# --------------------------------------------------------------------------
+# Chain-backed Layer 3 records (weight-custody-manifest 0.27.0)
+# --------------------------------------------------------------------------
+
+
+def chain(*, terminal: bool = True, renewals: int = 0):
+    """A signed chain plus the public key a verifier holds."""
+    keypair = generate_ed25519()
+    public = runtime_public_key(keypair.private_key)
+    manifest = make_manifest()
+    manifest_hash = canonical_hash(manifest.model_dump(mode="json", exclude_none=True))
+
+    records: list = []
+
+    def append(event, **detail):
+        records.append(
+            sign_runtime_record(
+                signing_key=keypair.private_key,
+                sequence=len(records),
+                event=event,
+                occurred_at="2026-08-27T00:00:0%dZ" % min(len(records), 9),
+                weights_hash=WEIGHTS,
+                manifest_hash=manifest_hash,
+                lease_id="lease-0001",
+                previous=records[-1] if records else None,
+                detail=detail or None,
+            )
+        )
+
+    append(RuntimeEvent.lease_started)
+    for _ in range(renewals):
+        append(RuntimeEvent.renewal_succeeded)
+    if terminal:
+        append(RuntimeEvent.lapse_detected)
+        append(RuntimeEvent.wipe_requested)
+        append(RuntimeEvent.wipe_completed)
+        append(RuntimeEvent.process_terminated)
+    return manifest, records, public
+
+
+def chain_record(**kwargs):
+    manifest, records, public = kwargs.pop("built", chain())
+    base = dict(
+        manifest=manifest,
+        records=records,
+        runtime_public_key_b64url=public,
+        data_class="restricted",
+        model_provider="example-labs",
+        model_id="example-8b-instruct",
+        workload_digest=SERVING,
+    )
+    base.update(kwargs)
+    return build_custody_chain_record(**base)
+
+
+def test_verified_terminal_chain_is_contraindicated_because_the_key_is_gone() -> None:
+    value = chain_record()
+
+    assert value["appraisal"]["chain_verified"] is True
+    assert value["appraisal"]["status"] == "contraindicated"
+    assert value["appraisal"]["final_event"] == RuntimeEvent.process_terminated.value
+
+
+def test_verified_live_chain_is_affirming() -> None:
+    value = chain_record(built=chain(terminal=False, renewals=2), require_terminal_sequence=False)
+
+    assert value["appraisal"]["chain_verified"] is True
+    assert value["appraisal"]["status"] == "affirming"
+    assert value["appraisal"]["chain_length"] == 3
+
+
+def test_a_chain_record_is_still_software_only() -> None:
+    """A signature from a key the runtime holds is not a hardware measurement."""
+    value = chain_record()
+
+    assert value["runtime"]["platform"] == "software-only"
+
+
+def test_broken_chain_is_contraindicated_with_the_sdk_reason() -> None:
+    """"sequence is not contiguous" and "signature invalid" go to different places."""
+    manifest, records, public = chain()
+    tampered = [records[0], *records[2:]]
+
+    value = chain_record(built=(manifest, tampered, public), require_terminal_sequence=False)
+
+    assert value["appraisal"]["chain_verified"] is False
+    assert value["appraisal"]["status"] == "contraindicated"
+    assert "contiguous" in value["appraisal"]["reason"]
+
+
+def test_wrong_key_cannot_produce_an_affirming_record() -> None:
+    manifest, records, _ = chain(terminal=False)
+    other = runtime_public_key(generate_ed25519().private_key)
+
+    value = chain_record(
+        built=(manifest, records, other), require_terminal_sequence=False
+    )
+
+    assert value["appraisal"]["chain_verified"] is False
+    assert value["appraisal"]["status"] == "contraindicated"
+
+
+def test_partial_chain_fails_when_a_terminal_one_was_required() -> None:
+    value = chain_record(built=chain(terminal=False))
+
+    assert value["appraisal"]["chain_verified"] is False
+    assert value["appraisal"]["status"] == "contraindicated"
+
+
+def test_chain_from_another_manifest_is_refused() -> None:
+    """Pairing one lease's receipts with another manifest would misattribute it."""
+    manifest, records, public = chain()
+    other = make_manifest(weights_hash="sha256:" + "9f0b" * 16)
+
+    with pytest.raises(MissingEvidence, match="misattribute"):
+        chain_record(built=(other, records, public))
+
+
+def test_empty_chain_is_refused() -> None:
+    manifest, _, public = chain()
+
+    with pytest.raises(MissingEvidence, match="nothing witnessed"):
+        chain_record(built=(manifest, [], public))
+
+
+def test_lease_id_reaches_the_record() -> None:
+    assert chain_record()["appraisal"]["lease_id"] == "lease-0001"
+
+
+def test_chain_record_carries_the_same_bindings_as_the_release_record() -> None:
+    value = chain_record()
+
+    assert value["model"]["weights_digest"] == WEIGHTS
+    assert value["policy"]["enforcement_mode"] == "enforce"
+    assert value["policy"]["bundle_hash"] == _release_bundle_hash()
+    assert "origin" not in value
+
+
+def _release_bundle_hash() -> str:
+    import hashlib
+
+    return "sha256:" + hashlib.sha256(manifest_policy_bundle(make_manifest())).hexdigest()
+
+
+def test_state_based_record_carries_no_chain_fields() -> None:
+    """The weaker path must not look like the stronger one."""
+    value = build_custody_record(
+        manifest=make_manifest(),
+        state=SessionState.holding,
+        lease_deadline="2026-08-27T12:00:00Z",
+        operations_used=3,
+        data_class="restricted",
+        model_provider="example-labs",
+        model_id="example-8b-instruct",
+        workload_digest=SERVING,
+    )
+
+    assert "chain_verified" not in value["appraisal"]
+    assert value["appraisal"]["verifier"] == "wcm-custody-session"
+
+
+def test_chain_record_names_a_different_verifier() -> None:
+    assert chain_record()["appraisal"]["verifier"] == "wcm-runtime-record-chain"

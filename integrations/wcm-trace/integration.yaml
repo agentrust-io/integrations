@@ -4,8 +4,8 @@ integrates_with:
   - wcm
   - trace
 description: >-
-  Turns a WCM Layer 2 release decision and Layer 3 custody state into signable
-  TRACE v0.2 Trust Records, deriving assurance from the checks that passed.
+  Turns a WCM Layer 2 release decision and a signed Layer 3 runtime record chain
+  into TRACE v0.2 Trust Records, deriving assurance from what actually verified.
 maintainer:
   github: imran-siddique
 repository: https://github.com/agentrust-io/integrations
