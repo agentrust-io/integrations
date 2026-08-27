@@ -1,0 +1,25 @@
+name: WCM GCP Confidential Space
+vendor: agentrust-io
+integrates_with:
+  - wcm
+description: >-
+  Generates a GCP Confidential Space workload identity attribute condition from a
+  WCM manifest, comparing accepted measurements against the container image digest.
+maintainer:
+  github: imran-siddique
+repository: https://github.com/agentrust-io/integrations
+homepage: https://wcm.agentrust-io.com
+license: Apache-2.0
+tier: community
+marketplace:
+  display_name: GCP Confidential Space
+  category: Model & weight custody
+  mark: GCS
+  keywords: [gcp, confidential-space, kms, workload-identity]
+wcm_roles:
+  - key-broker
+  - attestation-source
+wcm_conformance_levels:
+  - L2
+tested_against:
+  weight-custody-manifest: "0.26.0"

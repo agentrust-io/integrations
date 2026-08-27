@@ -1,6 +1,6 @@
 {
   "catalog_version": 1,
-  "count": 18,
+  "count": 32,
   "integrations": [
     {
       "name": "Claude Code",
@@ -203,6 +203,29 @@
       ]
     },
     {
+      "name": "Azure Secure Key Release",
+      "package_name": "WCM Azure Secure Key Release",
+      "vendor": "agentrust-io",
+      "description": "Translates a WCM release policy into an Azure Managed HSM Secure Key Release policy, and maps verified MAA claims into WCM composite evidence.",
+      "path": "integrations/wcm-azure-skr",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/wcm-azure-skr",
+      "homepage": "https://wcm.agentrust-io.com",
+      "repository": "https://github.com/agentrust-io/integrations",
+      "tier": "community",
+      "stack": [
+        "WCM"
+      ],
+      "category": "Model & weight custody",
+      "mark": "AZ",
+      "featured": null,
+      "keywords": [
+        "azure",
+        "key-vault",
+        "sev-snp",
+        "attestation"
+      ]
+    },
+    {
       "name": "comply54",
       "package_name": "comply54",
       "vendor": "comply54",
@@ -222,6 +245,29 @@
         "Africa",
         "regulation",
         "compliance"
+      ]
+    },
+    {
+      "name": "Confidential Containers Trustee",
+      "package_name": "WCM Confidential Containers Trustee",
+      "vendor": "agentrust-io",
+      "description": "Generates a Confidential Containers Trustee Rego resource policy and key resource layout from a WCM manifest, preferring the vTPM claim path.",
+      "path": "integrations/wcm-coco-trustee",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/wcm-coco-trustee",
+      "homepage": "https://wcm.agentrust-io.com",
+      "repository": "https://github.com/agentrust-io/integrations",
+      "tier": "community",
+      "stack": [
+        "WCM"
+      ],
+      "category": "Model & weight custody",
+      "mark": "CC",
+      "featured": null,
+      "keywords": [
+        "confidential-containers",
+        "trustee",
+        "kbs",
+        "rego"
       ]
     },
     {
@@ -247,6 +293,29 @@
       ]
     },
     {
+      "name": "GCP Confidential Space",
+      "package_name": "WCM GCP Confidential Space",
+      "vendor": "agentrust-io",
+      "description": "Generates a GCP Confidential Space workload identity attribute condition from a WCM manifest, comparing accepted measurements against the container image digest.",
+      "path": "integrations/wcm-gcp-confidential-space",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/wcm-gcp-confidential-space",
+      "homepage": "https://wcm.agentrust-io.com",
+      "repository": "https://github.com/agentrust-io/integrations",
+      "tier": "community",
+      "stack": [
+        "WCM"
+      ],
+      "category": "Model & weight custody",
+      "mark": "GCS",
+      "featured": null,
+      "keywords": [
+        "gcp",
+        "confidential-space",
+        "kms",
+        "workload-identity"
+      ]
+    },
+    {
       "name": "Google ADK",
       "package_name": "Google ADK",
       "vendor": "agentrust-io",
@@ -269,6 +338,29 @@
       ]
     },
     {
+      "name": "Hugging Face Download Gate",
+      "package_name": "Hugging Face WCM Download Gate",
+      "vendor": "agentrust-io",
+      "description": "Refuses a Hugging Face model snapshot whose bytes do not hash to the weights_hash bound by a jointly-signed WCM manifest shipped in the repository.",
+      "path": "integrations/wcm-huggingface",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/wcm-huggingface",
+      "homepage": "https://wcm.agentrust-io.com",
+      "repository": "https://github.com/agentrust-io/integrations",
+      "tier": "community",
+      "stack": [
+        "WCM"
+      ],
+      "category": "Model & weight custody",
+      "mark": "HF",
+      "featured": null,
+      "keywords": [
+        "huggingface",
+        "registry",
+        "integrity",
+        "download"
+      ]
+    },
+    {
       "name": "Nobulex",
       "package_name": "Nobulex",
       "vendor": "Nobulex",
@@ -288,6 +380,29 @@
         "receipts",
         "Ed25519",
         "evidence"
+      ]
+    },
+    {
+      "name": "NVIDIA GPU Attestation",
+      "package_name": "WCM NVIDIA GPU Attestation",
+      "vendor": "agentrust-io",
+      "description": "Adapts NVIDIA nvattest evidence and appraisal into a WCM GpuReport, refusing unless every RIM, nonce and live certificate check passed.",
+      "path": "integrations/wcm-nvidia-nras",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/wcm-nvidia-nras",
+      "homepage": "https://wcm.agentrust-io.com",
+      "repository": "https://github.com/agentrust-io/integrations",
+      "tier": "community",
+      "stack": [
+        "WCM"
+      ],
+      "category": "Model & weight custody",
+      "mark": "NV",
+      "featured": null,
+      "keywords": [
+        "nvidia",
+        "gpu",
+        "attestation",
+        "confidential-computing"
       ]
     },
     {
@@ -401,6 +516,213 @@
         "attestation",
         "sovp",
         "trace"
+      ]
+    },
+    {
+      "name": "Triton Repository Staging",
+      "package_name": "WCM Triton Repository Staging",
+      "vendor": "agentrust-io",
+      "description": "Prepares a Triton model repository under WCM attestation, verifying decrypted bytes against the bound weights hash before Triton can load them.",
+      "path": "integrations/wcm-triton",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/wcm-triton",
+      "homepage": "https://wcm.agentrust-io.com",
+      "repository": "https://github.com/agentrust-io/integrations",
+      "tier": "community",
+      "stack": [
+        "WCM"
+      ],
+      "category": "Frameworks",
+      "mark": "TR",
+      "featured": null,
+      "keywords": [
+        "triton",
+        "inference",
+        "model-repository",
+        "staging"
+      ]
+    },
+    {
+      "name": "vLLM Serving Guard",
+      "package_name": "WCM Serving Guard for vLLM",
+      "vendor": "agentrust-io",
+      "description": "Gates vLLM weight loading on WCM attestation and binds serving to a live lease, halting the process when the lease lapses.",
+      "path": "integrations/wcm-vllm",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/wcm-vllm",
+      "homepage": "https://wcm.agentrust-io.com",
+      "repository": "https://github.com/agentrust-io/integrations",
+      "tier": "community",
+      "stack": [
+        "WCM"
+      ],
+      "category": "Frameworks",
+      "mark": "VL",
+      "featured": null,
+      "keywords": [
+        "vllm",
+        "inference",
+        "lease",
+        "wipe-on-lapse"
+      ]
+    },
+    {
+      "name": "WCM Agent Manifest Binding",
+      "package_name": "WCM Agent Manifest Binding",
+      "vendor": "agentrust-io",
+      "description": "Binds an Agent Manifest model_identity artifact to a WCM manifest's weights hash, and reports what a matching digest does and does not establish.",
+      "path": "integrations/wcm-agent-manifest",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/wcm-agent-manifest",
+      "homepage": "https://wcm.agentrust-io.com",
+      "repository": "https://github.com/agentrust-io/integrations",
+      "tier": "community",
+      "stack": [
+        "WCM",
+        "Agent Manifest"
+      ],
+      "category": "Identity & trust",
+      "mark": "WAM",
+      "featured": null,
+      "keywords": [
+        "agent-manifest",
+        "model-identity",
+        "binding"
+      ]
+    },
+    {
+      "name": "WCM CycloneDX ML-BOM",
+      "package_name": "WCM CycloneDX ML-BOM",
+      "vendor": "agentrust-io",
+      "description": "Exports a WCM manifest as a CycloneDX 1.6 machine-learning-model component so custody terms reach licence review and procurement tooling.",
+      "path": "integrations/wcm-cyclonedx",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/wcm-cyclonedx",
+      "homepage": "https://wcm.agentrust-io.com",
+      "repository": "https://github.com/agentrust-io/integrations",
+      "tier": "community",
+      "stack": [
+        "WCM"
+      ],
+      "category": "Compliance",
+      "mark": "CDX",
+      "featured": null,
+      "keywords": [
+        "cyclonedx",
+        "ml-bom",
+        "procurement",
+        "licence"
+      ]
+    },
+    {
+      "name": "WCM in-toto Attestation",
+      "package_name": "WCM in-toto Attestation",
+      "vendor": "agentrust-io",
+      "description": "Wraps a signed WCM manifest as an in-toto Statement v1 so custody terms ride existing supply-chain tooling, and verifies the subject binding on the way back.",
+      "path": "integrations/wcm-in-toto",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/wcm-in-toto",
+      "homepage": "https://wcm.agentrust-io.com",
+      "repository": "https://github.com/agentrust-io/integrations",
+      "tier": "community",
+      "stack": [
+        "WCM"
+      ],
+      "category": "Model & weight custody",
+      "mark": "IT",
+      "featured": null,
+      "keywords": [
+        "in-toto",
+        "slsa",
+        "supply-chain",
+        "dsse"
+      ]
+    },
+    {
+      "name": "WCM Kyverno Policy Pack",
+      "package_name": "WCM Kyverno Policy Pack",
+      "vendor": "agentrust-io",
+      "description": "Generates a Kyverno ClusterPolicy enforcing the deployment preconditions a WCM manifest implies, and states in the policy what admission cannot verify.",
+      "path": "integrations/wcm-kyverno",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/wcm-kyverno",
+      "homepage": "https://wcm.agentrust-io.com",
+      "repository": "https://github.com/agentrust-io/integrations",
+      "tier": "community",
+      "stack": [
+        "WCM"
+      ],
+      "category": "Security & policy",
+      "mark": "KY",
+      "featured": null,
+      "keywords": [
+        "kubernetes",
+        "kyverno",
+        "admission",
+        "confidential-containers"
+      ]
+    },
+    {
+      "name": "WCM OCI Referrer",
+      "package_name": "WCM OCI Referrer",
+      "vendor": "agentrust-io",
+      "description": "Attaches a signed WCM manifest to a model artifact as an OCI v1.1 referrer, and grades how strongly the referrer binds to the actual weight bytes.",
+      "path": "integrations/wcm-oci",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/wcm-oci",
+      "homepage": "https://wcm.agentrust-io.com",
+      "repository": "https://github.com/agentrust-io/integrations",
+      "tier": "community",
+      "stack": [
+        "WCM"
+      ],
+      "category": "Model & weight custody",
+      "mark": "OCI",
+      "featured": null,
+      "keywords": [
+        "oci",
+        "oras",
+        "registry",
+        "referrers"
+      ]
+    },
+    {
+      "name": "WCM OpenTelemetry",
+      "package_name": "WCM OpenTelemetry",
+      "vendor": "agentrust-io",
+      "description": "Emits WCM key release decisions and runtime custody state as OpenTelemetry spans and metrics under a documented wcm.* attribute set.",
+      "path": "integrations/wcm-opentelemetry",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/wcm-opentelemetry",
+      "homepage": "https://wcm.agentrust-io.com",
+      "repository": "https://github.com/agentrust-io/integrations",
+      "tier": "community",
+      "stack": [
+        "WCM"
+      ],
+      "category": "Observability",
+      "mark": "OT",
+      "featured": null,
+      "keywords": [
+        "opentelemetry",
+        "metrics",
+        "spans",
+        "sre"
+      ]
+    },
+    {
+      "name": "WCM to TRACE",
+      "package_name": "WCM Key Release to TRACE",
+      "vendor": "agentrust-io",
+      "description": "Turns a WCM Layer 2 release decision and Layer 3 custody state into signable TRACE v0.2 Trust Records, deriving assurance from the checks that passed.",
+      "path": "integrations/wcm-trace",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/wcm-trace",
+      "homepage": "https://wcm.agentrust-io.com",
+      "repository": "https://github.com/agentrust-io/integrations",
+      "tier": "community",
+      "stack": [
+        "WCM",
+        "TRACE"
+      ],
+      "category": "Evidence & receipts",
+      "mark": "WT",
+      "featured": null,
+      "keywords": [
+        "custody",
+        "key-release",
+        "evidence"
       ]
     }
   ]

@@ -1,0 +1,3 @@
+weight-custody-manifest>=0.26.0
+# Triton is not a Python dependency: this runs before Triton starts, or is
+# invoked by a C repository agent. See the README.

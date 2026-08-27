@@ -1,0 +1,26 @@
+name: WCM Agent Manifest Binding
+vendor: agentrust-io
+integrates_with:
+  - wcm
+  - agent-manifest
+description: >-
+  Binds an Agent Manifest model_identity artifact to a WCM manifest's weights
+  hash, and reports what a matching digest does and does not establish.
+maintainer:
+  github: imran-siddique
+repository: https://github.com/agentrust-io/integrations
+homepage: https://wcm.agentrust-io.com
+license: Apache-2.0
+tier: community
+marketplace:
+  display_name: WCM Agent Manifest Binding
+  category: Identity & trust
+  mark: WAM
+  keywords: [agent-manifest, model-identity, binding]
+wcm_roles:
+  - manifest-verifier
+wcm_conformance_levels:
+  - L1
+tested_against:
+  weight-custody-manifest: "0.26.0"
+  agent-manifest: "0.11.1"

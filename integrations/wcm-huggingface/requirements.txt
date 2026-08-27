@@ -1,0 +1,4 @@
+weight-custody-manifest>=0.26.0
+# Downloads only. verify_snapshot works on an already-fetched directory with no
+# Hub dependency, so an air-gapped verifier does not need this.
+huggingface_hub>=0.24

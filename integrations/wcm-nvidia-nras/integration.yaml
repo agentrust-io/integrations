@@ -1,0 +1,22 @@
+name: WCM NVIDIA GPU Attestation
+vendor: agentrust-io
+integrates_with:
+  - wcm
+description: >-
+  Adapts NVIDIA nvattest evidence and appraisal into a WCM GpuReport, refusing
+  unless every RIM, nonce and live certificate check passed.
+maintainer:
+  github: imran-siddique
+repository: https://github.com/agentrust-io/integrations
+homepage: https://wcm.agentrust-io.com
+license: Apache-2.0
+tier: community
+marketplace:
+  display_name: NVIDIA GPU Attestation
+  category: Model & weight custody
+  mark: NV
+  keywords: [nvidia, gpu, attestation, confidential-computing]
+wcm_roles:
+  - attestation-source
+tested_against:
+  weight-custody-manifest: "0.26.0"

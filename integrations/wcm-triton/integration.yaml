@@ -1,0 +1,26 @@
+name: WCM Triton Repository Staging
+vendor: agentrust-io
+integrates_with:
+  - wcm
+description: >-
+  Prepares a Triton model repository under WCM attestation, verifying decrypted
+  bytes against the bound weights hash before Triton can load them.
+maintainer:
+  github: imran-siddique
+repository: https://github.com/agentrust-io/integrations
+homepage: https://wcm.agentrust-io.com
+license: Apache-2.0
+tier: community
+marketplace:
+  display_name: Triton Repository Staging
+  category: Frameworks
+  mark: TR
+  keywords: [triton, inference, model-repository, staging]
+wcm_roles:
+  - protected-runtime
+  - manifest-verifier
+wcm_conformance_levels:
+  - L1
+  - L2
+tested_against:
+  weight-custody-manifest: "0.26.0"

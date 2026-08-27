@@ -6,7 +6,7 @@ import nox
 
 
 nox.options.default_venv_backend = "venv"
-nox.options.sessions = ["capture_core", "trace_adapters", "capture_engines", "framework_adapters", "google_adk_adapter", "shadow_ai"]
+nox.options.sessions = ["capture_core", "trace_adapters", "capture_engines", "framework_adapters", "google_adk_adapter", "shadow_ai", "wcm_integrations"]
 
 
 def pytest(session: nox.Session, *paths: str) -> None:
@@ -64,3 +64,44 @@ def shadow_ai(session: nox.Session) -> None:
     session.install("pytest>=8", "pyyaml")
     session.env["PYTHONPATH"] = "integrations/shadow-ai/src"
     pytest(session, "integrations/shadow-ai/tests")
+
+
+@nox.session(python=["3.11", "3.12", "3.13"])
+def wcm_integrations(session: nox.Session) -> None:
+    """The Weight Custody Manifest integrations, against the published SDK.
+
+    Pinned to an exact release rather than a floor. These adapters are sensitive
+    to what the published package actually exports: 0.26.0 ships no
+    runtime_records module, and several of them work around that. A silent
+    upgrade should show up as a failing pin here, where the reason is written
+    down, rather than as a behaviour change nobody attributed to a dependency.
+
+    pyyaml and opentelemetry-api are test-only. The Kyverno generator emits YAML
+    without PyYAML on purpose and the OTel module is a no-op when the API is
+    absent; both are installed here so the tests can check the real thing rather
+    than a fake.
+    """
+    session.install(
+        "weight-custody-manifest==0.26.0",
+        "agent-manifest>=0.11.1",
+        "pytest>=8",
+        "pyyaml",
+        "opentelemetry-api>=1.25",
+    )
+    pytest(
+        session,
+        "integrations/wcm-agent-manifest",
+        "integrations/wcm-azure-skr",
+        "integrations/wcm-coco-trustee",
+        "integrations/wcm-cyclonedx",
+        "integrations/wcm-gcp-confidential-space",
+        "integrations/wcm-huggingface",
+        "integrations/wcm-in-toto",
+        "integrations/wcm-kyverno",
+        "integrations/wcm-nvidia-nras",
+        "integrations/wcm-oci",
+        "integrations/wcm-opentelemetry",
+        "integrations/wcm-trace",
+        "integrations/wcm-triton",
+        "integrations/wcm-vllm",
+    )

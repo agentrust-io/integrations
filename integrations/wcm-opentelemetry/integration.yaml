@@ -1,0 +1,22 @@
+name: WCM OpenTelemetry
+vendor: agentrust-io
+integrates_with:
+  - wcm
+description: >-
+  Emits WCM key release decisions and runtime custody state as OpenTelemetry
+  spans and metrics under a documented wcm.* attribute set.
+maintainer:
+  github: imran-siddique
+repository: https://github.com/agentrust-io/integrations
+homepage: https://wcm.agentrust-io.com
+license: Apache-2.0
+tier: community
+marketplace:
+  display_name: WCM OpenTelemetry
+  category: Observability
+  mark: OT
+  keywords: [opentelemetry, metrics, spans, sre]
+wcm_roles:
+  - evidence-consumer
+tested_against:
+  weight-custody-manifest: "0.26.0"

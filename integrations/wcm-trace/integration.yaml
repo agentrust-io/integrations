@@ -1,0 +1,26 @@
+name: WCM Key Release to TRACE
+vendor: agentrust-io
+integrates_with:
+  - wcm
+  - trace
+description: >-
+  Turns a WCM Layer 2 release decision and Layer 3 custody state into signable
+  TRACE v0.2 Trust Records, deriving assurance from the checks that passed.
+maintainer:
+  github: imran-siddique
+repository: https://github.com/agentrust-io/integrations
+homepage: https://wcm.agentrust-io.com
+license: Apache-2.0
+tier: community
+marketplace:
+  display_name: WCM to TRACE
+  category: Evidence & receipts
+  mark: WT
+  keywords: [custody, key-release, evidence]
+wcm_roles:
+  - evidence-consumer
+trace_roles:
+  - record-producer
+trace_conformance_level: 0
+tested_against:
+  weight-custody-manifest: "0.26.0"

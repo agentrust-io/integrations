@@ -1,0 +1,25 @@
+name: WCM Serving Guard for vLLM
+vendor: agentrust-io
+integrates_with:
+  - wcm
+description: >-
+  Gates vLLM weight loading on WCM attestation and binds serving to a live lease,
+  halting the process when the lease lapses.
+maintainer:
+  github: imran-siddique
+repository: https://github.com/agentrust-io/integrations
+homepage: https://wcm.agentrust-io.com
+license: Apache-2.0
+tier: community
+marketplace:
+  display_name: vLLM Serving Guard
+  category: Frameworks
+  mark: VL
+  keywords: [vllm, inference, lease, wipe-on-lapse]
+wcm_roles:
+  - protected-runtime
+wcm_conformance_levels:
+  - L2
+  - L3
+tested_against:
+  weight-custody-manifest: "0.26.0"

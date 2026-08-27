@@ -1,0 +1,24 @@
+name: Hugging Face WCM Download Gate
+vendor: agentrust-io
+integrates_with:
+  - wcm
+description: >-
+  Refuses a Hugging Face model snapshot whose bytes do not hash to the
+  weights_hash bound by a jointly-signed WCM manifest shipped in the repository.
+maintainer:
+  github: imran-siddique
+repository: https://github.com/agentrust-io/integrations
+homepage: https://wcm.agentrust-io.com
+license: Apache-2.0
+tier: community
+marketplace:
+  display_name: Hugging Face Download Gate
+  category: Model & weight custody
+  mark: HF
+  keywords: [huggingface, registry, integrity, download]
+wcm_roles:
+  - manifest-verifier
+wcm_conformance_levels:
+  - L1
+tested_against:
+  weight-custody-manifest: "0.26.0"
