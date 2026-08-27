@@ -1,6 +1,6 @@
 {
   "catalog_version": 1,
-  "count": 33,
+  "count": 34,
   "integrations": [
     {
       "name": "Claude Code",
@@ -427,6 +427,29 @@
         "gpu",
         "attestation",
         "confidential-computing"
+      ]
+    },
+    {
+      "name": "OpenAI Agents SDK",
+      "package_name": "OpenAI Agents SDK",
+      "vendor": "agentrust-io",
+      "description": "Emits a first-party TRACE Trust Record from OpenAI Agents SDK tracing, carrying tool and handoff identity with no payloads.",
+      "path": "integrations/openai-agents",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/openai-agents",
+      "homepage": null,
+      "repository": "https://github.com/agentrust-io/integrations",
+      "tier": "community",
+      "stack": [
+        "TRACE"
+      ],
+      "category": "Frameworks",
+      "mark": "OA",
+      "featured": null,
+      "keywords": [
+        "openai",
+        "agents",
+        "tracing",
+        "handoff"
       ]
     },
     {

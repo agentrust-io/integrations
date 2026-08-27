@@ -1,0 +1,4 @@
+agentrust-trace>=0.9.0
+# Only needed to attach the processor to a live run. Record construction is
+# importable without the SDK, so the honesty rules stay testable on their own.
+openai-agents>=0.22.0

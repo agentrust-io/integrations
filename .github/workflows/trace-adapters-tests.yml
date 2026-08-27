@@ -10,6 +10,7 @@ on:
       - "integrations/llamaindex/**"
       - "integrations/google-adk/**"
       - "integrations/openshell/**"
+      - "integrations/openai-agents/**"
       - ".github/workflows/trace-adapters-tests.yml"
   push:
     branches: [main]
@@ -21,6 +22,7 @@ on:
       - "integrations/llamaindex/**"
       - "integrations/google-adk/**"
       - "integrations/openshell/**"
+      - "integrations/openai-agents/**"
       - ".github/workflows/trace-adapters-tests.yml"
 
 permissions:
@@ -105,6 +107,14 @@ jobs:
           pip install ./packages/agentrust-trace-adapters pytest
           python -m pytest integrations/otel-genai/test_otel_to_trace.py -q
 
+      # Pydantic AI needs no adapter of its own: it instruments through
+      # OpenTelemetry and emits the GenAI conventions this adapter already maps.
+      # Verified against the released package rather than asserted (issue #96).
+      - name: Test released Pydantic AI coverage
+        run: |
+          pip install "pydantic-ai-slim==2.35.1" "opentelemetry-sdk>=1.25"
+          python -m pytest integrations/otel-genai/test_pydantic_ai_interop.py -q
+
   openshell-adapter:
     runs-on: ubuntu-latest
     steps:
@@ -142,6 +152,28 @@ jobs:
         run: |
           pip install "langchain-core==1.6.0" "langgraph==1.2.11"
           python -m pytest integrations/langchain/test_langgraph_interop.py -q
+
+  openai-agents-adapter:
+    # Two passes, on purpose. The first proves record construction and the
+    # honesty rules work without the SDK installed; the second runs a real
+    # released agent, which is what catches a renamed span field before it
+    # silently empties a transcript.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - name: Test the record rules without the SDK
+        run: |
+          pip install "agentrust-trace==0.9.0" pytest
+          python -m pytest integrations/openai-agents/test_openai_agents_to_trace.py -q
+      - name: Test released OpenAI Agents SDK interoperability
+        run: |
+          pip install "openai-agents==0.22.0"
+          python -m pytest integrations/openai-agents -q
 
   google-adk-adapter:
     runs-on: ubuntu-latest

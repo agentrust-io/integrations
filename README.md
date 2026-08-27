@@ -45,6 +45,7 @@ TRACE only works as a standard if it is genuinely neutral. Integrations are list
 | [SOVP](integrations/litzki-systems-sovp/) | Litzki Systems | trace | verified |
 | [LlamaIndex](integrations/llamaindex/) | agentrust-io | trace | community |
 | [Nobulex](integrations/nobulex/) | Nobulex | trace | community |
+| [OpenAI Agents SDK](integrations/openai-agents/) | agentrust-io | trace | community |
 | [OpenShell TRACE Adapter](integrations/openshell/) | agentrust-io | trace | community |
 | [OpenTelemetry GenAI](integrations/otel-genai/) | agentrust-io | trace | community |
 | [ramen-ai cMCP Adapter](integrations/ramen-ai-cmcp/) | ramen-ai | cmcp, trace | verified |
