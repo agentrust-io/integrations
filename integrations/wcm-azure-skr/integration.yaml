@@ -1,0 +1,25 @@
+name: WCM Azure Secure Key Release
+vendor: agentrust-io
+integrates_with:
+  - wcm
+description: >-
+  Translates a WCM release policy into an Azure Managed HSM Secure Key Release
+  policy, and maps verified MAA claims into WCM composite evidence.
+maintainer:
+  github: imran-siddique
+repository: https://github.com/agentrust-io/integrations
+homepage: https://wcm.agentrust-io.com
+license: Apache-2.0
+tier: community
+marketplace:
+  display_name: Azure Secure Key Release
+  category: Model & weight custody
+  mark: AZ
+  keywords: [azure, key-vault, sev-snp, attestation]
+wcm_roles:
+  - key-broker
+  - attestation-source
+wcm_conformance_levels:
+  - L2
+tested_against:
+  weight-custody-manifest: "0.26.0"

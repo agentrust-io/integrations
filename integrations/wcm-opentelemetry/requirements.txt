@@ -1,0 +1,4 @@
+weight-custody-manifest>=0.26.0
+# Optional at runtime: every method is a no-op when OTel is absent, so a library
+# instrumenting itself with this does not force the dependency on its users.
+opentelemetry-api>=1.25

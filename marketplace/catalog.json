@@ -1,6 +1,6 @@
 {
   "catalog_version": 1,
-  "count": 22,
+  "count": 25,
   "integrations": [
     {
       "name": "Claude Code",
@@ -200,6 +200,29 @@
         "budget",
         "spend",
         "cost"
+      ]
+    },
+    {
+      "name": "Azure Secure Key Release",
+      "package_name": "WCM Azure Secure Key Release",
+      "vendor": "agentrust-io",
+      "description": "Translates a WCM release policy into an Azure Managed HSM Secure Key Release policy, and maps verified MAA claims into WCM composite evidence.",
+      "path": "integrations/wcm-azure-skr",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/wcm-azure-skr",
+      "homepage": "https://wcm.agentrust-io.com",
+      "repository": "https://github.com/agentrust-io/integrations",
+      "tier": "community",
+      "stack": [
+        "WCM"
+      ],
+      "category": "Model & weight custody",
+      "mark": "AZ",
+      "featured": null,
+      "keywords": [
+        "azure",
+        "key-vault",
+        "sev-snp",
+        "attestation"
       ]
     },
     {
@@ -470,6 +493,52 @@
         "kyverno",
         "admission",
         "confidential-containers"
+      ]
+    },
+    {
+      "name": "WCM OCI Referrer",
+      "package_name": "WCM OCI Referrer",
+      "vendor": "agentrust-io",
+      "description": "Attaches a signed WCM manifest to a model artifact as an OCI v1.1 referrer, and grades how strongly the referrer binds to the actual weight bytes.",
+      "path": "integrations/wcm-oci",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/wcm-oci",
+      "homepage": "https://wcm.agentrust-io.com",
+      "repository": "https://github.com/agentrust-io/integrations",
+      "tier": "community",
+      "stack": [
+        "WCM"
+      ],
+      "category": "Model & weight custody",
+      "mark": "OCI",
+      "featured": null,
+      "keywords": [
+        "oci",
+        "oras",
+        "registry",
+        "referrers"
+      ]
+    },
+    {
+      "name": "WCM OpenTelemetry",
+      "package_name": "WCM OpenTelemetry",
+      "vendor": "agentrust-io",
+      "description": "Emits WCM key release decisions and runtime custody state as OpenTelemetry spans and metrics under a documented wcm.* attribute set.",
+      "path": "integrations/wcm-opentelemetry",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/wcm-opentelemetry",
+      "homepage": "https://wcm.agentrust-io.com",
+      "repository": "https://github.com/agentrust-io/integrations",
+      "tier": "community",
+      "stack": [
+        "WCM"
+      ],
+      "category": "Observability",
+      "mark": "OT",
+      "featured": null,
+      "keywords": [
+        "opentelemetry",
+        "metrics",
+        "spans",
+        "sre"
       ]
     },
     {
