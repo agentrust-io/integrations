@@ -27,7 +27,7 @@ jobs:
       - name: Install released packages
         run: |
           python -m pip install --upgrade pip
-          pip install "epi-recorder==4.4.1" agentrust-trace agentrust-trace-tests
+          pip install "epi-recorder==4.4.3" agentrust-trace agentrust-trace-tests
       - name: Emit a sample TRACE record
         run: python integrations/epilabs-epi-recorder/examples/emit_record.py trust-record.json
       - name: TRACE conformance Level 0
