@@ -1,6 +1,6 @@
 {
   "catalog_version": 1,
-  "count": 34,
+  "count": 35,
   "integrations": [
     {
       "name": "Claude Code",
@@ -314,6 +314,30 @@
         "runtime",
         "governance",
         "policy"
+      ]
+    },
+    {
+      "name": "EPI Recorder",
+      "package_name": "EPI Recorder",
+      "vendor": "EPI Labs",
+      "description": "Seals a portable .epi evidence file and emits a TRACE v0.2 log-import Trust Record (Level 0) via epi export trace; .epi hash is the transcript.",
+      "path": "integrations/epilabs-epi-recorder",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/epilabs-epi-recorder",
+      "homepage": "https://epilabs.org",
+      "repository": "https://github.com/mohdibrahimaiml/epi-recorder",
+      "tier": "community",
+      "stack": [
+        "TRACE",
+        "WCM"
+      ],
+      "category": "Evidence & receipts",
+      "mark": "EPI",
+      "featured": null,
+      "keywords": [
+        "evidence",
+        "seal",
+        "log-import",
+        ".epi"
       ]
     },
     {
