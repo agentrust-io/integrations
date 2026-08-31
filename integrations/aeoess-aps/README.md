@@ -7,8 +7,9 @@ against a Values Floor and returns an Ed25519-signed policy decision.
 This integration maps exactly one signed APS policy decision, the dict returned
 by `agent_passport.policy.evaluate_intent`, onto exactly one TRACE Trust Record
 (EAT profile `tag:agentrust-io.com,2026:trace-v0.2`). Nothing else in APS is
-mapped. Action receipts, revocation, identity binding, delegation chains and
-attribution are out of scope here.
+mapped. Action receipts, identity binding, delegation chains and attribution are
+out of scope here. TRACE revocation is examined below; this exporter emits no
+`TraceRevocation/1.0` statement and creates no revocation-store entry.
 
 ## Two different signatures
 
@@ -26,6 +27,49 @@ Conflating these two is the mistake this integration exists to avoid.
 Verifying signature 1 says an APS evaluator authorized this action. Verifying
 signature 2 says this exported record is the one the exporter produced. Neither
 implies the other.
+
+## Revocation
+
+APS revokes authority: a delegation (`RevocationRecord`, keyed by delegation id) or a
+principal binding (`PrincipalBindingRevocationV1`, keyed by binding id), each with a
+signed observation of what was checked. TRACE revokes a record-signing key and asserts
+its compromise. The two answer different questions, so the mapping is examined field by
+field and, for this exporter, produces no TRACE revocation object.
+
+TRACE's revocation surface is one mechanism that degrades gracefully: where an inclusion
+proof gives a record a log position, `TraceRevocation/1.0` (trace-spec main at
+`738358d`, unreleased) withdraws the key from that entry onward; where there is no
+inclusion entry, `docs/verification.md` section 3.2.3 falls back to binary revocation on
+the key, which is what `RevocationStore` in the released `agentrust-trace` 0.9.0
+implements. Both columns below are that one rule at two levels of evidence.
+
+| APS field or artifact | `RevocationStore` membership (0.9.0) | `TraceRevocation/1.0` (main `738358d`) |
+|---|---|---|
+| `RevocationRecord` (delegation id) | no_mapping | no_mapping |
+| `PrincipalBindingRevocationV1` (binding id) | no_mapping | no_mapping |
+| `revokedBy` | no_mapping | no_mapping: never `compromised_key_id`; APS withdraws an authority and asserts nothing about a key |
+| `revokedAt` / `revoked_at` | no_mapping (a membership test carries no time) | partial: `revoked_at`, converted to Unix seconds; informational in TRACE, not the boundary |
+| `reason` / `reason_code` | no_mapping | partial: `reason` as free text; a binding `reason_code` renders as text and loses its code semantics |
+| `affected_scope`, revocation ids, `revocation_artifact_digest` | no_mapping | no_mapping (`additionalProperties: false`) |
+| `SignedRevocationObservation` | no_mapping (the store carries no statement of what was checked) | no_mapping as statement (an observation withdraws nothing) and as bundle (cannot be constructed) |
+| `last_valid_entry_id`, `log_id`, `revocation_key_id`, `sig` (required to construct a statement) | not applicable | no_mapping: this exporter emits unsigned records with `transparency: none`, so it has no log position, no record-signing key and no TRACE signing contract; the two `partial` rows above are source correspondences only and cannot complete a statement without these |
+
+The `no_mapping` rows are a property of the record class, not pending work. An unsigned
+record with `transparency: none` has no inclusion entry and no signing key, so under
+section 3.2.3 it has no revocation surface at all, by construction. Nothing here becomes
+a `TraceRevocation/1.0` statement and no store entry is manufactured from an APS
+artifact.
+
+One observed divergence, kept as tested against 0.9.0: an empty `RevocationStore`
+accepts and an omitted store skips the check, while APS treats "no artifacts observed"
+as no evidence rather than as not revoked. TRACE's own section 3.2.3 takes the APS
+position at the bundle level (a verifier with no bundle reports that it performed no
+revocation check). The behaviour observed at `tested_against: 0.9.0` is retained here as a tested
+implementation result; agentrust-io/trace-spec#246 records it as inconsistent with
+section 3.2.3.
+
+The APS artifacts examined come from aeoess/agent-passport-system#123 (revocation
+verification corpus). Mapping questions and answers: agentrust-io/integrations#140.
 
 ## Run it
 

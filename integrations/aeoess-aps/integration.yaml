@@ -24,3 +24,7 @@ trace_roles:
   - record-producer
 tested_against:
   agentrust-trace: "0.9.0"
+  # trace-spec#236 (merged 2026-08-29, unreleased) changes the RevocationStore path:
+  # a callable returning a non-bool now fails closed instead of reading as not
+  # revoked. The revocation observations in README were made against 0.9.0 and
+  # are re-run on the release that carries #236.
