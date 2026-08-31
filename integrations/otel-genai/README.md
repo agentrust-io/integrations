@@ -46,6 +46,21 @@ Three inputs come from the operator, because telemetry does not carry them: the 
 | `tool_transcript.hash` | canonical digest over each `execute_tool` span's `gen_ai.tool.name`, `gen_ai.tool.call.id`, `gen_ai.tool.type` |
 | `tool_transcript.call_count` | number of `execute_tool` spans |
 
+## Pydantic AI interoperability
+
+Pydantic AI needs no dedicated adapter: its instrumentation emits OpenTelemetry
+GenAI spans that this adapter already accepts. CI pins Pydantic AI 2.35.1 and
+runs a released `Agent` with a `TestModel` and a real tool call, without network
+access.
+
+The result remains a telemetry transcription, with `origin.kind: log-import`
+and `appraisal.status: none`. The interoperability test also records the current
+boundary: Pydantic AI does not emit `gen_ai.tool.type`, so the transcript leaves
+that value unset. It emits `gen_ai.agent.call.id` where the conventions define
+`gen_ai.agent.id`; neither is used as the TRACE subject identity. Tool arguments,
+tool results, and input and output messages are emitted by default and remain
+excluded as payloads.
+
 ## What is deliberately not mapped
 
 `gen_ai.tool.call.arguments` and `gen_ai.tool.call.result` are **payloads**. Hashing them into the transcript would put request and response content into an artifact whose purpose is being handed to a third party. A test asserts that a span carrying an IBAN in its arguments produces the same transcript hash as one without, so the exclusion cannot regress silently.

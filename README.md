@@ -71,18 +71,22 @@ TRACE only works as a standard if it is genuinely neutral. Integrations are list
 | [scheduled-agents](scheduled-agents/) | agentrust-io | trace | community |
 <!-- integration-index:end -->
 
-### First-party framework coverage
+### Framework coverage
 
-| Framework | Adapter | Released framework exercised in CI | Evidence boundary |
-|---|---|---|---|
-| Google ADK | [Google ADK](integrations/google-adk/) | Yes - Google ADK 2.7.1 `InMemoryRunner` plugin lifecycle | Callback-visible invocation, model, and available tool identity; no payloads, retries, agent graph, function-body execution, or policy enforcement |
-| LangChain | [LangChain](integrations/langchain/) | Yes — LangChain Core 1.6.0 callback contract | Tool identity and outcome plus model identity; no chain topology or runnable state |
-| LangGraph | [LangChain](integrations/langchain/) | Yes — LangGraph 1.2.11 `StateGraph` with a nested tool call | Propagated tool callbacks; no nodes, edges, state transitions, checkpoints, or rollback decisions |
-| LlamaIndex | [LlamaIndex](integrations/llamaindex/) | No — current tests use representative event objects | Allow-listed tool and model fields; released-framework interoperability remains unverified |
+| Framework | Adapter | Evidence source | Released framework exercised in CI | Evidence boundary |
+|---|---|---|---|---|
+| Google ADK | [Google ADK](integrations/google-adk/) | First-party `BasePlugin` lifecycle | Yes - Google ADK 2.7.1 `InMemoryRunner` | Callback-visible invocation, model, and available tool identity; no payloads, retries, agent graph, function-body execution, or policy enforcement |
+| LangChain | [LangChain](integrations/langchain/) | First-party `BaseCallbackHandler` callbacks | Yes - LangChain Core 1.6.0 callback contract | Tool identity and outcome plus model identity; no chain topology or runnable state |
+| LangGraph | [LangChain](integrations/langchain/) | First-party LangChain callbacks propagated by the graph | Yes - LangGraph 1.2.11 `StateGraph` with a nested tool call | Propagated tool callbacks; no nodes, edges, state transitions, checkpoints, or rollback decisions |
+| LlamaIndex | [LlamaIndex](integrations/llamaindex/) | First-party `BaseEventHandler` events | No - current tests use representative event objects | Allow-listed tool and model fields; released-framework interoperability remains unverified |
+| OpenAI Agents SDK | [OpenAI Agents SDK](integrations/openai-agents/) | First-party `TracingProcessor` spans | Yes - OpenAI Agents SDK 0.22.0 scripted model and tool run | Tool, handoff, agent, and MCP identity and order; no payloads, reasoning traces, guardrail outcomes, session state, or retries |
+| Pydantic AI | [OpenTelemetry GenAI](integrations/otel-genai/) | OpenTelemetry GenAI transcription | Yes - Pydantic AI 2.35.1 `TestModel` with a tool call | Telemetry-reported model and tool identity; no payloads; absent `gen_ai.tool.type` is not inferred |
 
-“Adapter exists” and “released framework exercised” are separate claims here.
-The adapter README documents the evidence each callback surface can support; a
-missing graph or state concept is not inferred into the TRACE record.
+"Adapter exists" and "released framework exercised" are separate claims here.
+First-party hooks produce self-origin records with no `origin` block. Telemetry
+transcriptions carry their weaker evidence boundary explicitly. Each adapter
+README documents what its observation surface can support; a missing concept is
+not inferred into the TRACE record.
 
 The [Copilot](copilot/), [Cursor](cursor/), [Windsurf](windsurf/) and
 [Gemini CLI](gemini-cli/) drift checks are intentionally outside this manifest
