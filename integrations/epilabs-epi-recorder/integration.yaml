@@ -1,0 +1,29 @@
+name: EPI Recorder
+vendor: EPI Labs
+integrates_with:
+  - trace
+  - wcm
+description: >-
+  Seals a portable .epi evidence file and emits a TRACE v0.2 log-import
+  Trust Record (Level 0) via epi export trace; .epi hash is the transcript.
+maintainer:
+  github: mohdibrahimaiml
+  email: mohdibrahim@epilabs.org
+repository: https://github.com/mohdibrahimaiml/epi-recorder
+homepage: https://epilabs.org
+license: MIT
+tier: community
+marketplace:
+  display_name: EPI Recorder
+  category: Evidence & receipts
+  mark: EPI
+  keywords: [evidence, seal, log-import, .epi]
+trace_roles:
+  - record-producer
+trace_conformance_level: 0
+wcm_roles:
+  - attestation-source
+tested_against:
+  epi-recorder: "4.4.3"
+  agentrust-trace: "0.9.0"
+  agentrust-trace-tests: "0.5.1"
