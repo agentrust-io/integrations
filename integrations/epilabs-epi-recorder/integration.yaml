@@ -24,6 +24,5 @@ trace_conformance_level: 0
 wcm_roles:
   - attestation-source
 tested_against:
-  epi-recorder: "4.4.3"
   agentrust-trace: "0.9.0"
   agentrust-trace-tests: "0.5.1"
