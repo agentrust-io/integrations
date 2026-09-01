@@ -15,7 +15,7 @@ dependencies = [
 
 [project.optional-dependencies]
 test = [
-    "agentrust-trace-tests==0.5.0",
+    "agentrust-trace-tests==0.5.1",
     "pytest==9.1.1",
 ]
 
