@@ -253,7 +253,16 @@ class TestTraceConformance:
             finding.status for finding in findings if finding.code == "TR-SIG-005"
         ] == [Status.PASS]
 
-    def test_signed_software_record_fails_only_level_1_runtime_rule(self, trace_key):
+    def test_signed_software_record_fails_level_1_runtime_rules(self, trace_key):
+        """A software-only record fails Level 1 on runtime rules only.
+
+        Two of them as of agentrust-trace-tests 0.5.1. TR-RTE-001 is the platform
+        rule and has always fired here. TR-RTE-004 was added in 0.5.1 and fires
+        because no verifier nonce is supplied: this harness does not issue one, and
+        the record carries no ``runtime.nonce`` to match it if it did. The assertion
+        stays an exact comparison on purpose, so that a future change to the Level 1
+        finding set fails this test rather than passing silently.
+        """
         record = _build(_load("vector1_allowed.json"), iat=int(time.time()))
         results = run_trace_tests(record, "trace", level=1)
         failures = [
@@ -268,5 +277,10 @@ class TestTraceConformance:
                 "TR-RTE-001: runtime.platform 'software-only' is development-mode "
                 "and not acceptable for hardware-attested levels (Level 1 requires "
                 "a hardware TEE platform)",
-            )
+            ),
+            (
+                "TR-RTE-004",
+                "TR-RTE-004: Level 1+ verification requires the verifier's "
+                "expected nonce",
+            ),
         ]
