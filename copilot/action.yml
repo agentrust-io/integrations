@@ -39,10 +39,10 @@ runs:
   using: composite
   steps:
     # The engine imports agentrust-capture-core, which has no dependencies of its
-    # own, so this stays one small install rather than a tree. Pinned to a minor
-    # range so a core release cannot silently change what this check measures.
+    # own, so this stays one small install rather than a tree. The core ships in
+    # this action checkout, binding it to the same referenced revision.
     - shell: bash
-      run: pip install --quiet "$GITHUB_WORKSPACE/packages/agentrust-capture-core"
+      run: pip install --quiet "${{ github.action_path }}/../packages/agentrust-capture-core"
 
     - id: check
       shell: bash
