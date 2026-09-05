@@ -153,6 +153,20 @@ jobs:
           pip install "langchain-core==1.6.0" "langgraph==1.2.11"
           python -m pytest integrations/langchain/test_langgraph_interop.py -q
 
+  llamaindex-workflow-adapter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - name: Test released FunctionAgent workflow observation
+        run: |
+          pip install -r integrations/llamaindex/requirements-interop.txt
+          python -m pytest integrations/llamaindex -q
+
   openai-agents-adapter:
     # Two passes, on purpose. The first proves record construction and the
     # honesty rules work without the SDK installed; the second runs a real

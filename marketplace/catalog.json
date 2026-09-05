@@ -74,7 +74,7 @@
       "name": "LlamaIndex",
       "package_name": "LlamaIndex",
       "vendor": "agentrust-io",
-      "description": "Emits a TRACE Trust Record from LlamaIndex instrumentation events, reading an allow-list so payloads cannot leak.",
+      "description": "Emits a TRACE Trust Record from LlamaIndex instrumentation or per-run workflow tool requests, excluding argument and result fields.",
       "path": "integrations/llamaindex",
       "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/llamaindex",
       "homepage": null,

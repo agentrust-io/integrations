@@ -2,7 +2,7 @@ name: LlamaIndex
 vendor: agentrust-io
 integrates_with:
   - trace
-description: Emits a TRACE Trust Record from LlamaIndex instrumentation events, reading an allow-list so payloads cannot leak.
+description: Emits a TRACE Trust Record from LlamaIndex instrumentation or per-run workflow tool requests, excluding argument and result fields.
 maintainer:
   github: imran-siddique
 repository: https://github.com/agentrust-io/integrations
@@ -16,3 +16,6 @@ marketplace:
 trace_roles:
   - record-producer
 trace_conformance_level: 0
+tested_against:
+  agentrust-trace: "0.9.0"
+  agentrust-trace-tests: "0.5.1"
