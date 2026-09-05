@@ -1,0 +1,8 @@
+# Exact released surfaces exercised by test_llamaindex_interop.py.
+# Keep the framework-free evidence tests separate from this install.
+pytest==9.1.1
+agentrust-trace==0.9.0
+agentrust-trace-tests==0.5.1
+llama-index-core==0.14.24
+llama-index-workflows==2.23.3
+llama-index-instrumentation==0.6.0
