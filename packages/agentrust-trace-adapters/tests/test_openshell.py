@@ -1,8 +1,13 @@
 from __future__ import annotations
 
 import json
+import time
 
 import pytest
+from agentrust_trace import generate_key, key_to_jwk, sign_record, verify_record
+from agentrust_trace.models import TrustRecord
+from agentrust_trace.validate import validate_json
+from cryptography.exceptions import InvalidSignature
 
 from agentrust_trace_adapters import (
     MissingEvidence,
@@ -10,6 +15,7 @@ from agentrust_trace_adapters import (
     build_openshell_record,
     build_policy_bundle,
     build_transcript,
+    software_measurement,
 )
 
 JWK = {
@@ -79,16 +85,59 @@ def test_builds_honest_software_only_record() -> None:
         "source_event_id": "sbx-123",
     }
     assert record["runtime"]["platform"] == "software-only"
+    assert record["runtime"]["measurement"] == software_measurement(
+        "nvidia-openshell/0.0.105", record["subject"], record["policy"]["bundle_hash"]
+    )
     assert record["appraisal"]["status"] == "none"
+    assert record["appraisal"]["verifier"] == (
+        "https://github.com/agentrust-io/integrations/tree/main/integrations/openshell"
+    )
     assert record["policy"]["enforcement_mode"] == "enforce"
     assert record["tool_transcript"]["call_count"] == 1
     assert "transparency" not in record
 
 
-def test_output_validates_with_released_trace_model() -> None:
-    models = pytest.importorskip("agentrust_trace.models")
-    parsed = models.TrustRecord.model_validate(build())
+@pytest.mark.parametrize("version", ["0.0.105", "v0.0.105"])
+def test_output_validates_with_released_trace_model_and_schema(version: str) -> None:
+    record = build(evidence(openshell_version=version))
+    parsed = TrustRecord.model_validate(record)
     assert parsed.origin.kind == "third-party-control-plane"
+    assert parsed.origin.producer == f"nvidia-openshell/{version}"
+    # The model alone accepts a plain string for appraisal.verifier; the
+    # released JSON Schema additionally enforces its URI format.
+    validate_json(record)
+
+
+def test_signed_record_binds_the_unappraised_adapter_identity() -> None:
+    key = generate_key()
+    public_jwk = key_to_jwk(key)
+    record = build()
+    record["cnf"]["jwk"] = public_jwk
+    # The deterministic mapping fixture has a historical timestamp. Sign a
+    # fresh record here without disabling the released verifier's age check.
+    record["iat"] = int(time.time())
+    signed = sign_record(record, key)
+
+    validate_json(signed)
+    verify_record(signed, public_jwk)
+    assert signed["appraisal"] == {
+        "status": "none",
+        "verifier": (
+            "https://github.com/agentrust-io/integrations/tree/main/integrations/openshell"
+        ),
+    }
+    assert signed["origin"]["producer"] == "nvidia-openshell/0.0.105"
+    assert signed["runtime"]["platform"] == "software-only"
+
+    # Another well-formed URI still passes schema validation, but changing the
+    # signed identity must fail cryptographic verification against our key.
+    substituted = {
+        **signed,
+        "appraisal": {**signed["appraisal"], "verifier": "https://example.org/other"},
+    }
+    validate_json(substituted)
+    with pytest.raises(InvalidSignature):
+        verify_record(substituted, public_jwk)
 
 
 def test_policy_bundle_is_deterministic_and_binds_revision_and_both_layers() -> None:
