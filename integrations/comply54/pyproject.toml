@@ -9,8 +9,8 @@ description = "Converts comply54 ComplianceResult decisions into signed TRACE Tr
 requires-python = ">=3.11"
 license = "Apache-2.0"
 dependencies = [
-    "PyJWT>=2.8.0",
-    "cryptography>=42.0.0",
+    "PyJWT>=2.13.0",
+    "cryptography>=50.0.0",
 ]
 
 [project.optional-dependencies]
