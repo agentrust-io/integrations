@@ -14,6 +14,7 @@ import json
 import pathlib
 import socket
 import sys
+from contextvars import ContextVar
 
 import pytest
 from agentrust_trace.models import TrustRecord
@@ -44,8 +45,46 @@ def no_network(monkeypatch):
     def refuse(*args, **kwargs):
         raise AssertionError("the released-framework test must remain offline")
 
-    monkeypatch.setattr(socket.socket, "connect", refuse)
+    # Windows builds asyncio's internal socket pair using loopback TCP.
+    # Exempt only that synchronous construction, in this execution context.
+    # Ordinary loopback connections and connections on other threads stay blocked.
+    creating_pair = ContextVar("creating_socketpair", default=False)
+    original_pair = socket.socketpair
+    original_connect = socket.socket.connect
+
+    def local_pair(*args, **kwargs):
+        token = creating_pair.set(True)
+        try:
+            return original_pair(*args, **kwargs)
+        finally:
+            creating_pair.reset(token)
+
+    def guarded_connect(sock, address):
+        if (
+            creating_pair.get()
+            and isinstance(address, tuple)
+            and address[0] in ("127.0.0.1", "::1")
+        ):
+            return original_connect(sock, address)
+        refuse()
+
+    monkeypatch.setattr(socket, "socketpair", local_pair)
+    monkeypatch.setattr(socket.socket, "connect", guarded_connect)
     monkeypatch.setattr(socket, "getaddrinfo", refuse)
+
+
+def test_offline_guard_allows_socketpair_but_blocks_connections():
+    left, right = socket.socketpair()
+    with left, right:
+        right.settimeout(1)
+        left.sendall(b"local")
+        assert right.recv(5) == b"local"
+    for host in ("127.0.0.1", "192.0.2.1"):
+        with socket.socket() as sock:
+            with pytest.raises(AssertionError, match="must remain offline"):
+                sock.connect((host, 9))
+    with pytest.raises(AssertionError, match="must remain offline"):
+        socket.getaddrinfo("example.invalid", 443)
 
 
 def model_for_calls(calls):
