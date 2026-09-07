@@ -52,7 +52,7 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
-      - run: pip install build twine
+      - run: pip install --require-hashes -r requirements/release.txt
       - name: Build wheel and sdist
         working-directory: packages/agentrust-capture-core
         run: python -m build
@@ -68,7 +68,9 @@ jobs:
         run: |
           set -euo pipefail
           python -m venv /tmp/smoke
-          /tmp/smoke/bin/pip install --quiet dist/*.whl pytest
+          # The wheel under test is deliberately unpinned; the runner is not.
+          /tmp/smoke/bin/pip install --quiet --require-hashes -r "$GITHUB_WORKSPACE/requirements/smoke.txt"
+          /tmp/smoke/bin/pip install --quiet --no-deps dist/*.whl
           /tmp/smoke/bin/python - <<'PY'
           import agentrust_capture_core as core
           import sys

@@ -24,7 +24,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install independent provenance verifier
-        run: python -m pip install --disable-pip-version-check pypi-attestations==0.0.30
+        run: python -m pip install --disable-pip-version-check --require-hashes -r requirements/provenance.txt
       - name: Resolve the published wheel and source distribution
         id: distributions
         env:
@@ -75,12 +75,15 @@ jobs:
         run: |
           set -euo pipefail
           python -m venv /tmp/released-package
+          # The released version is the subject of this check, so it stays
+          # resolved from PyPI; the harness around it comes from the lock.
+          /tmp/released-package/bin/pip install --require-hashes \
+            -r "$GITHUB_WORKSPACE/requirements/smoke.txt"
           /tmp/released-package/bin/pip install \
             --disable-pip-version-check \
             --no-cache-dir \
-            "agentrust-trace-adapters==$VERSION" \
-            agentrust-trace-tests==0.5.0 \
-            pytest
+            --no-deps \
+            "agentrust-trace-adapters==$VERSION"
       - name: Exercise the released adapter with the signed OpenShell proof
         run: |
           set -euo pipefail

@@ -1,0 +1,7 @@
+# Release tooling for the capture-core and trace-adapters publish workflows.
+# These jobs build and upload to PyPI, so an unpinned resolution here is the
+# most consequential one in the repo. Compile with:
+#   uv pip compile requirements/release.in --generate-hashes --universal \
+#     --python-version 3.11 -o requirements/release.txt
+build
+twine

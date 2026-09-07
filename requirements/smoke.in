@@ -1,0 +1,7 @@
+# The post-publish smoke tests install the wheel that was just built, which is
+# deliberately not pinned, alongside a test runner that should be. This lock
+# covers only that runner and the conformance suite. Compile with:
+#   uv pip compile requirements/smoke.in --generate-hashes --universal \
+#     --python-version 3.11 -o requirements/smoke.txt
+pytest
+agentrust-trace-tests==0.5.0
