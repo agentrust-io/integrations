@@ -2,5 +2,5 @@
 #   uv pip compile requirements/capture-core.in --generate-hashes --universal \
 #     --python-version 3.9 -o requirements/capture-core.txt
 # agentrust-capture-core has no runtime dependencies; this is its dev extra.
-pytest>=8.0
+pytest>=9.0.3
 ruff>=0.4

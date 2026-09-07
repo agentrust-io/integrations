@@ -4,4 +4,4 @@
 # pytest 9.1.1, the runner for every job whose matrix starts at 3.11.
 # The agentrust-codex drift-without-signing job cannot use this one: it runs
 # on 3.9, which no pytest 9.x supports. See requirements/pytest-8.in.
-pytest==9.1.1
+pytest==9.0.3

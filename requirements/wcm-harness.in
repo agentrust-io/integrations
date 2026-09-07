@@ -3,5 +3,5 @@
 #     --python-version 3.11 -o requirements/wcm-harness.txt
 # The runner for the WCM integration jobs. The published SDKs those jobs
 # exist to test against stay resolved from PyPI, so they are not here.
-pytest>=8
+pytest>=9.0.3
 pyyaml

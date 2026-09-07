@@ -8,4 +8,4 @@
 # Compile with:
 #   uv pip compile requirements/pytest-8.in --generate-hashes --universal \
 #     --python-version 3.9 -o requirements/pytest-8.txt
-pytest==8.4.2
+pytest==9.0.3
