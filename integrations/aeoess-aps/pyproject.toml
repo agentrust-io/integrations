@@ -9,7 +9,10 @@ description = "Maps signed Agent Passport System policy decisions onto TRACE Tru
 requires-python = ">=3.11"
 license = "Apache-2.0"
 dependencies = [
-  "agentrust-trace>=0.5",
+  # 0.10.0 is the floor: verify_record enforces the full v0.2 schema from
+  # that release, which is what makes this integration's partial record a
+  # documented boundary rather than an accident. See the round-trip tests.
+  "agentrust-trace>=0.10.0",
   "agent-passport-system>=2.10",
 ]
 

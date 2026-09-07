@@ -248,10 +248,48 @@ def test_non_dict_is_refused():
 
 # --- TRACE sign and verify round-trip ---------------------------------------
 
-def test_sign_verify_roundtrip(record):
+def test_signed_record_passes_trace_tests_level_0(record):
+    """Signing works and the signature checks out, on a deliberately partial record.
+
+    Level 0 is this integration's gate, as the README says. The unsigned record
+    leaves TR-SIG-005 UNVERIFIED; once signed, nothing should be unverified.
+    """
+    runner = pytest.importorskip("trace_tests.runner")
+    from trace_tests.result import Status
+
     key = agentrust_trace.generate_key()
     signed = agentrust_trace.sign_record(dict(record), key)
-    agentrust_trace.verify_record(signed, allow_embedded_key=True, max_age_seconds=None)
+    assert signed["signature"]
+
+    results = runner.run(signed, "trace", 0)
+    findings = [f for module in results.values() for f in module]
+
+    assert [f.code for f in findings if f.status is Status.FAIL] == []
+    assert [f.code for f in findings if f.status is Status.UNVERIFIED] == []
+
+
+def test_full_verify_record_refuses_a_partial_record(record):
+    """The boundary this integration lives on, asserted rather than assumed.
+
+    agentrust-trace 0.10.0 made ``verify_record`` enforce the full v0.2 schema,
+    on the stated grounds that "signature validity is not schema validity": a
+    caller must not be able to treat a signed object missing required claims as
+    a verified Trust Record. That rule is right, and this record is deliberately
+    missing three of them, see DOCUMENTED_ABSENT_REQUIRED and the "Deliberately
+    absent" section of aps_trace.py.
+
+    So the round-trip this test used to assert is one the format no longer
+    offers, and should not. Pinning the refusal means the day APS starts
+    carrying a model identity, somebody has to come here and decide that
+    deliberately rather than discover it through a green suite.
+    """
+    key = agentrust_trace.generate_key()
+    signed = agentrust_trace.sign_record(dict(record), key)
+
+    with pytest.raises(ValueError, match="does not conform to the TRACE v0.2 schema"):
+        agentrust_trace.verify_record(
+            signed, allow_embedded_key=True, max_age_seconds=None
+        )
 
 
 def test_tampered_signed_record_fails_verification(record):

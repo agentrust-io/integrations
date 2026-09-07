@@ -1,5 +1,7 @@
 # Compile with:
 #   uv pip compile requirements/pytest-9.in --generate-hashes --universal \
 #     --python-version 3.11 -o requirements/pytest-9.txt
-# pytest 9.1.1, the runner several capture jobs pin explicitly.
+# pytest 9.1.1, the runner for every job whose matrix starts at 3.11.
+# The agentrust-codex drift-without-signing job cannot use this one: it runs
+# on 3.9, which no pytest 9.x supports. See requirements/pytest-8.in.
 pytest==9.1.1

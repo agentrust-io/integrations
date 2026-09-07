@@ -1,7 +1,11 @@
+# pytest 8.4.2 for the agentrust-codex drift-without-signing job.
+#
+# Not drift, and not interchangeable with pytest-9.txt. That job's matrix is
+# ["3.9", "3.11", "3.13"], and 8.4.2 is the newest pytest that still supports
+# Python 3.9; every 9.x release requires >=3.10. Unifying the two locks on 9.1.1
+# would break the 3.9 leg.
+#
 # Compile with:
 #   uv pip compile requirements/pytest-8.in --generate-hashes --universal \
 #     --python-version 3.9 -o requirements/pytest-8.txt
-# pytest 8.4.2, pinned by the agentrust-codex no-signing job. Kept distinct
-# from pytest-9 rather than unified: the divergence is undocumented and
-# changing a test runner version is not this change's business.
 pytest==8.4.2
