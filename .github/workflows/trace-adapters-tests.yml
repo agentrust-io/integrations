@@ -44,7 +44,8 @@ jobs:
       - name: Test against the released TRACE model
         working-directory: packages/agentrust-trace-adapters
         run: |
-          pip install pytest .
+          pip install --require-hashes -r ../../requirements/adapters.txt
+          pip install --no-deps .
           python -m pytest tests -q
 
   # The job that would have caught the defect this package was written to prevent.
@@ -61,7 +62,10 @@ jobs:
           python-version: "3.12"
       - name: Build a record with the DecisionAssure adapter and validate it
         run: |
-          pip install ./packages/agentrust-trace-adapters
+          # The local package goes in with --no-deps; its dependency comes
+          # from the lock, so nothing here resolves against PyPI.
+          pip install --require-hashes -r requirements/adapters.txt
+          pip install --no-deps ./packages/agentrust-trace-adapters
           python - <<'PY'
           import importlib.util, json
           from agentrust_trace.models import TrustRecord
@@ -104,7 +108,10 @@ jobs:
           python-version: "3.12"
       - name: Test the OTel GenAI adapter
         run: |
-          pip install ./packages/agentrust-trace-adapters pytest
+          # The local package goes in with --no-deps; its dependency comes
+          # from the lock, so nothing here resolves against PyPI.
+          pip install --require-hashes -r requirements/adapters.txt
+          pip install --no-deps ./packages/agentrust-trace-adapters
           python -m pytest integrations/otel-genai/test_otel_to_trace.py -q
 
       # Pydantic AI needs no adapter of its own: it instruments through
@@ -112,7 +119,7 @@ jobs:
       # Verified against the released package rather than asserted (issue #96).
       - name: Test released Pydantic AI coverage
         run: |
-          pip install "pydantic-ai-slim==2.35.1" "opentelemetry-sdk>=1.25"
+          pip install --require-hashes -r requirements/sdk-pydantic-ai.txt
           python -m pytest integrations/otel-genai/test_pydantic_ai_interop.py -q
 
   openshell-adapter:
@@ -126,7 +133,10 @@ jobs:
           python-version: "3.12"
       - name: Test OpenShell evidence mapping against released TRACE
         run: |
-          pip install ./packages/agentrust-trace-adapters pytest
+          # The local package goes in with --no-deps; its dependency comes
+          # from the lock, so nothing here resolves against PyPI.
+          pip install --require-hashes -r requirements/adapters.txt
+          pip install --no-deps ./packages/agentrust-trace-adapters
           python -m pytest packages/agentrust-trace-adapters/tests/test_openshell.py integrations/openshell/test_demo.py -q
           python integrations/openshell/demo/build_signed_record.py --output /tmp/signed-record.json
 
@@ -143,14 +153,14 @@ jobs:
         run: |
           # Keep the record builder and honesty rules usable without installing
           # an agent framework. Framework interoperability is a separate gate.
-          pip install "agentrust-trace>=0.9" pytest
+          pip install --require-hashes -r requirements/adapters-no-framework.txt
           python -m pytest \
             integrations/langchain/test_langchain_to_trace.py \
             integrations/llamaindex/test_llamaindex_to_trace.py \
             -q
       - name: Test released LangChain and LangGraph interoperability
         run: |
-          pip install "langchain-core==1.6.0" "langgraph==1.2.11"
+          pip install --require-hashes -r requirements/sdk-langchain.txt
           python -m pytest integrations/langchain/test_langgraph_interop.py -q
 
   openai-agents-adapter:
@@ -168,11 +178,11 @@ jobs:
           python-version: "3.12"
       - name: Test the record rules without the SDK
         run: |
-          pip install "agentrust-trace==0.9.0" pytest
+          pip install --require-hashes -r requirements/adapters-trace-090.txt
           python -m pytest integrations/openai-agents/test_openai_agents_to_trace.py -q
       - name: Test released OpenAI Agents SDK interoperability
         run: |
-          pip install "openai-agents==0.22.0"
+          pip install --require-hashes -r requirements/sdk-openai-agents.txt
           python -m pytest integrations/openai-agents -q
 
   google-adk-adapter:
@@ -186,11 +196,11 @@ jobs:
           python-version: "3.12"
       - name: Test evidence rules without Google ADK
         run: |
-          pip install "agentrust-trace==0.9.0" pytest
+          pip install --require-hashes -r requirements/adapters-trace-090.txt
           python -m pytest integrations/google-adk/test_google_adk_to_trace.py -q
       - name: Test released Google ADK interoperability and evidence rules
         run: |
-          pip install "google-adk==2.7.1" "agentrust-trace-tests==0.5.0"
+          pip install --require-hashes -r requirements/sdk-google-adk.txt
           python -m pytest \
             integrations/google-adk/test_google_adk_to_trace.py \
             integrations/google-adk/test_google_adk_interop.py \

@@ -1,0 +1,7 @@
+# Compile with:
+#   uv pip compile requirements/adapters-trace-090.in --generate-hashes --universal \
+#     --python-version 3.11 -o requirements/adapters-trace-090.txt
+# Same first-pass role, pinned to the exact TRACE release the openai-agents
+# and google-adk jobs assert against.
+agentrust-trace==0.9.0
+pytest

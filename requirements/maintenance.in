@@ -1,0 +1,5 @@
+# Compile with:
+#   uv pip compile requirements/maintenance.in --generate-hashes --universal \
+#     --python-version 3.11 -o requirements/maintenance.txt
+# The maintenance report script.
+pyyaml

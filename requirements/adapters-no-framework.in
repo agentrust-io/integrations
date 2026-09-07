@@ -1,0 +1,8 @@
+# Compile with:
+#   uv pip compile requirements/adapters-no-framework.in --generate-hashes --universal \
+#     --python-version 3.11 -o requirements/adapters-no-framework.txt
+# First pass for the framework adapter jobs: the record builder and honesty
+# rules must work with no agent framework installed. Deliberately carries no
+# SDK; the framework locks below are applied in the second step only.
+agentrust-trace>=0.9
+pytest

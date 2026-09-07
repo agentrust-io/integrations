@@ -1,0 +1,6 @@
+# Compile with:
+#   uv pip compile requirements/sdk-pydantic-ai.in --generate-hashes --universal \
+#     --python-version 3.11 -o requirements/sdk-pydantic-ai.txt
+# Second pass only: released Pydantic AI, which instruments through OTel.
+pydantic-ai-slim==2.35.1
+opentelemetry-sdk>=1.25

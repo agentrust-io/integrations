@@ -18,7 +18,7 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
-      - run: pip install pyyaml
+      - run: pip install --require-hashes -r requirements/maintenance.txt
       - run: python scripts/maintenance_report.py | tee maintenance-report.txt
         env:
           GITHUB_TOKEN: ${{ github.token }}

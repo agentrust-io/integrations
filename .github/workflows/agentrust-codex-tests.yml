@@ -34,7 +34,10 @@ jobs:
           python-version: "${{ matrix.python-version }}"
       - name: Run capture tests without the signing packages
         run: |
-          pip install ./packages/agentrust-capture-core pytest==8.4.2
+          # The local package goes in with --no-deps: it has no runtime
+          # dependencies of its own, so nothing here resolves against PyPI.
+          pip install --require-hashes -r requirements/pytest-8.txt
+          pip install --no-deps ./packages/agentrust-capture-core
           python -m pytest plugins/agentrust-codex/tests -q
 
   signing:
@@ -52,7 +55,13 @@ jobs:
           python-version: "${{ matrix.python-version }}"
       - name: Run signing and conformance tests
         run: |
-          pip install ./packages/agentrust-capture-core pytest==9.1.1 -r plugins/agentrust-codex/requirements.txt
+          # The local package goes in with --no-deps: it has no runtime
+          # dependencies of its own, so nothing here resolves against PyPI.
+          pip install --require-hashes -r requirements/pytest-9.txt
+          pip install --no-deps ./packages/agentrust-capture-core
+          # The plugin's own requirements are the subject of this test, so they
+          # stay resolved from PyPI rather than pinned.
+          pip install -r plugins/agentrust-codex/requirements.txt
           python -m pytest plugins/agentrust-codex/tests -q
 
   structure:
@@ -66,5 +75,5 @@ jobs:
           python-version: "3.12"
       - name: Validate integration and plugin structure
         run: |
-          pip install jsonschema==4.26.0 pyyaml==6.0.3
+          pip install --require-hashes -r requirements/codex-schema.txt
           python plugins/agentrust-codex/tests/validate_structure.py

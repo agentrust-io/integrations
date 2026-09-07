@@ -43,11 +43,12 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install the published SDK and test-only extras
         run: |
+          # The runner is pinned; the published SDKs this job exists to test
+          # against stay resolved from PyPI.
+          pip install --require-hashes -r requirements/wcm-harness.txt
           pip install \
             "weight-custody-manifest==0.27.0" \
             "agent-manifest>=0.11.1" \
-            "pytest>=8" \
-            pyyaml \
             "opentelemetry-api>=1.25"
       - name: Run the integration tests
         run: python -m pytest integrations/wcm-* -q
@@ -66,7 +67,8 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
-      - run: pip install "weight-custody-manifest==0.27.0" "pytest>=8"
+      - run: pip install --require-hashes -r requirements/wcm-harness.txt
+      - run: pip install "weight-custody-manifest==0.27.0"
       - run: |
           python -m pytest \
             integrations/wcm-triton/test_wcm_triton.py \

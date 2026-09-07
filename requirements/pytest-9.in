@@ -1,0 +1,5 @@
+# Compile with:
+#   uv pip compile requirements/pytest-9.in --generate-hashes --universal \
+#     --python-version 3.11 -o requirements/pytest-9.txt
+# pytest 9.1.1, the runner several capture jobs pin explicitly.
+pytest==9.1.1

@@ -29,7 +29,10 @@ jobs:
           python-version: "3.12"
       - name: Run the drift suite without the signing packages
         run: |
-          pip install ./packages/agentrust-capture-core pytest==9.1.1
+          # The local package goes in with --no-deps: it has no runtime
+          # dependencies of its own, so nothing here resolves against PyPI.
+          pip install --require-hashes -r requirements/pytest-9.txt
+          pip install --no-deps ./packages/agentrust-capture-core
           cd scheduled-agents
           python -m pytest tests -q
 
@@ -50,5 +53,11 @@ jobs:
       - name: Run full suite (with crypto packages)
         working-directory: scheduled-agents
         run: |
-          pip install ../packages/agentrust-capture-core pytest==9.1.1 -r requirements.txt
+          # The local package goes in with --no-deps: it has no runtime
+          # dependencies of its own, so nothing here resolves against PyPI.
+          pip install --require-hashes -r ../requirements/pytest-9.txt
+          pip install --no-deps ../packages/agentrust-capture-core
+          # The plugin's own requirements are the subject of this test, so they
+          # stay resolved from PyPI rather than pinned.
+          pip install -r requirements.txt
           python -m pytest tests -q

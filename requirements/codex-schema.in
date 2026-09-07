@@ -1,0 +1,6 @@
+# Compile with:
+#   uv pip compile requirements/codex-schema.in --generate-hashes --universal \
+#     --python-version 3.11 -o requirements/codex-schema.txt
+# Schema checks for the agentrust-codex plugin.
+jsonschema==4.26.0
+pyyaml==6.0.3

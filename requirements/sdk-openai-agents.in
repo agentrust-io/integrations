@@ -1,0 +1,5 @@
+# Compile with:
+#   uv pip compile requirements/sdk-openai-agents.in --generate-hashes --universal \
+#     --python-version 3.11 -o requirements/sdk-openai-agents.txt
+# Second pass only: the released OpenAI Agents SDK.
+openai-agents==0.22.0
