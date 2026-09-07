@@ -1,3 +1,13 @@
+# Also the runner for agentrust-codex drift-without-signing, whose matrix is
+# ["3.9", "3.11", "3.13"]. Compiled at 3.9 so the resolution is conditional:
+# pytest 9.1.1 on >=3.10, 8.4.2 on 3.9.
+#
+# 8.4.2 is the newest pytest that supports 3.9, and every 9.x requires >=3.10.
+# GHSA-6w46-j5rx-g56g (tmpdir handling) is fixed in 9.0.3, so there is no
+# non-vulnerable pytest for 3.9 at all. The conditional pin confines that to the
+# single 3.9 leg instead of holding every job back; dropping 3.9 support is the
+# only thing that would remove it entirely.
+#
 # Compile with:
 #   uv pip compile requirements/capture-core.in --generate-hashes --universal \
 #     --python-version 3.9 -o requirements/capture-core.txt
