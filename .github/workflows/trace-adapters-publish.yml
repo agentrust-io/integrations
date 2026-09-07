@@ -46,7 +46,7 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
-      - run: pip install build twine
+      - run: pip install --require-hashes -r requirements/release.txt
       - name: Build and inspect artifacts
         working-directory: packages/agentrust-trace-adapters
         run: |
@@ -55,7 +55,9 @@ jobs:
       - name: Smoke-test installed wheel and signed OpenShell proof
         run: |
           python -m venv /tmp/smoke
-          /tmp/smoke/bin/pip install --quiet packages/agentrust-trace-adapters/dist/*.whl agentrust-trace-tests==0.5.0 pytest
+          # The wheel under test is deliberately unpinned; the runner is not.
+          /tmp/smoke/bin/pip install --quiet --require-hashes -r requirements/smoke.txt
+          /tmp/smoke/bin/pip install --quiet --no-deps packages/agentrust-trace-adapters/dist/*.whl
           /tmp/smoke/bin/python -c "from agentrust_trace_adapters import build_openshell_record; assert callable(build_openshell_record)"
           /tmp/smoke/bin/python integrations/openshell/demo/build_signed_record.py --output /tmp/signed-record.json
           /tmp/smoke/bin/trace-tests verify --record /tmp/signed-record.json --level 0

@@ -1,0 +1,5 @@
+# Attestation verification for the released trace-adapters artifact.
+# Compile with:
+#   uv pip compile requirements/provenance.in --generate-hashes --universal \
+#     --python-version 3.11 -o requirements/provenance.txt
+pypi-attestations==0.0.30
