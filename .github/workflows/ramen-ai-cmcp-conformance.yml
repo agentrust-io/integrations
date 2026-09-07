@@ -37,7 +37,8 @@ jobs:
         run: pytest integrations/ramen-ai-cmcp/tests -q
       - name: Emit a natively signed TRACE v0.2 record
         run: |
-          export TRACE_PRIVATE_KEY_PEM="$(openssl genpkey -algorithm ED25519)"
+          TRACE_PRIVATE_KEY_PEM="$(openssl genpkey -algorithm ED25519)"
+          export TRACE_PRIVATE_KEY_PEM
           python integrations/ramen-ai-cmcp/examples/emit_record.py \
             --out trust-record.json \
             --model-provider ramen-ai \
