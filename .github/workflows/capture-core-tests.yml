@@ -33,7 +33,7 @@ jobs:
       - name: Run core tests
         working-directory: packages/agentrust-capture-core
         run: |
-          pip install --require-hashes -r requirements/capture-core.txt
+          pip install --require-hashes -r ../../requirements/capture-core.txt
           python -m pytest tests -q
 
   # The engines import the core as a hard dependency now, so the thing worth

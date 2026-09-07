@@ -14,8 +14,13 @@ permanently unmappable, which is the mapper behaving correctly.
 Two files are written:
 
   <out>              Unsigned record, the artifact ``trace-tests verify`` grades
-  <out>.signed.json  Signed record, verifiable with
-                     ``agentrust_trace.verify_record(..., allow_embedded_key=True)``
+  <out>.signed.json  The same record, signed. Its signature checks out, but
+                     ``agentrust_trace.verify_record`` refuses it: from 0.10.0
+                     that function enforces the full v0.2 schema, and this
+                     record deliberately omits ``model``, ``data_class`` and
+                     ``build_provenance`` (see "Deliberately absent" in
+                     aps_trace.py). ``trace-tests verify --level 0`` is the
+                     gate this integration targets, and it passes.
 
 Usage:
     python examples/emit_record.py --out trust-record.jwt
@@ -89,7 +94,12 @@ def main() -> int:
     record = build_trace_record(decision, trace_jwk=jwk)
 
     signed = agentrust_trace.sign_record(dict(record), key)
-    agentrust_trace.verify_record(signed, allow_embedded_key=True, max_age_seconds=None)
+
+    # Deliberately not calling verify_record here. Since agentrust-trace 0.10.0
+    # it enforces the full v0.2 schema, and this record is a documented partial:
+    # asking for a verdict it cannot honestly give would either fail the example
+    # or push someone to invent a model identity. Level 0 is the claim, and the
+    # conformance job runs it on the unsigned artifact immediately after this.
 
     out = Path(args.out)
     out.write_text(
@@ -106,7 +116,7 @@ def main() -> int:
     print(f"appraisal.status: {record['appraisal']['status']}")
     print(f"subject:          {record['subject']}")
     print(f"unsigned (for trace-tests): {out}")
-    print(f"signed   (verify_record OK): {signed_out}")
+    print(f"signed   (signature only, partial record): {signed_out}")
     return 0
 
 
