@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""LlamaIndex instrumentation events -> TRACE v0.2 Trust Record.
+"""LlamaIndex instrumentation or workflow events -> TRACE v0.2 Trust Record.
 
 Same shape as the LangChain adapter and for the same reason: a
 ``BaseEventHandler`` runs in the agent's own process, so what it sees is
@@ -22,6 +22,11 @@ Events read (``llama_index.core.instrumentation.events``):
   AgentToolCallEvent   -> tool identity
   LLMChatStartEvent    -> model identity from ``model_dict``
   LLMCompletionStartEvent -> same
+
+Modern ``FunctionAgent`` tool requests arrive on its per-run workflow stream,
+not as ``AgentToolCallEvent`` instrumentation. Pass those events explicitly to
+``observe_workflow``. Only ``ToolCall`` name and a fingerprint of its call id
+are retained; observing a request does not establish execution or success.
 """
 
 from __future__ import annotations
@@ -44,7 +49,14 @@ _SUBJECT_RE = re.compile(r"^(spiffe://[^/]+/.+|did:[a-z0-9]+:.+)$")
 #: ignored rather than filtered, so a new payload-bearing field cannot leak by
 #: being added upstream.
 TOOL_FIELDS = ("id_", "span_id")
-PAYLOAD_FIELDS_NOT_READ = ("arguments", "messages", "prompt", "response", "output", "template_args")
+PAYLOAD_FIELDS_NOT_READ = (
+    "arguments",
+    "messages",
+    "prompt",
+    "response",
+    "output",
+    "template_args",
+)
 
 
 class MissingEvidence(ValueError):
@@ -85,7 +97,16 @@ def _model_from_dict(model_dict: Any) -> tuple[str | None, str | None]:
     model = model_dict.get("model") or model_dict.get("model_name")
     cls = str(model_dict.get("class_name", "")).lower()
     provider = None
-    for known in ("anthropic", "openai", "bedrock", "vertex", "azure", "ollama", "mistral", "gemini"):
+    for known in (
+        "anthropic",
+        "openai",
+        "bedrock",
+        "vertex",
+        "azure",
+        "ollama",
+        "mistral",
+        "gemini",
+    ):
         if known in cls:
             provider = known
             break
@@ -102,6 +123,8 @@ class TraceEventHandler:
 
     def __init__(self) -> None:
         self._observed = _Observed()
+        self._tool_source: str | None = None
+        self._workflow_observed = False
 
     def handle(self, event: Any, **kwargs: Any) -> None:
         """The ``BaseEventHandler`` surface."""
@@ -110,6 +133,7 @@ class TraceEventHandler:
     def observe(self, event: Any) -> None:
         name = getattr(type(event), "class_name", lambda: type(event).__name__)()
         if name == "AgentToolCallEvent":
+            self._select_tool_source("instrumentation")
             self._observed.tools.append(
                 ToolCall(
                     name=_tool_name(event),
@@ -122,14 +146,60 @@ class TraceEventHandler:
             self._observed.provider = self._observed.provider or provider
             self._observed.model_id = self._observed.model_id or model
 
+    def observe_workflow(self, event: Any) -> None:
+        """Observe one run's workflow stream without registering global hooks.
+
+        ``ToolCall`` precedes tool lookup/execution. ``ToolCallResult`` and all
+        other events are ignored, so results cannot double-count requests or
+        leak outputs. Model identity must be supplied separately by the caller.
+        The model-supplied tool id is fingerprinted rather than copied into the
+        transcript. Neither that fingerprint nor the name is authenticated.
+
+        Use one fresh tracker per stream. Do not mix workflow and legacy tool
+        events: their identifiers do not support reliable cross-source dedup.
+        """
+        # Even a no-tool workflow must not inherit identity from process-global
+        # LLM instrumentation. Calling this API opts into explicit run identity.
+        self._workflow_observed = True
+        if type(event).__name__ != "ToolCall":
+            return
+        name = getattr(event, "tool_name", None)
+        tool_id = getattr(event, "tool_id", None)
+        if (
+            not isinstance(name, str)
+            or not name
+            or not isinstance(tool_id, str)
+            or not tool_id
+        ):
+            raise MissingEvidence(
+                "workflow ToolCall requires non-empty string tool_name and tool_id"
+            )
+        call = ToolCall(name=name, event_id=_digest(tool_id.encode()), span_id=None)
+        self._select_tool_source("workflow")
+        self._observed.tools.append(call)
+
+    def _select_tool_source(self, source: str) -> None:
+        if self._tool_source is not None and self._tool_source != source:
+            raise MissingEvidence(
+                "use separate trackers for workflow and instrumentation tool events"
+            )
+        self._tool_source = source
+
     @property
     def tool_calls(self) -> list[ToolCall]:
         return list(self._observed.tools)
 
     def transcript_bytes(self) -> bytes:
-        """Tool identity only: name, event id, span id. No arguments, ever."""
+        """Tool identity only; workflow event ids are call-id fingerprints.
+
+        Workflow entries describe requests, not successful handler invocations.
+        No arguments or results are read into this transcript.
+        """
         return json.dumps(
-            [{"tool": c.name, "event_id": c.event_id, "span_id": c.span_id} for c in self._observed.tools],
+            [
+                {"tool": c.name, "event_id": c.event_id, "span_id": c.span_id}
+                for c in self._observed.tools
+            ],
             sort_keys=True,
             separators=(",", ":"),
         ).encode()
@@ -147,6 +217,10 @@ class TraceEventHandler:
         attestation: dict[str, str] | None = None,
         iat: int | None = None,
     ) -> dict[str, Any]:
+        if self._workflow_observed and (not model_provider or not model_id):
+            raise MissingEvidence(
+                "workflow records require explicit model_provider and model_id"
+            )
         return build_record(
             subject=subject,
             policy_bundle=policy_bundle,
@@ -233,7 +307,9 @@ def build_record(
     else:
         runtime = {
             "platform": "software-only",
-            "measurement": _digest(workload_digest.encode() + b"\n" + _digest(policy_bundle).encode()),
+            "measurement": _digest(
+                workload_digest.encode() + b"\n" + _digest(policy_bundle).encode()
+            ),
         }
 
     record: dict[str, Any] = {
@@ -242,11 +318,17 @@ def build_record(
         "subject": subject,
         "model": {"provider": model_provider, "model_id": model_id},
         "runtime": runtime,
-        "policy": {"bundle_hash": _digest(policy_bundle), "enforcement_mode": enforcement_mode},
+        "policy": {
+            "bundle_hash": _digest(policy_bundle),
+            "enforcement_mode": enforcement_mode,
+        },
         "data_class": data_class,
         "build_provenance": {"slsa_level": 0, "digest": workload_digest},
         "appraisal": {"status": "none", "verifier": "llamaindex-adapter"},
     }
     if tool_count:
-        record["tool_transcript"] = {"hash": _digest(transcript), "call_count": tool_count}
+        record["tool_transcript"] = {
+            "hash": _digest(transcript),
+            "call_count": tool_count,
+        }
     return record

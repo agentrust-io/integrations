@@ -10,6 +10,7 @@ event.
 
 from __future__ import annotations
 
+import hashlib
 import pathlib
 import sys
 
@@ -119,7 +120,11 @@ def test_an_unknown_future_field_is_ignored_not_captured() -> None:
 
 def test_unrelated_event_types_are_ignored() -> None:
     h = TraceEventHandler()
-    h.handle(_Event("LLMCompletionEndEvent", prompt=f"pay {IBAN}", response="done", id_="e-9"))
+    h.handle(
+        _Event(
+            "LLMCompletionEndEvent", prompt=f"pay {IBAN}", response="done", id_="e-9"
+        )
+    )
     assert h.tool_calls == []
     assert IBAN not in h.transcript_bytes().decode()
 
@@ -137,13 +142,17 @@ def test_model_is_read_from_model_dict() -> None:
 
 
 def test_caller_overrides_a_guessed_provider() -> None:
-    record = _handler().build_record(**_kwargs(), model_provider="bedrock", model_id="x")
+    record = _handler().build_record(
+        **_kwargs(), model_provider="bedrock", model_id="x"
+    )
     assert record["model"]["provider"] == "bedrock"
 
 
 def test_unnamed_tool_is_labelled_not_dropped() -> None:
     h = TraceEventHandler()
-    h.handle(_Event("AgentToolCallEvent", tool=None, arguments="{}", id_="e-1", span_id=None))
+    h.handle(
+        _Event("AgentToolCallEvent", tool=None, arguments="{}", id_="e-1", span_id=None)
+    )
     assert h.tool_calls[0].name == "<unnamed>"
 
 
@@ -195,7 +204,8 @@ def test_unidentified_model_is_refused() -> None:
 def test_attestation_may_not_claim_software_only() -> None:
     with pytest.raises(MissingEvidence, match="attests nothing"):
         _handler().build_record(
-            **_kwargs(), attestation={"platform": "software-only", "measurement": DIGEST}
+            **_kwargs(),
+            attestation={"platform": "software-only", "measurement": DIGEST},
         )
 
 
@@ -241,3 +251,128 @@ def test_build_record_is_usable_without_the_handler() -> None:
         tool_count=0,
     )
     assert record["appraisal"]["status"] == "none"
+
+
+# Workflow unit tests protect the field allow-list. The separate interop suite
+# proves these events are actually delivered by a released FunctionAgent.
+class ToolCall:
+    def __init__(self, tool_name="search", tool_id="request-1"):
+        self.tool_name = tool_name
+        self.tool_id = tool_id
+
+    @property
+    def tool_kwargs(self):
+        raise AssertionError("workflow arguments must not be read")
+
+    @property
+    def span_id(self):
+        raise AssertionError("a workflow event does not supply an instrumentation span")
+
+    @property
+    def future_payload(self):
+        raise AssertionError("unknown fields must not be read")
+
+
+class ToolCallResult:
+    def __getattr__(self, name):
+        raise AssertionError("result fields must not be read")
+
+
+def test_workflow_records_only_request_name_and_fingerprinted_id() -> None:
+    h = TraceEventHandler()
+    h.observe_workflow(ToolCall(tool_id=IBAN))
+    h.observe_workflow(ToolCallResult())
+    assert len(h.tool_calls) == 1
+    assert h.tool_calls[0].name == "search"
+    assert (
+        h.tool_calls[0].event_id
+        == "sha256:" + hashlib.sha256(IBAN.encode()).hexdigest()
+    )
+    assert h.tool_calls[0].span_id is None
+    assert IBAN not in h.transcript_bytes().decode()
+
+
+def test_workflow_preserves_repeated_requests_even_with_same_id() -> None:
+    # Model ids are not guaranteed unique. Do not erase a second request by
+    # treating the call-id fingerprint as an exactly-once execution identifier.
+    h = TraceEventHandler()
+    h.observe_workflow(ToolCall())
+    h.observe_workflow(ToolCall())
+    assert len(h.tool_calls) == 2
+
+
+@pytest.mark.parametrize("field", ["tool_name", "tool_id"])
+@pytest.mark.parametrize("value", [None, "", 42, [], {"payload": IBAN}])
+def test_workflow_missing_identity_is_refused_without_mutation(field, value) -> None:
+    h = TraceEventHandler()
+    event = ToolCall()
+    setattr(event, field, value)
+    with pytest.raises(MissingEvidence, match="non-empty string") as exc:
+        h.observe_workflow(event)
+    assert IBAN not in str(exc.value)
+    assert h.tool_calls == []
+    # Invalid evidence must not select a source either.
+    h.observe(_tool_event("search", "legacy-1"))
+    assert len(h.tool_calls) == 1
+
+
+@pytest.mark.parametrize("workflow_first", [True, False])
+def test_mixing_tool_sources_is_refused_before_append(workflow_first) -> None:
+    h = TraceEventHandler()
+
+    def workflow():
+        h.observe_workflow(ToolCall())
+
+    def legacy():
+        h.observe(_tool_event("search", "legacy-1"))
+
+    first, second = (workflow, legacy) if workflow_first else (legacy, workflow)
+    first()
+    before = h.transcript_bytes()
+    with pytest.raises(MissingEvidence, match="separate trackers"):
+        second()
+    assert h.transcript_bytes() == before
+
+
+def test_irrelevant_workflow_events_do_not_read_fields_or_select_source() -> None:
+    h = TraceEventHandler()
+    h.observe_workflow(ToolCallResult())
+    h.observe_workflow(_chat_event({"model": IBAN}))
+    assert h.tool_calls == []
+    h.observe(_tool_event("legacy", "e-1"))
+    assert h.tool_calls[0].name == "legacy"
+
+
+def test_workflow_requests_preserve_order_and_require_model_identity() -> None:
+    h = TraceEventHandler()
+    h.observe_workflow(ToolCall("first", "one"))
+    h.observe_workflow(ToolCall("second", "two"))
+    assert [c.name for c in h.tool_calls] == ["first", "second"]
+    with pytest.raises(MissingEvidence, match="explicit model_provider and model_id"):
+        h.build_record(**_kwargs())
+    record = h.build_record(**_kwargs(), model_provider="local", model_id="test-model")
+    assert record["tool_transcript"]["call_count"] == 2
+
+
+@pytest.mark.parametrize("model_first", [True, False])
+@pytest.mark.parametrize("has_tool_request", [True, False])
+@pytest.mark.parametrize(
+    "explicit", [{}, {"model_provider": "local"}, {"model_id": "local"}]
+)
+def test_workflow_never_inherits_global_model_identity(
+    model_first, has_tool_request, explicit
+):
+    h = TraceEventHandler()
+    model_event = _chat_event({"class_name": "OpenAI", "model": "unrelated-model"})
+    event = ToolCall() if has_tool_request else ToolCallResult()
+    if model_first:
+        h.observe(model_event)
+    h.observe_workflow(event)
+    if not model_first:
+        h.observe(model_event)
+    with pytest.raises(MissingEvidence, match="explicit model_provider and model_id"):
+        h.build_record(**_kwargs(), **explicit)
+    record = h.build_record(
+        **_kwargs(), model_provider="run-provider", model_id="run-model"
+    )
+    assert record["model"] == {"provider": "run-provider", "model_id": "run-model"}

@@ -76,9 +76,14 @@ an effective policy, an AGT ACS manifest, and correlated decisions. After the
 adapter package is published:
 
 ```bash
-pip install agentrust-trace-adapters==0.1.0
+pip install agentrust-trace-adapters==0.1.0 agentrust-trace==0.10.0
 python integrations/openshell/demo/build_signed_record.py --output signed-record.json
 ```
+
+The schema-and-signature regression is validated with TRACE `0.10.0`. Earlier
+schemas through `0.9.0` require `transparency`, which this unanchored record
+intentionally omits. The adapter package's existing `>=0.7.0` dependency floor
+alone is not a schema-interoperability guarantee for this demo.
 
 The command builds the imported-evidence record, signs it with an ephemeral
 Ed25519 key, verifies the signature with the released `agentrust-trace` package,
@@ -92,8 +97,14 @@ and writes the record. The key is intentionally not persisted.
 | `origin.producer` | `nvidia-openshell/<version>` |
 | `runtime.platform` | `software-only` |
 | `appraisal.status` | `none` |
+| `appraisal.verifier` | [OpenShell adapter URI](https://github.com/agentrust-io/integrations/tree/main/integrations/openshell) |
 | `policy.bundle_hash` | Exact canonical bundle of OpenShell policy, revision, and ACS manifest |
 | `tool_transcript.hash` | Exact canonical envelope of OCSF events and ACS decisions |
+
+The verifier URI identifies this adapter emitting the `none` statement, not
+NVIDIA or a running appraisal service. The versioned source name remains in
+`origin.producer`. Neither the URI nor the signature proves that an appraisal
+ran, authenticates a deployed adapter binary, or implies vendor endorsement.
 
 OpenShell Docker, Podman, MicroVM, or Kubernetes execution does not by itself
 support a hardware TRACE claim. A higher level requires a quote and independent

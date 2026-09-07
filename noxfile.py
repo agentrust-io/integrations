@@ -46,6 +46,11 @@ def framework_adapters(session: nox.Session) -> None:
     session.install("langchain-core==1.6.0", "langgraph==1.2.11")
     pytest(session, "integrations/langchain/test_langgraph_interop.py")
 
+    # Modern LlamaIndex agents deliver tool requests on a per-run workflow
+    # stream, not through the legacy instrumentation event tested above.
+    session.install("-r", "integrations/llamaindex/requirements-interop.txt")
+    pytest(session, "integrations/llamaindex/test_llamaindex_interop.py")
+
     # Pydantic AI needs no adapter: it instruments through OpenTelemetry and
     # emits the GenAI conventions otel-genai already maps. Verified against the
     # released package rather than asserted, the same treatment LangGraph got.

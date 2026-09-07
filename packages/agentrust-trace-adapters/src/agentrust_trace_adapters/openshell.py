@@ -20,6 +20,9 @@ __all__ = [
 
 _POLICY_FORMAT = "agentrust.openshell-policy-bundle.v1"
 _TRANSCRIPT_FORMAT = "agentrust.openshell-transcript.v1"
+_ADAPTER_URI = (
+    "https://github.com/agentrust-io/integrations/tree/main/integrations/openshell"
+)
 _MODES = {"enforce", "advisory", "silent"}
 
 
@@ -231,7 +234,7 @@ def build_openshell_record(
         capture_complete=evidence.capture_complete,
         openshell_version=evidence.openshell_version,
     )
-    return build_record(
+    record = build_record(
         source=SourceSystem(
             producer=f"nvidia-openshell/{evidence.openshell_version}",
             source_event_id=evidence.sandbox_id,
@@ -249,3 +252,8 @@ def build_openshell_record(
         jwk=jwk,
         iat=iat,
     )
+    # TRACE requires a URI here, unlike the source's human-readable producer
+    # name. Identify the adapter emitting "none", not an NVIDIA appraisal.
+    # Preserve origin.producer and the source-derived measurement above.
+    record["appraisal"]["verifier"] = _ADAPTER_URI
+    return record

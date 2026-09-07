@@ -4,6 +4,7 @@ import importlib.util
 from pathlib import Path
 
 from agentrust_trace.models import TrustRecord
+from agentrust_trace.validate import validate_json
 
 DEMO = Path(__file__).parent / "demo" / "build_signed_record.py"
 
@@ -22,4 +23,8 @@ def test_demo_builds_signed_released_model_record() -> None:
     assert parsed.origin.producer == "nvidia-openshell/0.0.105"
     assert parsed.runtime.platform == "software-only"
     assert parsed.appraisal.status == "none"
+    assert parsed.appraisal.verifier == (
+        "https://github.com/agentrust-io/integrations/tree/main/integrations/openshell"
+    )
     assert parsed.policy.enforcement_mode == "enforce"
+    validate_json(record)

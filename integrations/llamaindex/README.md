@@ -1,30 +1,97 @@
 # LlamaIndex → TRACE
 
-Emits a TRACE v0.2 Trust Record from LlamaIndex instrumentation events.
+Builds a first-party TRACE Trust Record from LlamaIndex tool observations.
+There are two distinct event routes: legacy instrumentation and the per-run
+workflow stream used by modern `FunctionAgent`. A global instrumentation
+handler alone does **not** observe `FunctionAgent` tool requests.
 
-## First-party, like the LangChain adapter
+## Modern FunctionAgent workflow
 
-A `BaseEventHandler` runs in the agent's own process, so what it observes is the operator's own agent. The record carries **no `origin` block** — absence means `self`. It does not use [`agentrust-trace-adapters`](../../packages/agentrust-trace-adapters), which exists for *somebody else's* evidence and would mislabel this as a third-party transcription.
+The released-framework tests exercise `llama-index-core==0.14.24`,
+`llama-index-workflows==2.23.3`, and `llama-index-instrumentation==0.6.0`, with
+`agentrust-trace==0.9.0` and `agentrust-trace-tests==0.5.1`. Exact test pins live
+in [requirements-interop.txt](requirements-interop.txt).
 
-## The risk here is different from LangChain's
+Dependency-audit limitation: the tested environment resolves LlamaIndex's
+transitive NLTK dependency to 3.10.3, affected by
+[GHSA-8mgp-746c-j5xp](https://github.com/advisories/GHSA-8mgp-746c-j5xp),
+with no patched release listed at verification time. These tests do not use
+NLTK's affected model-file APIs. A passing interoperability run is not a clean
+dependency-security audit; reassess dependencies for deployment.
 
-LangChain has a dozen typed callbacks. LlamaIndex has **one method** — `handle(event)` — and several event types carry payloads:
+Use a fresh tracker for each run and pass events from that run's stream to
+`observe_workflow`. No global dispatcher registration is needed. Supply the
+model's identity explicitly from your configured agent; a process-global model
+observer could mix identities from concurrent runs.
+Once any event is passed to `observe_workflow`, record construction requires
+both explicit model fields, even for a run with no tool requests.
 
-| Event | Payload it carries |
-|---|---|
-| `AgentToolCallEvent` | `arguments` |
-| `LLMChatStartEvent` | the whole `messages` list |
-| `LLMCompletionEndEvent` | `prompt` and `response` |
+```python
+from agentrust_trace.sign import sign_record
+from llamaindex_to_trace import TraceEventHandler
 
-One entry point is easier to consume and harder to consume *safely*. So this handler reads an **explicit allow-list of fields** rather than the event object: tool name, event id, span id, and `model_dict` for identity. Nothing else is read, which means a payload-bearing field added upstream in a future version is ignored by default rather than captured.
 
-Four tests hold that line: an IBAN in tool `arguments`, an IBAN in chat `messages`, an IBAN in a field a later version might add, and an entire unrelated event type carrying prompt and response.
+async def run_with_record(
+    agent, user_msg, *, subject, policy_bundle, workload_digest,
+    model_provider, model_id, signing_key,
+):
+    tracker = TraceEventHandler()
+    handler = agent.run(user_msg=user_msg)
+    try:
+        async for event in handler.stream_events():
+            tracker.observe_workflow(event)
+        result = await handler
+    finally:
+        if not handler.is_done():
+            await handler.cancel_run()
 
-## Run it
-
-```bash
-pip install agentrust-trace llama-index-core
+    unsigned = tracker.build_record(
+        subject=subject,
+        policy_bundle=policy_bundle,       # bytes of the declared policy
+        workload_digest=workload_digest,   # digest of your artifact
+        model_provider=model_provider,
+        model_id=model_id,
+        data_class="internal",
+    )
+    return result, sign_record(unsigned, signing_key)
 ```
+
+The caller supplies its own configured agent, identity, policy bytes, artifact
+digest, and signing key. The offline tests supply a scripted local model and
+real local tools; they need no provider account, API key, or network requests.
+The stream has one consumer: if your application already processes it, call
+`observe_workflow` in that existing loop rather than starting a second consumer.
+The caller owns run cancellation and persistence. The adapter registers no
+hooks or background tasks, and does not label partial/cancelled observations
+as a successful run.
+
+### What enters the workflow transcript
+
+Each `ToolCall` contributes its `tool_name`, a SHA-256 fingerprint of `tool_id`
+in the existing `event_id` field, and `span_id: null`. Workflow events do not
+supply an instrumentation span. The call ID may be model-supplied, so its raw
+text is not retained. Fingerprints support correlation, not authentication or
+secrecy against guessing. Tool names remain visible metadata; do not put
+sensitive content in names.
+
+`ToolCallResult` and other events are ignored without reading their payloads.
+Arguments, results, prompts, responses, and arbitrary future fields never enter
+this transcript. One request plus one result counts once. Distinct requests
+with a repeated call ID still count separately: model IDs are not guaranteed
+unique. Replaying the stream is outside this observer's contract.
+
+In the tested framework, `ToolCall` is emitted **before lookup and execution**.
+The transcript therefore counts observed requests, including requests whose
+tool is unavailable or fails. It does not prove function-body execution,
+completion, business success, retry history, graph state, or exhaustive activity.
+Only events the caller actually passes to this tracker are observed.
+
+## Legacy instrumentation
+
+Existing `AgentToolCallEvent` handling is preserved. `LLMChatStartEvent` and
+`LLMCompletionStartEvent` can supply model identity through `model_dict`.
+The framework-free tests continue to check this route's explicit field
+allow-list. They do not establish support for every legacy LlamaIndex agent.
 
 ```python
 from llama_index.core.instrumentation import get_dispatcher
@@ -33,32 +100,62 @@ from llamaindex_to_trace import TraceEventHandler
 
 tracker = TraceEventHandler()
 
+
 class Bridge(BaseEventHandler):
     def handle(self, event, **kwargs):
         tracker.observe(event)
 
-get_dispatcher().add_event_handler(Bridge())
-# ... run your agent ...
 
-record = tracker.build_record(
-    subject="spiffe://example.org/agent/index-bot",
-    policy_bundle=open("policy.cedar", "rb").read(),
-    # enforcement_mode defaults to "declared"; see below
-    workload_digest="sha256:...",
-    data_class="internal",
-)
+bridge = Bridge()
+dispatcher = get_dispatcher()
+dispatcher.add_event_handler(bridge)
+try:
+    # Run one legacy agent here, with no unrelated concurrent runs.
+    ...
+finally:
+    dispatcher.event_handlers.remove(bridge)
 ```
 
-## `enforcement_mode` defaults to `declared`
+Global instrumentation is not per-run isolation. Do not feed legacy tool events
+and workflow tool requests into the same tracker: their identifiers cannot be
+reliably deduplicated. The first tool event selects a source; an event from the
+other source raises `MissingEvidence` before appending. Unknown event types
+are not recorded. Workflow requests with missing/non-string identity fields are
+also refused without retaining their values.
 
-**LlamaIndex enforces no policy.** `enforce`, `advisory` and `silent` all presuppose that something *evaluated* the policy; for a bare run, nothing did. TRACE 0.9.0 added `declared` for that case, so the default is now truthful rather than the closest available overstatement. Needs `agentrust-trace>=0.9`.
+## Evidence boundary and conformance
 
-## Conformance
+These are in-process observations of the operator's own agent. Records have
+no `origin` block (self), default to `runtime.platform: software-only`, and
+retain `appraisal.status: none`. Signing binds the record to its signing key;
+it does not attest the observer, authenticate model-supplied tool identity,
+prove safe behavior, or establish hardware provenance or runtime integrity.
 
-**Level 0** without an attestation, **Level 1** with one.
+`policy.enforcement_mode` defaults to `declared`: the caller's policy is named
+and hashed, but LlamaIndex has not evaluated or enforced it. Supplying another
+mode requires an actual external policy layer. Supplied attestation fields are
+passed through by the existing record builder; this adapter does not verify
+them or independently establish Level 1 assurance.
+
+The real `FunctionAgent` tests sign and verify records and pass the released
+TRACE Level 0 conformance checks with the honest `declared` mode. Level 0
+conformance does not raise this software-only evidence boundary.
+
+## Reproduce
+
+From the repository root in a fresh virtual environment:
 
 ```bash
-python -m pytest test_llamaindex_to_trace.py -q
+pip install pytest==9.1.1 agentrust-trace==0.9.0
+python -m pytest integrations/llamaindex/test_llamaindex_to_trace.py -q
+pip install -r integrations/llamaindex/requirements-interop.txt
+python -m pytest integrations/llamaindex -q
 ```
 
-20 tests.
+Or run `nox -s framework_adapters`, which preserves the framework-free pass
+and then installs the pinned released frameworks. CI runs both routes too.
+The real workflow regression is [test_llamaindex_interop.py](test_llamaindex_interop.py);
+it uses the released runner and a local scripted `MockFunctionCallingLLM`, not
+hand-constructed stand-ins for workflow delivery. Tests cover streaming and
+non-streaming model responses, request order, error and no-tool paths,
+concurrent run isolation, payload exclusion, and signed record validation.
