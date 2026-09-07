@@ -1,0 +1,8 @@
+# Compile with:
+#   uv pip compile requirements/validate.in --generate-hashes --universal \
+#     --python-version 3.11 -o requirements/validate.txt
+# Schema and packaging checks in validate.yml.
+jsonschema
+pyyaml
+pytest
+packaging

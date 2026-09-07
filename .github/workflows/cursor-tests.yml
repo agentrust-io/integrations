@@ -29,7 +29,10 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Run the suite against the core in this checkout
         run: |
-          pip install ./packages/agentrust-capture-core pytest
+          # The local package goes in with --no-deps: it has no runtime
+          # dependencies of its own, so nothing here resolves against PyPI.
+          pip install --require-hashes -r requirements/capture-core.txt
+          pip install --no-deps ./packages/agentrust-capture-core
           cd cursor
           python -m pytest tests -q
 
@@ -43,7 +46,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install the core from this checkout
-        run: pip install ./packages/agentrust-capture-core
+        run: pip install --no-deps ./packages/agentrust-capture-core
       - name: Snapshot this repository's Cursor composition
         run: python cursor/engine/capture.py snapshot
       - name: Verify against the committed baseline

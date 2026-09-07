@@ -33,7 +33,7 @@ jobs:
       - name: Run core tests
         working-directory: packages/agentrust-capture-core
         run: |
-          pip install pytest
+          pip install --require-hashes -r ../../requirements/capture-core.txt
           python -m pytest tests -q
 
   # The engines import the core as a hard dependency now, so the thing worth
@@ -50,7 +50,7 @@ jobs:
           python-version: "3.12"
       - name: Install the core from source, then import every engine
         run: |
-          pip install ./packages/agentrust-capture-core
+          pip install --no-deps ./packages/agentrust-capture-core
           python - <<'PY'
           import importlib.util
           for path in (

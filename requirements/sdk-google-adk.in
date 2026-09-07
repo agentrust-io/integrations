@@ -1,0 +1,6 @@
+# Compile with:
+#   uv pip compile requirements/sdk-google-adk.in --generate-hashes --universal \
+#     --python-version 3.11 -o requirements/sdk-google-adk.txt
+# Second pass only: released Google ADK plus the conformance suite.
+google-adk==2.7.1
+agentrust-trace-tests==0.5.0

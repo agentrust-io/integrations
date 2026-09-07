@@ -39,7 +39,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install ruff
-        run: pip install "ruff==0.16.3"
+        run: pip install --require-hashes -r requirements/lint.txt
       - name: Lint first-party code
         # Explicit paths rather than ".", so a vendored or generated tree added
         # later does not silently join the gate.

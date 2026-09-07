@@ -1,0 +1,5 @@
+# Compile with:
+#   uv pip compile requirements/lint.in --generate-hashes --universal \
+#     --python-version 3.11 -o requirements/lint.txt
+# The repo linter.
+ruff==0.16.3

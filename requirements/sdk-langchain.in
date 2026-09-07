@@ -1,0 +1,7 @@
+# Compile with:
+#   uv pip compile requirements/sdk-langchain.in --generate-hashes --universal \
+#     --python-version 3.11 -o requirements/sdk-langchain.txt
+# Second pass only: released LangChain/LangGraph, layered onto
+# adapters-no-framework.txt so the first pass stays framework-free.
+langchain-core==1.6.0
+langgraph==1.2.11

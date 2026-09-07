@@ -1,0 +1,7 @@
+# Compile with:
+#   uv pip compile requirements/adapters.in --generate-hashes --universal \
+#     --python-version 3.11 -o requirements/adapters.txt
+# agentrust-trace-adapters' own dependency plus the test runner. The local
+# package itself goes in with --no-deps afterwards.
+agentrust-trace>=0.7.0
+pytest
