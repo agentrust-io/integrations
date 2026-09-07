@@ -36,7 +36,10 @@ jobs:
         run: |
           # The local package goes in with --no-deps: it has no runtime
           # dependencies of its own, so nothing here resolves against PyPI.
-          pip install --require-hashes -r requirements/pytest-8.txt
+          # capture-core.txt rather than a flat 8.4.2 pin: it resolves
+          # pytest per Python version, so only the 3.9 leg of this matrix
+          # takes 8.4.2. See the lock for why 3.9 has no fixed pytest.
+          pip install --require-hashes -r requirements/capture-core.txt
           pip install --no-deps ./packages/agentrust-capture-core
           python -m pytest plugins/agentrust-codex/tests -q
 
