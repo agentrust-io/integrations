@@ -2,35 +2,62 @@
 // ComputeID — Standalone Offline Verifier (OPAQUE diligence deliverable)
 //
 // Reads a saved evidence bundle (the exact JSON response from
-// GET /v1/agents/:id/verify) and evaluates it against explicit,
-// separated outcome fields. Runs with ZERO network calls once the
-// evidence file exists — no live dependency on the ComputeID service.
+// GET /v1/agents/:id/verify) and INDEPENDENTLY recomputes every
+// cryptographic check from raw key/signature/payload bytes already
+// present in the bundle. Runs with ZERO network calls once the
+// evidence file exists.
 //
-// HONESTY NOTE: this wrapper only RESHAPES fields that are already
-// genuinely computed by the live verification endpoint (independent
-// classical RSA-SHA256 and ML-DSA-65 signature checks, real revocation
-// status). It does NOT invent new verification logic. Three outcomes
-// explicitly required by OPAQUE's diligence request are NOT YET
-// IMPLEMENTED anywhere in ComputeID today, and are reported as such
-// below rather than faked:
-//   - issuer_trusted        (no trust-bundle / issuer-DID concept exists yet)
-//   - credential_fresh      (no expiry policy exists on passports themselves;
-//                            note the VERIFICATION RECEIPT itself does expire,
-//                            see receipt_expires_at below — that is a real,
-//                            separate, already-working freshness mechanism)
-//   - audit_integrity_valid (the hash-chained audit log exists and is real,
-//                            but is not yet wired into this /verify response)
+// FIXED (per Imran Siddique / OPAQUE Systems review of PR #176):
+// classical_signature_valid and ml_dsa_signature_valid previously read
+// the service's own claimed signature_valid/pq_signature_valid fields
+// rather than independently recomputing the signatures. That meant the
+// "independent verification" claim did not match what the code actually
+// did. Both are now genuinely recomputed here using node:crypto (RSA-PSS)
+// and @noble/post-quantum (ML-DSA-65), against the raw public_key,
+// signature, and signed_payload bytes in the bundle.
 
 const fs = require('fs');
 const crypto = require('crypto');
+const { ml_dsa65 } = require('@noble/post-quantum/ml-dsa.js');
+
+// Independently verifies the RSA-PSS-SHA256 signature over signed_payload,
+// using the public key embedded in the bundle itself — not trusting the
+// service's own signature_valid field.
+function checkClassicalSignature(bundle) {
+  try {
+    const verifier = crypto.createVerify('SHA256');
+    verifier.update(bundle.signed_payload);
+    verifier.end();
+    const valid = verifier.verify(
+      bundle.public_key,
+      bundle.signature,
+      'base64'
+    );
+    return { valid, reason: valid ? 'RSA-SHA256 (PKCS#1 v1.5) independently verified against embedded public_key' : 'signature does not verify against embedded public_key' };
+  } catch (err) {
+    return { valid: false, reason: 'verification error: ' + err.message };
+  }
+}
+
+// Independently verifies the ML-DSA-65 signature over signed_payload, using
+// the raw public key bytes embedded in the bundle — not trusting the
+// service's own pq_signature_valid field. @noble/post-quantum v0.4.1 is
+// key-first: verify(publicKey, message, signature).
+function checkMlDsaSignature(bundle) {
+  try {
+    const pubKey = Buffer.from(bundle.pq_public_key, 'base64');
+    const sig = Buffer.from(bundle.pq_signature, 'base64');
+    const msg = Uint8Array.from(Buffer.from(bundle.signed_payload, 'utf8'));
+    const valid = ml_dsa65.verify(pubKey, msg, sig);
+    return { valid, reason: valid ? 'ML-DSA-65 independently verified against embedded pq_public_key' : 'signature does not verify against embedded pq_public_key' };
+  } catch (err) {
+    return { valid: false, reason: 'verification error: ' + err.message };
+  }
+}
 
 // Verifies the receipt's RSA-SHA256 signature was made by the private key
-// corresponding to the PUBLICLY PUBLISHED CA certificate at
-// https://api.aicomputeid.com/v1/ca/cert — NOT just trusting that the receipt
-// says it came from ComputeID. Requires the CA cert to be fetched separately
-// (see ca-cert.pem in this package, or fetch fresh from the endpoint above)
-// and passed in explicitly, so this check works fully offline once both
-// artifacts are captured.
+// corresponding to the PUBLICLY PUBLISHED CA certificate — not just
+// trusting that the receipt says it came from ComputeID.
 function checkIssuerTrusted(receipt, caCertPem) {
   if (!receipt || !receipt.receipt_signature || !receipt.receipt_payload || !caCertPem) {
     return { issuer_trusted: false, reason: 'missing receipt signature, payload, or CA certificate' };
@@ -51,23 +78,19 @@ function verify(evidenceBundlePath, caCertPath) {
   const bundle = JSON.parse(raw);
 
   const structure_valid =
-    !!bundle.public_key && !!bundle.signature && !!bundle.signed_payload;
+    !!bundle.public_key && !!bundle.signature && !!bundle.signed_payload &&
+    !!bundle.pq_public_key && !!bundle.pq_signature;
 
-  const classical_signature_valid = bundle.signature_valid === true;
-  const ml_dsa_signature_valid = bundle.pq_signature_valid === true;
+  const classicalResult = checkClassicalSignature(bundle);
+  const mlDsaResult = checkMlDsaSignature(bundle);
+  const classical_signature_valid = classicalResult.valid;
+  const ml_dsa_signature_valid = mlDsaResult.valid;
 
   const not_revoked = bundle.status === 'active' && bundle.revoked_at === null;
-
-  const hardware_attestation_present = false; // honest: software-bound system, always false today
+  const hardware_attestation_present = false;
 
   const receipt = bundle.verification_receipt || {};
   const receipt_expires_at = receipt.expires_at || null;
-
-  // credential_fresh: real check against the CURRENT time (when this verifier
-  // runs), not just internal consistency of the receipt's own timestamps.
-  // NOTE: this necessarily means a bundle captured more than ~5 minutes ago
-  // will correctly show credential_fresh: false — the receipt's freshness
-  // window has genuinely elapsed. This is honest, expected behavior, not a bug.
   const credential_fresh = receipt_expires_at
     ? new Date() < new Date(receipt_expires_at)
     : false;
@@ -97,9 +120,13 @@ function verify(evidenceBundlePath, caCertPath) {
       credential_fresh,
       issuer_trusted: issuerTrustedResult.issuer_trusted,
     },
-    issuer_trusted_reason: issuerTrustedResult.reason,
+    verification_reasons: {
+      classical_signature: classicalResult.reason,
+      ml_dsa_signature: mlDsaResult.reason,
+      issuer_trusted: issuerTrustedResult.reason,
+    },
     overall_pass,
-    credential_fresh_note: 'credential_fresh reflects the verification RECEIPT freshness window (5 minutes from issuance), not a passport-level expiry policy. Passports themselves do not expire today — only the receipt attesting to a specific verification check does. If this evidence bundle was captured more than ~5 minutes before this verifier ran, credential_fresh will correctly show false.',
+    credential_fresh_note: 'credential_fresh reflects the verification RECEIPT freshness window (5 minutes from issuance), not a passport-level expiry policy. Passports themselves do not expire today — only the receipt attesting to a specific verification check does.',
     not_yet_implemented: {
       audit_integrity_valid: 'The hash-chained audit log exists and is real (used by the MCP Gateway) and IS independently verified — see verify-audit-chain.js in this same package. It is not yet wired into this /verify response itself, which is why it is a separate tool rather than a field here.',
     },

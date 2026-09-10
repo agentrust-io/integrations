@@ -1,0 +1,12 @@
+{
+  "name": "computeid-trace-adapter",
+  "version": "1.0.0",
+  "description": "ComputeID AgentPassport TRACE v0.2 adapter and offline verification tools",
+  "main": "convert-to-trace.js",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "canonicalize": "2.1.0",
+    "@noble/post-quantum": "0.4.1",
+    "pg": "^8.23.0"
+  }
+}

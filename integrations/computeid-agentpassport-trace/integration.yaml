@@ -3,9 +3,9 @@ vendor: ComputeID
 integrates_with: [trace]
 description: "Converts ComputeID AgentPassport /verify evidence into a TRACE-shaped record via the third-party-control-plane origin path; does not currently pass TRACE conformance at any level."
 maintainer: {github: trustedaicompute-ops}
-repository: https://github.com/trustedaicompute-ops/computeid-backend
+repository: https://github.com/trustedaicompute-ops/computeid-trace-adapter
 license: Apache-2.0
 tier: community
-marketplace: {category: "Identity and access", mark: CID}
+marketplace: {category: "Identity & trust", mark: CID}
 trace_roles: [external-evidence-source]
 tested_against: {agentrust-trace: "0.5.1"}
