@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Emit a TRACE Trust Record from a freshly evaluated APS policy decision.
+"""Emit a TRACE-shaped mapping output from a freshly evaluated APS policy decision.
 
 Runs the real APS path with ephemeral keys: an agent declares an ActionIntent,
 an evaluator evaluates it against the Values Floor with FloorValidatorV1, and
-the resulting signed PolicyDecision is mapped onto a TRACE Trust Record by
+the resulting signed PolicyDecision is mapped into TRACE record shape by
 :func:`aps_trace.build_trace_record`. No network access and no credentials.
 
 The decision is minted at run time rather than loaded from a committed fixture
@@ -19,8 +19,8 @@ Two files are written:
                      that function enforces the full v0.2 schema, and this
                      record deliberately omits ``model``, ``data_class`` and
                      ``build_provenance`` (see "Deliberately absent" in
-                     aps_trace.py). ``trace-tests verify --level 0`` is the
-                     gate this integration targets, and it passes.
+                     aps_trace.py). ``trace-tests verify --level 0`` runs on
+                     it as a coverage probe. No conformance level is claimed.
 
 Usage:
     python examples/emit_record.py --out trust-record.jwt
@@ -96,10 +96,10 @@ def main() -> int:
     signed = agentrust_trace.sign_record(dict(record), key)
 
     # Deliberately not calling verify_record here. Since agentrust-trace 0.10.0
-    # it enforces the full v0.2 schema, and this record is a documented partial:
-    # asking for a verdict it cannot honestly give would either fail the example
-    # or push someone to invent a model identity. Level 0 is the claim, and the
-    # conformance job runs it on the unsigned artifact immediately after this.
+    # it enforces the full v0.2 schema, and this mapping output is documented as
+    # schema-incomplete: asking for a verdict it cannot honestly give would either
+    # fail the example or push someone to invent a model identity. Level 0 is a
+    # coverage probe, and CI runs it on the unsigned artifact right after this.
 
     out = Path(args.out)
     out.write_text(
@@ -116,7 +116,7 @@ def main() -> int:
     print(f"appraisal.status: {record['appraisal']['status']}")
     print(f"subject:          {record['subject']}")
     print(f"unsigned (for trace-tests): {out}")
-    print(f"signed   (signature only, partial record): {signed_out}")
+    print(f"signed   (signature only, not a Trust Record): {signed_out}")
     return 0
 
 

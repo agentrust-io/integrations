@@ -15,16 +15,30 @@ marketplace:
   category: Identity & trust
   mark: AP
   keywords: [passport, identity, policy]
-# Level 0 passes with an explicit TR-SIG-005 UNVERIFIED finding: the graded
-# artifact is the unsigned record, so trace-tests reports it as not
-# cryptographically verified. The signed form is written alongside it and
-# verifies via agentrust_trace.verify_record (see README).
-trace_conformance_level: 0
+# Role. APS decisions are Ed25519-signed external evidence. This integration
+# maps one onto a TRACE record but cannot populate `model`, `data_class` or
+# `build_provenance` without inventing them, so the output does not validate
+# against the v0.2 schema and is not a TRACE Trust Record. Same case as
+# nobulex: external-evidence-source, no conformance level (#170).
 trace_roles:
-  - record-producer
+  - external-evidence-source
 tested_against:
-  agentrust-trace: "0.9.0"
-  # trace-spec#236 (merged 2026-08-29, unreleased) changes the RevocationStore path:
-  # a callable returning a non-bool now fails closed instead of reading as not
-  # revoked. The revocation observations in README were made against 0.9.0 and
-  # are re-run on the release that carries #236.
+  agentrust-trace: "0.10.0"
+  agentrust-trace-tests: "0.5.1"
+  # This file records only the package keys its schema supports. The fixed CI
+  # job pins the complete package set needed to reproduce this result, which
+  # also includes agent-passport-system 3.0.1.
+  # Position at these versions: the emitted record carries every field the
+  # mapper can source from an APS decision and validates field by field against
+  # the v0.2 JSON Schema, but `model`, `data_class` and `build_provenance` are
+  # absent, so `agentrust_trace.verify_record` refuses it (pinned by
+  # tests/test_mapping.py::test_verify_record_refuses_schema_incomplete_mapping).
+  # `trace-tests verify --level 0` reports 8 checks with TR-SIG-005 UNVERIFIED;
+  # that is a coverage result, not a conformance claim.
+  # These versions are the fixed run in .github/workflows/aeoess-aps-conformance.yml.
+  # The floating run installs unpinned releases as drift detection (#169).
+  # The revocation observations in README were made against 0.9.0 and stand as
+  # 0.9.0 results. They cannot be re-run on this exporter's record at 0.10.0:
+  # verify_record refuses it on schema grounds before any revocation check runs
+  # (observed with an empty store, a callable returning a non-bool, and a
+  # callable returning True; all three raise the schema error first).

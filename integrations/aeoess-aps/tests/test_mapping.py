@@ -1,8 +1,8 @@
 """APS to TRACE mapping tests.
 
 Covers the mapping itself, the refusals that keep an unverified APS decision
-from becoming a TRACE record, and a level 0 conformance run against the emitted
-record. Decisions are minted in-process with ephemeral keys, so no network
+from being mapped into TRACE record shape, and a level 0 coverage run against
+the mapping output. Decisions are minted in-process with ephemeral keys, so no network
 access, no credentials and no committed fixtures are involved.
 
 A committed decision fixture is impossible here on purpose: APS decisions
@@ -248,10 +248,10 @@ def test_non_dict_is_refused():
 
 # --- TRACE sign and verify round-trip ---------------------------------------
 
-def test_signed_record_passes_trace_tests_level_0(record):
-    """Signing works and the signature checks out, on a deliberately partial record.
+def test_signed_mapping_has_no_level0_findings(record):
+    """Signing works and the signature checks out, on a schema-incomplete mapping output.
 
-    Level 0 is this integration's gate, as the README says. The unsigned record
+    Level 0 is a coverage probe here, not a conformance gate. The unsigned output
     leaves TR-SIG-005 UNVERIFIED; once signed, nothing should be unverified.
     """
     runner = pytest.importorskip("trace_tests.runner")
@@ -268,7 +268,7 @@ def test_signed_record_passes_trace_tests_level_0(record):
     assert [f.code for f in findings if f.status is Status.UNVERIFIED] == []
 
 
-def test_full_verify_record_refuses_a_partial_record(record):
+def test_verify_record_refuses_schema_incomplete_mapping(record):
     """The boundary this integration lives on, asserted rather than assumed.
 
     agentrust-trace 0.10.0 made ``verify_record`` enforce the full v0.2 schema,
@@ -330,8 +330,8 @@ def test_present_fields_all_validate_against_the_v02_schema(record):
     assert missing == DOCUMENTED_ABSENT_REQUIRED
 
 
-def test_record_passes_trace_tests_level_0(record):
-    """Level 0 must pass, with TR-SIG-005 UNVERIFIED on the unsigned record."""
+def test_mapping_level0_coverage_result(record):
+    """Level 0 coverage result: 8 checks, TR-SIG-005 UNVERIFIED on the unsigned output."""
     runner = pytest.importorskip("trace_tests.runner")
     from trace_tests.result import Status
 
@@ -341,3 +341,12 @@ def test_record_passes_trace_tests_level_0(record):
     assert [f.code for f in findings if f.status is Status.FAIL] == []
     unverified = [f for f in findings if f.status is Status.UNVERIFIED]
     assert [f.code for f in unverified] == ["TR-SIG-005"]
+
+
+def test_integration_metadata_claims_no_level():
+    """#170: external-evidence-source, and no conformance level anywhere in the manifest."""
+    import pathlib
+    import yaml
+    manifest = yaml.safe_load(pathlib.Path(__file__).resolve().parents[1].joinpath("integration.yaml").read_text())
+    assert manifest["trace_roles"] == ["external-evidence-source"]
+    assert "trace_conformance_level" not in manifest
