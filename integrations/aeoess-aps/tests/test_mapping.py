@@ -346,7 +346,11 @@ def test_mapping_level0_coverage_result(record):
 def test_integration_metadata_claims_no_level():
     """#170: external-evidence-source, and no conformance level anywhere in the manifest."""
     import pathlib
-    import yaml
-    manifest = yaml.safe_load(pathlib.Path(__file__).resolve().parents[1].joinpath("integration.yaml").read_text())
-    assert manifest["trace_roles"] == ["external-evidence-source"]
-    assert "trace_conformance_level" not in manifest
+    import re
+    text = pathlib.Path(__file__).resolve().parents[1].joinpath("integration.yaml").read_text()
+    # Parsed with re rather than a YAML library so the test extras stay as they are.
+    body = "\n".join(line for line in text.splitlines() if not line.lstrip().startswith("#"))
+    roles = re.search(r"^trace_roles:\n((?:  - .*\n?)+)", body, re.M)
+    assert roles is not None
+    assert [r.strip()[2:] for r in roles.group(1).strip().splitlines()] == ["external-evidence-source"]
+    assert re.search(r"^trace_conformance_level:", body, re.M) is None

@@ -1,6 +1,6 @@
 {
   "catalog_version": 1,
-  "count": 35,
+  "count": 36,
   "integrations": [
     {
       "name": "Claude Code",
@@ -270,6 +270,24 @@
         "regulation",
         "compliance"
       ]
+    },
+    {
+      "name": "ComputeID AgentPassport TRACE Adapter",
+      "package_name": "ComputeID AgentPassport TRACE Adapter",
+      "vendor": "ComputeID",
+      "description": "Converts ComputeID AgentPassport /verify evidence into a TRACE-shaped record via the third-party-control-plane origin path; does not currently pass TRACE conformance at any level.",
+      "path": "integrations/computeid-agentpassport-trace",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/computeid-agentpassport-trace",
+      "homepage": null,
+      "repository": "https://github.com/trustedaicompute-ops/computeid-trace-adapter",
+      "tier": "community",
+      "stack": [
+        "TRACE"
+      ],
+      "category": "Identity & trust",
+      "mark": "CID",
+      "featured": null,
+      "keywords": []
     },
     {
       "name": "Confidential Containers Trustee",
