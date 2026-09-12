@@ -451,7 +451,7 @@ def build_trace(cur: dict) -> dict:
 def sign_all(cur: dict, outdir: Path) -> tuple[dict, dict]:
     try:
         from agent_manifest import Ed25519Signer, Ed25519Verifier, Manifest
-        from agentrust_trace import generate_key, sign_record
+        from agentrust_trace import sign_record
     except ImportError as e:
         raise SystemExit(
             "Signing needs the crypto packages, which are not installed. Run:\n"
@@ -467,19 +467,28 @@ def sign_all(cur: dict, outdir: Path) -> tuple[dict, dict]:
     manifest["signature"] = Ed25519Signer(kp).sign(manifest)
     Ed25519Verifier(kp.public_bytes).verify(manifest, manifest["signature"]["signature_value"])
 
-    trace = sign_record(build_trace(cur), generate_key())
+    # The same persisted key that signs the manifest, not a fresh one. A record
+    # signed by a throwaway key keeps its only public half inside its own
+    # cnf.jwk, and agentrust_trace.verify_record refuses that by default:
+    # trusting the key a record names proves the record is internally
+    # consistent, not that it came from anyone. It also gave the agent a new
+    # TRACE identity every session, so the key could never be pinned out of
+    # band or registered as a producer.
+    trace = sign_record(build_trace(cur), kp.private_key)
 
     outdir.mkdir(parents=True, exist_ok=True)
     (outdir / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
     (outdir / "trace.json").write_text(json.dumps(trace, indent=2), encoding="utf-8")
-    # Publish the public key so a third party can verify manifest.json without
-    # trusting this machine: load it into the verifier's trusted_keys as
-    # {key_id: public_key_b64url}. The private key never leaves ~/.claude.
+    # Publish the public key so a third party can verify manifest.json and
+    # trace.json without trusting this machine: load it into the verifier's
+    # trusted_keys as {key_id: public_key_b64url}. The private key never leaves
+    # ~/.claude.
     verification_key = {
         "algorithm": "Ed25519",
         "key_id": kp.key_id,
         "public_key_b64url": kp.public_b64url(),
-        "note": "load as {key_id: public_key_b64url} into the verifier's trusted_keys",
+        "note": "load as {key_id: public_key_b64url} into the verifier's trusted_keys; "
+                "verifies both manifest.json and trace.json, which share this key",
     }
     (outdir / "verification_key.json").write_text(
         json.dumps(verification_key, indent=2), encoding="utf-8"

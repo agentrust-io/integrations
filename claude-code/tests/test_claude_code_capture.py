@@ -5,6 +5,7 @@ network or signing dependencies, so it runs in CI without the crypto packages.
 """
 from __future__ import annotations
 
+import base64
 import importlib.util
 import json
 from pathlib import Path
@@ -541,6 +542,69 @@ def test_manifest_is_externally_verifiable_and_tamper_evident(tmp_path, monkeypa
     tampered["artifacts"]["policy_bundle"]["hash"] = "sha256:" + "0" * 64
     bad = verify_manifest(tampered, ctx, RevocationStore())
     assert bad.signature_verified is False
+
+
+def test_trace_record_is_externally_verifiable_with_the_published_key(tmp_path, monkeypatch):
+    """The mirror of the manifest test above, which is why this was missed.
+
+    The manifest had this test and the trace record did not, so the trace
+    record was signed with agentrust_trace.generate_key() for three sessions
+    and nobody noticed. A record signed by a throwaway key keeps its only
+    public half inside its own cnf.jwk, and verify_record refuses that by
+    default: it proves the record is internally consistent, not that it came
+    from anyone.
+    """
+    pytest.importorskip("agentrust_trace")
+    pytest.importorskip("cryptography")
+    from agentrust_trace import verify_record
+
+    _point_signing_key(tmp_path, monkeypatch)
+    out = tmp_path / "records"
+    cur = capture.snapshot({"model_id": "claude-x", "builtin_tools": ["Bash"], "mcp_servers": []})
+    _manifest, trace = capture.sign_all(cur, out)
+
+    vk = json.loads((out / "verification_key.json").read_text(encoding="utf-8"))
+    jwk = {"kty": "OKP", "crv": "Ed25519", "x": vk["public_key_b64url"]}
+
+    # A third party holding only the published public key verifies the record.
+    # No allow_embedded_key: that flag is the insecure path this test exists to
+    # keep us off, and verify_record raises without either.
+    verify_record(trace, jwk, max_age_seconds=None)
+
+    # And the record must not be verifiable under some other key.
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+    other = Ed25519PrivateKey.generate().public_key().public_bytes_raw()
+    other_jwk = {"kty": "OKP", "crv": "Ed25519",
+                 "x": base64.urlsafe_b64encode(other).decode().rstrip("=")}
+    with pytest.raises(Exception):
+        verify_record(trace, other_jwk, max_age_seconds=None)
+
+
+def test_manifest_and_trace_share_one_stable_identity(tmp_path, monkeypatch):
+    """Two sessions, one key, and the same key across both record types.
+
+    A TRACE identity that changes every session cannot be pinned out of band,
+    so it can never be registered as a trace-registry producer. Registering a
+    producer is the whole point of a stable signing identity.
+    """
+    pytest.importorskip("agentrust_trace")
+    pytest.importorskip("cryptography")
+
+    _point_signing_key(tmp_path, monkeypatch)
+    cur = capture.snapshot({"model_id": "claude-x", "builtin_tools": [], "mcp_servers": []})
+
+    first_manifest, first_trace = capture.sign_all(cur, tmp_path / "run1")
+    second_manifest, second_trace = capture.sign_all(cur, tmp_path / "run2")
+
+    published = json.loads(
+        (tmp_path / "run1" / "verification_key.json").read_text(encoding="utf-8")
+    )["public_key_b64url"]
+
+    # The trace record names its confirmation key, and it has to be the
+    # published one rather than a per-session key.
+    assert first_trace["cnf"]["jwk"]["x"] == published
+    assert second_trace["cnf"]["jwk"]["x"] == first_trace["cnf"]["jwk"]["x"]
+    assert first_manifest["signature"]["key_id"] == second_manifest["signature"]["key_id"]
 
 
 # ---------------------------------------------------------------------------
