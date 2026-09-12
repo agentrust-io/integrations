@@ -1,4 +1,12 @@
-# Agent Passport System TRACE exporter conformance workflow.
+# Agent Passport System TRACE exporter workflow.
+#
+# Two jobs answering two questions (#169, #170):
+#   floating  installs the latest released agentrust-io packages, unpinned on
+#             purpose, as drift detection ("harness gets pinned, subject does not").
+#   fixed     installs exactly the versions named in integration.yaml
+#             tested_against, so that claim cannot move underneath itself.
+# Neither job asserts a TRACE conformance level. This integration is an
+# external-evidence-source; trace-tests --level 0 runs as a coverage report.
 # Lives at repo root because GitHub Actions only discovers workflows there.
 # Scoped to this integration via the paths filter.
 name: aeoess-aps conformance
@@ -19,7 +27,8 @@ permissions:
   contents: read
 
 jobs:
-  conformance:
+  floating:
+    name: floating (latest releases, drift detection)
     strategy:
       fail-fast: false
       matrix:
@@ -40,11 +49,56 @@ jobs:
         run: pytest integrations/aeoess-aps/tests -q
       - name: Emit a sample TRACE record
         run: python integrations/aeoess-aps/examples/emit_record.py --out trust-record.jwt
-      - name: TRACE conformance level 0
+      - name: trace-tests level 0 (coverage report, not a conformance claim)
         run: trace-tests verify --record trust-record.jwt --level 0
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
-          name: conformance-${{ matrix.os }}-py${{ matrix.python }}
+          name: floating-${{ matrix.os }}-py${{ matrix.python }}
+          path: |
+            trust-record.jwt
+            trust-record.jwt.signed.json
+
+  fixed:
+    name: fixed (tested_against versions)
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12", "3.13", "3.14"]
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install the package set that reproduces the tested_against result
+        # integration.yaml records agentrust-trace and agentrust-trace-tests, the
+        # keys its schema supports; agent-passport-system is pinned here as part
+        # of the same reproducible snapshot.
+        run: |
+          pip install "agentrust-trace==0.10.0" "agentrust-trace-tests==0.5.1" "agent-passport-system==3.0.1"
+      - name: Pinned versions match integration.yaml
+        run: |
+          python - <<'PY'
+          import re, sys
+          from importlib.metadata import version
+          y = open("integrations/aeoess-aps/integration.yaml").read()
+          want = dict(re.findall(r'^  (agentrust-trace|agentrust-trace-tests): "([^"]+)"', y, re.M))
+          have = {k: version(k) for k in want}
+          print(want, have)
+          sys.exit(0 if want == have else 1)
+          PY
+      - name: Install this integration
+        run: pip install -e "integrations/aeoess-aps[test]"
+      - name: Integration tests
+        run: pytest integrations/aeoess-aps/tests -q
+      - name: Emit a sample record
+        run: python integrations/aeoess-aps/examples/emit_record.py --out trust-record.jwt
+      - name: trace-tests level 0 (coverage report, not a conformance claim)
+        run: trace-tests verify --record trust-record.jwt --level 0
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: fixed-${{ matrix.os }}-py${{ matrix.python }}
           path: |
             trust-record.jwt
             trust-record.jwt.signed.json
