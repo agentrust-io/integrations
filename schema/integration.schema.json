@@ -178,6 +178,20 @@
       "then": { "required": ["trace_conformance_level"] }
     },
     {
+      "$comment": "The mirror of the rule above. An external-evidence-source maps somebody else's signed evidence into TRACE shape and issues no Trust Record of its own, so it has no level of its own to claim. integrations/_template/integration.yaml previously showed the two as a pair, which is how aeoess-aps came to carry a level it could not support (integrations#170).",
+      "if": {
+        "required": ["trace_roles"],
+        "not": {
+          "properties": {
+            "trace_roles": {
+              "contains": { "enum": ["record-producer", "record-consumer"] }
+            }
+          }
+        }
+      },
+      "then": { "not": { "required": ["trace_conformance_level"] } }
+    },
+    {
       "if": {
         "properties": {
           "integrates_with": { "contains": { "const": "wcm" } }
