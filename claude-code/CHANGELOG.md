@@ -4,6 +4,32 @@ All notable changes to the AgenTrust for Claude Code plugin.
 
 ## Unreleased
 
+### Fixed
+- **The TRACE Trust Record is signed with the plugin's persisted key, not a
+  throwaway one.** `sign_all` called `agentrust_trace.generate_key()` for each
+  record, so the private half was discarded at once and the only copy of the
+  public half was the `cnf.jwk` inside the record itself.
+  `agentrust_trace.verify_record` refuses that by default and warns when forced
+  with `allow_embedded_key=True` that it "proves the record is internally
+  consistent, NOT that it came from a trusted issuer" - so the signature
+  attested to nothing about origin, which is the property the record exists to
+  carry. It also gave the agent a new TRACE identity every session: three
+  records captured locally in August carry three different keys, where their
+  manifests all share one.
+
+  The record now shares the key that signs the manifest, whose public half is
+  already published beside it as `verification_key.json`. That makes the record
+  verifiable by a third party holding only that file, and makes the identity
+  stable enough to pin out of band or register as a trace-registry producer,
+  which a per-session key can never be.
+
+  Records emitted before this change cannot be retrofitted; their signing keys
+  no longer exist. Re-run `/trace` to emit a verifiable one.
+
+  Found because the test suite asserted the manifest was externally verifiable
+  and never asked the same of the record. It does now, and both new tests fail
+  against the previous behaviour.
+
 ### Breaking
 - Drift detection now requires the separately published
   `agentrust-capture-core` package; the previous vendored fallback was removed.
