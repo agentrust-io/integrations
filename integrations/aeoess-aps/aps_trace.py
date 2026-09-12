@@ -1,10 +1,12 @@
-"""aps_trace: export one signed APS policy decision as a TRACE Trust Record.
+"""aps_trace: map one signed APS policy decision, as external evidence, into TRACE record shape.
 
 The Agent Passport System (APS) evaluates an ActionIntent against a Values
 Floor and returns a PolicyDecision: a dict signed by the evaluator, carrying a
 verdict of ``permit``, ``narrow`` or ``deny``. This module maps exactly one
-such decision onto one TRACE Trust Record dict (EAT profile
-``tag:agentrust-io.com,2026:trace-v0.2``).
+such decision onto one TRACE-shaped mapping output (EAT profile
+``tag:agentrust-io.com,2026:trace-v0.2``). The output is not a TRACE Trust
+Record: this integration is an ``external-evidence-source`` and claims no
+conformance level (agentrust-io/integrations#170).
 
 Two different signatures are involved and they are never the same key:
 
@@ -49,8 +51,9 @@ Deliberately absent
 ``model``, ``data_class`` and ``build_provenance`` are required by the TRACE
 v0.2 JSON Schema and are absent here. An APS policy decision carries no model
 identity, no data classification and no build provenance, so any value would be
-invented. The record is therefore a partial TRACE record: it passes
-``trace-tests verify --level 0``, and it does not satisfy the full v0.2 schema.
+invented. The mapping output therefore does not satisfy the v0.2 Trust Record
+schema and ``agentrust_trace.verify_record`` refuses it. ``trace-tests verify
+--level 0`` runs on it as a coverage probe, not as a conformance claim.
 ``tests/test_mapping.py`` pins the exact set of absent required fields so the
 gap stays deliberate. See the README section "What it does NOT claim".
 
@@ -111,7 +114,7 @@ REQUIRED_DECISION_KEYS = frozenset(
 
 
 def build_trace_record(decision: dict[str, Any], *, trace_jwk: dict[str, str]) -> dict[str, Any]:
-    """Map one signed APS policy decision onto an unsigned TRACE Trust Record.
+    """Map one signed APS policy decision onto an unsigned TRACE-shaped mapping output.
 
     Args:
         decision: The dict returned by ``agent_passport.policy.evaluate_intent``,
@@ -121,7 +124,8 @@ def build_trace_record(decision: dict[str, Any], *, trace_jwk: dict[str, str]) -
             the APS evaluator key.
 
     Returns:
-        An unsigned TRACE Trust Record dict.
+        An unsigned dict in TRACE v0.2 record shape. It omits ``model``,
+        ``data_class`` and ``build_provenance`` and is not a TRACE Trust Record.
 
     Raises:
         ValueError: if the decision is malformed, its evaluator signature does
@@ -175,7 +179,7 @@ def build_trace_record(decision: dict[str, Any], *, trace_jwk: dict[str, str]) -
 
 
 def _validate_decision(decision: dict[str, Any]) -> None:
-    """Refuse anything that must not become a TRACE Trust Record.
+    """Refuse anything that must not be mapped into TRACE record shape.
 
     Checks shape, then the evaluator signature and expiry through
     ``verify_policy_decision``, then the verdict. Every rejection raises

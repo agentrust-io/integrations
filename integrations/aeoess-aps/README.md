@@ -64,9 +64,11 @@ One observed divergence, kept as tested against 0.9.0: an empty `RevocationStore
 accepts and an omitted store skips the check, while APS treats "no artifacts observed"
 as no evidence rather than as not revoked. TRACE's own section 3.2.3 takes the APS
 position at the bundle level (a verifier with no bundle reports that it performed no
-revocation check). The behaviour observed at `tested_against: 0.9.0` is retained here as a tested
+revocation check). The behaviour observed at agentrust-trace 0.9.0 is retained here as a tested
 implementation result; agentrust-io/trace-spec#246 records it as inconsistent with
-section 3.2.3.
+section 3.2.3. It cannot be re-observed on this exporter's record at 0.10.0, where
+`verify_record` refuses the record on schema grounds before any revocation check
+runs, so these rows are 0.9.0 results and are not restated for 0.10.0.
 
 The APS artifacts examined come from aeoess/agent-passport-system#123 (revocation
 verification corpus). Mapping questions and answers: agentrust-io/integrations#140.
@@ -138,17 +140,22 @@ convention here. The verdict is still carried, as `policy.enforcement_mode` and
 
 See rules 2 and 4 in [CONTRIBUTING.md](../../CONTRIBUTING.md).
 
-- **The record is a partial TRACE record.** `model`, `data_class` and
-  `build_provenance` are required by the v0.2 JSON Schema and are absent. An APS
-  policy decision carries no model identity, no data classification and no build
-  provenance, so any value there would be invented. The record passes
-  `trace-tests verify --level 0`, which does not grade those fields, and it does
-  not satisfy the full v0.2 schema. `tests/test_mapping.py` pins the exact set of
-  absent required fields so the gap cannot widen silently.
-- **Level 0 carries an explicit `TR-SIG-005 UNVERIFIED` finding.** The graded
-  artifact is the unsigned record, so trace-tests reports that it is not
-  cryptographically verified. The signed form is written next to it as
-  `<out>.signed.json` and verifies with `agentrust_trace.verify_record`.
+- **This integration is an `external-evidence-source`, not a `record-producer`,
+  and claims no conformance level.** An APS decision is signed external
+  evidence. The mapper places it into a TRACE record but cannot populate
+  `model`, `data_class` or `build_provenance`, which the v0.2 JSON Schema
+  requires, without inventing them. So the emitted record is not a TRACE Trust
+  Record, and from `agentrust-trace` 0.10.0 `verify_record` refuses it on
+  schema grounds. `tests/test_mapping.py` pins both the exact set of absent
+  required fields and that refusal, so neither can change silently. The same
+  role, for the same reason, is used by `nobulex`.
+- **`trace-tests verify --level 0` is a coverage report here, not a claim.** It
+  reports 8 checks with an explicit `TR-SIG-005 UNVERIFIED` finding because the
+  graded artifact is the unsigned record. A clean Level 0 run means nothing the
+  suite could check went wrong. It does not mean the record verifies.
+- **The signed form `<out>.signed.json` demonstrates the sign path only.** Its
+  signature is valid over the emitted claims, and `verify_record` still refuses
+  it, because signature validity is not schema validity.
 - **`runtime.platform` is `software-only` and there is no hardware attestation.**
   `runtime.measurement` is a digest of the signed APS decision, not a TEE
   measurement. Per the v0.2 schema, `software-only` records must never be treated
@@ -157,11 +164,19 @@ See rules 2 and 4 in [CONTRIBUTING.md](../../CONTRIBUTING.md).
   does not chain to a trusted issuer.
 - **`transparency` is `urn:aps:transparency:none`.** This integration publishes
   nothing to a transparency log, so there is no SCITT receipt to resolve.
-- **No conformance level above 0 is claimed or configured.**
+- **No conformance level is claimed or configured.**
 
-## Conformance CI
+## CI
 
 `.github/workflows/aeoess-aps-conformance.yml` at the repository root, scoped to
-`integrations/aeoess-aps/**`. It installs the released packages, runs the tests,
-emits a record and runs `trace-tests verify --level 0` across Python 3.11 to
-3.14.
+`integrations/aeoess-aps/**`, runs two jobs across Python 3.11 to 3.14:
+
+- **floating** installs the latest released packages, unpinned on purpose, as
+  drift detection. This is the "harness gets pinned, subject does not" rule
+  from #169.
+- **fixed** installs exactly the versions named in `integration.yaml`
+  `tested_against`, checks that the installed versions match that file, and
+  runs the same steps. This is what backs the `tested_against` claim.
+
+Both run the tests, emit a record, and run `trace-tests verify --level 0` as a
+coverage report.
