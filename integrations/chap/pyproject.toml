@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "chap-agentrust-integration"
+version = "0.1.0"
+description = "CHAP review decisions as TRACE approval-outcome references"
+requires-python = ">=3.11"
+license = "Apache-2.0"
+dependencies = ["agentrust-trace", "rfc8785"]
+
+[project.optional-dependencies]
+demo = ["chap-coordinator"]
+test = ["pytest", "chap-coordinator", "agentrust-trace-tests"]
+
+[tool.setuptools]
+py-modules = ["chap_trace", "chap_demo"]

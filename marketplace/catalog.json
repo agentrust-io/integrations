@@ -1,6 +1,6 @@
 {
   "catalog_version": 1,
-  "count": 36,
+  "count": 37,
   "integrations": [
     {
       "name": "Claude Code",
@@ -247,6 +247,29 @@
         "provenance",
         "tutorial",
         "cross-operator"
+      ]
+    },
+    {
+      "name": "CHAP approval outcome",
+      "package_name": "CHAP",
+      "vendor": "agentrust-io",
+      "description": "Cites a CHAP review decision from a TRACE Trust Record as an approval-outcome reference, and checks the reference against an exported CHAP audit log.",
+      "path": "integrations/chap",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/chap",
+      "homepage": "https://github.com/BrightbeamAI/chap",
+      "repository": "https://github.com/agentrust-io/integrations",
+      "tier": "community",
+      "stack": [
+        "TRACE"
+      ],
+      "category": "Evidence & receipts",
+      "mark": "CH",
+      "featured": null,
+      "keywords": [
+        "chap",
+        "human-review",
+        "approval",
+        "references"
       ]
     },
     {

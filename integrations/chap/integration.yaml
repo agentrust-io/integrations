@@ -1,0 +1,33 @@
+name: CHAP
+vendor: agentrust-io
+integrates_with:
+  - trace
+description: >-
+  Cites a CHAP review decision from a TRACE Trust Record as an approval-outcome
+  reference, and checks the reference against an exported CHAP audit log.
+maintainer:
+  github: imran-siddique
+repository: https://github.com/agentrust-io/integrations
+homepage: https://github.com/BrightbeamAI/chap
+license: Apache-2.0
+tier: community
+marketplace:
+  display_name: CHAP approval outcome
+  category: Evidence & receipts
+  mark: CH
+  keywords: [chap, human-review, approval, references]
+# Roles. The adapter builds the `references` entry a producer signs into its own
+# Trust Record, and checks a received record's reference against a CHAP log. The
+# rest of the record (model, runtime, policy, data_class, build_provenance) belongs
+# to the governed run, not to CHAP; examples/emit_record.py fills those with fixed
+# example values and says so. Level 0: software-only signing, no attestation.
+trace_roles:
+  - record-producer
+  - record-consumer
+trace_conformance_level: 0
+tested_against:
+  agentrust-trace: "0.10.0"
+  agentrust-trace-tests: "0.5.1"
+  # The schema records agentrust-io package keys only. The fixed job in
+  # .github/workflows/chap-conformance.yml also pins chap-coordinator 0.2.13, the
+  # CHAP reference coordinator every test and example drives.
