@@ -4,5 +4,5 @@
 # First pass for the framework adapter jobs: the record builder and honesty
 # rules must work with no agent framework installed. Deliberately carries no
 # SDK; the framework locks below are applied in the second step only.
-agentrust-trace>=0.9
+agentrust-trace>=0.10.0
 pytest
