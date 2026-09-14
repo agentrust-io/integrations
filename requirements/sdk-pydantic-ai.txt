@@ -19,11 +19,11 @@ griffelib==2.3.0 \
     --hash=sha256:1b8f9cd525681c26b1d6d574faa1371651e8459ca51d209684f50b8096ae06e0 \
     --hash=sha256:7b0952caf5bca6afa4bb5ee8c6a2d183fe3f21b62efc5f6c7243cb2b26d2d115
     # via pydantic-ai-slim
-h11==0.16.0 ; sys_platform != 'emscripten' \
+h11==0.16.0 \
     --hash=sha256:4e35b956cf45792e4caa5885e69fba00bdbc6ffafbfa020300e549b208ee5ff1 \
     --hash=sha256:63cf8bbe7522de3bf65932fda1d9c2772064ffb3dae62d55932da54b31cb6c86
     # via httpcore2
-httpcore2==2.12.0 ; sys_platform != 'emscripten' \
+httpcore2==2.12.0 \
     --hash=sha256:7e04258ce01013d7d615e5b910a3b27fac937d7a95038227e79652b4ba3b4ceb \
     --hash=sha256:9293522bba0aa7c4c8e9e3f040c16575bd8868e155a77fa30c7a9085a5eae648
     # via httpx2
@@ -33,10 +33,6 @@ httpx2==2.12.0 \
     # via
     #   genai-prices
     #   pydantic-ai-slim
-httpx2-jsfetch==1.0 ; python_full_version >= '3.12' and sys_platform == 'emscripten' \
-    --hash=sha256:70a0e3eabfef7cce5ad9c629f7d01ca05e418f586646f4ddf14782e4c1454c60 \
-    --hash=sha256:cb916b707601e69a07721aabc8f3f6659be3a6893bc1ff5c6f9e02241df2da32
-    # via httpx2
 idna==3.19 \
     --hash=sha256:5e0811a4383b21dc5838069f801c4fb62113b7447663d2530d2bd6e77b49bf15 \
     --hash=sha256:815e7be7a7806d54abb586dc943addc79e8b2ee16915059658cbeff4b1b43bf4
@@ -69,9 +65,9 @@ pydantic==2.13.5 \
     #   genai-prices
     #   pydantic-ai-slim
     #   pydantic-graph
-pydantic-ai-slim==2.35.1 \
-    --hash=sha256:2fb842df93e444fe74319e743e341e972bad268e88b29f7a337e0a3032be5d16 \
-    --hash=sha256:afc3b15092e8b5b54b82acddec058b8c3aebac18c52f74707942333d06d38ede
+pydantic-ai-slim==2.42.0 \
+    --hash=sha256:045c788b1636e0ed79542f2b7562d2688a3e3701744ed7379a928fceec446336 \
+    --hash=sha256:a042b73551470c40a2ab7cd532e26c20f592b5731ae544ff3eecbcdf6ceebcc4
     # via -r requirements/sdk-pydantic-ai.in
 pydantic-core==2.46.5 \
     --hash=sha256:013d6f3483d81e02e7c328831808f336c8596ee33b4bd4026b9ffb1e960b8942 \
@@ -195,11 +191,11 @@ pydantic-core==2.46.5 \
     --hash=sha256:fc8515076c11f3cfdf4fb142dcca0fe384b1230a3b5415458ac84f3e0903ec13 \
     --hash=sha256:ff218293c9c806138dca139765e3b067621be52bcd93cdc14c7711be7ddc90a9
     # via pydantic
-pydantic-graph==2.35.1 \
-    --hash=sha256:52adad7963370e6e794708eedc58ca07f27b66e339a8594ada150a2abf7a1360 \
-    --hash=sha256:849b143e3246a985ff5ff65727b0d4b44945dea47db4b057212c0aa06b82fd4d
+pydantic-graph==2.42.0 \
+    --hash=sha256:25c47047ac1bbad2fdc6dace23958c6ec700a6366abc18d67dccd41411185df7 \
+    --hash=sha256:eb6c416dee9e3415195194c44ca3abeeae8853bff095d38ac798c7c3395f815d
     # via pydantic-ai-slim
-truststore==0.10.4 ; sys_platform != 'emscripten' \
+truststore==0.10.4 \
     --hash=sha256:9d91bd436463ad5e4ee4aba766628dd6cd7010cf3e2461756b3303710eebc301 \
     --hash=sha256:adaeaecf1cbb5f4de3b1959b42d41f6fab57b2b1666adb59e89cb0b53361d981
     # via
@@ -210,7 +206,6 @@ typing-extensions==4.16.0 \
     --hash=sha256:dc983d19a509c94dba722ee6abd33940f7c05a89e243c47e907eb4db6f1a43e5
     # via
     #   anyio
-    #   httpx2
     #   opentelemetry-api
     #   opentelemetry-sdk
     #   opentelemetry-semantic-conventions
