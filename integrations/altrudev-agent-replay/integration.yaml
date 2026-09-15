@@ -1,0 +1,34 @@
+name: Agent Replay
+vendor: Altru.dev
+
+integrates_with:
+  - trace
+
+description: >-
+  Verifies standalone TRACE Trust Records and attaches their verified evidence summary to AI-agent incident reconstructions.
+
+maintainer:
+  github: altrudev
+
+repository: https://github.com/altrudev/Agent-Replay
+
+license: Apache-2.0
+tier: community
+
+marketplace:
+  category: Evidence & receipts
+  mark: AR
+  keywords:
+    - incident-reconstruction
+    - forensics
+    - TRACE
+    - agent-traces
+
+trace_roles:
+  - record-consumer
+
+trace_conformance_level: 0
+
+tested_against:
+  agentrust-trace: "0.10.0"
+  agentrust-trace-tests: "0.5.1"

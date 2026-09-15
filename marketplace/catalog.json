@@ -1,6 +1,6 @@
 {
   "catalog_version": 1,
-  "count": 37,
+  "count": 38,
   "integrations": [
     {
       "name": "Claude Code",
@@ -156,6 +156,29 @@
         "passport",
         "identity",
         "policy"
+      ]
+    },
+    {
+      "name": "Agent Replay",
+      "package_name": "Agent Replay",
+      "vendor": "Altru.dev",
+      "description": "Verifies standalone TRACE Trust Records and attaches their verified evidence summary to AI-agent incident reconstructions.",
+      "path": "integrations/altrudev-agent-replay",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/altrudev-agent-replay",
+      "homepage": null,
+      "repository": "https://github.com/altrudev/Agent-Replay",
+      "tier": "community",
+      "stack": [
+        "TRACE"
+      ],
+      "category": "Evidence & receipts",
+      "mark": "AR",
+      "featured": null,
+      "keywords": [
+        "incident-reconstruction",
+        "forensics",
+        "TRACE",
+        "agent-traces"
       ]
     },
     {
