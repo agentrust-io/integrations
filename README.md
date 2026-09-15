@@ -52,7 +52,7 @@ TRACE only works as a standard if it is genuinely neutral. Integrations are list
 | [OpenShell TRACE Adapter](integrations/openshell/) | agentrust-io | trace | community |
 | [OpenTelemetry GenAI](integrations/otel-genai/) | agentrust-io | trace | community |
 | [ramen-ai cMCP Adapter](integrations/ramen-ai-cmcp/) | ramen-ai | cmcp, trace | verified |
-| [SAGE AgenTrust Bridge](integrations/sage-agenttrust/) | SAGE AgenTrust Bridge | cmcp, trace | community |
+| [SAGE AgenTrust Bridge](integrations/sage-agenttrust/) | SAGE | cmcp, trace | community |
 | [Agent Sentinel](integrations/sentinel/) | a1k7 | trace | community |
 | [Shadow AI Discovery](integrations/shadow-ai/) | agentrust-io | cmcp, agent-manifest | community |
 | [Agentic SpendGuard](integrations/spendguard/) | SpendGuard | trace | community |
