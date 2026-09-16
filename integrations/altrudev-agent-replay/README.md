@@ -44,6 +44,7 @@ record = {
     "data_class": "internal",
     "build_provenance": {"slsa_level": 1, "digest": "sha256:" + "e" * 64},
     "appraisal": {"status": "none", "verifier": "https://verifier.example.test"},
+    "transparency": "https://registry.example.test/trace/sample",
 }
 signed = sign_record(record, key)
 Path("session.trace.json").write_text(json.dumps(signed), encoding="utf-8")
