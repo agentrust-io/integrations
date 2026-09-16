@@ -11,6 +11,10 @@ on:
       - "integrations/google-adk/**"
       - "integrations/openshell/**"
       - "integrations/openai-agents/**"
+      - "requirements/adapters*.in"
+      - "requirements/adapters*.txt"
+      - "requirements/sdk-*.in"
+      - "requirements/sdk-*.txt"
       - ".github/workflows/trace-adapters-tests.yml"
   push:
     branches: [main]
@@ -23,6 +27,10 @@ on:
       - "integrations/google-adk/**"
       - "integrations/openshell/**"
       - "integrations/openai-agents/**"
+      - "requirements/adapters*.in"
+      - "requirements/adapters*.txt"
+      - "requirements/sdk-*.in"
+      - "requirements/sdk-*.txt"
       - ".github/workflows/trace-adapters-tests.yml"
 
 permissions:
