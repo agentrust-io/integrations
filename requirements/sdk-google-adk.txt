@@ -40,7 +40,7 @@ certifi==2026.7.22 \
     #   httpcore
     #   httpx
     #   requests
-cffi==2.1.1 \
+cffi==2.1.1 ; platform_python_implementation != 'PyPy' \
     --hash=sha256:046bfc24911b37851ee1b51aab8bffe713d89c68c6a057b09484ce9fd5f69b4e \
     --hash=sha256:06c72bb76605a4b0cd0aad6930b69d4baf7dd5d806cfc409b824191099700e66 \
     --hash=sha256:0beceaabe56af686895136a2de78db54ecd8e4046b236b8fd6d6cb61389e9bf2 \
@@ -387,7 +387,7 @@ google-adk==2.9.0 \
     --hash=sha256:3b15b91fdaf8e7193006d0ee4e745f45b4f39c62bdc1a6a8e60a4a8b1972bd3b \
     --hash=sha256:9c29c9345476a7130ae19e410e6a58abd6730fbd0902b6f3cbdfa771fb659f58
     # via -r requirements/sdk-google-adk.in
-google-auth[pyopenssl,requests]==2.57.1 \
+google-auth==2.57.1 \
     --hash=sha256:ab439dee60a6856412bc058f13a68eb6a59c5b81526bb89cfdcf89ce9c0a48c9 \
     --hash=sha256:eb47b230fc6707eed4aee1c9cef55ec05bc1785eecba74ff8b572d531e921b1e
     # via
@@ -465,7 +465,7 @@ pyasn1-modules==0.4.2 \
     --hash=sha256:29253a9207ce32b64c3ac6600edc75368f98473906e8fd1043bd6b5b1de2c14a \
     --hash=sha256:677091de870a80aae844b1ca6134f54652fa2c8c5a52aa396440ac3106e941e6
     # via google-auth
-pycparser==3.0 \
+pycparser==3.0 ; implementation_name != 'PyPy' and platform_python_implementation != 'PyPy' \
     --hash=sha256:600f49d217304a5902ac3c37e1281c9fe94e4d0489de643a9504c5cdfdfc6b29 \
     --hash=sha256:b727414169a36b7d524c1c3e31839a521725078d7b2ff038656844266160a992
     # via cffi
@@ -843,6 +843,8 @@ typing-extensions==4.16.0 \
     #   opentelemetry-semantic-conventions
     #   pydantic
     #   pydantic-core
+    #   referencing
+    #   starlette
     #   typing-inspection
 typing-inspection==0.4.4 \
     --hash=sha256:547274fa6b0a561ccf549cc9524b999a578e737d015d8709d021f9d0d13bea47 \
