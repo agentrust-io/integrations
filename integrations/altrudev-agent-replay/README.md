@@ -6,7 +6,7 @@ Agent Replay consumes standalone TRACE Trust Records as supplementary evidence d
 
 This listing is pinned to:
 
-- Agent Replay commit `77d4934e1560d2cfc2b80263cfc08c104a9ee079` (package version 0.4.3)
+- Agent Replay commit `79e8ff8647997a668af87b3c098f1a626247a12a` (package version 0.4.3)
 - `agentrust-trace==0.9.0`
 - `agentrust-trace-tests==0.5.1`
 
@@ -17,7 +17,7 @@ The earlier v0.4.2 dependency declared `agentrust-trace>=0.9.1,<0.10.0`, but 0.9
 ```bash
 git clone https://github.com/altrudev/Agent-Replay.git
 cd Agent-Replay
-git checkout 77d4934e1560d2cfc2b80263cfc08c104a9ee079
+git checkout 79e8ff8647997a668af87b3c098f1a626247a12a
 
 python3 -m venv .venv
 source .venv/bin/activate
@@ -74,9 +74,17 @@ trace-tests verify --record session.trace.json --level 0
 
 The adapter calls the released `agentrust-trace` `validate_json()` and `verify_record()` functions directly. It does not enable embedded-key trust; the issuer key is supplied independently.
 
-## Expected Level 0 result
+## Reproduced result
 
-The generated record is a software-only TRACE v0.2 development record. Level 0 should exit 0. Higher conformance levels are not claimed by this listing.
+Executed on an Ubuntu VPS against the pinned packages and Agent Replay commit above.
+
+- valid record: verified by Agent Replay through the released TRACE verifier;
+- tampered record: rejected with `cryptography.exceptions.InvalidSignature`;
+- wrong caller-supplied trusted key: rejected with `cryptography.exceptions.InvalidSignature`;
+- `pytest -q tests/test_trace_real_verifier.py`: `3 passed`;
+- `trace-tests verify --record session.trace.json --level 0`: `PASS (8 checks, 0 skipped)`.
+
+The generated record is a software-only TRACE v0.2 development record. Higher conformance levels are not claimed by this listing.
 
 ## What is verified
 
