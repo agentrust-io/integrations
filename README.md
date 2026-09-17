@@ -39,6 +39,7 @@ TRACE only works as a standard if it is genuinely neutral. Integrations are list
 | [Agent Passport System](integrations/aeoess-aps/) | aeoess | trace | community |
 | [cA2A Cross-Operator Delegation](integrations/agentrust-ca2a-cross-operator/) | agentrust-io | ca2a | community |
 | [CHAP](integrations/chap/) | agentrust-io | trace | community |
+| [AI Agent Incident Register](integrations/companyscope-incident-register/) | CompanyScope | agent-manifest | community |
 | [comply54](integrations/comply54/) | comply54 | trace | community |
 | [ComputeID AgentPassport TRACE Adapter](integrations/computeid-agentpassport-trace/) | ComputeID | trace | community |
 | [DecisionAssure](integrations/decisionassure/) | DecisionAssure (a1k7) | trace | community |
