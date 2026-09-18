@@ -1,0 +1,24 @@
+name: Bernstein MCP verifier
+vendor: Bernstein
+integrates_with:
+  - trace
+description: >-
+  Stateless TRACE v0.2 checks on one Trust Record or a delegation chain,
+  as MCP tools at mcp.bernstein.run; Bernstein runs emit the records.
+maintainer:
+  github: chernistry
+repository: https://github.com/sipyourdrink-ltd/bernstein-mcp
+homepage: https://mcp.bernstein.run
+license: Apache-2.0
+tier: community
+marketplace:
+  category: Evidence & receipts
+  mark: BN
+  keywords: [verifier, mcp, delegation, orchestration]
+trace_roles:
+  - record-producer
+  - record-consumer
+trace_conformance_level: 0
+tested_against:
+  agentrust-trace: "0.10.0"
+  agentrust-trace-tests: "0.5.1"

@@ -1,6 +1,6 @@
 {
   "catalog_version": 1,
-  "count": 37,
+  "count": 38,
   "integrations": [
     {
       "name": "Claude Code",
@@ -223,6 +223,29 @@
         "key-vault",
         "sev-snp",
         "attestation"
+      ]
+    },
+    {
+      "name": "Bernstein MCP verifier",
+      "package_name": "Bernstein MCP verifier",
+      "vendor": "Bernstein",
+      "description": "Stateless TRACE v0.2 checks on one Trust Record or a delegation chain, as MCP tools at mcp.bernstein.run; Bernstein runs emit the records.",
+      "path": "integrations/bernstein-mcp",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/bernstein-mcp",
+      "homepage": "https://mcp.bernstein.run",
+      "repository": "https://github.com/sipyourdrink-ltd/bernstein-mcp",
+      "tier": "community",
+      "stack": [
+        "TRACE"
+      ],
+      "category": "Evidence & receipts",
+      "mark": "BN",
+      "featured": null,
+      "keywords": [
+        "verifier",
+        "mcp",
+        "delegation",
+        "orchestration"
       ]
     },
     {

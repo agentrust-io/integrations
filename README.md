@@ -38,6 +38,7 @@ TRACE only works as a standard if it is genuinely neutral. Integrations are list
 | [claude-code](claude-code/) | agentrust-io | agent-manifest, trace | community |
 | [Agent Passport System](integrations/aeoess-aps/) | aeoess | trace | community |
 | [cA2A Cross-Operator Delegation](integrations/agentrust-ca2a-cross-operator/) | agentrust-io | ca2a | community |
+| [Bernstein MCP verifier](integrations/bernstein-mcp/) | Bernstein | trace | community |
 | [CHAP](integrations/chap/) | agentrust-io | trace | community |
 | [comply54](integrations/comply54/) | comply54 | trace | community |
 | [ComputeID AgentPassport TRACE Adapter](integrations/computeid-agentpassport-trace/) | ComputeID | trace | community |
