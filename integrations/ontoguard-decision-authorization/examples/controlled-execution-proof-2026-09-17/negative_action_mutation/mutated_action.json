@@ -1,0 +1,8 @@
+{
+  "action": "RELEASE_PAYMENT",
+  "amount": 260000.0,
+  "currency": "USD",
+  "counterparty": "newly added supplier",
+  "consequence": "FINANCIAL_COMMITMENT",
+  "cross_border": true
+}

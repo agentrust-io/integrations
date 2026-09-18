@@ -1,0 +1,45 @@
+{
+  "live_trace_id": "2fcdc71e-dc28-4d94-9150-fae4517103f3",
+  "live_handoff_hash": "sha256:857e7b2a887b4af1ba764addcaa36eeff1b0ff41e6ee70ab138689438d75ee52",
+  "live_decision_binding_hash": "sha256:e77da6414669b99d2cfc7f9ddcab2a16f58099c972d65a6198d348f8c37665c9",
+  "live_movement_hash": "sha256:9c84fe2af3815b82794a1bb8972535c5bf7f68b9bbdf8c3e353cca474e91ef03",
+  "pre_exec_checks": {
+    "decision_action": true,
+    "release_authorized": true,
+    "release_status": true,
+    "freshness_status": true,
+    "integrity_status": true,
+    "required_behavior": true,
+    "handoff_hash_present": true,
+    "movement_hash_present": true,
+    "amount_250000": true,
+    "counterparty": true
+  },
+  "executor_command": {
+    "action": "RELEASE_PAYMENT",
+    "amount": 250000.0,
+    "currency": "USD",
+    "counterparty": "newly added supplier",
+    "consequence": "FINANCIAL_COMMITMENT",
+    "cross_border": true
+  },
+  "partner_action_binding": {
+    "amount": "250000.00",
+    "consequence_class": "FINANCIAL_COMMITMENT",
+    "counterparty": "newly added supplier",
+    "cross_border": true,
+    "currency": "USD",
+    "operation": "RELEASE_PAYMENT"
+  },
+  "partner_action_binding_exact": "{\"amount\":\"250000.00\",\"consequence_class\":\"FINANCIAL_COMMITMENT\",\"counterparty\":\"newly added supplier\",\"cross_border\":true,\"currency\":\"USD\",\"operation\":\"RELEASE_PAYMENT\"}",
+  "authorized_action_binding_digest": "sha256:69d550f00938f4f950b263a730bab485262e2c9cc577e5dd8be5c661fa734433",
+  "executed_action_binding_digest": "sha256:69d550f00938f4f950b263a730bab485262e2c9cc577e5dd8be5c661fa734433",
+  "action_bind": true,
+  "authorized_movement_hash": "sha256:9c84fe2af3815b82794a1bb8972535c5bf7f68b9bbdf8c3e353cca474e91ef03",
+  "executed_movement_hash": "sha256:9c84fe2af3815b82794a1bb8972535c5bf7f68b9bbdf8c3e353cca474e91ef03",
+  "movement_bind": true,
+  "adapter_state": "ALLOW_EXECUTION_CANDIDATE",
+  "trace_record_emitted": false,
+  "trace_claim_present": true,
+  "note": "TRACE Level-0 published suite not executed in this environment. Candidate only."
+}

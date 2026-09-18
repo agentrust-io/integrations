@@ -1,0 +1,67 @@
+{
+  "authorization_result": {
+    "action": "ALLOW",
+    "release_authorized": true,
+    "trace_id": "release-payment-allow-executed-fixture",
+    "handoff_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "decision_binding_hash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "movement_hash": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "action_binding_profile": "ontoguard.partner-execution-action/v1",
+    "action_binding_digest": "sha256:69d550f00938f4f950b263a730bab485262e2c9cc577e5dd8be5c661fa734433",
+    "issued_at_utc": "2026-09-17T02:24:05.736031Z",
+    "expires_at_utc": "2026-09-24T02:24:05.736031Z"
+  },
+  "authorization_result_exact": "{\"action\":\"ALLOW\",\"action_binding_digest\":\"sha256:69d550f00938f4f950b263a730bab485262e2c9cc577e5dd8be5c661fa734433\",\"action_binding_profile\":\"ontoguard.partner-execution-action/v1\",\"decision_binding_hash\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"expires_at_utc\":\"2026-09-24T02:24:05.736031Z\",\"handoff_hash\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"issued_at_utc\":\"2026-09-17T02:24:05.736031Z\",\"movement_hash\":\"sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"release_authorized\":true,\"trace_id\":\"release-payment-allow-executed-fixture\"}",
+  "authorization_result_bytes_sha256": "sha256:649dfafe9fa56bdaad644ca7cb25bb5d0af41b2fcf2ca8d4ee397219f1e2fdab",
+  "authorization_signature": "DiceJc-4TcNrrPF6WXNaIVg6UE2At932B8RxwsIC2YQru8135UcChKFKLmPrsp8iAVHXMBtAgH5vCTYkv-GLCA",
+  "authorization_kid": "ontoguard-test-1",
+  "authorization_public_jwk": {
+    "kty": "OKP",
+    "crv": "Ed25519",
+    "x": "RvDSCzVjze1sj6mt2dXpejxv_tJ5ToYW65T42J1i844",
+    "kid": "ontoguard-test-1"
+  },
+  "label": "ALLOW_EXECUTION_PROVEN",
+  "execution_receipt": {
+    "executed": true,
+    "protected_effect_formed": true,
+    "authorized_action": "ALLOW",
+    "authorized_trace_id": "release-payment-allow-executed-fixture",
+    "authorized_handoff_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "authorized_decision_binding_hash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "authorized_result_digest": "sha256:649dfafe9fa56bdaad644ca7cb25bb5d0af41b2fcf2ca8d4ee397219f1e2fdab",
+    "authorized_movement_hash": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "executed_movement_hash": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "authorized_action_binding_digest": "sha256:69d550f00938f4f950b263a730bab485262e2c9cc577e5dd8be5c661fa734433",
+    "executed_action_binding_digest": "sha256:69d550f00938f4f950b263a730bab485262e2c9cc577e5dd8be5c661fa734433",
+    "subject": "did:key:z6MkFixtureExecutor111111111111111111111111111",
+    "policy": {
+      "bundle_hash": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "enforcement_mode": "enforce",
+      "version": "payments-corridor-1"
+    },
+    "build_provenance": {
+      "slsa_level": 0,
+      "digest": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "builder": "https://ontoguard.ai"
+    },
+    "model": {
+      "provider": "example",
+      "model_id": "conformance-fixture",
+      "version": "1"
+    },
+    "data_class": "internal",
+    "appraisal_verifier": "https://ontoguard.ai/trace/software-only",
+    "execution_event_id": "exec-release-payment-001",
+    "execution_producer": "ontoguard-controlled-executor-v1",
+    "receipt_bytes": "{\"appraisal_verifier\":\"https://ontoguard.ai/trace/software-only\",\"authorized_action\":\"ALLOW\",\"authorized_action_binding_digest\":\"sha256:69d550f00938f4f950b263a730bab485262e2c9cc577e5dd8be5c661fa734433\",\"authorized_decision_binding_hash\":\"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"authorized_handoff_hash\":\"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"authorized_movement_hash\":\"sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"authorized_result_digest\":\"sha256:649dfafe9fa56bdaad644ca7cb25bb5d0af41b2fcf2ca8d4ee397219f1e2fdab\",\"authorized_trace_id\":\"release-payment-allow-executed-fixture\",\"build_provenance\":{\"builder\":\"https://ontoguard.ai\",\"digest\":\"sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"slsa_level\":0},\"data_class\":\"internal\",\"executed\":true,\"executed_action_binding_digest\":\"sha256:69d550f00938f4f950b263a730bab485262e2c9cc577e5dd8be5c661fa734433\",\"executed_movement_hash\":\"sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"execution_event_id\":\"exec-release-payment-001\",\"execution_producer\":\"ontoguard-controlled-executor-v1\",\"model\":{\"model_id\":\"conformance-fixture\",\"provider\":\"example\",\"version\":\"1\"},\"policy\":{\"bundle_hash\":\"sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"enforcement_mode\":\"enforce\",\"version\":\"payments-corridor-1\"},\"protected_effect_formed\":true,\"subject\":\"did:key:z6MkFixtureExecutor111111111111111111111111111\"}",
+    "kid": "execution-test-1",
+    "public_jwk": {
+      "kty": "OKP",
+      "crv": "Ed25519",
+      "x": "TCiGH-xS3kJn7PfaepwRxhD2q6zrng7LQw1IfjW7GS0",
+      "kid": "execution-test-1"
+    },
+    "signature": "ZyhHbowNYmpSHBlz9u3IIVSLfVePOT4_UBVUq3U-dH5VpouM4W88j22AuS2S1EZEbX1tayuEnxLXuo17AwYCBQ"
+  }
+}

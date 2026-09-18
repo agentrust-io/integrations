@@ -1,0 +1,3 @@
+PUBLISHED_TRACE_LEVEL0=NOT_RUN_IN_THIS_ENVIRONMENT
+Adapter produced a trace_claim_candidate only (sign_trace=false).
+Run trace-tests verify --level 0 after signing with agentrust-trace.

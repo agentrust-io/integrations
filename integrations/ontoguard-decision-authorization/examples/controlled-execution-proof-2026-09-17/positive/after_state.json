@@ -1,0 +1,9 @@
+{
+  "controlled_payment.status": "RELEASED",
+  "state_hash": "sha256:82db8ab3eb5f1ae1bf13663837791fa3c46b90551ff474cbc9d97e81fb38bdb9",
+  "trace_id": "2fcdc71e-dc28-4d94-9150-fae4517103f3",
+  "movement_hash": "sha256:9c84fe2af3815b82794a1bb8972535c5bf7f68b9bbdf8c3e353cca474e91ef03",
+  "commit_attempt_id": "commit-d6701675f5f4906b",
+  "protected_effect_formed": true,
+  "note": "Controlled local state transition for the Imran demo. Not a bank ledger and not production L5."
+}

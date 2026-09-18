@@ -1,0 +1,8 @@
+{
+  "kid": "ontoguard-controlled-executor-v1",
+  "kty": "OKP",
+  "crv": "Ed25519",
+  "x": "Ovb7rJpETUDsGa1BbbLm9O4zVGCDdpjoLGe-5tjGAU4",
+  "test_only": true,
+  "thumbprint": "oo-1mu3OnOlU5ng3Lrv8KPQWQgcRetojQoxyBuHmdPU"
+}

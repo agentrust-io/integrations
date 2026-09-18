@@ -1,0 +1,6 @@
+{
+  "controlled_payment.status": "PENDING",
+  "state_hash": "sha256:332011b91ccd9887592cd7072f12da38748e37ee1af81985f9c8e1f066aec6fb",
+  "trace_id": "2fcdc71e-dc28-4d94-9150-fae4517103f3",
+  "movement_hash": "sha256:9c84fe2af3815b82794a1bb8972535c5bf7f68b9bbdf8c3e353cca474e91ef03"
+}

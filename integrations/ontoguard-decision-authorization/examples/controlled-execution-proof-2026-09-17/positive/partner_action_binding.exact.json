@@ -1,0 +1,13 @@
+{
+  "profile": "ontoguard.partner-execution-action/v1",
+  "object": {
+    "amount": "250000.00",
+    "consequence_class": "FINANCIAL_COMMITMENT",
+    "counterparty": "newly added supplier",
+    "cross_border": true,
+    "currency": "USD",
+    "operation": "RELEASE_PAYMENT"
+  },
+  "exact_bytes": "{\"amount\":\"250000.00\",\"consequence_class\":\"FINANCIAL_COMMITMENT\",\"counterparty\":\"newly added supplier\",\"cross_border\":true,\"currency\":\"USD\",\"operation\":\"RELEASE_PAYMENT\"}",
+  "digest": "sha256:69d550f00938f4f950b263a730bab485262e2c9cc577e5dd8be5c661fa734433"
+}

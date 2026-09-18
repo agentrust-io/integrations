@@ -1,0 +1,24 @@
+name: OntoGuard Decision Authorization
+vendor: OntoGuard AI
+integrates_with:
+  - trace
+description: >-
+  Thin adapter: signed OntoGuard authorization plus independent execution
+  receipt to TRACE v0.2 only after proven execution.
+maintainer:
+  github: MMM777-ai
+  email: mark.starobinsky@ontoguard.ai
+repository: https://github.com/MMM777-ai/OntoGuard-decision-authorization
+homepage: https://ontoguard.ai
+license: Apache-2.0
+tier: community
+marketplace:
+  category: Evidence & receipts
+  mark: OG
+  keywords: [authorization, decision, handoff, pre-execution]
+trace_roles:
+  - record-producer
+trace_conformance_level: 0
+tested_against:
+  agentrust-trace: "0.10.0"
+  agentrust-trace-tests: "0.5.1"

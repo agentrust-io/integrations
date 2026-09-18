@@ -1,0 +1,13 @@
+{
+  "action": "ALLOW",
+  "release_authorized": true,
+  "trace_id": "2fcdc71e-dc28-4d94-9150-fae4517103f3",
+  "handoff_hash": "sha256:857e7b2a887b4af1ba764addcaa36eeff1b0ff41e6ee70ab138689438d75ee52",
+  "handoff_seal_digest": "sha256:96fc8fc6c8586fa314753ec0e46bfd68eb11c709c44bab78d6ee2ea92ab70349",
+  "decision_binding_hash": "sha256:e77da6414669b99d2cfc7f9ddcab2a16f58099c972d65a6198d348f8c37665c9",
+  "movement_hash": "sha256:9c84fe2af3815b82794a1bb8972535c5bf7f68b9bbdf8c3e353cca474e91ef03",
+  "action_binding_profile": "ontoguard.partner-execution-action/v1",
+  "action_binding_digest": "sha256:69d550f00938f4f950b263a730bab485262e2c9cc577e5dd8be5c661fa734433",
+  "issued_at_utc": "2026-09-17T02:32:33.231311Z",
+  "expires_at_utc": "2026-09-24T02:32:33.231311Z"
+}

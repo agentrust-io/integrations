@@ -1,0 +1,44 @@
+{
+  "eat_profile": "tag:agentrust-io.com,2026:trace-v0.2",
+  "iat": 1789612354,
+  "subject": "did:key:zOvb7rJpETUDsGa1BbbLm9O4zVGCDdpjoLGe-5tjGAU4",
+  "model": {
+    "provider": "ontoguard-controlled-executor",
+    "model_id": "v1",
+    "version": "1"
+  },
+  "runtime": {
+    "platform": "software-only",
+    "measurement": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "policy": {
+    "bundle_hash": "sha256:881d5cc05e75399d189bfb8325c3e777e526032ac8b2177bcef7e3aa2bb241ee",
+    "enforcement_mode": "enforce",
+    "version": "controlled-protected-commit-v1"
+  },
+  "data_class": "internal",
+  "origin": {
+    "kind": "third-party-control-plane",
+    "producer": "ontoguard-controlled-executor-v1",
+    "source_event_id": "commit-d6701675f5f4906b",
+    "ingested_at": 1789612354
+  },
+  "references": [
+    {
+      "rel": "authorized-intent",
+      "id": "sha256:857e7b2a887b4af1ba764addcaa36eeff1b0ff41e6ee70ab138689438d75ee52",
+      "resolver": "OntoGuard",
+      "digest": "sha256:702b18043ad86ae81bc917eadb242da4f02324bf115242402a5ab2144b570239"
+    }
+  ],
+  "build_provenance": {
+    "slsa_level": 0,
+    "digest": "sha256:6c600611a4918bcf3910d5bc7648418847f7bbacc23e904a2a5ebf2c58f4c9ef",
+    "builder": "ontoguard-controlled-executor-v1"
+  },
+  "appraisal": {
+    "status": "none",
+    "verifier": "https://ontoguard.ai/trace/software-only",
+    "timestamp": 1789612354
+  }
+}

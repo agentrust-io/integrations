@@ -1,6 +1,6 @@
 {
   "catalog_version": 1,
-  "count": 37,
+  "count": 38,
   "integrations": [
     {
       "name": "Claude Code",
@@ -492,6 +492,29 @@
         "gpu",
         "attestation",
         "confidential-computing"
+      ]
+    },
+    {
+      "name": "OntoGuard Decision Authorization",
+      "package_name": "OntoGuard Decision Authorization",
+      "vendor": "OntoGuard AI",
+      "description": "Thin adapter: signed OntoGuard authorization plus independent execution receipt to TRACE v0.2 only after proven execution.",
+      "path": "integrations/ontoguard-decision-authorization",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/ontoguard-decision-authorization",
+      "homepage": "https://ontoguard.ai",
+      "repository": "https://github.com/MMM777-ai/OntoGuard-decision-authorization",
+      "tier": "community",
+      "stack": [
+        "TRACE"
+      ],
+      "category": "Evidence & receipts",
+      "mark": "OG",
+      "featured": null,
+      "keywords": [
+        "authorization",
+        "decision",
+        "handoff",
+        "pre-execution"
       ]
     },
     {

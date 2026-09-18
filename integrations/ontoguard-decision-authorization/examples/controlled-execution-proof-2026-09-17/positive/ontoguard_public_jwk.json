@@ -1,0 +1,8 @@
+{
+  "kid": "ontoguard-demo-allow-2fcdc71e",
+  "kty": "OKP",
+  "crv": "Ed25519",
+  "x": "DqTCPdFHACu1M0mXu3qBRRkdMQkon7frnQ-FW6LORQ8",
+  "test_only": true,
+  "thumbprint": "jBdbggkPUGyQbx4xaOabshIcDXS2hsfHolZy49s2IR0"
+}

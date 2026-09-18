@@ -1,0 +1,13 @@
+{
+  "schema": "ontoguard-adapter-jwks-v1",
+  "keys": [
+    {
+      "kid": "ontoguard-test-1",
+      "kty": "OKP",
+      "crv": "Ed25519",
+      "x": "RvDSCzVjze1sj6mt2dXpejxv_tJ5ToYW65T42J1i844",
+      "test_only": true,
+      "thumbprint": "1yvNlxLfEJB4sQf_mhm0mAJjK7t9DyoxtEHTT5fEHJs"
+    }
+  ]
+}

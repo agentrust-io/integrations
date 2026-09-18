@@ -1,0 +1,26 @@
+{
+  "authorization_result": {
+    "action": "ALLOW",
+    "release_authorized": true,
+    "trace_id": "release-payment-allow-pending-exec-fixture",
+    "handoff_hash": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+    "decision_binding_hash": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+    "movement_hash": "sha256:9999999999999999999999999999999999999999999999999999999999999999",
+    "action_binding_profile": "ontoguard.partner-execution-action/v1",
+    "action_binding_digest": "sha256:69d550f00938f4f950b263a730bab485262e2c9cc577e5dd8be5c661fa734433",
+    "issued_at_utc": "2026-09-17T02:24:05.736031Z",
+    "expires_at_utc": "2026-09-24T02:24:05.736031Z"
+  },
+  "authorization_result_exact": "{\"action\":\"ALLOW\",\"action_binding_digest\":\"sha256:69d550f00938f4f950b263a730bab485262e2c9cc577e5dd8be5c661fa734433\",\"action_binding_profile\":\"ontoguard.partner-execution-action/v1\",\"decision_binding_hash\":\"sha256:6666666666666666666666666666666666666666666666666666666666666666\",\"expires_at_utc\":\"2026-09-24T02:24:05.736031Z\",\"handoff_hash\":\"sha256:5555555555555555555555555555555555555555555555555555555555555555\",\"issued_at_utc\":\"2026-09-17T02:24:05.736031Z\",\"movement_hash\":\"sha256:9999999999999999999999999999999999999999999999999999999999999999\",\"release_authorized\":true,\"trace_id\":\"release-payment-allow-pending-exec-fixture\"}",
+  "authorization_result_bytes_sha256": "sha256:30f446837ec4b736f71163bd6633250c6d66f44b72bd003a5c7277c9790dc1f6",
+  "authorization_signature": "JAH3Pmfkgn0fjknD7Kp3JQjLwJeGqldi7KqI7ThQYudbFU_lEWjfThCELBtXtQb6nRzVV3OsDYCeEz46Hly_Cw",
+  "authorization_kid": "ontoguard-test-1",
+  "authorization_public_jwk": {
+    "kty": "OKP",
+    "crv": "Ed25519",
+    "x": "RvDSCzVjze1sj6mt2dXpejxv_tJ5ToYW65T42J1i844",
+    "kid": "ontoguard-test-1"
+  },
+  "label": "ALLOW_NO_EXECUTION_YET",
+  "execution_receipt": null
+}

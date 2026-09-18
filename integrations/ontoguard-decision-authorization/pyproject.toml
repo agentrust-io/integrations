@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ontoguard-decision-authorization"
+version = "0.5.0"
+description = "Thin OntoGuard Decision Authorization → TRACE v0.2 adapter"
+readme = "README.md"
+license = { text = "Apache-2.0" }
+requires-python = ">=3.11"
+authors = [{ name = "OntoGuard AI", email = "mark.starobinsky@ontoguard.ai" }]
+dependencies = [
+  "agentrust-trace>=0.5.1",
+  "cryptography>=41",
+]
+
+[project.optional-dependencies]
+test = [
+  "pytest>=8",
+  "agentrust-trace-tests>=0.4.1",
+]
+
+[tool.setuptools]
+py-modules = ["ontoguard_trace"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
