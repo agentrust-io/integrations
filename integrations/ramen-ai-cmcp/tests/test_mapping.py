@@ -173,7 +173,11 @@ class TestBuildTraceRecord:
         assert allowed_record["cnf"]["jwk"] == expected_jwk
         assert allowed_record["signature"]
         assert "=" not in allowed_record["signature"]
-        agentrust_trace.verify_record(allowed_record, expected_jwk, max_age_seconds=None)
+        # Verify at the fixture's issuance time so this signature test is
+        # independent of the wall clock while retaining freshness checks.
+        agentrust_trace.verify_record(
+            allowed_record, expected_jwk, now=allowed_record["iat"]
+        )
 
     def test_blocked_receipt_does_not_claim_hardware_appraisal(self, blocked_record):
         assert blocked_record["appraisal"]["status"] == "none"
