@@ -1,0 +1,9 @@
+{
+  "note": "Public keys only. Seeds are sha256 over the labels in generate.py, so the material is public by construction.",
+  "pinned": {
+    "did:aps:example:gateway-01": {
+      "gateway-01-key-2026-09": "2b8a641a8e6142689263b004331fa4fa8010eace769631055ffe45ac44950aca"
+    }
+  },
+  "unrelated_public_key": "57ba45a6260947ed7e44a5f6cb81fde45834375d79270db80bda6dc3eaf844d0"
+}

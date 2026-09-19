@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "aeoess-aps-integration"
 version = "0.1.0"
-description = "Maps signed Agent Passport System policy decisions onto TRACE Trust Records"
+description = "Maps signed Agent Passport System policy decisions onto TRACE Trust Records and verifies APS action receipts as external action evidence"
 requires-python = ">=3.11"
 license = "Apache-2.0"
 dependencies = [
@@ -23,4 +23,4 @@ test = [
 ]
 
 [tool.setuptools]
-py-modules = ["aps_trace"]
+py-modules = ["aps_trace", "aps_action_receipt"]

@@ -1,0 +1,23 @@
+{
+  "action_ref": "757daf1a7fdfae7d6871c60225e21ed93ea1a0ebddb712ce3339d1287a8df5b9",
+  "delegation_ref": "31c05ebeb7947e8ee3c70c29478bcc126ca3af87f731045ac85cce02935e694b",
+  "evidence_refs": [],
+  "issued_at": "2026-09-18T12:00:00.000Z",
+  "issuer": "did:aps:example:gateway-01",
+  "profile": "aps-receipt-v1",
+  "receipt_id": "26c535b1b99939c6fdcc705ffbdeeaf6d58a8637d13e17c7772443d5274d13aa",
+  "receipt_type": "aps:action-intent:v1",
+  "result": {
+    "description": "create one calendar event",
+    "intent_id": "itn-fixture-0001"
+  },
+  "signatures": [
+    {
+      "alg": "Ed25519",
+      "key_id": "gateway-01-key-2026-09",
+      "signer": "did:aps:example:gateway-01",
+      "value": "74c6d21c6056ad7bc30fefe4c8d3d261dd7bdaba1759f30a4d4b5ada26743058c7caec7ea98d348daae4752fe85138107591a877adc95581e85db208542a7503"
+    }
+  ],
+  "subject_agent": "did:aps:example:agent-01"
+}

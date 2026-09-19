@@ -140,7 +140,7 @@
       "name": "Agent Passport System",
       "package_name": "Agent Passport System",
       "vendor": "aeoess",
-      "description": "Maps one Ed25519-signed Agent Passport System policy decision onto a TRACE Trust Record, refusing decisions that fail signature or expiry verification.",
+      "description": "Maps one signed Agent Passport System policy decision onto a TRACE Trust Record and verifies one signed APS action receipt as external action evidence, refusing whatever fails its checks.",
       "path": "integrations/aeoess-aps",
       "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/aeoess-aps",
       "homepage": "https://agent-passport.org",
@@ -155,7 +155,8 @@
       "keywords": [
         "passport",
         "identity",
-        "policy"
+        "policy",
+        "receipts"
       ]
     },
     {

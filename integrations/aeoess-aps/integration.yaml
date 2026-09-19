@@ -3,8 +3,9 @@ vendor: aeoess
 integrates_with:
   - trace
 description: >-
-  Maps one Ed25519-signed Agent Passport System policy decision onto a TRACE
-  Trust Record, refusing decisions that fail signature or expiry verification.
+  Maps one signed Agent Passport System policy decision onto a TRACE Trust
+  Record and verifies one signed APS action receipt as external action
+  evidence, refusing whatever fails its checks.
 maintainer:
   github: aeoess
 repository: https://github.com/aeoess/agent-passport-python
@@ -14,7 +15,7 @@ tier: community
 marketplace:
   category: Identity & trust
   mark: AP
-  keywords: [passport, identity, policy]
+  keywords: [passport, identity, policy, receipts]
 # Role. APS decisions are Ed25519-signed external evidence. This integration
 # maps one onto a TRACE record but cannot populate `model`, `data_class` or
 # `build_provenance` without inventing them, so the output does not validate

@@ -1,0 +1,8 @@
+{
+  "action_type": "calendar.event.create",
+  "agent_id": "did:aps:example:agent-01",
+  "scope_required": [
+    "calendar:write"
+  ],
+  "timestamp": "2026-09-18T11:59:58Z"
+}

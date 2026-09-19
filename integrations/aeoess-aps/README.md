@@ -4,12 +4,22 @@ The Agent Passport System (APS) is an open protocol for agent identity and
 scoped delegation, in which an evaluator checks an agent's declared intent
 against a Values Floor and returns an Ed25519-signed policy decision.
 
-This integration maps exactly one signed APS policy decision, the dict returned
-by `agent_passport.policy.evaluate_intent`, onto exactly one TRACE Trust Record
-(EAT profile `tag:agentrust-io.com,2026:trace-v0.2`). Nothing else in APS is
-mapped. Action receipts, identity binding, delegation chains and attribution are
-out of scope here. TRACE revocation is examined below; this exporter emits no
-`TraceRevocation/1.0` statement and creates no revocation-store entry.
+This integration does two things, in two modules that share nothing but the
+APS dependency.
+
+`aps_trace` maps exactly one signed APS policy decision, the dict returned by
+`agent_passport.policy.evaluate_intent`, onto exactly one TRACE Trust Record
+(EAT profile `tag:agentrust-io.com,2026:trace-v0.2`). TRACE revocation is
+examined below; this exporter emits no `TraceRevocation/1.0` statement and
+creates no revocation-store entry.
+
+`aps_action_receipt` verifies exactly one signed APS action intent receipt
+(`ReceiptV1`, profile `aps-receipt-v1`, type `aps:action-intent:v1`) as
+external action issuance evidence and reports `verified`, `invalid` or
+`unverified`. It emits no TRACE record. See [Action receipts as external evidence](#action-receipts-as-external-evidence).
+
+Nothing else in APS is mapped or verified here. Identity binding, delegation
+chains and attribution are out of scope.
 
 ## Two different signatures
 
@@ -81,6 +91,7 @@ Against released packages:
 pip install agentrust-trace agentrust-trace-tests agent-passport-system
 pip install -e "integrations/aeoess-aps[test]"
 pytest integrations/aeoess-aps/tests -q
+python integrations/aeoess-aps/fixtures/action-receipt/generate.py  # must leave git diff empty
 python integrations/aeoess-aps/examples/emit_record.py --out trust-record.jwt
 trace-tests verify --record trust-record.jwt --level 0
 ```
@@ -123,6 +134,51 @@ policy decisions from evidence appraisal, and the exporter aligns to that
 convention here. The verdict is still carried, as `policy.enforcement_mode` and
 `policy.version`.
 
+## Action receipts as external evidence
+
+TRACE keeps three evidence layers apart (trace-spec `spec/trace-v0.2.md`
+section 3.3.3): session evidence, action issuance evidence, and outcome
+evidence. `docs/verification.md` ("Action receipts and embodied workflows")
+lists what a verifier checks on an external action receipt and the outcomes it
+reports. `aps_action_receipt.verify_aps_action_receipt` runs those checks on
+one APS `ReceiptV1` of type `aps:action-intent:v1` and reports an APS
+issuance evidence status.
+
+| TRACE check (verification.md) | What this verifier does on a `ReceiptV1` |
+|---|---|
+| Canonical action digest | Recomputes `agent_passport.compute_action_ref` over the caller supplied preimage (`agent_id`, `action_type`, `scope_required`, `timestamp`, draft-pidlisnyi-aps section 4.1) and compares it to `action_ref`. Without a preimage the check is `not_checked`. |
+| Receipt signature, trusted issuer key | `agent_passport.receipt_core.verify_receipt_v1` with the caller's `resolve_key`. `ReceiptV1` embeds no key, so the trust input is always the caller's. |
+| Artifact class | `receipt_type` must be `aps:action-intent:v1` (or the caller's `expected_receipt_type`). A correctly signed receipt of another type is not action issuance evidence. |
+| Session or call binding | `subject_agent` and `delegation_ref` against caller expectations, and `subject_agent` against the preimage's `agent_id` whenever a preimage is supplied. |
+| Chain order | Not checked. `prev` is carried but this verifier takes one receipt, not a chain. |
+| Freshness | `issued_at` against a caller supplied `reference_time` and `max_age_seconds`. No wall clock default, so a committed receipt verifies identically on every run. |
+
+| Status reported | When | TRACE outcome |
+|---|---|---|
+| `verified` | every check that could run passed, against a pinned key | no_mapping, see below |
+| `invalid` | structure, receipt id, signature, receipt type, subject, delegation reference, action binding or freshness failed | `receipt_invalid` |
+| `unverified` | the signer key is not pinned and nothing else failed (trace-spec section 3.3.2: no trust conferred, no wrongdoing proven) | `receipt_unverified` |
+
+`verified` maps to no TRACE outcome on purpose. TRACE splits a valid receipt
+into `receipt_valid_accepted` and `receipt_valid_rejected` by the outcome the
+receipt payload carries. `ReceiptV1.result` is an open object and the APS
+receipt core defines no verdict field inside it, so reading acceptance or
+rejection out of the receipt would be a convention this integration invented.
+That split is outcome evidence and belongs to the bound decision output.
+`receipt_missing_required` is a chain level outcome and out of scope for a
+verifier that takes one receipt.
+
+The committed fixture in `fixtures/action-receipt/` is regenerated byte for
+byte by `generate.py` from published seed labels, so it carries no secret
+material and `tests/test_action_receipt.py` pins its sha256. It is possible
+here where a committed decision fixture is not: freshness is judged at the
+caller's reference time, not the wall clock.
+
+`verified` does not mean the action executed, that the delegation named by
+`delegation_ref` was valid or current at issuance (verify that separately with
+`agent_passport.verify_delegation`), that the signature proves authority rather
+than authorship, or that anyone appraised the evidence.
+
 ## What is verified
 
 - `aps_trace.build_trace_record` refuses a decision with a tampered verdict, a
@@ -135,6 +191,14 @@ convention here. The verdict is still carried, as `policy.enforcement_mode` and
   which TR-SIG-005 is UNVERIFIED. See below.
 - Every field the mapper emits validates against the TRACE v0.2 JSON Schema.
   The fields it does not emit are pinned by a test.
+- `aps_action_receipt.verify_aps_action_receipt` returns `verified` on the
+  committed fixture at its recorded reference time and `invalid` on a corrupt
+  signature, a tampered field, a wrong pinned key, another receipt type, a
+  wrong subject agent, a preimage naming a different agent than the receipt,
+  a wrong delegation reference, a different action preimage, a preimage with
+  no canonical form, a stale receipt, a future dated receipt and a malformed
+  receipt, and `unverified` on an unpinned key or a resolver error. Each case mutates one thing and `tests/test_action_receipt.py`
+  asserts which check carried the result.
 
 ## What it does NOT claim
 
