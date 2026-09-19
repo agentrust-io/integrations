@@ -240,9 +240,9 @@ jsonpointer==3.1.1 \
     --hash=sha256:0b801c7db33a904024f6004d526dcc53bbb8a4a0f4e32bfd10beadf60adf1900 \
     --hash=sha256:8ff8b95779d071ba472cf5bc913028df06031797532f08a7d5b602d8b2a488ca
     # via jsonpatch
-langchain-core==1.6.0 \
-    --hash=sha256:d8bb924cd413955d9d3192ccced140407427c3ff51e50ffb941222648da92cb2 \
-    --hash=sha256:dc72e36678ed26683ec0ad8829b44011fba461d10f9b31dbd9110215e5ec2333
+langchain-core==1.6.3 \
+    --hash=sha256:114fe1868c9ed60606662b9dd0074bf3152cc6b0b1522ba37cbd6b04f55ca77d \
+    --hash=sha256:88b430944fbd4d40fa98135d6c873581d497b6f33515d01962337548e918df2f
     # via
     #   -r requirements/sdk-langchain.in
     #   langgraph
