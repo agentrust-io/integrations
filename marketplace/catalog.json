@@ -226,6 +226,29 @@
       ]
     },
     {
+      "name": "AI Agent Incident Register",
+      "package_name": "AI Agent Incident Register",
+      "vendor": "CompanyScope",
+      "description": "Reads an Agent Manifest and returns the decided AI-agent incidents bearing on what it declares, with the liability allocation the register assigned.",
+      "path": "integrations/companyscope-incident-register",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/companyscope-incident-register",
+      "homepage": "https://companyscope.io/register",
+      "repository": "https://github.com/agentrust-io/integrations",
+      "tier": "community",
+      "stack": [
+        "Agent Manifest"
+      ],
+      "category": "Compliance",
+      "mark": "AIR",
+      "featured": null,
+      "keywords": [
+        "incidents",
+        "liability",
+        "pre-deployment-review",
+        "case-law"
+      ]
+    },
+    {
       "name": "Azure Secure Key Release",
       "package_name": "WCM Azure Secure Key Release",
       "vendor": "agentrust-io",

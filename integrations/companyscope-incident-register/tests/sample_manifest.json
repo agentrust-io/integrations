@@ -1,0 +1,91 @@
+{
+  "context": "https://manifest.agentrust-io.com/v0.2/context.json",
+  "type": "AgentManifest",
+  "manifest_id": "018f4a3b-2c1d-7e5f-a8b9-0d1e2f3a4b5c",
+  "agent_id": "spiffe://example.test/agent/support-triage/prod",
+  "version": "1.0.0",
+  "issued_at": "2026-09-17T08:38:05.246475Z",
+  "expires_at": "2026-12-16T08:38:05.246475Z",
+  "issuer": "spiffe://example.test/signing-authority",
+  "crypto_profile": "standard",
+  "artifacts": {
+    "system_prompt": {
+      "hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "hash_algorithm": "SHA-256",
+      "version": "3.1.0",
+      "classification": "confidential",
+      "bound_at": "2026-09-17T08:38:05.246475Z"
+    },
+    "policy_bundle": {
+      "hash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "policy_language": "cedar",
+      "version": "1.0.0",
+      "enforcement_mode": "advisory",
+      "scope": [],
+      "bound_at": "2026-09-17T08:38:05.246475Z"
+    },
+    "tool_manifest": {
+      "catalog_hash": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "tools": [
+        {
+          "tool_id": "t-001",
+          "tool_name": "crm.lookup_customer",
+          "endpoint_id": "ep-crm",
+          "schema_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+          "description_hash": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+          "version": "1.2.0",
+          "permission_scope": "read",
+          "egress_destinations": [
+            "crm.internal"
+          ]
+        },
+        {
+          "tool_id": "t-002",
+          "tool_name": "repo.open_pull_request",
+          "endpoint_id": "ep-git",
+          "schema_hash": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+          "description_hash": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+          "version": "0.9.1",
+          "permission_scope": "write",
+          "egress_destinations": [
+            "github.com"
+          ]
+        },
+        {
+          "tool_id": "t-003",
+          "tool_name": "shell.exec",
+          "endpoint_id": "ep-runner",
+          "schema_hash": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+          "description_hash": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+          "version": "0.4.0",
+          "permission_scope": "write",
+          "egress_destinations": [
+            "*"
+          ]
+        }
+      ],
+      "allow_dynamic_registration": true,
+      "rug_pull_policy": "deny-and-alert",
+      "bound_at": "2026-09-17T08:38:05.246475Z"
+    },
+    "model_identity": {
+      "provider": "example-lab",
+      "model_id": "example-model",
+      "version": "2026-08",
+      "quantization": "none",
+      "deployment_type": "third-party-api",
+      "model_attestation_type": "provider-asserted",
+      "bound_at": "2026-09-17T08:38:05.246475Z"
+    }
+  },
+  "data_scope": {
+    "personal_data_categories": [
+      "contact details",
+      "support history"
+    ],
+    "legal_basis": [
+      "contract"
+    ],
+    "automated_decision_making": false
+  }
+}
