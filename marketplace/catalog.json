@@ -566,7 +566,7 @@
     {
       "name": "SAGE AgenTrust Bridge",
       "package_name": "SAGE AgenTrust Bridge",
-      "vendor": "SAGE AgenTrust Bridge",
+      "vendor": "SAGE",
       "description": "Reverse proxy that edge-verifies a TRACE record (key-equal) or cMCP RuntimeClaim (gateway-asserted) before admitting a memory submit to a stock, unmodified SAGE consensus-memory node.",
       "path": "integrations/sage-agenttrust",
       "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/sage-agenttrust",
