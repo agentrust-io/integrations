@@ -1,5 +1,5 @@
 name: SAGE AgenTrust Bridge
-vendor: SAGE AgenTrust Bridge
+vendor: SAGE
 integrates_with:
   - cmcp
   - trace
@@ -18,11 +18,13 @@ marketplace:
   category: Security & policy
   mark: SG
   keywords: [memory, proxy, consensus]
-# Level the cMCP-RuntimeClaim (envelope) path passes; the bare C-2 TRACE record is not graded
-# by agentrust-trace-tests (LoadError), so it carries no conformance level — see README.
+# Both paths pass Level 0: the cMCP-RuntimeClaim (envelope) form, and — since
+# agentrust-trace-tests 0.5.1 loads a standalone TRACE record as fmt="trace" — the bare C-2
+# record the bridge mints. Level 1 is not claimed: software-only has no hardware root.
 trace_conformance_level: 0
 trace_roles:
   - record-consumer
 tested_against:
-  cmcp-runtime: "0.2.1"
-  agentrust-trace: "0.5.0"
+  cmcp-runtime: "0.5.0"
+  agentrust-trace: "0.10.0"
+  agentrust-trace-tests: "0.5.1"
