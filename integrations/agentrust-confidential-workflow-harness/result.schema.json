@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Confidential workflow harness result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "scenario_id",
+    "transaction_id",
+    "claim",
+    "status",
+    "observations",
+    "boundary_outcomes",
+    "mutation_proof",
+    "blocked",
+    "limitations",
+    "package_versions"
+  ],
+  "properties": {
+    "scenario_id": {"type": "string"},
+    "transaction_id": {"type": "string"},
+    "claim": {"type": "string"},
+    "status": {"enum": ["passed", "refused", "unknown", "incomplete"]},
+    "observations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["boundary", "outcome", "source", "evidence_class", "lineage"],
+        "properties": {
+          "boundary": {"enum": ["authorization", "delivery", "receipt", "installation/admission", "execution", "response_verification", "release/disclosure"]},
+          "outcome": {"enum": ["established", "contradicted", "unavailable", "not_applicable"]},
+          "source": {"type": "string"},
+          "evidence_class": {"enum": ["synthetic", "replayed", "hosted/live", "hardware"]},
+          "lineage": {"type": "string"},
+          "caused_by": {"type": ["string", "null"]},
+          "detail": {"type": ["string", "null"]}
+        }
+      }
+    },
+    "boundary_outcomes": {"type": "object"},
+    "mutation_proof": {"type": "object"},
+    "blocked": {"type": "array", "items": {"type": "string"}},
+    "limitations": {"type": "array", "items": {"type": "string"}},
+    "package_versions": {"type": "object", "additionalProperties": {"type": "string"}}
+  }
+}
