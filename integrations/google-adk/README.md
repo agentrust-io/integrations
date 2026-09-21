@@ -82,13 +82,13 @@ discard an invocation after persisting its record.
 pip install -r requirements.txt pytest
 python -m pytest test_google_adk_to_trace.py -q
 
-pip install google-adk==2.7.1 agentrust-trace-tests==0.5.0
+pip install google-adk==2.7.1 agentrust-trace-tests==0.5.1
 python -m pytest test_google_adk_interop.py -q
 ```
 
 The first suite exercises evidence construction without installing ADK. The
 second uses the released runner and checks success, tool failure, cancellation,
 concurrent invocations, payload exclusion, signed TRACE validation, and Level 0
-conformance for the optional externally enforced path. The bare ADK path keeps
-the honest `declared` policy mode; `agentrust-trace-tests` 0.5.0 predates that
-mode, so the conformance fixture uses `advisory` to represent an external layer.
+conformance for both the default `declared` policy mode and the optional
+externally enforced `advisory` path. `declared` needs `agentrust-trace-tests`
+0.5.1 or later; 0.5.0 rejects it with `TR-POL-002`.

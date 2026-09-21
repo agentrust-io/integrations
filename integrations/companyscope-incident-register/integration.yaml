@@ -10,7 +10,7 @@ maintainer:
 repository: https://github.com/agentrust-io/integrations
 homepage: https://companyscope.io/register
 license: Apache-2.0
-tier: community
+tier: verified
 marketplace:
   category: Compliance
   mark: AIR

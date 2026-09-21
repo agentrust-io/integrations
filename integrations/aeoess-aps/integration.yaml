@@ -10,7 +10,7 @@ maintainer:
 repository: https://github.com/aeoess/agent-passport-python
 homepage: https://agent-passport.org
 license: Apache-2.0
-tier: community
+tier: verified
 marketplace:
   category: Identity & trust
   mark: AP

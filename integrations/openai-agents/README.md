@@ -92,12 +92,28 @@ the honesty rules can be tested independently of the framework.
 
 ## Coverage and limits
 
-| Runtime | Exercised | Not described |
-|---|---|---|
-| Agents SDK | Tool calls, handoffs, agent spans, MCP tool calls | Reasoning traces, guardrail outcomes, session state, retries |
+| Runtime | Exercised against the released SDK | Unit-tested only | Not described |
+|---|---|---|---|
+| Agents SDK | Tool calls, agent spans | Handoffs, MCP tool calls (the interop suite checks the span fields they use still exist) | Reasoning traces, guardrail outcomes, session state, retries |
 
 `test_openai_agents_interop.py` runs a real released `Agent` with a real tool
 through a real `TracingProcessor`, using a scripted model so no API key or
 network is needed, and asserts the field names this adapter reads still exist. A
 rename upstream fails there with a specific assertion rather than silently
 producing an empty transcript.
+
+## Tests
+
+```bash
+pip install -r requirements.txt pytest
+python -m pytest test_openai_agents_to_trace.py -q
+
+pip install openai-agents==0.22.3 agentrust-trace-tests==0.5.1
+python -m pytest . -q
+```
+
+The first suite runs without the SDK. The second adds the interop tests. To check
+conformance, write a signed record from a real run to `record.json` and run
+`trace-tests verify --record record.json --level 0`; it passes. Level 1 fails on
+`TR-RTE-001` and `TR-RTE-004`, because nothing here carries a hardware
+attestation.

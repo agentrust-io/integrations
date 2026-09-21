@@ -10,7 +10,7 @@ maintainer:
 repository: https://github.com/agentrust-io/integrations
 homepage: https://wcm.agentrust-io.com
 license: Apache-2.0
-tier: community
+tier: verified
 marketplace:
   display_name: WCM Kyverno Policy Pack
   category: Security & policy

@@ -96,6 +96,14 @@ pip install weight-custody-manifest
 ```
 
 ```python
+from wcm import KeyBrokerService
+from wcm.renewal import manifest_identity
+
+# The broker refuses `manifest_authorized` unless it trusts this manifest's identity.
+kbs = KeyBrokerService(
+    {manifest.weights_hash: weights_key},
+    trusted_manifest_identities={manifest_identity(manifest)},
+)
 from wcm_triton import prepare_repository
 
 result = prepare_repository(
@@ -112,6 +120,17 @@ print(result.files_staged, result.computed_digest)
 Pair it with [`wcm-vllm`](../wcm-vllm)'s `CustodyGuard` if the serving process
 also needs a live lease. Staging proves the weights were released to an attested
 workload at load time; it says nothing about revocation an hour later.
+
+## Verified-tier review
+
+A maintainer ran this on 2026-09-21 in an isolated environment against released
+`weight-custody-manifest` 0.28.2, and again on 0.27.0 with the same results.
+This entry is `tier: verified` for the offline path only. Checked: 18 tests pass
+and 1 is skipped (the symlink test, on Windows); against the SDK's real
+`KeyBrokerService` with `SoftwareProvider` evidence, correct bytes are staged and
+match the digest, tampered bytes are refused and the staging directory removed,
+and a revoked serving image is refused. Not checked: a live run on a
+confidential VM with Triton. Re-verification happens at every release that touches this integration.
 
 ## Scope
 

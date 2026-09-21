@@ -94,6 +94,18 @@ evidence = CompositeEvidence(cpu=cpu_quote, gpu=gpu)
 takes parsed documents, so the adapter is testable without a GPU and the same
 code path runs whether the documents came from a local run or a captured bundle.
 
+## Verified-tier review
+
+A maintainer ran this on 2026-09-21 in an isolated environment against released
+`weight-custody-manifest` 0.28.2, and again on 0.27.0 with the same results.
+This entry is `tier: verified` for the offline path only. Checked: 60 tests
+pass on synthetic tokens; the real H100 raw report and certificate chain from the
+WCM repository's `gpu_h100_attestation.json` fixture, passed through this
+adapter, gives `verified: True` from `wcm verify-quote --kind gpu` (leaf
+`GH100 A01 GSP FMC LF`) and `verified: False` with a wrong nonce. Not checked:
+the RIM and OCSP appraisal half, which needs a real `nvattest` appraisal from a
+confidential-computing GPU. Re-verification happens at every release that touches this integration.
+
 ## Scope
 
 GPU firmware appraisal and report verification. A GPU attestation says the device

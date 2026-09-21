@@ -11,7 +11,7 @@ maintainer:
 repository: https://github.com/MMM777-ai/OntoGuard-decision-authorization
 homepage: https://ontoguard.ai
 license: Apache-2.0
-tier: community
+tier: verified
 marketplace:
   category: Evidence & receipts
   mark: OG
