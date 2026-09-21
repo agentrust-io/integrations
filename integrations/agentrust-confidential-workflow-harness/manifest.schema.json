@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Confidential workflow harness run manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "scenario_id",
+    "transaction_id",
+    "claim",
+    "protected_asset",
+    "workload_principal",
+    "delegated_peer",
+    "permitted_recipients",
+    "forbidden_recipients",
+    "policy_version",
+    "trust_input_digest"
+  ],
+  "properties": {
+    "scenario_id": {"type": "string", "minLength": 1},
+    "transaction_id": {"type": "string", "minLength": 1},
+    "claim": {"type": "string", "minLength": 1},
+    "protected_asset": {"type": "string", "minLength": 1},
+    "workload_principal": {"type": "string", "minLength": 1},
+    "delegated_peer": {"type": "string", "minLength": 1},
+    "permitted_recipients": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "forbidden_recipients": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "policy_version": {"type": "string", "minLength": 1},
+    "trust_input_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "mutation": {"type": ["string", "null"]},
+    "waiting_on_release": {"type": ["string", "null"]},
+    "inputs": {"type": "object"}
+  }
+}
