@@ -1,0 +1,19 @@
+name: Confidential Workflow Acceptance Harness
+vendor: agentrust-io
+integrates_with:
+  - cmcp
+  - ca2a
+description: >-
+  Deterministic acceptance harness for boundary-separated confidential workflow
+  evidence, negative cases, and gate mutation proofs.
+maintainer:
+  github: altrudev
+repository: https://github.com/agentrust-io/integrations
+license: Apache-2.0
+tier: community
+marketplace:
+  category: Security & policy
+  mark: CWH
+  keywords: [confidentiality, acceptance, harness, policy, evidence, mutation]
+tested_against:
+  cmcp-runtime: "0.5.0"
