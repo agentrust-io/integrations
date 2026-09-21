@@ -25,7 +25,6 @@ class DeterministicWorkflowAdapter:
             i.get("workload") == scenario.workload_principal
             and i.get("key_id") == "key-A"
             and i.get("policy_version") == scenario.policy_version
-            and not i.get("revoked_before_use", False)
         )
         if scenario.mutation == "disable_authorization_gate":
             auth_ok = True
@@ -52,12 +51,28 @@ class DeterministicWorkflowAdapter:
                     "version-admission",
                     "peer-receipt",
                 )
-                executed = auth_ok and admitted and not i.get("replay", False)
+                revoked = i.get("revoked_before_use", False)
+                if scenario.mutation == "disable_revocation_gate":
+                    revoked = False
+                replayed = i.get("replay", False)
                 if scenario.mutation == "disable_replay_gate":
-                    executed = auth_ok and admitted
+                    replayed = False
+                missing_execution_evidence = i.get("missing_execution_evidence", False)
+                executed = auth_ok and admitted and not replayed and not revoked
+                if missing_execution_evidence:
+                    execution_outcome = Outcome.UNAVAILABLE
+                else:
+                    execution_outcome = (
+                        Outcome.ESTABLISHED if executed else Outcome.CONTRADICTED
+                    )
+                if (
+                    scenario.mutation == "assume_missing_execution_success"
+                    and missing_execution_evidence
+                ):
+                    execution_outcome = Outcome.ESTABLISHED
                 emit(
                     Boundary.EXECUTION,
-                    Outcome.ESTABLISHED if executed else Outcome.CONTRADICTED,
+                    execution_outcome,
                     "execution-check",
                     "version-admission",
                 )
