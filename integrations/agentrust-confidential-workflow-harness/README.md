@@ -29,7 +29,7 @@ The deterministic adapter records the package release targets that will be used
 when protocol-specific adapters are wired:
 
 - `cmcp-runtime==0.5.0`
-- `cA2A==0.2.0`
+- `ca2a-runtime==0.2.0`
 
 Protocol/API changes remain in the owning repositories. Any scenario that needs
 an unreleased surface must carry `waiting_on_release`; a blocked required case
