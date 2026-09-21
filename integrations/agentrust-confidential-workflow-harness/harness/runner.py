@@ -30,6 +30,6 @@ class HarnessRunner:
             ],
             package_versions={
                 "cmcp-runtime": "0.5.0",
-                "ca2a": "0.2.0",
+                "ca2a-runtime": "0.2.0",
             },
         )
