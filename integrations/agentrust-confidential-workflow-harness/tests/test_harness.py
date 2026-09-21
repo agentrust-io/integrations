@@ -109,6 +109,61 @@ class HarnessTests(unittest.TestCase):
             )
         )
 
+    def test_key_substitution_and_authorization_gate_mutation(self):
+        bad = scenario(inputs={**scenario().inputs, "key_id": "key-X"})
+        mutated = scenario(
+            inputs={**scenario().inputs, "key_id": "key-X"},
+            mutation="disable_authorization_gate",
+        )
+        self.assertEqual(self.runner.run(bad).status, "refused")
+        self.assertEqual(self.runner.run(mutated).status, "passed")
+
+    def test_policy_substitution_and_authorization_gate_mutation(self):
+        bad = scenario(inputs={**scenario().inputs, "policy_version": "p0"})
+        mutated = scenario(
+            inputs={**scenario().inputs, "policy_version": "p0"},
+            mutation="disable_authorization_gate",
+        )
+        self.assertEqual(self.runner.run(bad).status, "refused")
+        self.assertEqual(self.runner.run(mutated).status, "passed")
+
+    def test_revocation_before_use_and_revocation_gate_mutation(self):
+        bad = scenario(inputs={**scenario().inputs, "revoked_before_use": True})
+        mutated = scenario(
+            inputs={**scenario().inputs, "revoked_before_use": True},
+            mutation="disable_revocation_gate",
+        )
+        self.assertEqual(self.runner.run(bad).status, "refused")
+        self.assertEqual(self.runner.run(mutated).status, "passed")
+
+    def test_bypass_egress_and_release_gate_mutation(self):
+        bad = scenario(inputs={**scenario().inputs, "bypass_egress": True})
+        mutated = scenario(
+            inputs={**scenario().inputs, "bypass_egress": True},
+            mutation="disable_release_gate",
+        )
+        self.assertEqual(self.runner.run(bad).status, "refused")
+        self.assertEqual(self.runner.run(mutated).status, "passed")
+
+    def test_response_binding_and_binding_gate_mutation(self):
+        bad = scenario(inputs={**scenario().inputs, "response_bound": False})
+        mutated = scenario(
+            inputs={**scenario().inputs, "response_bound": False},
+            mutation="disable_response_binding_gate",
+        )
+        self.assertEqual(self.runner.run(bad).status, "refused")
+        self.assertEqual(self.runner.run(mutated).status, "passed")
+
+    def test_missing_execution_evidence_stays_unknown(self):
+        bad = scenario(inputs={**scenario().inputs, "missing_execution_evidence": True})
+        weakened = scenario(
+            inputs={**scenario().inputs, "missing_execution_evidence": True},
+            mutation="assume_missing_execution_success",
+        )
+        self.assertEqual(self.runner.run(bad).status, "unknown")
+        self.assertEqual(self.runner.run(bad).boundary_outcomes["execution"], "unavailable")
+        self.assertEqual(self.runner.run(weakened).status, "passed")
+
     def test_blocked_case_keeps_milestone_incomplete(self):
         s = scenario(waiting_on_release="released disclosure API required")
         result = self.runner.run(s)
