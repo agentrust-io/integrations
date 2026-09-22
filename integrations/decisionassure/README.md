@@ -1,6 +1,6 @@
 # DecisionAssure → TRACE
 
-Converts a [DecisionAssure](https://github.com/a1k7/DecisionAssure-Runtime-Governance) runtime governance trace into a TRACE v0.2 Trust Record.
+Converts a DecisionAssure runtime governance trace into a TRACE v0.2 Trust Record.
 
 ## What the record claims, and what it does not
 

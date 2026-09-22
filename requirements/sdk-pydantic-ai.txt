@@ -69,9 +69,9 @@ pydantic==2.13.5 \
     #   genai-prices
     #   pydantic-ai-slim
     #   pydantic-graph
-pydantic-ai-slim==2.42.0 \
-    --hash=sha256:045c788b1636e0ed79542f2b7562d2688a3e3701744ed7379a928fceec446336 \
-    --hash=sha256:a042b73551470c40a2ab7cd532e26c20f592b5731ae544ff3eecbcdf6ceebcc4
+pydantic-ai-slim==2.44.0 \
+    --hash=sha256:67063d1b2900e92dc558079fa3854e0141ed6f81ec5fb7d9c4d1b3b86bd0c9b6 \
+    --hash=sha256:88be3150dc6c89383e4dd596414dda3479c2773ee6e9e40789596d82fc34a783
     # via -r requirements/sdk-pydantic-ai.in
 pydantic-core==2.46.5 \
     --hash=sha256:013d6f3483d81e02e7c328831808f336c8596ee33b4bd4026b9ffb1e960b8942 \
@@ -195,9 +195,9 @@ pydantic-core==2.46.5 \
     --hash=sha256:fc8515076c11f3cfdf4fb142dcca0fe384b1230a3b5415458ac84f3e0903ec13 \
     --hash=sha256:ff218293c9c806138dca139765e3b067621be52bcd93cdc14c7711be7ddc90a9
     # via pydantic
-pydantic-graph==2.42.0 \
-    --hash=sha256:25c47047ac1bbad2fdc6dace23958c6ec700a6366abc18d67dccd41411185df7 \
-    --hash=sha256:eb6c416dee9e3415195194c44ca3abeeae8853bff095d38ac798c7c3395f815d
+pydantic-graph==2.44.0 \
+    --hash=sha256:7a7aec1399d8dfc09f0485c4f9749c568bc451ed517ee1f3e903c3d216ea17e5 \
+    --hash=sha256:e6d62aa8579b83815b9adcb3dbff210647951ef4fa5f6526b24ee9d168d385bb
     # via pydantic-ai-slim
 truststore==0.10.4 ; sys_platform != 'emscripten' \
     --hash=sha256:9d91bd436463ad5e4ee4aba766628dd6cd7010cf3e2461756b3303710eebc301 \

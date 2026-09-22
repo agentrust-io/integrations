@@ -438,7 +438,7 @@
       "path": "integrations/decisionassure",
       "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/decisionassure",
       "homepage": null,
-      "repository": "https://github.com/a1k7/DecisionAssure-Runtime-Governance",
+      "repository": "https://github.com/agentrust-io/integrations/tree/main/integrations/decisionassure",
       "tier": "community",
       "stack": [
         "TRACE"
