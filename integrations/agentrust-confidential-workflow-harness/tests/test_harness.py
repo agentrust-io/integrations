@@ -1,6 +1,7 @@
 import unittest
 
-from harness import HarnessRunner, Outcome, Scenario
+from harness import Boundary, HarnessRunner, Observation, Outcome, Scenario
+from harness.adapters.base import AdapterResult
 
 def scenario(**overrides):
     base = dict(
@@ -29,6 +30,44 @@ def scenario(**overrides):
 class HarnessTests(unittest.TestCase):
     def setUp(self):
         self.runner = HarnessRunner()
+
+    def test_absent_main_evidence_stays_unknown(self):
+        class StubAdapter:
+            def __init__(self, observations):
+                self.observations = observations
+
+            def run(self, scenario):
+                return AdapterResult(tuple(self.observations))
+
+        for observations in (
+            [],
+            [Observation(Boundary.AUTHORIZATION, Outcome.ESTABLISHED, "partial")],
+            [Observation(b, Outcome.ESTABLISHED, "retry", lineage="retry-1") for b in Boundary],
+        ):
+            with self.subTest(observations=observations):
+                result = HarnessRunner(StubAdapter(observations)).run(scenario())
+                self.assertEqual(result.status, "unknown")
+                self.assertEqual(result.boundary_outcomes["release/disclosure"], "unavailable")
+
+    def test_forbidden_recipient_overrides_permission(self):
+        bad = scenario(forbidden_recipients=("recipient-R",))
+        result = self.runner.run(bad)
+        self.assertEqual(result.status, "refused")
+        self.assertEqual(result.boundary_outcomes["release/disclosure"], "contradicted")
+        weakened = scenario(forbidden_recipients=("recipient-R",), mutation="disable_release_gate")
+        self.assertEqual(self.runner.run(weakened).status, "passed")
+
+    def test_semantic_version_admission(self):
+        for version in ["0.9.9", "1.0.0-rc.1", "1.0.0-alpha", "garbage", "01.0.0", "1.0", "1.0.0-01", 12, None]:
+            with self.subTest(version=version):
+                result = self.runner.run(scenario(inputs={**scenario().inputs, "software_version": version}))
+                self.assertEqual(result.status, "refused")
+                self.assertEqual(result.boundary_outcomes["installation/admission"], "contradicted")
+        for version in ["1.0.0", "1.0.0+build.1", "1.0.1", "2.0.0-rc.1", "10.0.0"]:
+            with self.subTest(version=version):
+                self.assertEqual(self.runner.run(scenario(inputs={**scenario().inputs, "software_version": version})).status, "passed")
+        weakened = scenario(inputs={**scenario().inputs, "software_version": "1.0.0-rc.1"}, mutation="disable_version_gate")
+        self.assertEqual(self.runner.run(weakened).status, "passed")
 
     def test_positive_control(self):
         result = self.runner.run(scenario())

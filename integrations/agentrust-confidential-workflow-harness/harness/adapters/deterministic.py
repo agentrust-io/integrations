@@ -1,6 +1,30 @@
 from __future__ import annotations
+import re
 from .base import AdapterResult
 from ..model import Boundary, EvidenceClass, Observation, Outcome, Scenario
+
+
+def _meets_version_floor(value: object) -> bool:
+    """Check the fixed 1.0.0 floor using SemVer 2.0.0 precedence (semver.org)."""
+    if not isinstance(value, str):
+        return False
+    match = re.fullmatch(
+        r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)"
+        r"(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?"
+        r"(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?", value
+    )
+    if match is None:
+        return False
+    major, minor, patch, prerelease = match.groups()
+    if prerelease is not None and any(
+        part.isdigit() and len(part) > 1 and part.startswith("0")
+        for part in prerelease.split(".")
+    ):
+        return False
+    # Components are canonical decimal strings; this fixed floor avoids int-size limits.
+    above_floor = major != "0" and (major != "1" or minor != "0" or patch != "0")
+    at_floor = (major, minor, patch) == ("1", "0", "0")
+    return above_floor or (at_floor and prerelease is None)
 
 class DeterministicWorkflowAdapter:
     """Deterministic software-only adapter used to prove harness semantics."""
@@ -42,7 +66,7 @@ class DeterministicWorkflowAdapter:
                 emit(Boundary.EXECUTION, Outcome.UNAVAILABLE, "receipt-timeout", "dispatch")
             else:
                 emit(Boundary.RECEIPT, Outcome.ESTABLISHED, "peer-receipt", "dispatch")
-                admitted = i.get("software_version", "1.0.0") >= "1.0.0"
+                admitted = _meets_version_floor(i.get("software_version", "1.0.0"))
                 if scenario.mutation == "disable_version_gate":
                     admitted = True
                 emit(
@@ -119,7 +143,10 @@ class DeterministicWorkflowAdapter:
         )
 
         recipient = i.get("recipient", "recipient-R")
-        allowed_recipient = recipient in scenario.permitted_recipients
+        allowed_recipient = (
+            recipient in scenario.permitted_recipients
+            and recipient not in scenario.forbidden_recipients
+        )
         release_ok = verified and allowed_recipient and not i.get("bypass_egress", False)
         if scenario.mutation == "disable_release_gate":
             release_ok = verified

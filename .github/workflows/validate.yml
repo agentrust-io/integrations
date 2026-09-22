@@ -42,3 +42,6 @@ jobs:
           python scripts/generate_marketplace_catalog.py --check
       - name: Test AGT Marketplace snapshot generation
         run: python -m pytest tests/test_generate_agt_marketplace_catalog.py -q
+      - name: Test confidential workflow harness
+        run: python -m unittest discover -s tests -v
+        working-directory: integrations/agentrust-confidential-workflow-harness

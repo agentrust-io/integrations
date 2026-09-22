@@ -56,3 +56,9 @@ overwrite an earlier unknown outcome.
 
 The public result must never contain protected payloads, secrets, device IDs or
 low-entropy digests of protected material.
+
+Missing main-lineage observations remain `unavailable`; adapters must explicitly
+report `not_applicable`. A forbidden recipient takes precedence over permission.
+The deterministic software-version gate uses [SemVer 2.0.0](https://semver.org/)
+with a fixed minimum of `1.0.0`: `1.0.0-rc.1` is below that minimum, and build
+metadata does not change precedence. Invalid versions are refused.
