@@ -19,11 +19,11 @@ griffelib==2.3.0 \
     --hash=sha256:1b8f9cd525681c26b1d6d574faa1371651e8459ca51d209684f50b8096ae06e0 \
     --hash=sha256:7b0952caf5bca6afa4bb5ee8c6a2d183fe3f21b62efc5f6c7243cb2b26d2d115
     # via pydantic-ai-slim
-h11==0.16.0 \
+h11==0.16.0 ; sys_platform != 'emscripten' \
     --hash=sha256:4e35b956cf45792e4caa5885e69fba00bdbc6ffafbfa020300e549b208ee5ff1 \
     --hash=sha256:63cf8bbe7522de3bf65932fda1d9c2772064ffb3dae62d55932da54b31cb6c86
     # via httpcore2
-httpcore2==2.12.0 \
+httpcore2==2.12.0 ; sys_platform != 'emscripten' \
     --hash=sha256:7e04258ce01013d7d615e5b910a3b27fac937d7a95038227e79652b4ba3b4ceb \
     --hash=sha256:9293522bba0aa7c4c8e9e3f040c16575bd8868e155a77fa30c7a9085a5eae648
     # via httpx2
@@ -33,6 +33,10 @@ httpx2==2.12.0 \
     # via
     #   genai-prices
     #   pydantic-ai-slim
+httpx2-jsfetch==1.0 ; python_full_version >= '3.12' and sys_platform == 'emscripten' \
+    --hash=sha256:70a0e3eabfef7cce5ad9c629f7d01ca05e418f586646f4ddf14782e4c1454c60 \
+    --hash=sha256:cb916b707601e69a07721aabc8f3f6659be3a6893bc1ff5c6f9e02241df2da32
+    # via httpx2
 idna==3.19 \
     --hash=sha256:5e0811a4383b21dc5838069f801c4fb62113b7447663d2530d2bd6e77b49bf15 \
     --hash=sha256:815e7be7a7806d54abb586dc943addc79e8b2ee16915059658cbeff4b1b43bf4
@@ -195,7 +199,7 @@ pydantic-graph==2.44.0 \
     --hash=sha256:7a7aec1399d8dfc09f0485c4f9749c568bc451ed517ee1f3e903c3d216ea17e5 \
     --hash=sha256:e6d62aa8579b83815b9adcb3dbff210647951ef4fa5f6526b24ee9d168d385bb
     # via pydantic-ai-slim
-truststore==0.10.4 \
+truststore==0.10.4 ; sys_platform != 'emscripten' \
     --hash=sha256:9d91bd436463ad5e4ee4aba766628dd6cd7010cf3e2461756b3303710eebc301 \
     --hash=sha256:adaeaecf1cbb5f4de3b1959b42d41f6fab57b2b1666adb59e89cb0b53361d981
     # via
@@ -206,6 +210,7 @@ typing-extensions==4.16.0 \
     --hash=sha256:dc983d19a509c94dba722ee6abd33940f7c05a89e243c47e907eb4db6f1a43e5
     # via
     #   anyio
+    #   httpx2
     #   opentelemetry-api
     #   opentelemetry-sdk
     #   opentelemetry-semantic-conventions
