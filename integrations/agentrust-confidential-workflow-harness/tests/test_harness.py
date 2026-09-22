@@ -148,6 +148,43 @@ class HarnessTests(unittest.TestCase):
             )
         )
 
+    def test_response_parent_is_actual_main_execution(self):
+        for overrides, expected_source in (
+            ({}, "execution-check"),
+            ({"timeout_after_dispatch": True}, "receipt-timeout"),
+            ({"dispatch": False}, "not-dispatched"),
+            ({"missing_execution_evidence": True}, "execution-check"),
+        ):
+            for retry in (False, True):
+                with self.subTest(inputs=overrides, retry=retry):
+                    result = self.runner.run(scenario(inputs={
+                        **scenario().inputs, **overrides, "retry_lineage": retry,
+                    }))
+                    response = next(o for o in result.observations
+                                    if o.boundary == Boundary.RESPONSE_VERIFICATION)
+                    self.assertEqual(response.lineage, "main")
+                    self.assertEqual(response.caused_by, expected_source)
+                    self.assertTrue(any(
+                        o.boundary == Boundary.EXECUTION
+                        and o.lineage == response.lineage
+                        and o.source == response.caused_by
+                        for o in result.observations
+                    ))
+
+    def test_causal_parents_resolve_earlier_in_same_lineage(self):
+        for overrides in ({}, {"timeout_after_dispatch": True}, {"dispatch": False},
+                          {"missing_execution_evidence": True}, {"workload": "wrong"}):
+            for retry in (False, True):
+                with self.subTest(inputs=overrides, retry=retry):
+                    result = self.runner.run(scenario(inputs={
+                        **scenario().inputs, **overrides, "retry_lineage": retry,
+                    }))
+                    seen = set()
+                    for observation in result.observations:
+                        if observation.caused_by is not None:
+                            self.assertIn((observation.lineage, observation.caused_by), seen)
+                        seen.add((observation.lineage, observation.source))
+
     def test_key_substitution_and_authorization_gate_mutation(self):
         bad = scenario(inputs={**scenario().inputs, "key_id": "key-X"})
         mutated = scenario(

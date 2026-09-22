@@ -54,6 +54,12 @@ Every observation records a boundary, outcome, source, evidence class, lineage,
 and optional causal parent. Main-lineage summaries never allow a retry branch to
 overwrite an earlier unknown outcome.
 
+In the deterministic adapter, each non-null causal parent names an earlier
+observation in the same lineage. Response verification points to the actual
+main-lineage execution observation, including timeout and no-dispatch outcomes.
+Retry observations record authorization from the shared synthetic inputs in
+their own lineage; they do not replace the main path's evidence.
+
 The public result must never contain protected payloads, secrets, device IDs or
 low-entropy digests of protected material.
 

@@ -107,6 +107,13 @@ class DeterministicWorkflowAdapter:
             emit(Boundary.EXECUTION, Outcome.NOT_APPLICABLE, "not-dispatched")
 
         if i.get("retry_lineage", False):
+            # Record the shared authorization inputs in the retry's own lineage.
+            emit(
+                Boundary.AUTHORIZATION,
+                Outcome.ESTABLISHED if auth_ok else Outcome.CONTRADICTED,
+                "authorization-check",
+                lineage="retry-1",
+            )
             emit(
                 Boundary.DELIVERY,
                 Outcome.ESTABLISHED,
@@ -122,14 +129,15 @@ class DeterministicWorkflowAdapter:
                 lineage="retry-1",
             )
 
-        exec_main = next(
+        execution_main = next(
             (
-                o.outcome
+                o
                 for o in reversed(obs)
                 if o.boundary == Boundary.EXECUTION and o.lineage == "main"
             ),
-            Outcome.UNAVAILABLE,
+            None,
         )
+        exec_main = execution_main.outcome if execution_main else Outcome.UNAVAILABLE
         verified = exec_main == Outcome.ESTABLISHED and i.get("response_bound", True)
         if scenario.mutation == "disable_response_binding_gate":
             verified = exec_main == Outcome.ESTABLISHED
@@ -139,7 +147,7 @@ class DeterministicWorkflowAdapter:
             if verified
             else (Outcome.UNAVAILABLE if exec_main == Outcome.UNAVAILABLE else Outcome.CONTRADICTED),
             "response-binding",
-            "execution-check",
+            execution_main.source if execution_main else None,
         )
 
         recipient = i.get("recipient", "recipient-R")
