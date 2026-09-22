@@ -1,6 +1,6 @@
 {
   "catalog_version": 1,
-  "count": 41,
+  "count": 42,
   "integrations": [
     {
       "name": "Claude Code",
@@ -402,6 +402,32 @@
         "trustee",
         "kbs",
         "rego"
+      ]
+    },
+    {
+      "name": "Confidential Workflow Acceptance Harness",
+      "package_name": "Confidential Workflow Acceptance Harness",
+      "vendor": "agentrust-io",
+      "description": "Deterministic acceptance harness for boundary-separated confidential workflow evidence, negative cases, and gate mutation proofs.",
+      "path": "integrations/agentrust-confidential-workflow-harness",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/agentrust-confidential-workflow-harness",
+      "homepage": null,
+      "repository": "https://github.com/agentrust-io/integrations",
+      "tier": "community",
+      "stack": [
+        "cMCP",
+        "cA2A"
+      ],
+      "category": "Security & policy",
+      "mark": "CWH",
+      "featured": null,
+      "keywords": [
+        "confidentiality",
+        "acceptance",
+        "harness",
+        "policy",
+        "evidence",
+        "mutation"
       ]
     },
     {
