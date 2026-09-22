@@ -371,6 +371,7 @@ httpx2==2.12.0 \
     # via
     #   mcp
     #   openai
+    #   openai-agents
 httpx2-jsfetch==1.0 ; python_full_version >= '3.12' and sys_platform == 'emscripten' \
     --hash=sha256:70a0e3eabfef7cce5ad9c629f7d01ca05e418f586646f4ddf14782e4c1454c60 \
     --hash=sha256:cb916b707601e69a07721aabc8f3f6659be3a6893bc1ff5c6f9e02241df2da32
@@ -509,9 +510,9 @@ openai==3.8.0 \
     --hash=sha256:514736aa1e4ef1033c1209ad53897392845ccd4f2c4fae6413b2cf5f91c2c926 \
     --hash=sha256:6138a5a1333a1be9e4d1edea2d160b311542787b029543f87de4961c66358d16
     # via openai-agents
-openai-agents==0.22.0 \
-    --hash=sha256:6c3d7b9e34d3ca4bf763d4557d01ec844685290f0d80cb72e10a304029c0d7ee \
-    --hash=sha256:985a74a8024123980c2d4dc329d19b2332a0f86919fa7b3f6b9c2abaae022680
+openai-agents==0.22.3 \
+    --hash=sha256:33c79a5da0c9cf8ace0019bb09e268338d9162a18edbb6c2ce12bc139917109e \
+    --hash=sha256:41dec9e2e703db32a627bf0290f3721a6ca37405603a8cb654213356dbb8ee9d
     # via -r requirements/sdk-openai-agents.in
 opentelemetry-api==1.44.0 \
     --hash=sha256:67647e5e9566edcf421166fdf022b3537f818635daa852b289e34604dc6fb33a \
@@ -654,11 +655,15 @@ pydantic-core==2.46.5 \
 pyjwt==2.13.0 \
     --hash=sha256:41571c89ca91598c79e8ef18a2d07367d4810fbbd6f637794879baf1b7703423 \
     --hash=sha256:66adcc2aff09b3f1bbd95fc1e1577df8ac8723c978552fd43304c8a290ac5728
-    # via mcp
+    # via
+    #   mcp
+    #   openai-agents
 python-multipart==0.0.32 \
     --hash=sha256:be54b7f3fa167bb83e4fcd936b887b708f4e57fe75911c02aebf53efaf8d938e \
     --hash=sha256:ff6d3f776f16878c894e52e107296ffc890e913c611b1a4ec6c44e2821fe2e23
-    # via mcp
+    # via
+    #   mcp
+    #   openai-agents
 pywin32==312 ; sys_platform == 'win32' \
     --hash=sha256:02ebca0f0242b75292e218065004310d6a477407c09fa449bfe4f6022bc0c0fc \
     --hash=sha256:17948aeadbdb091f0ced6ef0841620794e68327b94ee415571c1203594b7215c \
@@ -825,6 +830,7 @@ starlette==1.6.0 \
     --hash=sha256:d4e3ac5e546444960c710297a3c9fc3f7ebae1b7e963f3d36173b49da535be9b
     # via
     #   mcp
+    #   openai-agents
     #   sse-starlette
 truststore==0.10.4 ; sys_platform != 'emscripten' \
     --hash=sha256:9d91bd436463ad5e4ee4aba766628dd6cd7010cf3e2461756b3303710eebc301 \
@@ -857,7 +863,9 @@ typing-inspection==0.4.4 \
 urllib3==2.7.0 \
     --hash=sha256:231e0ec3b63ceb14667c67be60f2f2c40a518cb38b03af60abc813da26505f4c \
     --hash=sha256:9fb4c81ebbb1ce9531cce37674bbc6f1360472bc18ca9a553ede278ef7276897
-    # via requests
+    # via
+    #   openai-agents
+    #   requests
 uvicorn==0.52.4 ; sys_platform != 'emscripten' \
     --hash=sha256:73acfee47a0b133c5de13d219492d62d8a31e935f4fe6e41a232451a15379f86 \
     --hash=sha256:f86e41a149d7d05a9969337e3946a9c171c06a5d42680896daaba624aeac8da1
