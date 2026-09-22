@@ -9,7 +9,7 @@ maintainer:
   github: imran-siddique
 repository: https://github.com/agentrust-io/integrations
 license: Apache-2.0
-tier: community
+tier: verified
 marketplace:
   category: Frameworks
   mark: LC

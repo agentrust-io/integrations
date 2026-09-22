@@ -41,13 +41,13 @@ if ALLOW + independently proven execution:
 
 - Not production L5 or non-bypassable route topology.
 - Not hardware attestation, TEE, or confidential computing.
-- Not published TRACE conformance until `trace-tests verify --level 0` runs
-  against a signed record in CI.
+- Not continuously checked. No CI workflow runs `trace-tests` on this
+  integration yet; the Level 0 result rests on the maintainer run recorded
+  under "Verified-tier review".
 - Not an OntoGuard semantic engine. Authorization remains in OntoGuard.
 - Per TRACE spec 3.1.2, a Trust Record is issued per execution and a
   reference cannot carry a pre-execution commitment.
 - `appraisal.status=none`. Local TRACE signing is not an independent appraisal.
-- Community tier on first submission.
 
 ## Run it
 
@@ -112,6 +112,16 @@ Level 1 is unsupported (`runtime.platform=software-only`) and must fail
 - This adapter: verify both objects, refuse TRACE when either is missing or
   mismatched, project an executed event into TRACE v0.2.
 - Downstream enforcement: consume the current handoff before commit.
+
+## Verified-tier review
+
+A maintainer ran "Run it" on 2026-09-21 in an isolated environment against
+released `agentrust-trace` 0.10.0 and `agentrust-trace-tests` 0.5.1: 27 tests
+passed, `emit_record.py` printed `STATE=ALLOW_EXECUTION_PROVEN SIGNED=True`, and
+`trace-tests verify --level 0` gave `Result: PASS (8 checks, 0 skipped)` with the
+signature verified. Level 1 fails on `TR-RTE-001` and `TR-RTE-004`, as the list
+above says it must. The manifest is now `tier: verified`. Re-verification happens
+at every release that touches this integration.
 
 ## License
 

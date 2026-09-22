@@ -137,6 +137,19 @@ Put the manifest at the repository root as `wcm.manifest.json`, with
 `weights_hash` computed by `artifact_digest` over the inventory you intend to
 bind, excluding the manifest itself.
 
+## Verified-tier review
+
+A maintainer ran this on 2026-09-21 in an isolated environment against released
+`weight-custody-manifest` 0.28.2, and again on 0.27.0 with the same results.
+This entry is `tier: verified` for the offline path only. Checked: 21 tests
+pass; `--local` gives `ok: true`, a tampered shard and a single signature each
+exit 1 with the documented reason; a real Hub snapshot
+(`hf-internal-testing/tiny-random-gpt2`) with a maintainer-signed sidecar gives
+`ok: true`; `guarded_snapshot_download` refuses `main` and refuses a repo with no
+sidecar; the WCM L1 vectors pass 32/32. Not checked: a positive guarded download
+from a Hub repo that publishes `wcm.manifest.json` (none is known), and the
+symlinked cache layout (the run was on Windows, where the Hub copies files). Re-verification happens at every release that touches this integration.
+
 ## Scope
 
 Integrity and provenance against software and remote adversaries. Confidential

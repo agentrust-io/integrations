@@ -57,7 +57,7 @@
       "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/langchain",
       "homepage": null,
       "repository": "https://github.com/agentrust-io/integrations",
-      "tier": "community",
+      "tier": "verified",
       "stack": [
         "TRACE"
       ],
@@ -79,7 +79,7 @@
       "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/llamaindex",
       "homepage": null,
       "repository": "https://github.com/agentrust-io/integrations",
-      "tier": "community",
+      "tier": "verified",
       "stack": [
         "TRACE"
       ],
@@ -145,7 +145,7 @@
       "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/aeoess-aps",
       "homepage": "https://agent-passport.org",
       "repository": "https://github.com/aeoess/agent-passport-python",
-      "tier": "community",
+      "tier": "verified",
       "stack": [
         "TRACE"
       ],
@@ -168,7 +168,7 @@
       "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/altrudev-agent-replay",
       "homepage": null,
       "repository": "https://github.com/altrudev/Agent-Replay",
-      "tier": "community",
+      "tier": "verified",
       "stack": [
         "TRACE"
       ],
@@ -235,7 +235,7 @@
       "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/companyscope-incident-register",
       "homepage": "https://companyscope.io/register",
       "repository": "https://github.com/agentrust-io/integrations",
-      "tier": "community",
+      "tier": "verified",
       "stack": [
         "Agent Manifest"
       ],
@@ -281,7 +281,7 @@
       "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/bernstein-mcp",
       "homepage": "https://mcp.bernstein.run",
       "repository": "https://github.com/sipyourdrink-ltd/bernstein-mcp",
-      "tier": "community",
+      "tier": "verified",
       "stack": [
         "TRACE"
       ],
@@ -328,7 +328,7 @@
       "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/chap",
       "homepage": "https://github.com/BrightbeamAI/chap",
       "repository": "https://github.com/agentrust-io/integrations",
-      "tier": "community",
+      "tier": "verified",
       "stack": [
         "TRACE"
       ],
@@ -436,7 +436,7 @@
       "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/epilabs-epi-recorder",
       "homepage": "https://epilabs.org",
       "repository": "https://github.com/mohdibrahimaiml/epi-recorder",
-      "tier": "community",
+      "tier": "verified",
       "stack": [
         "TRACE",
         "WCM"
@@ -483,7 +483,7 @@
       "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/google-adk",
       "homepage": null,
       "repository": "https://github.com/agentrust-io/integrations",
-      "tier": "community",
+      "tier": "verified",
       "stack": [
         "TRACE"
       ],
@@ -505,7 +505,7 @@
       "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/wcm-huggingface",
       "homepage": "https://wcm.agentrust-io.com",
       "repository": "https://github.com/agentrust-io/integrations",
-      "tier": "community",
+      "tier": "verified",
       "stack": [
         "WCM"
       ],
@@ -528,7 +528,7 @@
       "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/nobulex",
       "homepage": "https://nobulex.com",
       "repository": "https://github.com/arian-gogani/nobulex",
-      "tier": "community",
+      "tier": "verified",
       "stack": [
         "TRACE"
       ],
@@ -550,7 +550,7 @@
       "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/wcm-nvidia-nras",
       "homepage": "https://wcm.agentrust-io.com",
       "repository": "https://github.com/agentrust-io/integrations",
-      "tier": "community",
+      "tier": "verified",
       "stack": [
         "WCM"
       ],
@@ -573,7 +573,7 @@
       "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/ontoguard-decision-authorization",
       "homepage": "https://ontoguard.ai",
       "repository": "https://github.com/MMM777-ai/OntoGuard-decision-authorization",
-      "tier": "community",
+      "tier": "verified",
       "stack": [
         "TRACE"
       ],
@@ -596,7 +596,7 @@
       "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/openai-agents",
       "homepage": null,
       "repository": "https://github.com/agentrust-io/integrations",
-      "tier": "community",
+      "tier": "verified",
       "stack": [
         "TRACE"
       ],
@@ -732,7 +732,7 @@
       "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/wcm-triton",
       "homepage": "https://wcm.agentrust-io.com",
       "repository": "https://github.com/agentrust-io/integrations",
-      "tier": "community",
+      "tier": "verified",
       "stack": [
         "WCM"
       ],
@@ -755,7 +755,7 @@
       "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/wcm-vllm",
       "homepage": "https://wcm.agentrust-io.com",
       "repository": "https://github.com/agentrust-io/integrations",
-      "tier": "community",
+      "tier": "verified",
       "stack": [
         "WCM"
       ],
@@ -848,7 +848,7 @@
       "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/wcm-kyverno",
       "homepage": "https://wcm.agentrust-io.com",
       "repository": "https://github.com/agentrust-io/integrations",
-      "tier": "community",
+      "tier": "verified",
       "stack": [
         "WCM"
       ],
@@ -871,7 +871,7 @@
       "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/wcm-oci",
       "homepage": "https://wcm.agentrust-io.com",
       "repository": "https://github.com/agentrust-io/integrations",
-      "tier": "community",
+      "tier": "verified",
       "stack": [
         "WCM"
       ],

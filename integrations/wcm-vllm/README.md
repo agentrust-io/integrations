@@ -65,6 +65,14 @@ pip install weight-custody-manifest
 ```
 
 ```python
+from wcm import KeyBrokerService
+from wcm.renewal import manifest_identity
+
+# The broker refuses `manifest_authorized` unless it trusts this manifest's identity.
+kbs = KeyBrokerService(
+    {manifest.weights_hash: weights_key},
+    trusted_manifest_identities={manifest_identity(manifest)},
+)
 from wcm_serving_guard import CustodyGuard
 
 guard = CustodyGuard(broker=kbs, manifest=manifest, provider=provider)
@@ -174,6 +182,16 @@ one produces evidence the broker rejects with a message about measurements rathe
 than about configuration.
 
 Pass `serving_image_measurement` explicitly to override.
+
+## Verified-tier review
+
+A maintainer ran this on 2026-09-21 in an isolated environment against released
+`weight-custody-manifest` 0.28.2, and again on 0.27.0 with the same results.
+This entry is `tier: verified` for the offline path only. Checked: 38 tests pass;
+against the SDK's real `KeyBrokerService`, `acquire()` returns the released key, a
+lapsed lease fires `on_lapse`, the receipt chain verifies as a valid terminal
+runtime record chain, and a revoked serving image raises `ReleaseRefused`. Not
+checked: a live run on a confidential VM with a GPU and vLLM. Re-verification happens at every release that touches this integration.
 
 ## Scope
 
