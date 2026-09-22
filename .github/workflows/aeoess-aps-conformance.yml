@@ -76,7 +76,7 @@ jobs:
         # keys its schema supports; agent-passport-system is pinned here as part
         # of the same reproducible snapshot.
         run: |
-          pip install "agentrust-trace==0.10.0" "agentrust-trace-tests==0.5.1" "agent-passport-system==3.0.1"
+          pip install "agentrust-trace==0.10.0" "agentrust-trace-tests==0.5.1" "agent-passport-system==4.0.0"
       - name: Pinned versions match integration.yaml
         run: |
           python - <<'PY'

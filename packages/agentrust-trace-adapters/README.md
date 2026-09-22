@@ -125,3 +125,10 @@ It is a deterministic digest over the identifying inputs (producer, subject, pol
 ## Licence
 
 Apache-2.0.
+
+## Proposed OpenShell bundle verifier (unreleased)
+
+The candidate verifier and synthetic acceptance cases are described in
+[the producer contract](docs/openshell-bundle-candidate.md). This is development
+work for NVIDIA/OpenShell#2745; no live exporter compatibility or hardware
+assurance is claimed. The released OpenShell adapter remains unchanged.

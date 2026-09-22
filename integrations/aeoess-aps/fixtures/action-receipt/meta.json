@@ -1,0 +1,8 @@
+{
+  "expected_delegation_ref": "sha256:d094cc25d9bc657777d5fb0dbe37ebb096d9901b52a7c215d210fbe9ea72d462",
+  "expected_subject_agent": "did:aps:example:agent-01",
+  "generated_by": "fixtures/action-receipt/generate.py",
+  "max_age_seconds": 600,
+  "reference_time": "2026-09-18T12:05:00Z",
+  "sdk": "agent-passport-system 4.0.0"
+}

@@ -240,8 +240,15 @@ def test_model_supplied_call_id_is_fingerprinted_before_retention() -> None:
     )
 
 
-def test_level_zero_conformance_with_external_advisory_enforcement() -> None:
-    """The optional externally enforced path passes the released Level 0 suite."""
+@pytest.mark.parametrize(
+    ("enforcement_mode", "policy_bundle"),
+    [
+        ("declared", b'{"rules":["adk-callbacks-observe-only"]}'),
+        ("advisory", b'{"rules":["external-advisory-layer"]}'),
+    ],
+)
+def test_level_zero_conformance(enforcement_mode: str, policy_bundle: bytes) -> None:
+    """The default and the externally enforced paths pass the released Level 0 suite."""
     plugin = GoogleAdkTracePlugin()
     agent = LlmAgent(
         name="conformance_agent",
@@ -255,8 +262,8 @@ def test_level_zero_conformance_with_external_advisory_enforcement() -> None:
         plugin.build_record(
             invocation_id,
             subject="spiffe://example.org/agent/google-adk",
-            policy_bundle=b'{"rules":["external-advisory-layer"]}',
-            enforcement_mode="advisory",
+            policy_bundle=policy_bundle,
+            enforcement_mode=enforcement_mode,
             workload_digest=DIGEST,
             data_class="internal",
             model_provider="test-provider",

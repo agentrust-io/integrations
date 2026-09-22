@@ -98,6 +98,17 @@ python wcm_oci.py verify referrer.json \
 achievable result is `annotation-only`, and the tool says so rather than leaving
 you to wonder. Exit code is non-zero unless `trusted`.
 
+## Verified-tier review
+
+A maintainer ran this on 2026-09-21 in an isolated environment against released
+`weight-custody-manifest` 0.28.2, and again on 0.27.0 with the same results.
+This entry is `tier: verified` for the offline path only. Checked: 21 tests pass;
+`build` then `verify` gives `trusted: true` via `layer-digest`; without
+`--subject-manifest` it reports `annotation-only` and exits 1; builds are
+byte-reproducible; the referrer validates against the OCI image-spec v1.1.1
+image-manifest schema; the WCM L1 vectors run through `verify` pass 32/32. Not
+checked: pushing the referrer to a live registry. Re-verification happens at every release that touches this integration.
+
 ## Scope
 
 Distribution-time binding. No attestation, no key release: a registry is not an

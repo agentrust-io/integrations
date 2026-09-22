@@ -1,0 +1,12 @@
+{
+  "delegation_verification_key": {
+    "did:aps:example:principal-01#key-1": "34e2e8eb00110dfef899d833c28fa059fd02474682521d33abbfa249c3fc7629"
+  },
+  "note": "Public keys only. Seeds are sha256 over the labels in generate.py, so the material is public by construction.",
+  "pinned": {
+    "did:aps:example:agent-01": {
+      "agent-01-key-2026-09": "ea827123618c65352e6f012584f2472056f2a37366edda01e7066dfbc2fd1d8c"
+    }
+  },
+  "unrelated_public_key": "57ba45a6260947ed7e44a5f6cb81fde45834375d79270db80bda6dc3eaf844d0"
+}

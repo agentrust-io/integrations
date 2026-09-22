@@ -38,24 +38,24 @@ TRACE only works as a standard if it is genuinely neutral. Integrations are list
 | Integration | Vendor | Integrates with | Tier |
 |---|---|---|---|
 | [claude-code](claude-code/) | agentrust-io | agent-manifest, trace | community |
-| [Agent Passport System](integrations/aeoess-aps/) | aeoess | trace | community |
+| [Agent Passport System](integrations/aeoess-aps/) | aeoess | trace | verified |
 | [cA2A Cross-Operator Delegation](integrations/agentrust-ca2a-cross-operator/) | agentrust-io | ca2a | community |
 | [Confidential Workflow Acceptance Harness](integrations/agentrust-confidential-workflow-harness/) | agentrust-io | cmcp, ca2a | community |
-| [Agent Replay](integrations/altrudev-agent-replay/) | Altru.dev | trace | community |
-| [Bernstein MCP verifier](integrations/bernstein-mcp/) | Bernstein | trace | community |
-| [CHAP](integrations/chap/) | agentrust-io | trace | community |
-| [AI Agent Incident Register](integrations/companyscope-incident-register/) | CompanyScope | agent-manifest | community |
+| [Agent Replay](integrations/altrudev-agent-replay/) | Altru.dev | trace | verified |
+| [Bernstein MCP verifier](integrations/bernstein-mcp/) | Bernstein | trace | verified |
+| [CHAP](integrations/chap/) | agentrust-io | trace | verified |
+| [AI Agent Incident Register](integrations/companyscope-incident-register/) | CompanyScope | agent-manifest | verified |
 | [comply54](integrations/comply54/) | comply54 | trace | community |
 | [ComputeID AgentPassport TRACE Adapter](integrations/computeid-agentpassport-trace/) | ComputeID | trace | community |
 | [DecisionAssure](integrations/decisionassure/) | DecisionAssure (a1k7) | trace | community |
-| [EPI Recorder](integrations/epilabs-epi-recorder/) | EPI Labs | trace, wcm | community |
-| [Google ADK](integrations/google-adk/) | agentrust-io | trace | community |
-| [LangChain](integrations/langchain/) | agentrust-io | trace | community |
+| [EPI Recorder](integrations/epilabs-epi-recorder/) | EPI Labs | trace, wcm | verified |
+| [Google ADK](integrations/google-adk/) | agentrust-io | trace | verified |
+| [LangChain](integrations/langchain/) | agentrust-io | trace | verified |
 | [SOVP](integrations/litzki-systems-sovp/) | Litzki Systems | trace | verified |
-| [LlamaIndex](integrations/llamaindex/) | agentrust-io | trace | community |
-| [Nobulex](integrations/nobulex/) | Nobulex | trace | community |
-| [OntoGuard Decision Authorization](integrations/ontoguard-decision-authorization/) | OntoGuard AI | trace | community |
-| [OpenAI Agents SDK](integrations/openai-agents/) | agentrust-io | trace | community |
+| [LlamaIndex](integrations/llamaindex/) | agentrust-io | trace | verified |
+| [Nobulex](integrations/nobulex/) | Nobulex | trace | verified |
+| [OntoGuard Decision Authorization](integrations/ontoguard-decision-authorization/) | OntoGuard AI | trace | verified |
+| [OpenAI Agents SDK](integrations/openai-agents/) | agentrust-io | trace | verified |
 | [OpenShell TRACE Adapter](integrations/openshell/) | agentrust-io | trace | community |
 | [OpenTelemetry GenAI](integrations/otel-genai/) | agentrust-io | trace | community |
 | [ramen-ai cMCP Adapter](integrations/ramen-ai-cmcp/) | ramen-ai | cmcp, trace | verified |
@@ -68,15 +68,15 @@ TRACE only works as a standard if it is genuinely neutral. Integrations are list
 | [WCM Confidential Containers Trustee](integrations/wcm-coco-trustee/) | agentrust-io | wcm | community |
 | [WCM CycloneDX ML-BOM](integrations/wcm-cyclonedx/) | agentrust-io | wcm | community |
 | [WCM GCP Confidential Space](integrations/wcm-gcp-confidential-space/) | agentrust-io | wcm | community |
-| [Hugging Face WCM Download Gate](integrations/wcm-huggingface/) | agentrust-io | wcm | community |
+| [Hugging Face WCM Download Gate](integrations/wcm-huggingface/) | agentrust-io | wcm | verified |
 | [WCM in-toto Attestation](integrations/wcm-in-toto/) | agentrust-io | wcm | community |
-| [WCM Kyverno Policy Pack](integrations/wcm-kyverno/) | agentrust-io | wcm | community |
-| [WCM NVIDIA GPU Attestation](integrations/wcm-nvidia-nras/) | agentrust-io | wcm | community |
-| [WCM OCI Referrer](integrations/wcm-oci/) | agentrust-io | wcm | community |
+| [WCM Kyverno Policy Pack](integrations/wcm-kyverno/) | agentrust-io | wcm | verified |
+| [WCM NVIDIA GPU Attestation](integrations/wcm-nvidia-nras/) | agentrust-io | wcm | verified |
+| [WCM OCI Referrer](integrations/wcm-oci/) | agentrust-io | wcm | verified |
 | [WCM OpenTelemetry](integrations/wcm-opentelemetry/) | agentrust-io | wcm | community |
 | [WCM Key Release to TRACE](integrations/wcm-trace/) | agentrust-io | wcm, trace | community |
-| [WCM Triton Repository Staging](integrations/wcm-triton/) | agentrust-io | wcm | community |
-| [WCM Serving Guard for vLLM](integrations/wcm-vllm/) | agentrust-io | wcm | community |
+| [WCM Triton Repository Staging](integrations/wcm-triton/) | agentrust-io | wcm | verified |
+| [WCM Serving Guard for vLLM](integrations/wcm-vllm/) | agentrust-io | wcm | verified |
 | [agentrust-codex](plugins/agentrust-codex/) | agentrust-io | agent-manifest, trace | community |
 | [scheduled-agents](scheduled-agents/) | agentrust-io | trace | community |
 <!-- integration-index:end -->

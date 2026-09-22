@@ -13,7 +13,7 @@ maintainer:
 repository: https://github.com/altrudev/Agent-Replay
 
 license: Apache-2.0
-tier: community
+tier: verified
 
 marketplace:
   category: Evidence & receipts

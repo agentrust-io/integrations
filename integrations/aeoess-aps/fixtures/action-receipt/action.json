@@ -1,0 +1,12 @@
+{
+  "action_type": "calendar.event.create",
+  "agent_id": "did:aps:example:agent-01",
+  "issued_at": "2026-09-18T11:59:58.000Z",
+  "nonce": "ba1032b5cd443e76ec6eea1fae6af97c",
+  "payload_ref": "a1fd6cf9ef78a29694991eb21958891947425f5e6b92e83edb791bf2cb05969a",
+  "profile": "aps-action-ref-v2",
+  "scope_required": [
+    "calendar:write"
+  ],
+  "target": "https://calendar.example.com/calendars/primary"
+}

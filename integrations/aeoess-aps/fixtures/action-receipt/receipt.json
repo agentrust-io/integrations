@@ -1,0 +1,23 @@
+{
+  "action_ref": "4e4d257aac94d0a65bd0b4a519a3c1a830ed7fd2cd278b61575c472b0fc7f068",
+  "delegation_ref": "sha256:d094cc25d9bc657777d5fb0dbe37ebb096d9901b52a7c215d210fbe9ea72d462",
+  "evidence_refs": [],
+  "issued_at": "2026-09-18T12:00:00.000Z",
+  "issuer": "did:aps:example:agent-01",
+  "profile": "aps-receipt-v1",
+  "receipt_id": "ee29f071de57411dd321ffe6396614bea559fcae9b02c19b443563779eea7f16",
+  "receipt_type": "aps:action-intent:v1",
+  "result": {
+    "profile": "aps-action-intent-result-v1",
+    "status": "declared"
+  },
+  "signatures": [
+    {
+      "alg": "Ed25519",
+      "key_id": "agent-01-key-2026-09",
+      "signer": "did:aps:example:agent-01",
+      "value": "d7f78b048c975dff68f29f286ea51c9cd72ba2c3702bfb6600735c9b373decc84dc66657b4ed8e9ec7f48f65d4dda02ef9415a4653310932d5fbdebf837b260f"
+    }
+  ],
+  "subject_agent": "did:aps:example:agent-01"
+}

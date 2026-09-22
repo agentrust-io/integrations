@@ -30,6 +30,13 @@ Seal completeness (truncation through 4.4.1; 4.4.3 seals full payloads): [histor
 
 Byte-level seal map: [byte-level seal scope](https://github.com/mohdibrahimaiml/epi-recorder/blob/v4.4.3/docs/KNOWN_LIMITATIONS.md#byte-level-seal-scope-from-1kb-sweep-440-demo-banking-amlepi-405612-b).
 
-## Verified tier request
+## Verified-tier review
 
-Please evaluate this integration for the **Verified** tier. Reproduction is the four steps above against `epi-recorder==4.4.3` and `agentrust-trace-tests==0.5.1`.
+Done. A maintainer reproduced the four steps above on 2026-09-21 in an isolated
+environment against released `epi-recorder==4.4.3`, `agentrust-trace==0.9.0` and
+`agentrust-trace-tests==0.5.1` (Level 0 `Result: PASS (8 checks)` with the
+Ed25519 signature verified; Level 1 fails on `TR-RTE-001` and `TR-RTE-004`, as
+documented), and the manifest is now `tier: verified`. The install above resolves
+`agentrust-trace` 0.9.0 because 0.10.0 conflicts with epi-recorder's
+`pydantic<=2.12.3`. Re-verification happens at every release that touches this
+integration.

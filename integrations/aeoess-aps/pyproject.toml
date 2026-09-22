@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "aeoess-aps-integration"
 version = "0.1.0"
-description = "Maps signed Agent Passport System policy decisions onto TRACE Trust Records"
+description = "Maps signed Agent Passport System policy decisions onto TRACE Trust Records and verifies APS action receipts as external action evidence"
 requires-python = ">=3.11"
 license = "Apache-2.0"
 dependencies = [
@@ -13,7 +13,11 @@ dependencies = [
   # that release, which is what makes this integration's partial record a
   # documented boundary rather than an accident. See the round-trip tests.
   "agentrust-trace>=0.10.0",
-  "agent-passport-system>=2.10",
+  # 4.0.0 is the floor: the section 5.3 stage rules, the sha256: prefixed
+  # delegation_ref and the separate signer-authority axis all arrive in that
+  # release, and the action intent verifier reads all three. An earlier
+  # release would accept a stage-invalid record as valid.
+  "agent-passport-system>=4.0",
 ]
 
 [project.optional-dependencies]
@@ -23,4 +27,4 @@ test = [
 ]
 
 [tool.setuptools]
-py-modules = ["aps_trace"]
+py-modules = ["aps_trace", "aps_action_receipt"]
