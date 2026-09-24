@@ -31,6 +31,36 @@ class HarnessTests(unittest.TestCase):
     def setUp(self):
         self.runner = HarnessRunner()
 
+    def test_core_rejects_invalid_adapter_history(self):
+        class StubAdapter:
+            def __init__(self, observations):
+                self.observations = observations
+
+            def run(self, scenario):
+                return AdapterResult(tuple(self.observations))
+
+        good = list(self.runner.adapter.run(scenario()).observations)
+        from dataclasses import replace
+        cases = {
+            "missing parent": [replace(good[0], caused_by="absent"), *good[1:]],
+            "future parent": [replace(good[0], caused_by=good[1].source), *good[1:]],
+            "duplicate source": [good[0], replace(good[1], source=good[0].source), *good[2:]],
+            "late upgrade": [*good[:4], replace(good[4], outcome=Outcome.UNAVAILABLE),
+                             *good[5:], replace(good[4], source="late-execution")],
+            "cross-lineage parent": [replace(good[0], lineage="retry"), *good[1:]],
+        }
+        for name, observations in cases.items():
+            with self.subTest(case=name), self.assertRaises(ValueError):
+                HarnessRunner(StubAdapter(observations)).run(scenario())
+
+    def test_unknown_mutation_rejected_before_adapter_runs(self):
+        class MustNotRun:
+            def run(self, scenario):
+                raise AssertionError("invalid mutation reached adapter")
+
+        with self.assertRaisesRegex(ValueError, "mutation"):
+            HarnessRunner(MustNotRun()).run(scenario(mutation="typo"))
+
     def test_absent_main_evidence_stays_unknown(self):
         class StubAdapter:
             def __init__(self, observations):
@@ -42,7 +72,7 @@ class HarnessTests(unittest.TestCase):
         for observations in (
             [],
             [Observation(Boundary.AUTHORIZATION, Outcome.ESTABLISHED, "partial")],
-            [Observation(b, Outcome.ESTABLISHED, "retry", lineage="retry-1") for b in Boundary],
+            [Observation(b, Outcome.ESTABLISHED, b.value, lineage="retry-1") for b in Boundary],
         ):
             with self.subTest(observations=observations):
                 result = HarnessRunner(StubAdapter(observations)).run(scenario())
@@ -151,8 +181,8 @@ class HarnessTests(unittest.TestCase):
     def test_response_parent_is_actual_main_execution(self):
         for overrides, expected_source in (
             ({}, "execution-check"),
-            ({"timeout_after_dispatch": True}, "receipt-timeout"),
-            ({"dispatch": False}, "not-dispatched"),
+            ({"timeout_after_dispatch": True}, "execution-unavailable"),
+            ({"dispatch": False}, "execution-not-applicable"),
             ({"missing_execution_evidence": True}, "execution-check"),
         ):
             for retry in (False, True):

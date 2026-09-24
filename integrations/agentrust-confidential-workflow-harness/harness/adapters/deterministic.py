@@ -62,8 +62,8 @@ class DeterministicWorkflowAdapter:
             emit(Boundary.DELIVERY, Outcome.ESTABLISHED, "dispatch", "authorization-check")
             if i.get("timeout_after_dispatch", False):
                 emit(Boundary.RECEIPT, Outcome.UNAVAILABLE, "receipt-timeout", "dispatch")
-                emit(Boundary.ADMISSION, Outcome.UNAVAILABLE, "receipt-timeout", "dispatch")
-                emit(Boundary.EXECUTION, Outcome.UNAVAILABLE, "receipt-timeout", "dispatch")
+                emit(Boundary.ADMISSION, Outcome.UNAVAILABLE, "admission-unavailable", "receipt-timeout")
+                emit(Boundary.EXECUTION, Outcome.UNAVAILABLE, "execution-unavailable", "admission-unavailable")
             else:
                 emit(Boundary.RECEIPT, Outcome.ESTABLISHED, "peer-receipt", "dispatch")
                 admitted = _meets_version_floor(i.get("software_version", "1.0.0"))
@@ -102,9 +102,9 @@ class DeterministicWorkflowAdapter:
                 )
         else:
             emit(Boundary.DELIVERY, Outcome.NOT_APPLICABLE, "not-dispatched")
-            emit(Boundary.RECEIPT, Outcome.NOT_APPLICABLE, "not-dispatched")
-            emit(Boundary.ADMISSION, Outcome.NOT_APPLICABLE, "not-dispatched")
-            emit(Boundary.EXECUTION, Outcome.NOT_APPLICABLE, "not-dispatched")
+            emit(Boundary.RECEIPT, Outcome.NOT_APPLICABLE, "receipt-not-applicable", "not-dispatched")
+            emit(Boundary.ADMISSION, Outcome.NOT_APPLICABLE, "admission-not-applicable", "receipt-not-applicable")
+            emit(Boundary.EXECUTION, Outcome.NOT_APPLICABLE, "execution-not-applicable", "admission-not-applicable")
 
         if i.get("retry_lineage", False):
             # Record the shared authorization inputs in the retry's own lineage.

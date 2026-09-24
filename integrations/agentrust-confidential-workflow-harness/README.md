@@ -54,8 +54,12 @@ Every observation records a boundary, outcome, source, evidence class, lineage,
 and optional causal parent. Main-lineage summaries never allow a retry branch to
 overwrite an earlier unknown outcome.
 
-In the deterministic adapter, each non-null causal parent names an earlier
-observation in the same lineage. Response verification points to the actual
+The fixed core rejects malformed adapter histories with `ValueError` before
+producing a result. Each source identifies one observation per lineage, each
+boundary has one outcome per lineage, and each non-null causal parent names an
+earlier observation in that lineage. A later observation cannot overwrite an
+earlier boundary outcome. Unsupported mutation names are rejected before the
+adapter runs. Response verification points to the actual
 main-lineage execution observation, including timeout and no-dispatch outcomes.
 Retry observations record authorization from the shared synthetic inputs in
 their own lineage; they do not replace the main path's evidence.

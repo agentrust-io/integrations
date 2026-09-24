@@ -3,11 +3,19 @@ from .adapters.deterministic import DeterministicWorkflowAdapter
 from .model import RunResult, Scenario
 from .verdict import status, summarize
 
+SUPPORTED_MUTATIONS = frozenset({
+    "disable_authorization_gate", "disable_version_gate", "disable_revocation_gate",
+    "disable_replay_gate", "assume_missing_execution_success",
+    "disable_response_binding_gate", "disable_release_gate",
+})
+
 class HarnessRunner:
     def __init__(self, adapter=None):
         self.adapter = adapter or DeterministicWorkflowAdapter()
 
     def run(self, scenario: Scenario) -> RunResult:
+        if scenario.mutation is not None and scenario.mutation not in SUPPORTED_MUTATIONS:
+            raise ValueError(f"unsupported mutation: {scenario.mutation!r}")
         observations = list(self.adapter.run(scenario).observations)
         boundaries = summarize(observations)
         blocked = [scenario.waiting_on_release] if scenario.waiting_on_release else []
