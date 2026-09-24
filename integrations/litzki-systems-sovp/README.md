@@ -23,14 +23,13 @@ Source, tests, and CI live in the canonical repository:
 Against released packages only:
 
 ```bash
-pip install agentrust-trace agentrust-trace-tests
-pip install "git+https://github.com/litzki-systems/sovp-agentrust-bridge#subdirectory=integrations/litzki-sovp"
+pip install litzki-sovp-agentrust-bridge==0.1.1 agentrust-trace==0.10.0 agentrust-trace-tests==0.5.1
 
 # Throwaway local signing key (never commit it):
 openssl genpkey -algorithm Ed25519 -out ed25519-private.pem
 
 # Emit a signed TRACE record from the example SOVP attestation:
-curl -sSL https://raw.githubusercontent.com/litzki-systems/sovp-agentrust-bridge/main/integrations/litzki-sovp/examples/sovp-attestation.json -o sovp-attestation.json
+curl -fsSL https://raw.githubusercontent.com/litzki-systems/sovp-agentrust-bridge/ef5fd2c4b8e105935f183476fd6ed2ea1afb4d8e/integrations/litzki-sovp/examples/sovp-attestation.json -o sovp-attestation.json
 litzki-sovp-trace --input sovp-attestation.json --private-key ed25519-private.pem --output sovp.trace.json
 
 # Verify it:
@@ -38,6 +37,12 @@ trace-tests verify --record sovp.trace.json --level 0
 ```
 
 ## What is verified
+
+Reproduced on 2026-09-23 in a fresh Windows Python 3.12 environment using
+the released bridge 0.1.1, `agentrust-trace` 0.10.0 and
+`agentrust-trace-tests` 0.5.1, with the pinned example above. The bridge's
+`appraisal.verifier` is a URI. These are exact tested versions, not a claim
+that every later release is compatible.
 
 `trace-tests verify --record sovp.trace.json --level 0` passes **8/8, 0
 failures** (`TR-ENV`, `TR-SIG`, `TR-POL`). Unlike an unsigned-artifact Level 0,
