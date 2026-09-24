@@ -140,7 +140,7 @@
       "name": "Agent Passport System",
       "package_name": "Agent Passport System",
       "vendor": "aeoess",
-      "description": "Maps one signed Agent Passport System policy decision onto a TRACE Trust Record and verifies one signed APS action receipt as external action evidence, refusing whatever fails its checks.",
+      "description": "Maps signed APS decisions onto TRACE records; separately verifies action receipts as issuance evidence and AuthorityDelegationV1 chains against an expected leaf reference.",
       "path": "integrations/aeoess-aps",
       "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/aeoess-aps",
       "homepage": "https://agent-passport.org",
@@ -156,6 +156,7 @@
         "passport",
         "identity",
         "policy",
+        "delegation",
         "receipts"
       ]
     },

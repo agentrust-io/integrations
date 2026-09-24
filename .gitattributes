@@ -1,0 +1,2 @@
+# Preserve the exact bytes used by delegation fixture checksums.
+integrations/aeoess-aps/fixtures/delegation-chain/*.json text eol=lf

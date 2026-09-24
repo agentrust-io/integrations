@@ -10,16 +10,21 @@ APS dependency.
 `aps_trace` maps exactly one signed APS policy decision, the dict returned by
 `agent_passport.policy.evaluate_intent`, onto exactly one TRACE Trust Record
 (EAT profile `tag:agentrust-io.com,2026:trace-v0.2`). TRACE revocation is
-examined below; this exporter emits no `TraceRevocation/1.0` statement and
+examined below. This exporter emits no `TraceRevocation/1.0` statement and
 creates no revocation-store entry.
+
+`delegation_verify` checks one `AuthorityDelegationV1` root-to-leaf chain
+against an expected leaf reference and reports `valid`, `invalid`,
+`indeterminate` or `unsupported`. It emits no TRACE record. See
+[Delegation chains as authority evidence](#delegation-chains-as-authority-evidence).
 
 `aps_action_receipt` verifies exactly one signed APS action intent receipt
 (`ReceiptV1`, profile `aps-receipt-v1`, type `aps:action-intent:v1`) as
 external action issuance evidence and reports `verified`, `invalid` or
 `unverified`. It emits no TRACE record. See [Action receipts as external evidence](#action-receipts-as-external-evidence).
 
-Nothing else in APS is mapped or verified here. Identity binding, delegation
-chains and attribution are out of scope.
+Nothing else in APS is mapped or verified here. Identity binding and attribution
+are out of scope.
 
 ## Two different signatures
 
@@ -91,6 +96,8 @@ Against released packages:
 pip install agentrust-trace agentrust-trace-tests agent-passport-system
 pip install -e "integrations/aeoess-aps[test]"
 pytest integrations/aeoess-aps/tests -q
+python integrations/aeoess-aps/fixtures/delegation-chain/generate.py  # must leave git diff empty
+
 python integrations/aeoess-aps/fixtures/action-receipt/generate.py  # must leave git diff empty
 python integrations/aeoess-aps/examples/emit_record.py --out trust-record.jwt
 trace-tests verify --record trust-record.jwt --level 0
@@ -133,6 +140,31 @@ exactly such a policy decision. Our mapping was reviewed as defensible on
 policy decisions from evidence appraisal, and the exporter aligns to that
 convention here. The verdict is still carried, as `policy.enforcement_mode` and
 `policy.version`.
+
+## Delegation chains as authority evidence
+
+Receipt evidence and delegation authority are checked separately.
+
+`delegation_verify` takes one APS `AuthorityDelegationV1` chain, the expected `delegation_ref` and a revocation resolver. It checks the supplied root-to-leaf chain with the verifier from `agent-passport-system` 4.0.0.
+
+The integration adds one check before that verification. draft-pidlisnyi-aps-03 section 5.3 defines `delegation_ref` as the selected `AuthorityDelegationV1` leaf, so the leaf's `delegation_id` must match the expected reference. A mismatch is returned as `invalid` with this module's own code, `DELEGATION_REF_MISMATCH`.
+
+The SDK result is otherwise preserved as `valid`, `invalid`, `indeterminate` or `unsupported`, including its code and member index. Nothing is converted to `valid`.
+
+The released resolver contract distinguishes `active` and `revoked`. A resolver answer outside those values is treated as unknown. The SDK reports that as `REVOCATION_UNKNOWN` and an `indeterminate` result. There is no separate stale state in the released verifier.
+
+The function accepts one root-to-leaf chain per call. It does not accept several authority chains and does not merge scopes or budgets between them. Concatenating two independent chains produces invalid linkage and is rejected like any other malformed chain. That is not a separate multi-chain rule.
+
+The sponsor handover fixture uses the same agent identity under two independently issued chains. Revoking the old employee chain makes that path invalid without invalidating the separately issued successor chain. A second agent with only the old path remains invalid.
+
+The fixtures in `fixtures/delegation-chain/` are minted from published seed labels, regenerate byte for byte with `generate.py`, and carry no secret material.
+
+This module verifies the APS delegation named by a `delegation_ref`. It does not verify the receipt that carried the reference.
+
+It also does not:
+- decide whether the delegation scope authorizes a particular action
+- combine authority from separate chains
+- make an APS delegation a TRACE record
 
 ## Action receipts as external evidence
 
@@ -216,6 +248,21 @@ which this integration does not take.
   which TR-SIG-005 is UNVERIFIED. See below.
 - Every field the mapper emits validates against the TRACE v0.2 JSON Schema.
   The fields it does not emit are pinned by a test.
+- `delegation_verify.verify_delegation_authority` returns `valid` on the
+  committed fixture chains at their recorded reference time, `invalid` with
+  code `REVOKED` at the revoked member's index when an ancestor is revoked,
+  `indeterminate` with code `REVOCATION_UNKNOWN` when the resolver gives an answer
+  other than `active` or `revoked`, and `invalid` with this module's own code
+  `DELEGATION_REF_MISMATCH` when the expected reference does not name the
+  chain's leaf. The sponsor handover fixture (OLD org, OLD employee,
+  independently issued NEW org and NEW employee, same agent identity) is
+  pinned end to end. The OLD chain is invalid after its employee's
+  delegation is revoked, the NEW chain is valid on its own, a second
+  OLD-only agent with no replacement stays invalid, and the two chains
+  concatenated into one list are refused by the SDK's own linkage check
+  rather than verifying as combined authority. `tests/` asserts the state,
+  the failure code and the member index together for every case.
+
 - `aps_action_receipt.verify_aps_action_receipt` returns `verified` on the
   committed fixture at its recorded reference time, and `invalid` on a corrupt
   signature, a tampered field, a wrong pinned key, another receipt type, a

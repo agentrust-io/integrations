@@ -1,0 +1,14 @@
+{
+  "generated_by": "fixtures/delegation-chain/generate.py",
+  "new_leaf_agent_x_delegation_ref": "sha256:c6121cb7aa2e06c57a86846d0b4462a52284a2ec538a0cac6cd7869e55f088ef",
+  "old_leaf_agent_x_delegation_ref": "sha256:2b36f3af446f9a365c53a4a3e2b9fec49d4f881a93341d956e7f49a0db278539",
+  "old_leaf_agent_y_delegation_ref": "sha256:9570508a22babb871d8346d2dead2086d4891a5c8a5b2315588500d727fa2b70",
+  "reference_time": "2026-09-20T12:00:00.000Z",
+  "sdk": "agent-passport-system 4.0.0",
+  "simple_leaf_delegation_ref": "sha256:b286ffdc22bb67ff62029bfaf960155d114577152f86245a8b45367f301c5005",
+  "trusted_roots": [
+    "did:aps:example:principal-01",
+    "did:aps:example:org-old-01",
+    "did:aps:example:org-new-01"
+  ]
+}

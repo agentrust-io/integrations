@@ -1,0 +1,296 @@
+{
+  "new_leaf_agent_x": {
+    "authority": {
+      "depth": {
+        "remaining": 0
+      },
+      "reputation": {
+        "ceiling": 100,
+        "profile": "aps-score-0-100-v1"
+      },
+      "reversibility": {
+        "ceiling": "irreversible",
+        "profile": "aps-tci-v1"
+      },
+      "scope": {
+        "grants": [
+          "agent:act"
+        ],
+        "profile": "aps-hierarchical-v1"
+      },
+      "spend": {
+        "mode": "unbounded"
+      },
+      "time": {
+        "not_after": "2026-09-21T00:00:00.000Z",
+        "not_before": "2026-09-20T01:00:00.000Z"
+      },
+      "values": {
+        "profile": "aps-values-identifiers-v1",
+        "required": []
+      }
+    },
+    "delegation_id": "sha256:c6121cb7aa2e06c57a86846d0b4462a52284a2ec538a0cac6cd7869e55f088ef",
+    "issued_at": "2026-09-20T01:00:00.000Z",
+    "issuer": "did:aps:example:employee-new-01",
+    "nonce": "a475f0258da5aae3b20213c095e972e2",
+    "parent_delegation_id": "sha256:33cab1c92b59e42ac3d8ac9794f878082e2c4ef055e9cf3aa3083b857f43333a",
+    "record_type": "aps:authority-delegation:v1",
+    "signature": "16ddc56208d9b648d80a09037f17d3bf21719e9bc17e1c520fafad7b756fd6d04d12aaecd61f2279f3ec4082a2346911927c32df2223c7b8ea4abd68fb000b02",
+    "subject": "did:aps:example:agent-x-01",
+    "verification_method": "did:aps:example:employee-new-01#key-1",
+    "version": "1.0"
+  },
+  "new_root": {
+    "authority": {
+      "depth": {
+        "remaining": 1
+      },
+      "reputation": {
+        "ceiling": 100,
+        "profile": "aps-score-0-100-v1"
+      },
+      "reversibility": {
+        "ceiling": "irreversible",
+        "profile": "aps-tci-v1"
+      },
+      "scope": {
+        "grants": [
+          "agent:act"
+        ],
+        "profile": "aps-hierarchical-v1"
+      },
+      "spend": {
+        "mode": "unbounded"
+      },
+      "time": {
+        "not_after": "2026-09-21T00:00:00.000Z",
+        "not_before": "2026-09-20T00:00:00.000Z"
+      },
+      "values": {
+        "profile": "aps-values-identifiers-v1",
+        "required": []
+      }
+    },
+    "delegation_id": "sha256:33cab1c92b59e42ac3d8ac9794f878082e2c4ef055e9cf3aa3083b857f43333a",
+    "issued_at": "2026-09-20T00:00:00.000Z",
+    "issuer": "did:aps:example:org-new-01",
+    "nonce": "907bcb5410b804c0c420f6f765e8c599",
+    "parent_delegation_id": null,
+    "record_type": "aps:authority-delegation:v1",
+    "signature": "2849a073a42daf560592dfd7899f0e0683d01081608427338b488c17946cd8acb43ff219be3b943f1c8f3f82cc6248aae589a82b6f343c7999cca901e592e300",
+    "subject": "did:aps:example:employee-new-01",
+    "verification_method": "did:aps:example:org-new-01#key-1",
+    "version": "1.0"
+  },
+  "old_leaf_agent_x": {
+    "authority": {
+      "depth": {
+        "remaining": 0
+      },
+      "reputation": {
+        "ceiling": 100,
+        "profile": "aps-score-0-100-v1"
+      },
+      "reversibility": {
+        "ceiling": "irreversible",
+        "profile": "aps-tci-v1"
+      },
+      "scope": {
+        "grants": [
+          "agent:act"
+        ],
+        "profile": "aps-hierarchical-v1"
+      },
+      "spend": {
+        "mode": "unbounded"
+      },
+      "time": {
+        "not_after": "2026-09-21T00:00:00.000Z",
+        "not_before": "2026-09-20T01:00:00.000Z"
+      },
+      "values": {
+        "profile": "aps-values-identifiers-v1",
+        "required": []
+      }
+    },
+    "delegation_id": "sha256:2b36f3af446f9a365c53a4a3e2b9fec49d4f881a93341d956e7f49a0db278539",
+    "issued_at": "2026-09-20T01:00:00.000Z",
+    "issuer": "did:aps:example:employee-old-01",
+    "nonce": "7eb901adf07e076c77dfa69de49db33c",
+    "parent_delegation_id": "sha256:1b70d6fedcd8d0a67f4db2cd435b5162ca09f87d75d590ce16837cca3f993bc2",
+    "record_type": "aps:authority-delegation:v1",
+    "signature": "0741bd29064b3a1dee2b2fc9e9ae0999c80c09d3eef28b2cce990ab1e691f9ee01261f1f2de067c61d2180fe96f427fb92f6dc997f37aa773227a2246def4001",
+    "subject": "did:aps:example:agent-x-01",
+    "verification_method": "did:aps:example:employee-old-01#key-1",
+    "version": "1.0"
+  },
+  "old_leaf_agent_y": {
+    "authority": {
+      "depth": {
+        "remaining": 0
+      },
+      "reputation": {
+        "ceiling": 100,
+        "profile": "aps-score-0-100-v1"
+      },
+      "reversibility": {
+        "ceiling": "irreversible",
+        "profile": "aps-tci-v1"
+      },
+      "scope": {
+        "grants": [
+          "agent:act"
+        ],
+        "profile": "aps-hierarchical-v1"
+      },
+      "spend": {
+        "mode": "unbounded"
+      },
+      "time": {
+        "not_after": "2026-09-21T00:00:00.000Z",
+        "not_before": "2026-09-20T01:00:00.000Z"
+      },
+      "values": {
+        "profile": "aps-values-identifiers-v1",
+        "required": []
+      }
+    },
+    "delegation_id": "sha256:9570508a22babb871d8346d2dead2086d4891a5c8a5b2315588500d727fa2b70",
+    "issued_at": "2026-09-20T01:00:00.000Z",
+    "issuer": "did:aps:example:employee-old-01",
+    "nonce": "f9d6063f54102d49ee301c3c31d92537",
+    "parent_delegation_id": "sha256:1b70d6fedcd8d0a67f4db2cd435b5162ca09f87d75d590ce16837cca3f993bc2",
+    "record_type": "aps:authority-delegation:v1",
+    "signature": "9011cd8b3e9ca7b25c5de93e7ae0123f8539f8c73fb7406a7442708c25ee6b2b4370fc8ca9fca768c1257932a80e8b51c61ac5994db54f65e5056f537b2cfc01",
+    "subject": "did:aps:example:agent-y-01",
+    "verification_method": "did:aps:example:employee-old-01#key-1",
+    "version": "1.0"
+  },
+  "old_root": {
+    "authority": {
+      "depth": {
+        "remaining": 1
+      },
+      "reputation": {
+        "ceiling": 100,
+        "profile": "aps-score-0-100-v1"
+      },
+      "reversibility": {
+        "ceiling": "irreversible",
+        "profile": "aps-tci-v1"
+      },
+      "scope": {
+        "grants": [
+          "agent:act"
+        ],
+        "profile": "aps-hierarchical-v1"
+      },
+      "spend": {
+        "mode": "unbounded"
+      },
+      "time": {
+        "not_after": "2026-09-21T00:00:00.000Z",
+        "not_before": "2026-09-20T00:00:00.000Z"
+      },
+      "values": {
+        "profile": "aps-values-identifiers-v1",
+        "required": []
+      }
+    },
+    "delegation_id": "sha256:1b70d6fedcd8d0a67f4db2cd435b5162ca09f87d75d590ce16837cca3f993bc2",
+    "issued_at": "2026-09-20T00:00:00.000Z",
+    "issuer": "did:aps:example:org-old-01",
+    "nonce": "4d03cf9caccd4a847684eccbddd30937",
+    "parent_delegation_id": null,
+    "record_type": "aps:authority-delegation:v1",
+    "signature": "6c3f45bb6c2043d1a7f23625b5b6a542e201357eb03b23f6074a647c0e3142e77e90b69e3df09bbf255156da31edb804e4a56d3850b4d1069395e381466ba808",
+    "subject": "did:aps:example:employee-old-01",
+    "verification_method": "did:aps:example:org-old-01#key-1",
+    "version": "1.0"
+  },
+  "simple_leaf": {
+    "authority": {
+      "depth": {
+        "remaining": 0
+      },
+      "reputation": {
+        "ceiling": 100,
+        "profile": "aps-score-0-100-v1"
+      },
+      "reversibility": {
+        "ceiling": "irreversible",
+        "profile": "aps-tci-v1"
+      },
+      "scope": {
+        "grants": [
+          "agent:act"
+        ],
+        "profile": "aps-hierarchical-v1"
+      },
+      "spend": {
+        "mode": "unbounded"
+      },
+      "time": {
+        "not_after": "2026-09-21T00:00:00.000Z",
+        "not_before": "2026-09-20T01:00:00.000Z"
+      },
+      "values": {
+        "profile": "aps-values-identifiers-v1",
+        "required": []
+      }
+    },
+    "delegation_id": "sha256:b286ffdc22bb67ff62029bfaf960155d114577152f86245a8b45367f301c5005",
+    "issued_at": "2026-09-20T01:00:00.000Z",
+    "issuer": "did:aps:example:delegate-01",
+    "nonce": "36104e270cf3a99b97411d870c5a7505",
+    "parent_delegation_id": "sha256:1db5c0b8018df7f6d43a3387eb1625fd566604c4ded8eeec2051e9040b0b85e5",
+    "record_type": "aps:authority-delegation:v1",
+    "signature": "c027e73f788dbf61cdb3a5e4163f8c68634527e544b416abac42c33726decf926c04e26d82a0e8a7423df4711a956c24bb10c1b1f672517f3ccd5724e2b2c000",
+    "subject": "did:aps:example:agent-01",
+    "verification_method": "did:aps:example:delegate-01#key-1",
+    "version": "1.0"
+  },
+  "simple_root": {
+    "authority": {
+      "depth": {
+        "remaining": 1
+      },
+      "reputation": {
+        "ceiling": 100,
+        "profile": "aps-score-0-100-v1"
+      },
+      "reversibility": {
+        "ceiling": "irreversible",
+        "profile": "aps-tci-v1"
+      },
+      "scope": {
+        "grants": [
+          "agent:act"
+        ],
+        "profile": "aps-hierarchical-v1"
+      },
+      "spend": {
+        "mode": "unbounded"
+      },
+      "time": {
+        "not_after": "2026-09-21T00:00:00.000Z",
+        "not_before": "2026-09-20T00:00:00.000Z"
+      },
+      "values": {
+        "profile": "aps-values-identifiers-v1",
+        "required": []
+      }
+    },
+    "delegation_id": "sha256:1db5c0b8018df7f6d43a3387eb1625fd566604c4ded8eeec2051e9040b0b85e5",
+    "issued_at": "2026-09-20T00:00:00.000Z",
+    "issuer": "did:aps:example:principal-01",
+    "nonce": "9c0f69c028570903c406c9144d9e0820",
+    "parent_delegation_id": null,
+    "record_type": "aps:authority-delegation:v1",
+    "signature": "cf7962e31542fc5515567adc64f0eb4414e9dbd0aad5803a4dee4113dbb2b8f4731da410aef7f6949c03389d013f0bbe58256a56042ead4a52e2467f0e30b105",
+    "subject": "did:aps:example:delegate-01",
+    "verification_method": "did:aps:example:principal-01#key-1",
+    "version": "1.0"
+  }
+}

@@ -3,9 +3,8 @@ vendor: aeoess
 integrates_with:
   - trace
 description: >-
-  Maps one signed Agent Passport System policy decision onto a TRACE Trust
-  Record and verifies one signed APS action receipt as external action
-  evidence, refusing whatever fails its checks.
+  Maps signed APS decisions onto TRACE records; separately verifies action receipts
+  as issuance evidence and AuthorityDelegationV1 chains against an expected leaf reference.
 maintainer:
   github: aeoess
 repository: https://github.com/aeoess/agent-passport-python
@@ -15,7 +14,7 @@ tier: verified
 marketplace:
   category: Identity & trust
   mark: AP
-  keywords: [passport, identity, policy, receipts]
+  keywords: [passport, identity, policy, delegation, receipts]
 # Role. APS decisions are Ed25519-signed external evidence. This integration
 # maps one onto a TRACE record but cannot populate `model`, `data_class` or
 # `build_provenance` without inventing them, so the output does not validate
@@ -28,7 +27,7 @@ tested_against:
   agentrust-trace-tests: "0.5.1"
   # This file records only the package keys its schema supports. The fixed CI
   # job pins the complete package set needed to reproduce this result, which
-  # also includes agent-passport-system 4.0.0.
+  # also includes agent-passport-system 4.0.0 for both receipt and delegation checks.
   # Position at these versions: the emitted record carries every field the
   # mapper can source from an APS decision and validates field by field against
   # the v0.2 JSON Schema, but `model`, `data_class` and `build_provenance` are

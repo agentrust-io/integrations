@@ -1,0 +1,11 @@
+{
+  "note": "Public keys only. Seeds are sha256 over the labels in generate.py, so the material is public by construction.",
+  "pinned": {
+    "did:aps:example:delegate-01#key-1": "3a8d41ff2e8a1dc576da5443bc3b9bafc3562a659103f6d9a7a8be53c5b94b82",
+    "did:aps:example:employee-new-01#key-1": "bf026ed865e0363b80fcbb90c148145d1b0c526f0d0a754736577f81551cf715",
+    "did:aps:example:employee-old-01#key-1": "0e7b880b77de973fa9c89b49a0db1bed2738929b7d8d45faf7ba5e4553ed43dd",
+    "did:aps:example:org-new-01#key-1": "3cf4b1bf1bbcf28ca18e9940fc0f303e09b81d85eb4fbd34820fb1ed47472237",
+    "did:aps:example:org-old-01#key-1": "e8dc6af0e163883a55734520e3373776e4c33cffb48fb8ceb5eee154095e7aaa",
+    "did:aps:example:principal-01#key-1": "efa7fed5ca87f5e9ef4e1f1df539e141b2bf02160e8ab7dc7e6e2daf0ca28f18"
+  }
+}
