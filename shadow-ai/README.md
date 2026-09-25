@@ -2,6 +2,11 @@
 
 Compares enriched tool-call audit records against a separate agent-to-tools registry and reports unregistered agents and undeclared tools. It does not read cMCP output directly; see [Inputs and limitations](#inputs-and-limitations).
 
+This is standalone tooling, outside the integration index and Marketplace. It
+has no working cMCP or Agent Manifest adapter and claims neither integration.
+The source moved from `integrations/shadow-ai/` to `shadow-ai/`; update local
+`PYTHONPATH` settings to `shadow-ai/src`. Run its tests with `nox -s shadow_ai`.
+
 ## What it does
 
 For every tool-call record (a record with a non-empty `tool_name`), the scanner looks up the record's `agent_id` in the registry:

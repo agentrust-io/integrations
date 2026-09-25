@@ -1,6 +1,6 @@
 {
   "catalog_version": 1,
-  "count": 41,
+  "count": 40,
   "integrations": [
     {
       "name": "Claude Code",
@@ -677,29 +677,6 @@
         "scheduled",
         "unattended",
         "drift"
-      ]
-    },
-    {
-      "name": "Shadow AI Discovery",
-      "package_name": "Shadow AI Discovery",
-      "vendor": "agentrust-io",
-      "description": "Compares enriched tool-call audit records against a separate agent-to-tools registry to report unregistered agents and undeclared tools. Does not read cMCP output directly.",
-      "path": "integrations/shadow-ai",
-      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/shadow-ai",
-      "homepage": null,
-      "repository": "https://github.com/agentrust-io/integrations",
-      "tier": "community",
-      "stack": [
-        "cMCP",
-        "Agent Manifest"
-      ],
-      "category": "Identity & trust",
-      "mark": "SH",
-      "featured": null,
-      "keywords": [
-        "discovery",
-        "undeclared",
-        "remediation"
       ]
     },
     {
