@@ -176,6 +176,21 @@ def test_enforcement_mode_is_closed() -> None:
         PolicyEvidence(bundle=b"{}", enforcement_mode="monitor")
 
 
+def test_policy_defaults_to_declared() -> None:
+    policy = PolicyEvidence(bundle=b'{"rules": []}')
+    assert policy.enforcement_mode == "declared"
+    record = build_record(**_kwargs(policy=policy))
+    assert record["policy"]["enforcement_mode"] == "declared"
+
+
+@pytest.mark.parametrize("mode", ["enforce", "advisory", "silent", "declared"])
+def test_policy_preserves_explicit_enforcement_modes(mode: str) -> None:
+    policy = PolicyEvidence(bundle=b'{"rules": []}', enforcement_mode=mode)
+    assert policy.enforcement_mode == mode
+    record = build_record(**_kwargs(policy=policy))
+    assert record["policy"]["enforcement_mode"] == mode
+
+
 # --- the test the previous adapter did not have ---------------------------
 
 

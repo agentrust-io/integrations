@@ -60,14 +60,26 @@ record = build_record(
     subject="spiffe://example.org/agent/support-bot",
     model_provider="anthropic",
     model_id="claude-sonnet-4-6",
-    # The policy bytes your deployment enforces. Most control planes do not put
+    # The policy bytes being bound into the evidence. Most control planes do not put
     # the bundle in their telemetry; that is not a reason to hash something else.
     policy=PolicyEvidence(bundle=open("policy.cedar", "rb").read()),
     data_class="internal",
     workload_digest="sha256:...",   # the image or artifact the producer reports
     jwk=public_jwk,
 )
+assert record["policy"]["enforcement_mode"] == "declared"
 ```
+
+`PolicyEvidence(bundle=...)` now emits `enforcement_mode="declared"`; previously,
+omitting the mode implicitly emitted `"enforce"`. `"declared"` binds the policy
+without claiming it was evaluated. Callers with an independently established
+enforcement context must pass `enforcement_mode="enforce"` or the actual supported
+mode (`"advisory"`, `"silent"`, or `"declared"`) explicitly. Explicit modes pass
+through unchanged. This changes evidence-constructor output only; runtime
+enforcement defaults and behavior are unchanged.
+
+The `"declared"` value requires `agentrust-trace>=0.9.0`; the package dependency
+floor is raised accordingly.
 
 ## NVIDIA OpenShell
 
@@ -120,7 +132,7 @@ It is a deterministic digest over the identifying inputs (producer, subject, pol
 
 ## Tests
 
-26 tests, one per way a record could validate and still be untrue, including two that parse the built record with the real `TrustRecord` model. That last pair is what the previous adapter did not have.
+31 builder tests, one per way a record could validate and still be untrue, including two that parse the built record with the real `TrustRecord` model. That last pair is what the previous adapter did not have.
 
 ## Licence
 
