@@ -6,6 +6,7 @@ on:
       - 'packages/agentrust-capture-core/src/**'
       - 'packages/agentrust-trace-adapters/src/**'
       - '.clusterfuzzlite/**'
+      - 'requirements/fuzz.txt'
       - '.github/workflows/cflite_pr.yml'
 
 # Read-only. Findings surface in the job log and the uploaded crash artifact
