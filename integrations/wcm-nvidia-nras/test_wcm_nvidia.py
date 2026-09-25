@@ -82,7 +82,7 @@ def test_appraised_gpu_produces_a_report() -> None:
     report = adapt(evidence_doc(), appraisal_doc(), NONCE)
 
     assert report.platform == GPU_PLATFORM
-    assert report.cc_mode is True
+    assert report.cc_mode is None
     assert report.nonce_echo == NONCE
     assert report.measurement == "nvidia-rim:arch=HOPPER;driver=580.65.06;vbios=96.00.9F.00.01"
 
@@ -261,3 +261,103 @@ def test_cli_reports_a_refusal_on_stderr(tmp_path: pathlib.Path, capsys) -> None
 
     assert main(["--nonce", NONCE, "--evidence", str(evidence), "--appraisal", str(appraisal)]) == 1
     assert "secboot" in capsys.readouterr().err
+
+
+# The release gate, run for real. Every other test here stops at what adapt()
+# returns; these follow that return value through the published SDK's
+# KeyBrokerService, because what matters is whether a key comes out.
+
+_CURRENT_IMAGE = "sha256:" + "5e2d" * 16
+
+
+def _manifest(pin: str, **gpu_overrides: object):
+    from wcm import WeightCustodyManifest
+
+    return WeightCustodyManifest.model_validate({
+        "manifest_version": "0.1",
+        "weights_hash": "sha256:" + "4a1c9b02" * 8,
+        "builder": {"identity": "example-builder", "signing_key": "ed25519:placeholder"},
+        "release_terms": {
+            "license": "example",
+            "permitted_derivatives": "none",
+            "permitted_environments": ["attested-enclave"],
+        },
+        "release_policy": {
+            "required_assurance_tier": "hardware-attested",
+            "physical_hardening": "not-required",
+            "trusted_time_source": "secure-tsc",
+            "memory_fingerprint_challenge": "not-required",
+            "required_hw_platform": ["amd-sev-snp", GPU_PLATFORM],
+            "required_gpu_measurement": {"rim_pin": pin, **gpu_overrides},
+            "tenancy": "shared",
+            "required_serving_image": {
+                "signer": "ed25519:placeholder",
+                "release_rule": "prefer-current",
+                "accepted_measurements": [{"measurement": _CURRENT_IMAGE, "status": "current"}],
+            },
+            "key_release_mode": "attestation-gated",
+            "replay_protection": "kbs-nonce-required",
+            "attestation_revocation_check": "live-per-release",
+            "revocation_authority": "builder-and-opaque-joint",
+        },
+        "custody": {
+            "custodian": "example-custodian",
+            "custodian_type": "opaque-hosted",
+            "kbs_image": {"measurement": "sha256:" + "abcd1234" * 8, "signer": "ed25519:placeholder"},
+            "enclave_id": "did:example:enclave",
+            "attestation_cadence": "24h",
+            "kbs_attestation_cadence": "24h",
+        },
+        "base_confidentiality": "confidential",
+        "deployment_model": "builder-to-customer",
+        "signatures": [],
+    })
+
+
+def _release(**gpu_overrides: object):
+    """Carry this adapter's report through verify_and_release.
+
+    The manifest pins the measurement the adapter emits, so the GPU check gets
+    as far as the confidential-compute condition. A refusal for any earlier
+    reason would pass these tests for the wrong one.
+    """
+    from datetime import datetime, timezone
+
+    from wcm import KeyBrokerService, SoftwareProvider, manifest_identity
+
+    manifest = _manifest(rim_pin(arch="HOPPER", driver_version="580.65.06",
+                                 vbios_version="96.00.9F.00.01"), **gpu_overrides)
+    kbs = KeyBrokerService(
+        {manifest.weights_hash: b"decryption-key-for-these-weights"},
+        now=lambda: datetime(2026, 9, 25, 12, 0, 0, tzinfo=timezone.utc),
+        trusted_manifest_identities={manifest_identity(manifest)},
+    )
+    challenge = kbs.issue_challenge()
+    report = adapt(evidence_doc(nonce=challenge.nonce),
+                   appraisal_doc(eat_nonce=challenge.nonce), challenge.nonce)
+    evidence = SoftwareProvider().produce(
+        challenge,
+        serving_image_measurement=_CURRENT_IMAGE,
+        gpu_measurement=report.measurement,
+    ).model_copy(update={"gpu": report})
+    decision = kbs.verify_and_release(manifest, evidence)
+    return decision, next(check for check in decision.checks if check.name == "gpu")
+
+
+def test_the_report_is_refused_by_the_release_gate() -> None:
+    """An adapted report releases no key, and the reason is the unstated mode."""
+    decision, gpu = _release()
+
+    assert decision.released is False
+    assert decision.key is None
+    assert gpu.passed is False
+    assert "unstated" in gpu.detail
+
+
+def test_only_the_signed_manifest_waives_the_mode() -> None:
+    """require_cc_mode: false is the existing waiver. This adapter never sets it."""
+    decision, gpu = _release(require_cc_mode=False)
+
+    assert decision.released is True
+    assert gpu.passed is True
+    assert "waived" in gpu.detail
