@@ -20,4 +20,4 @@ trace_roles:
   - record-producer
 tested_against:
   agent-manifest: 0.12.0
-  agentrust-trace: 0.5.0
+  agentrust-trace: 0.10.0
