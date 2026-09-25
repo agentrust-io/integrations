@@ -1,0 +1,12 @@
+# osv-scanner reads this file for manifests in this directory only; it does not
+# apply to parent or child directories. Scorecard's Vulnerabilities check runs
+# osv-scanner and honours it the same way.
+
+[[IgnoredVulns]]
+id = "GHSA-8mgp-746c-j5xp"
+ignoreUntil = 2026-12-24
+reason = """\
+nltk arrives transitively through llama-index-core (requirements-interop.txt) \
+and no fixed release exists: 3.10.3, the latest, is still affected. The \
+interop tests do not call NLTK's affected model-file APIs. Review by the \
+ignoreUntil date, or earlier if nltk ships a fix."""

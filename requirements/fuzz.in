@@ -1,0 +1,11 @@
+# Compile with:
+#   uv pip compile requirements/fuzz.in --generate-hashes --universal \
+#     --python-version 3.11 -o requirements/fuzz.txt
+# Runtime dependencies of the two first-party packages the ClusterFuzzLite
+# targets import (.clusterfuzzlite/build.sh). agentrust-capture-core has none.
+# 3.11 is the interpreter gcr.io/oss-fuzz-base/base-builder-python ships.
+# atheris, pyinstaller and setuptools come with that base image and stay out of
+# this lock, so it cannot replace the toolchain compile_python_fuzzer uses.
+# The local packages go in with --no-deps afterwards.
+agentrust-trace>=0.7.0
+cryptography>=43.0.0

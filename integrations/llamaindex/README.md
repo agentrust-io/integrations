@@ -18,6 +18,8 @@ transitive NLTK dependency to 3.10.3, affected by
 with no patched release listed at verification time. These tests do not use
 NLTK's affected model-file APIs. A passing interoperability run is not a clean
 dependency-security audit; reassess dependencies for deployment.
+`osv-scanner.toml` in this directory ignores that one advisory until 2026-12-24,
+when it is due for review.
 
 Use a fresh tracker for each run and pass events from that run's stream to
 `observe_workflow`. No global dispatcher registration is needed. Supply the

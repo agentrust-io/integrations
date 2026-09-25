@@ -5,7 +5,11 @@
 # the targets exercise the same import surface a consumer gets from PyPI.
 
 cd "$SRC/integrations"
-pip3 install --no-cache-dir ./packages/agentrust-capture-core ./packages/agentrust-trace-adapters
+# Their runtime dependencies come from a hash-locked file; the packages
+# themselves then go in with --no-deps. atheris and pyinstaller are part of
+# the base image and are deliberately not in the lock.
+pip3 install --no-cache-dir --require-hashes -r requirements/fuzz.txt
+pip3 install --no-cache-dir --no-deps ./packages/agentrust-capture-core ./packages/agentrust-trace-adapters
 
 # compile_python_fuzzer bundles each target with PyInstaller, which follows
 # static imports only. The cryptography stack reaches email.mime lazily, so
