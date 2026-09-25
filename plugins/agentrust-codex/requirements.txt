@@ -5,6 +5,8 @@
 agentrust-capture-core>=0.1.1,<0.2
 
 # Signing only, below the core: install these to generate signed records.
-agent-manifest==0.3.0
+# 0.10.1 is the first release that admits cryptography 50 (the fix for
+# PYSEC-2026-3552); 0.3.0 capped it below 50. Matches claude-code.
+agent-manifest>=0.12.0
 agentrust-trace>=0.5
 agentrust-trace-tests>=0.4,<0.5

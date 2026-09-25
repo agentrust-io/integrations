@@ -87,7 +87,9 @@ def build_record(
     it does not, the record cannot state what was built, and this raises rather
     than inventing one.
     """
-    if not _SUBJECT_RE.match(subject or ""):
+    # fullmatch, not match: the patterns end in "$", which also matches before a
+    # trailing newline, and that newline would be carried into the record.
+    if not _SUBJECT_RE.fullmatch(subject or ""):
         raise ValueError(
             f"subject {subject!r} must be a SPIFFE URI or a DID. The identity of the "
             "workload is not something an adapter may make up."
@@ -97,7 +99,7 @@ def build_record(
             "model_provider and model_id are required. If the source evidence does not "
             "identify the model, it cannot support a record that names one."
         )
-    if model_weights_digest is not None and not DIGEST_RE.match(model_weights_digest):
+    if model_weights_digest is not None and not DIGEST_RE.fullmatch(model_weights_digest):
         raise ValueError(
             f"model_weights_digest {model_weights_digest!r} is not a sha256:/sha384: "
             "digest. Omit it instead: weights_digest is optional, and an absent field is "
@@ -109,7 +111,7 @@ def build_record(
             "truthful to default it to. Pass the artifact or image digest the producing "
             "system reports, or the digest of the deployment you are attesting."
         )
-    if not DIGEST_RE.match(workload_digest):
+    if not DIGEST_RE.fullmatch(workload_digest):
         raise ValueError(f"workload_digest {workload_digest!r} is not a sha256:/sha384: digest")
 
     record: dict[str, Any] = {

@@ -17,5 +17,5 @@ trace_conformance_level: 0
 trace_roles:
   - record-producer
 tested_against:
-  agentrust-trace: 0.5.0
-  agentrust-trace-tests: 0.4.0
+  agentrust-trace: 0.10.0
+  agentrust-trace-tests: 0.5.1

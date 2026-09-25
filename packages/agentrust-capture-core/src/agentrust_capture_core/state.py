@@ -81,6 +81,9 @@ def load_state(path: Path) -> dict | None:
         return None
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
-    except (json.JSONDecodeError, OSError):
+    except (ValueError, RecursionError, OSError):
+        # ValueError, not only JSONDecodeError: invalid UTF-8 and an integer past
+        # the digit limit raise plain ValueError, and deep nesting raises
+        # RecursionError. Each would otherwise brick the hook like a truncation.
         return None
     return data if isinstance(data, dict) else None
