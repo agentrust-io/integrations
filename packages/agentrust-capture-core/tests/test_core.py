@@ -250,6 +250,17 @@ class TestState:
         p.write_text('{"a": ', encoding="utf-8")
         assert core.load_state(p) is None
 
+    @pytest.mark.parametrize("body", [
+        b'{"a": ' + b"1" * 5000 + b"}",   # past the int digit limit: ValueError
+        b"[" * 200000 + b"]" * 200000,    # RecursionError in the decoder
+        b'{"a": "\xff"}',                  # UnicodeDecodeError
+    ], ids=["int-digit-limit", "deep-nesting", "invalid-utf8"])
+    def test_undecodable_state_reads_as_absent_not_raised(self, tmp_path, body):
+        """Every corrupt file is absent, not only the ones JSONDecodeError covers."""
+        p = tmp_path / "baseline.json"
+        p.write_bytes(body)
+        assert core.load_state(p) is None
+
     def test_non_object_state_reads_as_absent(self, tmp_path):
         p = tmp_path / "baseline.json"
         p.write_text("[1, 2]", encoding="utf-8")

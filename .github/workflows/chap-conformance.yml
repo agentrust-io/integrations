@@ -13,10 +13,12 @@ on:
   push:
     paths:
       - "integrations/chap/**"
+      - "requirements/chap-fixed.*"
       - ".github/workflows/chap-conformance.yml"
   pull_request:
     paths:
       - "integrations/chap/**"
+      - "requirements/chap-fixed.*"
       - ".github/workflows/chap-conformance.yml"
   schedule:
     - cron: "0 6 * * 1"   # weekly: catch drift against the latest released packages
@@ -73,7 +75,7 @@ jobs:
           python-version: ${{ matrix.python }}
       - name: Install the package set that reproduces the tested_against result
         run: |
-          pip install "agentrust-trace==0.10.0" "agentrust-trace-tests==0.5.1" "chap-coordinator==0.2.13"
+          pip install --require-hashes -r requirements/chap-fixed.txt
       - name: Pinned versions match integration.yaml
         run: |
           python - <<'PY'
@@ -86,7 +88,8 @@ jobs:
           sys.exit(0 if want == have else 1)
           PY
       - name: Install this integration
-        run: pip install -e "integrations/chap[test]"
+        # --no-deps: every runtime and test dependency came from the lock above.
+        run: pip install --no-deps -e integrations/chap
       - name: Integration tests
         run: pytest integrations/chap/tests -q
       - name: Emit a record citing a live CHAP approval

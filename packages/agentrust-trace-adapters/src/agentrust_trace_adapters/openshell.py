@@ -27,9 +27,24 @@ _MODES = {"enforce", "advisory", "silent"}
 
 
 def _canonical_json(value: Any) -> bytes:
+    # allow_nan=False: NaN and Infinity are not JSON, and these bytes are
+    # committed by digest as the transcript and policy bundle.
     return json.dumps(
-        value, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+        value, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False
     ).encode("utf-8")
+
+
+def _reject_duplicate_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    value: dict[str, Any] = {}
+    for key, item in pairs:
+        if key in value:
+            raise ValueError(f"duplicate JSON key {key!r}")
+        value[key] = item
+    return value
+
+
+def _reject_constant(name: str) -> Any:
+    raise ValueError(f"non-finite JSON number {name}")
 
 
 def _required_bytes(name: str, value: bytes) -> bytes:
@@ -91,12 +106,23 @@ def _parse_ocsf_jsonl(
 ) -> list[dict[str, Any]]:
     raw = _required_bytes("ocsf_jsonl", data)
     events: list[dict[str, Any]] = []
-    for line_number, line in enumerate(raw.decode("utf-8").splitlines(), start=1):
-        if not line.strip():
+    # JSONL lines end at "\n" only. bytes.splitlines() would also split on a
+    # bare "\r", and str.splitlines() on \v, \f, \x1c to \x1e, \x85, U+2028 and
+    # U+2029, which turns one line a strict reader rejects into several events
+    # and breaks a U+2028 inside a JSON string. A "\r" before the "\n" is
+    # tolerated, since JSON treats it as whitespace.
+    for line_number, raw_line in enumerate(raw.split(b"\n"), start=1):
+        if not raw_line.strip():
             continue
         try:
-            event = json.loads(line)
-        except json.JSONDecodeError as exc:
+            event = json.loads(
+                raw_line.decode("utf-8"),
+                object_pairs_hook=_reject_duplicate_keys,
+                parse_constant=_reject_constant,
+            )
+        except (ValueError, RecursionError) as exc:
+            # ValueError covers JSONDecodeError, UnicodeDecodeError, the int
+            # digit limit and the two hooks above.
             raise ValueError(f"OCSF JSONL line {line_number} is invalid JSON") from exc
         if not isinstance(event, dict):
             raise ValueError(f"OCSF JSONL line {line_number} must be a JSON object")

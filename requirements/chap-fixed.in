@@ -1,0 +1,14 @@
+# Compile with:
+#   uv pip compile requirements/chap-fixed.in --generate-hashes --universal \
+#     --python-version 3.11 -o requirements/chap-fixed.txt
+# The fixed job in .github/workflows/chap-conformance.yml. The two agentrust-io
+# pins must equal tested_against in integrations/chap/integration.yaml; the job
+# checks that after install. chap-coordinator is the release the tests drive.
+# rfc8785 and pytest are the integration's runtime and test dependencies,
+# which the --no-deps editable install no longer pulls in.
+# The floating job stays unpinned on purpose (drift detection).
+agentrust-trace==0.10.0
+agentrust-trace-tests==0.5.1
+chap-coordinator==0.2.13
+rfc8785
+pytest

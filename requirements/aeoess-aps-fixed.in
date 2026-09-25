@@ -1,0 +1,11 @@
+# Compile with:
+#   uv pip compile requirements/aeoess-aps-fixed.in --generate-hashes --universal \
+#     --python-version 3.11 -o requirements/aeoess-aps-fixed.txt
+# The fixed job in .github/workflows/aeoess-aps-conformance.yml. The two
+# agentrust-io pins must equal tested_against in
+# integrations/aeoess-aps/integration.yaml; the job checks that after install.
+# The floating job stays unpinned on purpose (drift detection).
+agentrust-trace==0.10.0
+agentrust-trace-tests==0.5.1
+agent-passport-system==4.0.0
+pytest

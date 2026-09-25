@@ -14,10 +14,12 @@ on:
   push:
     paths:
       - "integrations/aeoess-aps/**"
+      - "requirements/aeoess-aps-fixed.*"
       - ".github/workflows/aeoess-aps-conformance.yml"
   pull_request:
     paths:
       - "integrations/aeoess-aps/**"
+      - "requirements/aeoess-aps-fixed.*"
       - ".github/workflows/aeoess-aps-conformance.yml"
   schedule:
     - cron: "0 6 * * 1"   # weekly: catch drift against the latest released packages
@@ -73,10 +75,10 @@ jobs:
           python-version: ${{ matrix.python }}
       - name: Install the package set that reproduces the tested_against result
         # integration.yaml records agentrust-trace and agentrust-trace-tests, the
-        # keys its schema supports; agent-passport-system is pinned here as part
-        # of the same reproducible snapshot.
+        # keys its schema supports; agent-passport-system is pinned in the same
+        # hashed lock as part of the same reproducible snapshot.
         run: |
-          pip install "agentrust-trace==0.10.0" "agentrust-trace-tests==0.5.1" "agent-passport-system==4.0.0"
+          pip install --require-hashes -r requirements/aeoess-aps-fixed.txt
       - name: Pinned versions match integration.yaml
         run: |
           python - <<'PY'
@@ -89,7 +91,8 @@ jobs:
           sys.exit(0 if want == have else 1)
           PY
       - name: Install this integration
-        run: pip install -e "integrations/aeoess-aps[test]"
+        # --no-deps: every runtime and test dependency came from the lock above.
+        run: pip install --no-deps -e integrations/aeoess-aps
       - name: Integration tests
         run: pytest integrations/aeoess-aps/tests -q
       - name: Emit a sample record
