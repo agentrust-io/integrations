@@ -245,7 +245,13 @@ def adapt(
     return GpuReport(
         platform=GPU_PLATFORM,
         measurement=rim_pin(arch=arch, driver_version=driver, vbios_version=vbios),
-        cc_mode=True,
+        # Unknown, not on. Nothing this adapter receives states the mode: no
+        # appraisal claim names it, and in captures on two devices no field of
+        # the signed report moved with it (WCM tests/fixtures/nvidia/cc-mode,
+        # WCM #159). WCM 0.28.4 denies an unstated mode unless the signed
+        # manifest waives it with required_gpu_measurement.require_cc_mode:
+        # false, a decision for whoever signs the manifest, not for this adapter.
+        cc_mode=None,
         nonce_echo=expected_nonce,
         quote_b64=base64.b64encode(container.encode()).decode(),
     )

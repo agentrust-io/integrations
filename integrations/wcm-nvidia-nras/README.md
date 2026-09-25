@@ -69,6 +69,24 @@ which is the correct direction.
 | More than one GPU evidence item | A multi-GPU host produces one report per device and a manifest pins one. Adapting several would silently pick one and claim it covered them all |
 | Malformed raw evidence | WCM would have nothing to verify independently |
 
+## Confidential-compute mode is reported as unknown
+
+The adapter emits `cc_mode=None`. Nothing it receives states the mode: none of
+the NRAS v4 appraisal claims names it, and in captures on two H100s no field of
+the signed report moved when the mode changed (WCM
+`python/tests/fixtures/nvidia/cc-mode`, WCM #159).
+
+`weight-custody-manifest` 0.28.4 denies release on an unstated mode
+(`WCM-L2-0018`), so **a release through this adapter now fails closed.** Until
+2026-09-25 it emitted `True` unconditionally and the gate had no way to deny on
+this path.
+
+A deployment that accepts the risk sets
+`required_gpu_measurement.require_cc_mode: false` in the signed manifest. That
+is the existing waiver and belongs to whoever signs the manifest. This adapter
+never sets it. `0.28.4` is also the floor: earlier releases type `cc_mode` as a
+required boolean and reject unknown.
+
 ## Run it
 
 ```bash
@@ -98,6 +116,11 @@ code path runs whether the documents came from a local run or a captured bundle.
 
 A maintainer ran this on 2026-09-21 in an isolated environment against released
 `weight-custody-manifest` 0.28.2, and again on 0.27.0 with the same results.
+Re-run on 2026-09-25 against released 0.28.4 for the unknown-mode change: 62
+tests pass, including two that carry the adapter's report through the SDK's own
+`KeyBrokerService` (refused as unstated; released only under the manifest
+waiver), and the H100 fixture below still gives `verified: True`, and `False`
+with a wrong nonce.
 This entry is `tier: verified` for the offline path only. Checked: 60 tests
 pass on synthetic tokens; the real H100 raw report and certificate chain from the
 WCM repository's `gpu_h100_attestation.json` fixture, passed through this
@@ -109,10 +132,10 @@ confidential-computing GPU. Re-verification happens at every release that touche
 ## Scope
 
 GPU firmware appraisal and report verification. A GPU attestation says the device
-is in CC mode running appraised firmware. It says nothing about an operator who
-physically owns the machine, where confidential computing does not hold (WCM
-`SPEC.md` section 3.6), and published memory-bus attacks reach GPU-adjacent
-memory as well as CPU memory.
+is running appraised firmware; it does not state the confidential-compute mode
+(see above). It says nothing about an operator who physically owns the machine,
+where confidential computing does not hold (WCM `SPEC.md` section 3.6), and
+published memory-bus attacks reach GPU-adjacent memory as well as CPU memory.
 
 - Specification and documentation: <https://wcm.agentrust-io.com>
 - SDK: <https://pypi.org/project/weight-custody-manifest/>

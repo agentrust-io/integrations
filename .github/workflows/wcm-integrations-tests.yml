@@ -6,10 +6,12 @@ name: WCM integrations tests
 # what CONTRIBUTING rule 1 requires an integration to target.
 #
 # weight-custody-manifest is pinned to an exact version. These adapters depend on
-# what the published package actually exports, and 0.27.0 is the release that
-# first published wcm.artifact_digest, runtime_records and memory_sweep. A
-# silent upgrade should surface here as a failing pin, next to the reason,
-# rather than as behaviour nobody attributed to a dependency.
+# what the published package actually exports. 0.27.0 first published
+# wcm.artifact_digest, runtime_records and memory_sweep; 0.28.4 is the first
+# release whose gate denies a GPU report that does not state confidential-compute
+# mode, and whose GpuReport.cc_mode accepts unknown, which wcm-nvidia-nras now
+# emits. A silent upgrade should surface here as a failing pin, next to the
+# reason, rather than as behaviour nobody attributed to a dependency.
 
 on:
   pull_request:
@@ -47,7 +49,7 @@ jobs:
           # against stay resolved from PyPI.
           pip install --require-hashes -r requirements/wcm-harness.txt
           pip install \
-            "weight-custody-manifest==0.27.0" \
+            "weight-custody-manifest==0.28.4" \
             "agent-manifest>=0.11.1" \
             "opentelemetry-api>=1.25"
       - name: Run the integration tests
@@ -68,7 +70,7 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install --require-hashes -r requirements/wcm-harness.txt
-      - run: pip install "weight-custody-manifest==0.27.0"
+      - run: pip install "weight-custody-manifest==0.28.4"
       - run: |
           python -m pytest \
             integrations/wcm-triton/test_wcm_triton.py \
