@@ -31,6 +31,29 @@ class HarnessTests(unittest.TestCase):
     def setUp(self):
         self.runner = HarnessRunner()
 
+    def test_required_boundaries_cannot_be_not_applicable(self):
+        from dataclasses import replace
+
+        class StubAdapter:
+            def __init__(self, observations):
+                self.observations = observations
+
+            def run(self, scenario):
+                return AdapterResult(tuple(self.observations))
+
+        good = list(self.runner.adapter.run(scenario()).observations)
+        for boundary in Boundary:
+            with self.subTest(boundary=boundary):
+                observations = [
+                    replace(o, outcome=Outcome.NOT_APPLICABLE)
+                    if o.boundary == boundary else o for o in good
+                ]
+                result = HarnessRunner(StubAdapter(observations)).run(scenario())
+                self.assertEqual(result.status, "unknown")
+        observations = [replace(o, outcome=Outcome.NOT_APPLICABLE) for o in good]
+        self.assertEqual(HarnessRunner(StubAdapter(observations)).run(scenario()).status,
+                         "unknown")
+
     def test_core_rejects_invalid_adapter_history(self):
         class StubAdapter:
             def __init__(self, observations):
@@ -104,7 +127,7 @@ class HarnessTests(unittest.TestCase):
         self.assertEqual(result.status, "passed")
         self.assertTrue(
             all(
-                value in {"established", "not_applicable"}
+                value == "established"
                 for value in result.boundary_outcomes.values()
             )
         )

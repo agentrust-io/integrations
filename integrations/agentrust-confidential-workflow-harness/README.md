@@ -67,8 +67,11 @@ their own lineage; they do not replace the main path's evidence.
 The public result must never contain protected payloads, secrets, device IDs or
 low-entropy digests of protected material.
 
-Missing main-lineage observations remain `unavailable`; adapters must explicitly
-report `not_applicable`. A forbidden recipient takes precedence over permission.
+All seven main-lineage boundaries are required for this fixed workflow. A result
+passes only when each is `established`. Missing observations remain `unavailable`;
+an explicit `not_applicable` outcome also leaves the result `unknown`. Contradicted
+evidence still produces `refused`, and a release dependency produces `incomplete`.
+A forbidden recipient takes precedence over permission.
 The deterministic software-version gate uses [SemVer 2.0.0](https://semver.org/)
 with a fixed minimum of `1.0.0`: `1.0.0-rc.1` is below that minimum, and build
 metadata does not change precedence. Invalid versions are refused.

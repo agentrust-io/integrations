@@ -19,7 +19,7 @@ def summarize(observations: list[Observation]) -> dict[str, str]:
             raise ValueError("causal parent must name an earlier observation in the same lineage")
         seen_sources.add(source)
         seen_boundaries.add(boundary)
-    # Missing observations are unknown; not_applicable requires explicit evidence.
+    # All seven fixed-workflow boundaries require established evidence.
     out = {b.value: Outcome.UNAVAILABLE.value for b in Boundary}
     for observation in observations:
         if observation.lineage == "main":
@@ -31,6 +31,6 @@ def status(boundaries: dict[str, str], blocked: list[str]) -> str:
         return "incomplete"
     if any(v == Outcome.CONTRADICTED.value for v in boundaries.values()):
         return "refused"
-    if any(v == Outcome.UNAVAILABLE.value for v in boundaries.values()):
+    if any(boundaries.get(b.value) != Outcome.ESTABLISHED.value for b in Boundary):
         return "unknown"
     return "passed"
