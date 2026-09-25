@@ -1,12 +1,16 @@
 name: Shadow AI Discovery
 vendor: agentrust-io
+# Qualified targets, not direct compatibility (integrations#215): audit records
+# must first be enriched with a trustworthy agent_id, and suggested_manifest_id
+# is only a naming hint for Agent Manifest. No tested_against: no direct run
+# against a released cmcp-runtime or agent-manifest has been recorded.
 integrates_with:
   - cmcp
   - agent-manifest
 description: >-
-  Detects unregistered agents making MCP tool calls not declared in a cmcp
-  catalog.json, emitting DiscoveryEvents that map to Agent Manifest records
-  for remediation or quarantine.
+  Compares enriched tool-call audit records against a separate agent-to-tools
+  registry to report unregistered agents and undeclared tools. Does not read
+  cMCP output directly.
 maintainer:
   github: imran-siddique
 repository: https://github.com/agentrust-io/integrations
@@ -16,6 +20,3 @@ marketplace:
   category: Identity & trust
   mark: SH
   keywords: [discovery, undeclared, remediation]
-tested_against:
-  cmcp-runtime: "0.2.0"
-  agent-manifest: "1.0.0"
