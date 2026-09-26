@@ -25,10 +25,10 @@ classifiers = [
     "Typing :: Typed",
 ]
 requires-python = ">=3.11"
-# The origin block, and the rule that a non-self origin cannot carry a hardware
-# platform, land in 0.7.0. An adapter built against an older model would emit
-# records this package's whole premise depends on being rejected.
-dependencies = ["agentrust-trace>=0.7.0", "cryptography>=43.0.0"]
+# TRACE 0.7.0 introduced the origin block and its software-only platform rule.
+# The declared evidence-constructor default additionally requires TRACE 0.9.0;
+# earlier models reject that policy mode.
+dependencies = ["agentrust-trace>=0.9.0", "cryptography>=43.0.0"]
 
 [project.urls]
 Homepage = "https://github.com/agentrust-io/integrations"

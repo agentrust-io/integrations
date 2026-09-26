@@ -117,11 +117,11 @@ class PolicyEvidence:
     """
 
     bundle: bytes
-    enforcement_mode: str = "enforce"
+    enforcement_mode: str = "declared"
     version: str | None = None
     policy_uri: str | None = None
 
-    MODES = ("enforce", "advisory", "silent")
+    MODES = ("enforce", "advisory", "silent", "declared")
 
     def __post_init__(self) -> None:
         if not isinstance(self.bundle, (bytes, bytearray)) or not self.bundle:
