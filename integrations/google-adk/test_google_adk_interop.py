@@ -136,6 +136,7 @@ def build_signed(plugin: GoogleAdkTracePlugin, invocation_id: str) -> dict:
             invocation_id,
             subject="spiffe://example.org/agent/google-adk",
             policy_bundle=b'{"rules":["no-payload-egress"]}',
+            enforcement_mode="declared",
             workload_digest=DIGEST,
             data_class="confidential",
             model_provider="test-provider",

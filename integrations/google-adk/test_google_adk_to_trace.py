@@ -39,6 +39,7 @@ def kwargs(**overrides):
     values = {
         "subject": SUBJECT,
         "policy_bundle": b'{"rules":["no-payload-egress"]}',
+        "enforcement_mode": "declared",
         "workload_digest": DIGEST,
         "data_class": "confidential",
         "model_provider": "test-provider",
@@ -394,6 +395,23 @@ def test_invalid_workload_digest_is_refused() -> None:
             transcript=b"{}",
             tool_count=0,
         )
+
+
+def test_enforcement_mode_has_no_default() -> None:
+    """TRACE spec section 4.3: declared MUST NOT be a default. The caller states it."""
+    values = kwargs(model_id="test-model")
+    del values["enforcement_mode"]
+    with pytest.raises(TypeError, match="enforcement_mode"):
+        build_record(**values, transcript=b"{}", tool_count=0)
+
+
+def test_declared_is_accepted_when_the_caller_states_it() -> None:
+    record = build_record(
+        **kwargs(model_id="test-model", enforcement_mode="declared"),
+        transcript=b"{}",
+        tool_count=0,
+    )
+    assert record["policy"]["enforcement_mode"] == "declared"
 
 
 def test_invalid_enforcement_mode_is_refused() -> None:

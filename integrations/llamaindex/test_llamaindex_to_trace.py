@@ -167,11 +167,17 @@ def test_transcript_is_order_sensitive() -> None:
 # --- refusals --------------------------------------------------------------
 
 
-def test_enforcement_mode_defaults_to_declared() -> None:
-    """TRACE 0.9.0 added the value that is actually true of a framework run."""
+def test_enforcement_mode_has_no_default() -> None:
+    """TRACE spec section 4.3: declared MUST NOT be a default. The caller states it."""
     kwargs = _kwargs()
     del kwargs["enforcement_mode"]
-    assert _handler().build_record(**kwargs)["policy"]["enforcement_mode"] == "declared"
+    with pytest.raises(TypeError, match="enforcement_mode"):
+        _handler().build_record(**kwargs)
+
+
+def test_declared_is_accepted_when_the_caller_states_it() -> None:
+    record = _handler().build_record(**_kwargs(enforcement_mode="declared"))
+    assert record["policy"]["enforcement_mode"] == "declared"
 
 
 def test_unknown_enforcement_mode_is_still_refused() -> None:

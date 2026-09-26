@@ -60,6 +60,7 @@ record = plugin.build_record(
     invocation_id,
     subject="spiffe://example.org/agent/research-bot",
     policy_bundle=open("policy.cedar", "rb").read(),
+    enforcement_mode="declared",
     workload_digest="sha256:...",
     data_class="internal",
     model_provider="google",
@@ -68,9 +69,11 @@ signed = sign_record(record, generate_key())
 plugin.discard(invocation_id)
 ```
 
-`enforcement_mode` defaults to `declared`: the policy is bound into the signed
-record, but Google ADK itself did not evaluate it. Override that value only when
-a separate enforcement layer actually evaluated the policy.
+`enforcement_mode` is required. A bare ADK run is `declared`: the policy is bound
+into the signed record, but Google ADK itself did not evaluate it. TRACE spec
+section 4.3 says `declared` MUST NOT be a default, so the caller states it. Pass
+another value only when a separate enforcement layer actually evaluated the
+policy.
 
 One plugin can observe concurrent invocations. It retains state by ADK
 invocation id until `discard()` is called, so long-running processes should
@@ -89,6 +92,6 @@ python -m pytest test_google_adk_interop.py -q
 The first suite exercises evidence construction without installing ADK. The
 second uses the released runner and checks success, tool failure, cancellation,
 concurrent invocations, payload exclusion, signed TRACE validation, and Level 0
-conformance for both the default `declared` policy mode and the optional
+conformance for both the `declared` policy mode and the optional
 externally enforced `advisory` path. `declared` needs `agentrust-trace-tests`
 0.5.1 or later; 0.5.0 rejects it with `TR-POL-002`.

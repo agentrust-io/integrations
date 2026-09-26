@@ -83,6 +83,7 @@ def record(**kwargs) -> dict:
     base = dict(
         subject=SUBJECT,
         policy_bundle=POLICY,
+        enforcement_mode="declared",
         workload_digest=WORKLOAD,
         data_class="internal",
         model_provider="openai",
@@ -95,10 +96,23 @@ def record(**kwargs) -> dict:
 # --- honesty rules --------------------------------------------------------
 
 
-def test_enforcement_mode_defaults_to_declared() -> None:
-    """The SDK enforces no policy. Anything else would describe enforcement that
-    did not happen."""
-    assert record()["policy"]["enforcement_mode"] == "declared"
+def test_enforcement_mode_has_no_default() -> None:
+    """TRACE spec section 4.3: declared MUST NOT be a default, and any other
+    default describes enforcement that did not happen. The caller states it."""
+    base = dict(
+        subject=SUBJECT,
+        policy_bundle=POLICY,
+        workload_digest=WORKLOAD,
+        data_class="internal",
+        model_provider="openai",
+        model_id="gpt-5",
+    )
+    with pytest.raises(TypeError, match="enforcement_mode"):
+        build_record(**base)
+
+
+def test_declared_is_accepted_when_the_caller_states_it() -> None:
+    assert record(enforcement_mode="declared")["policy"]["enforcement_mode"] == "declared"
 
 
 def test_a_bare_run_carries_no_origin_block() -> None:
@@ -205,6 +219,7 @@ def test_no_payload_reaches_the_record() -> None:
         processor.build_record(
             subject=SUBJECT,
             policy_bundle=POLICY,
+            enforcement_mode="declared",
             workload_digest=WORKLOAD,
             data_class="internal",
             model_provider="openai",
@@ -264,6 +279,7 @@ def test_concurrent_runs_do_not_share_a_transcript() -> None:
     args = dict(
         subject=SUBJECT,
         policy_bundle=POLICY,
+        enforcement_mode="declared",
         workload_digest=WORKLOAD,
         data_class="internal",
         model_provider="openai",
@@ -282,6 +298,7 @@ def test_building_before_any_run_is_refused() -> None:
         TraceRecordProcessor().build_record(
             subject=SUBJECT,
             policy_bundle=POLICY,
+            enforcement_mode="declared",
             workload_digest=WORKLOAD,
             data_class="internal",
             model_provider="openai",

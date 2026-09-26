@@ -119,16 +119,17 @@ def test_transcript_is_order_sensitive() -> None:
 # --- refusals --------------------------------------------------------------
 
 
-def test_enforcement_mode_defaults_to_declared() -> None:
-    """TRACE 0.9.0 added the value that is actually true of a framework run.
-
-    Before it, the three modes all asserted that something evaluated the policy,
-    so this adapter refused to default the field and made the caller pick a value
-    that overstated their run.
-    """
+def test_enforcement_mode_has_no_default() -> None:
+    """TRACE spec section 4.3: declared MUST NOT be a default, and any other
+    default claims an evaluation nobody observed. The caller states the mode."""
     kwargs = _kwargs()
     del kwargs["enforcement_mode"]
-    record = _handler_with_two_tools().build_record(**kwargs)
+    with pytest.raises(TypeError, match="enforcement_mode"):
+        _handler_with_two_tools().build_record(**kwargs)
+
+
+def test_declared_is_accepted_when_the_caller_states_it() -> None:
+    record = _handler_with_two_tools().build_record(**_kwargs(enforcement_mode="declared"))
     assert record["policy"]["enforcement_mode"] == "declared"
 
 

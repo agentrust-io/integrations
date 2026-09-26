@@ -59,6 +59,7 @@ def test_langgraph_tool_run_emits_a_valid_trace_record() -> None:
         handler.build_record(
             subject="spiffe://example.org/agent/langgraph",
             policy_bundle=b'{"rules":["no-payload-egress"]}',
+            enforcement_mode="declared",
             workload_digest=DIGEST,
             data_class="confidential",
             model_provider="test-provider",
