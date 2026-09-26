@@ -48,4 +48,4 @@ __all__ = [
     "software_measurement",
 ]
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"

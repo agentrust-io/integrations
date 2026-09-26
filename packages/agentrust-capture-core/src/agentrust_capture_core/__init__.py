@@ -58,7 +58,7 @@ from .seal import (
 )
 from .state import StatePaths, atomic_write, load_state, save_baseline, save_state
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 
 __all__ = [
     "EXCLUDE_DIRS",
