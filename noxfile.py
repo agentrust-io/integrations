@@ -88,8 +88,8 @@ def google_adk_adapter(session: nox.Session) -> None:
 @nox.session(python="3.12")
 def shadow_ai(session: nox.Session) -> None:
     session.install("pytest>=8", "pyyaml")
-    session.env["PYTHONPATH"] = "integrations/shadow-ai/src"
-    pytest(session, "integrations/shadow-ai/tests")
+    session.env["PYTHONPATH"] = "shadow-ai/src"
+    pytest(session, "shadow-ai/tests")
 
 
 @nox.session(python=["3.11", "3.12", "3.13"])
