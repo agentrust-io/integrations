@@ -17,10 +17,12 @@ worse description, not a safer one.
 **The honest limit, stated where you cannot miss it.** The Agents SDK enforces
 no policy of its own. Guardrails exist and can stop a run, but they are the
 operator's code, not a policy engine evaluating a bundle. So
-``enforcement_mode`` defaults to ``declared``: the policy is named and bound
-into the signed record, and nothing evaluated it. Override that only when a
-real enforcement layer sat in front of the tools. A record claiming ``enforce``
-from a bare Agents SDK run describes enforcement that did not happen.
+``enforcement_mode`` has no default and the caller states it. A bare Agents SDK
+run is ``declared``: the policy is named and bound into the signed record, and
+nothing evaluated it. TRACE spec section 4.3 says ``declared`` MUST NOT be a
+default. Pass ``enforce`` only when a real enforcement layer sat in front of
+the tools; a record claiming ``enforce`` from a bare Agents SDK run describes
+enforcement that did not happen.
 
 **Payloads never enter the record.** ``FunctionSpanData`` carries ``input`` and
 ``output``, and ``GenerationSpanData`` carries the full message list. None of it
@@ -46,6 +48,7 @@ Usage::
     record = processor.build_record(
         subject="spiffe://example.org/agent/support-bot",
         policy_bundle=open("policy.cedar", "rb").read(),
+        enforcement_mode="declared",
         workload_digest="sha256:...",
         data_class="internal",
         model_provider="openai",
@@ -271,7 +274,7 @@ def build_record(
     tools: tuple[ToolCall, ...] = (),
     handoffs: tuple[tuple[str, str], ...] = (),
     agents: tuple[str, ...] = (),
-    enforcement_mode: str = "declared",
+    enforcement_mode: str,
     attestation: dict[str, str] | None = None,
     iat: int | None = None,
 ) -> dict[str, Any]:
@@ -289,9 +292,9 @@ def build_record(
         )
     if enforcement_mode not in ENFORCEMENT_MODES:
         raise MissingEvidence(
-            f"enforcement_mode must be one of {', '.join(ENFORCEMENT_MODES)}. The "
-            "default is 'declared', which is what a bare Agents SDK run is: the policy "
-            "is named and bound, and nothing evaluated it."
+            f"enforcement_mode must be one of {', '.join(ENFORCEMENT_MODES)}. A bare "
+            "Agents SDK run is 'declared': the policy is named and bound, and nothing "
+            "evaluated it."
         )
     if not model_provider or not model_id:
         raise MissingEvidence(

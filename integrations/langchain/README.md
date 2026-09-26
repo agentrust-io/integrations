@@ -50,22 +50,22 @@ agent.invoke({"input": "..."}, config={"callbacks": [handler]})
 record = handler.build_record(
     subject="spiffe://example.org/agent/research-bot",
     policy_bundle=open("policy.cedar", "rb").read(),
-    # enforcement_mode defaults to "declared"; see below
+    enforcement_mode="declared",  # required; see below
     workload_digest="sha256:...",
     data_class="internal",
 )
 signed = sign_record(record, generate_key())
 ```
 
-## `enforcement_mode` defaults to `declared`
+## `enforcement_mode` is required
 
-**LangChain enforces no policy.** It has no policy engine, and this handler is an observer that cannot block anything. So the default is `declared`: the policy is named and bound into the signed record, and nothing evaluated it.
+**LangChain enforces no policy.** It has no policy engine, and this handler is an observer that cannot block anything. So a bare LangChain run is `declared`: the policy is named and bound into the signed record, and nothing evaluated it. `declared` needs `agentrust-trace>=0.9`.
 
-That value did not exist when this adapter was written. `enforce`, `advisory` and `silent` all presuppose that *something evaluated the policy*, so the adapter refused to default the field and made the caller pick a value that overstated their run. TRACE 0.9.0 added `declared` for exactly this case, and it needs `agentrust-trace>=0.9`.
+The adapter does not pick the mode for you. `enforce`, `advisory` and `silent` all presuppose that *something evaluated the policy*, so defaulting to any of them claims an evaluation nobody observed, and TRACE spec section 4.3 says `declared` MUST NOT be a default. Leaving the argument out raises `TypeError`.
 
 | Value | When it is true here |
 |---|---|
-| `declared` | The default. The policy is named and bound; nothing evaluated it. |
+| `declared` | A bare LangChain run. The policy is named and bound; nothing evaluated it. |
 | `enforce` | Only when a real enforcement layer (cMCP, a policy proxy) sat in front of the tools. |
 | `advisory` | Only when something evaluated the policy and chose not to act on it. |
 | `silent` | Only when something enforced it with the operational logs suppressed. |

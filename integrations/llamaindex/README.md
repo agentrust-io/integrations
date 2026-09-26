@@ -50,6 +50,7 @@ async def run_with_record(
     unsigned = tracker.build_record(
         subject=subject,
         policy_bundle=policy_bundle,       # bytes of the declared policy
+        enforcement_mode="declared",       # required; nothing evaluated the policy
         workload_digest=workload_digest,   # digest of your artifact
         model_provider=model_provider,
         model_id=model_id,
@@ -133,9 +134,11 @@ retain `appraisal.status: none`. Signing binds the record to its signing key;
 it does not attest the observer, authenticate model-supplied tool identity,
 prove safe behavior, or establish hardware provenance or runtime integrity.
 
-`policy.enforcement_mode` defaults to `declared`: the caller's policy is named
-and hashed, but LlamaIndex has not evaluated or enforced it. Supplying another
-mode requires an actual external policy layer. Supplied attestation fields are
+`policy.enforcement_mode` is required. A bare LlamaIndex run is `declared`: the
+caller's policy is named and hashed, but LlamaIndex has not evaluated or
+enforced it. TRACE spec section 4.3 says `declared` MUST NOT be a default, so the
+caller states it. Supplying another mode requires an actual external policy
+layer. Supplied attestation fields are
 passed through by the existing record builder; this adapter does not verify
 them or independently establish Level 1 assurance.
 

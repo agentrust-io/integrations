@@ -130,6 +130,7 @@ def signed_record(tracker, *, subject=SUBJECT):
         tracker.build_record(
             subject=subject,
             policy_bundle=b'{"declared-policy":true}',
+            enforcement_mode="declared",
             workload_digest="sha256:" + "a" * 64,
             data_class="internal",
             model_provider="local-test-double",

@@ -209,7 +209,7 @@ class TraceEventHandler:
         *,
         subject: str,
         policy_bundle: bytes,
-        enforcement_mode: str = "declared",
+        enforcement_mode: str,
         workload_digest: str,
         data_class: str,
         model_provider: str | None = None,
@@ -244,7 +244,7 @@ def build_record(
     *,
     subject: str,
     policy_bundle: bytes,
-    enforcement_mode: str = "declared",
+    enforcement_mode: str,
     workload_digest: str,
     data_class: str,
     model_provider: str | None,
@@ -256,10 +256,11 @@ def build_record(
 ) -> dict[str, Any]:
     """Assemble the unsigned record. Raises rather than inventing a field.
 
-    ``enforcement_mode`` defaults to ``declared``: the policy is named and bound
-    into the signed record and nothing evaluated it, which is what a LlamaIndex
-    run is. TRACE 0.9.0 added that value; before it, every available value
-    overstated a bare run and this adapter refused to default the field.
+    ``enforcement_mode`` is required. A bare LlamaIndex run is ``declared``: the
+    policy is named and bound into the signed record and nothing evaluated it.
+    TRACE spec section 4.3 says ``declared`` MUST NOT be a default, and any
+    other default would claim an evaluation nobody observed, so the caller
+    states the mode.
     """
     if not _SUBJECT_RE.match(subject or ""):
         raise MissingEvidence(
@@ -274,9 +275,9 @@ def build_record(
         )
     if enforcement_mode not in ENFORCEMENT_MODES:
         raise MissingEvidence(
-            f"enforcement_mode must be one of {', '.join(ENFORCEMENT_MODES)}. The default "
-            "is 'declared', which is what a LlamaIndex run actually is: the policy is named "
-            "and bound, and nothing evaluated it."
+            f"enforcement_mode must be one of {', '.join(ENFORCEMENT_MODES)}. A bare "
+            "LlamaIndex run is 'declared': the policy is named and bound, and nothing "
+            "evaluated it."
         )
     if not model_provider or not model_id:
         raise MissingEvidence(

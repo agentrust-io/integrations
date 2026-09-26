@@ -19,14 +19,15 @@ would produce a worse description, not a safer one.
 Where the deployment runs inside a TEE, passing an attestation lifts the same
 record from Level 0 to Level 1 and nothing else about the call changes.
 
-## `enforcement_mode` defaults to `declared`
+## `enforcement_mode` is required
 
 The Agents SDK enforces no policy. Guardrails exist and can stop a run, but they
-are the operator's own code, not a policy engine evaluating a bundle. So the
-default is `declared`: the policy is named and bound into the signed record, and
-nothing evaluated it.
+are the operator's own code, not a policy engine evaluating a bundle. So a bare
+run is `declared`: the policy is named and bound into the signed record, and
+nothing evaluated it. TRACE spec section 4.3 says `declared` MUST NOT be a
+default, so the caller states it; leaving it out raises `TypeError`.
 
-Override it only when a real enforcement layer sat in front of the tools. A
+Pass another value only when a real enforcement layer sat in front of the tools. A
 record claiming `enforce` from a bare Agents SDK run describes enforcement that
 did not happen.
 
@@ -79,6 +80,7 @@ Runner.run_sync(agent, "...")
 record = processor.build_record(
     subject="spiffe://example.org/agent/support-bot",
     policy_bundle=open("policy.cedar", "rb").read(),
+    enforcement_mode="declared",
     workload_digest="sha256:...",
     data_class="internal",
     model_provider="openai",     # the span that reports it is not read; see above

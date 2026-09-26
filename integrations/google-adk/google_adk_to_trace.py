@@ -7,9 +7,10 @@ identity, and callback-visible lifecycle outcomes. User content, model contents
 and responses, tool arguments and results, and exception messages are
 deliberately never read into evidence.
 
-Google ADK does not evaluate a TRACE policy. Records therefore default to
-``policy.enforcement_mode: declared`` and ``appraisal.status: none``. They have
-no ``origin`` block because this is first-party, in-process observation.
+Google ADK does not evaluate a TRACE policy, so ``enforcement_mode`` has no
+default: a bare ADK run passes ``declared`` (TRACE spec section 4.3 says
+``declared`` MUST NOT be a default). Records carry ``appraisal.status: none``
+and no ``origin`` block because this is first-party, in-process observation.
 """
 
 from __future__ import annotations
@@ -352,7 +353,7 @@ class GoogleAdkTracePlugin(_GoogleAdkBasePlugin):
         *,
         subject: str,
         policy_bundle: bytes,
-        enforcement_mode: str = "declared",
+        enforcement_mode: str,
         workload_digest: str,
         data_class: str,
         model_provider: str | None = None,
@@ -409,7 +410,7 @@ def build_record(
     *,
     subject: str,
     policy_bundle: bytes,
-    enforcement_mode: str = "declared",
+    enforcement_mode: str,
     workload_digest: str,
     data_class: str,
     model_provider: str | None,

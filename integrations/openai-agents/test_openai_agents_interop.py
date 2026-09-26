@@ -105,6 +105,7 @@ def test_a_real_run_produces_a_valid_record(processor) -> None:
     record = processor.build_record(
         subject=SUBJECT,
         policy_bundle=POLICY,
+        enforcement_mode="declared",
         workload_digest=WORKLOAD,
         data_class="internal",
         model_provider="openai",
@@ -132,6 +133,7 @@ def test_a_real_tool_call_reaches_the_transcript_without_its_arguments(processor
     record = processor.build_record(
         subject=SUBJECT,
         policy_bundle=POLICY,
+        enforcement_mode="declared",
         workload_digest=WORKLOAD,
         data_class="internal",
         model_provider="openai",

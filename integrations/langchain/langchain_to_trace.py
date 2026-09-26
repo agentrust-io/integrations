@@ -15,15 +15,13 @@ adapter in ``agentrust-trace`` does. Nothing else about the call changes.
 
 **The honest limit, stated where you cannot miss it.** LangChain enforces no
 policy. It has no policy engine, and this handler is an observer with no ability
-to block anything. ``enforcement_mode`` therefore defaults to ``declared``: the
-policy is named and bound into the signed record, and nothing evaluated it.
-
-That value did not exist when this adapter was written. The three original modes
-all assert that something evaluated the policy, so the adapter refused to default
-the field and made the caller choose a value that overstated their run. TRACE
-0.9.0 added ``declared`` for exactly this case. Override the default only when a
-real enforcement layer sat in front of the tools; a record claiming ``enforce``
-from a bare LangChain run describes enforcement that did not happen.
+to block anything. So ``enforcement_mode`` has no default and the caller states
+it. For a bare LangChain run that is ``declared``: the policy is named and bound
+into the signed record, and nothing evaluated it. TRACE spec section 4.3 says
+``declared`` MUST NOT be a default, and any other default would claim an
+evaluation nobody observed. Pass ``enforce`` only when a real enforcement layer
+sat in front of the tools; a record claiming ``enforce`` from a bare LangChain
+run describes enforcement that did not happen.
 
 Callback signatures are taken from ``langchain_core.callbacks.base`` and are the
 public, documented API. Payloads never enter the record: ``on_tool_start``
@@ -215,7 +213,7 @@ class TraceCallbackHandler(_LangChainBaseCallbackHandler):
         *,
         subject: str,
         policy_bundle: bytes,
-        enforcement_mode: str = "declared",
+        enforcement_mode: str,
         workload_digest: str,
         data_class: str,
         model_provider: str | None = None,
@@ -225,9 +223,9 @@ class TraceCallbackHandler(_LangChainBaseCallbackHandler):
     ) -> dict[str, Any]:
         """Assemble the unsigned Trust Record for this run.
 
-        ``enforcement_mode`` defaults to ``declared`` because LangChain itself
-        evaluates no policy. Override it only when a separate enforcement layer
-        actually evaluated the declared bundle. See the README.
+        ``enforcement_mode`` is required. LangChain itself evaluates no policy,
+        so a bare run passes ``declared``; pass another mode only when a
+        separate enforcement layer actually evaluated the bundle. See the README.
 
         ``attestation`` is ``{"platform": ..., "measurement": ...}`` when the
         deployment runs in a TEE, which lifts the record to Level 1. Absent, the
@@ -257,7 +255,7 @@ def build_record(
     *,
     subject: str,
     policy_bundle: bytes,
-    enforcement_mode: str = "declared",
+    enforcement_mode: str,
     workload_digest: str,
     data_class: str,
     model_provider: str | None,
@@ -284,9 +282,9 @@ def build_record(
         )
     if enforcement_mode not in ENFORCEMENT_MODES:
         raise MissingEvidence(
-            f"enforcement_mode must be one of {', '.join(ENFORCEMENT_MODES)}. The default "
-            "is 'declared', which is what a LangChain run actually is: the policy is named "
-            "and bound, and nothing evaluated it."
+            f"enforcement_mode must be one of {', '.join(ENFORCEMENT_MODES)}. A bare "
+            "LangChain run is 'declared': the policy is named and bound, and nothing "
+            "evaluated it."
         )
     if not model_provider or not model_id:
         raise MissingEvidence(
