@@ -126,9 +126,11 @@ It is a deterministic digest over the identifying inputs (producer, subject, pol
 
 Apache-2.0.
 
-## Proposed OpenShell bundle verifier (unreleased)
+## Candidate OpenShell bundle verifier (since 0.1.1)
 
-The candidate verifier and synthetic acceptance cases are described in
-[the producer contract](docs/openshell-bundle-candidate.md). This is development
-work for NVIDIA/OpenShell#2745; no live exporter compatibility or hardware
-assurance is claimed. The released OpenShell adapter remains unchanged.
+`agentrust_trace_adapters.openshell_bundle.verify_bundle` ships from 0.1.1. It
+verifies a proposed signed OpenShell evidence bundle, described with its synthetic
+acceptance cases in [the producer contract](docs/openshell-bundle-candidate.md).
+The contract is development work for NVIDIA/OpenShell#2745 and does not exist
+upstream yet, so no live exporter compatibility or hardware assurance is claimed.
+The OpenShell transcript adapter is unaffected.
