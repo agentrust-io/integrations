@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "agentrust-trace-adapters"
-version = "0.1.0"
+version = "0.1.1"
 description = "Build TRACE Trust Records from evidence another system produced, without fabricating what is not there"
 readme = "README.md"
 license = "Apache-2.0"

@@ -16,9 +16,10 @@ python -m pytest packages/agentrust-trace-adapters/tests/test_openshell_bundle.p
 python packages/agentrust-trace-adapters/examples/synthetic_openshell_bundle.py
 ```
 
-These source-tree commands test the new package code. They are not instructions
-for the released `agentrust-trace-adapters==0.1.0` integration. No package release
-or compatibility-floor change is included.
+These source-tree commands test the package code. The verifier ships in
+`agentrust-trace-adapters` 0.1.1 and later; 0.1.0 does not include it. The
+producer contract it checks is still a candidate, so its shape can change before
+an upstream exporter exists.
 
 ## Inputs and trust
 
