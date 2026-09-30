@@ -1,5 +1,5 @@
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![Discord](https://dcbadge.limes.pink/api/server/9JWNpH7E?style=flat)](https://discord.gg/9JWNpH7E)
+[![Discord](https://dcbadge.limes.pink/api/server/grgzFEHgkj?style=flat)](https://discord.gg/grgzFEHgkj)
 
 # agentrust-io Integrations
 
@@ -136,7 +136,7 @@ unknowable at authoring time.
 
 ## Community
 
-Questions, feedback, integration help: [Discord](https://discord.gg/9JWNpH7E).
+Questions, feedback, integration help: [Discord](https://discord.gg/grgzFEHgkj).
 
 ## License
 
