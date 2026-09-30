@@ -3,7 +3,7 @@
 agentrust-trace-tests==0.5.1 \
     --hash=sha256:5c13421d41357a5b2e096eced457f5dee65d4921b253b25dac53684b3d31eeeb \
     --hash=sha256:79e9d98a7106ae1c47b8378c8808be26f1fa34a62779e9f7b0e954cf40a2a19c
-    # via -r requirements/sdk-google-adk.in
+    # via -r sdk-google-adk.in
 aiosqlite==0.22.1 \
     --hash=sha256:043e0bd78d32888c0a9ca90fc788b38796843360c855a7262a532813133a0650 \
     --hash=sha256:21c002eb13823fad740196c5a2e9d8e62f6243bd9e7e4a1f87fb5e44ecb4fceb
@@ -386,7 +386,7 @@ fastapi==0.141.1 \
 google-adk==2.9.2 \
     --hash=sha256:9d4b91a3cc3a52a471ca5831127e4c46ac174da0db519b4d157a09011737da10 \
     --hash=sha256:ad887aadff34ebfe06586ded2b04848413c8bed6d6c7dd14dc7485ec7e54b2d2
-    # via -r requirements/sdk-google-adk.in
+    # via -r sdk-google-adk.in
 google-auth[pyopenssl,requests]==2.57.1 \
     --hash=sha256:ab439dee60a6856412bc058f13a68eb6a59c5b81526bb89cfdcf89ce9c0a48c9 \
     --hash=sha256:eb47b230fc6707eed4aee1c9cef55ec05bc1785eecba74ff8b572d531e921b1e
@@ -854,9 +854,9 @@ typing-inspection==0.4.4 \
     # via
     #   fastapi
     #   pydantic
-urllib3==2.7.0 \
-    --hash=sha256:231e0ec3b63ceb14667c67be60f2f2c40a518cb38b03af60abc813da26505f4c \
-    --hash=sha256:9fb4c81ebbb1ce9531cce37674bbc6f1360472bc18ca9a553ede278ef7276897
+urllib3==2.8.0 \
+    --hash=sha256:0cf3cae568d36aa9576b28dfb35f11328f1cb974ca7647d9475ebb86c75ac6e3 \
+    --hash=sha256:63bf2ead4c879426ebf22ef2a781eeb4aa3b4ae798a0435506f8687fd5bb9b63
     # via requests
 uvicorn==0.52.4 \
     --hash=sha256:73acfee47a0b133c5de13d219492d62d8a31e935f4fe6e41a232451a15379f86 \
