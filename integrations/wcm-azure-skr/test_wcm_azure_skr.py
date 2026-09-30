@@ -324,3 +324,92 @@ def test_a_token_with_no_nonce_is_refused() -> None:
         evidence_from_maa_claims(
             good_claims(**{"x-ms-runtime": {}}), challenge(), serving_image_measurement=SERVING
         )
+
+
+BOTH_ORDERS = pytest.mark.parametrize(
+    "order", [["amd-sev-snp", "intel-tdx"], ["intel-tdx", "amd-sev-snp"]]
+)
+OWN_DEBUG_CLAIM = {"sevsnpvm": "x-ms-sevsnpvm-is-debuggable", "tdxvm": "tdx_td_attributes_debug"}
+FOREIGN_PREFIX = {"sevsnpvm": "tdx_", "tdxvm": "x-ms-sevsnpvm-"}
+
+
+def _branch_type(branch: dict) -> str:
+    return next(c["equals"] for c in branch["allOf"] if c["claim"] == "x-ms-attestation-type")
+
+
+@BOTH_ORDERS
+def test_every_branch_has_its_own_debug_gate_whatever_the_platform_order(order: list) -> None:
+    """The gate used to follow required_hw_platform[0]: [tdx, snp] emitted none at all."""
+    result = build_release_policy(
+        make_manifest(required_hw_platform=order), authority=AUTHORITY, allow_unbound_workload=True
+    )
+
+    assert {_branch_type(b) for b in result["anyOf"]} == {"sevsnpvm", "tdxvm"}
+    for branch in result["anyOf"]:
+        gate = {"claim": OWN_DEBUG_CLAIM[_branch_type(branch)], "equals": "false"}
+        assert gate in branch["allOf"]
+
+
+@BOTH_ORDERS
+def test_each_branch_carries_only_claims_of_its_own_tee(order: list) -> None:
+    """[snp, tdx] used to put x-ms-sevsnpvm-* on tdxvm branches, which never match."""
+    result = build_release_policy(
+        make_manifest(required_hw_platform=order),
+        authority=AUTHORITY,
+        allow_unbound_workload=True,
+    )
+
+    for branch in result["anyOf"]:
+        foreign = FOREIGN_PREFIX[_branch_type(branch)]
+        assert all(not c["claim"].startswith(foreign) for c in branch["allOf"])
+
+
+@BOTH_ORDERS
+def test_snp_only_measurement_claim_is_refused_when_tdx_is_allowed(order: list) -> None:
+    with pytest.raises(SkrPolicyError, match="only issued on sevsnpvm tokens"):
+        build_release_policy(
+            make_manifest(required_hw_platform=order),
+            authority=AUTHORITY,
+            measurement_claim="x-ms-sevsnpvm-hostdata",
+        )
+
+
+def test_mapping_must_name_a_claim_for_every_allowed_tee() -> None:
+    with pytest.raises(SkrPolicyError, match="no measurement_claim for tdxvm"):
+        build_release_policy(
+            make_manifest(required_hw_platform=["amd-sev-snp", "intel-tdx"]),
+            authority=AUTHORITY,
+            measurement_claim={"sevsnpvm": "x-ms-sevsnpvm-hostdata"},
+        )
+
+
+def test_tdx_measurement_claims_are_384_bit_and_refused_for_a_wcm_hash() -> None:
+    """Every documented TDX measurement register is 96 or 128 hex; none fits a HashValue."""
+    with pytest.raises(SkrPolicyError, match="different chains"):
+        build_release_policy(
+            make_manifest(required_hw_platform=["amd-sev-snp", "intel-tdx"]),
+            authority=AUTHORITY,
+            measurement_claim={"sevsnpvm": "x-ms-sevsnpvm-hostdata", "tdxvm": "tdx_mrconfigid"},
+        )
+
+
+def test_tdx_debug_gate_can_be_dropped_deliberately() -> None:
+    result = build_release_policy(
+        make_manifest(required_hw_platform=["intel-tdx"]),
+        authority=AUTHORITY,
+        allow_unbound_workload=True,
+        require_not_debuggable=False,
+    )
+
+    assert all(c["claim"] != "tdx_td_attributes_debug" for c in result["anyOf"][0]["allOf"])
+
+
+def test_debuggable_tdx_guest_cannot_produce_hardware_attested_evidence() -> None:
+    claims = {
+        "x-ms-attestation-type": "tdxvm",
+        "x-ms-compliance-status": "azure-compliant-cvm",
+        "tdx_td_attributes_debug": True,
+        "x-ms-runtime": {"nonce": "a" * 64},
+    }
+    with pytest.raises(SkrPolicyError, match="debuggable"):
+        evidence_from_maa_claims(claims, challenge(), serving_image_measurement=SERVING)

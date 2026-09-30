@@ -34,10 +34,20 @@ emit a measurement condition without it. Pass ``allow_unbound_workload=True`` to
 get the platform conditions alone; the returned policy is then annotated as not
 binding a workload, and the CLI prints that to stderr.
 
-**Claims used, and where they come from.** Only SEV-SNP claims that Microsoft
-documents for MAA are emitted by default. TDX is supported for attestation type
-and compliance status; its measurement claim names are not asserted here and
-must be supplied through ``measurement_claim`` like any other.
+**Claims used, and where they come from.** Every claim is one Microsoft
+documents for MAA. SEV-SNP claims are from the MAA claim sets page
+(https://learn.microsoft.com/azure/attestation/claim-sets). TDX claims are from
+the MAA TDX EAT profile
+(https://learn.microsoft.com/azure/attestation/trust-domain-extensions-eat-profile)
+and its ``tdxvm`` sample token
+(https://learn.microsoft.com/azure/attestation/attestation-token-examples).
+
+**Each branch carries only claims of its own TEE.** A token has one
+``x-ms-attestation-type``; MAA issues ``x-ms-sevsnpvm-*`` claims only on a
+``sevsnpvm`` token and ``tdx_*`` claims only on a ``tdxvm`` token. A condition
+naming the other TEE's claim is never met, so a branch mixing them never
+matches. The debug gate is therefore per branch: ``x-ms-sevsnpvm-is-debuggable``
+on SNP, ``tdx_td_attributes_debug`` on TDX.
 
 Usage::
 
@@ -70,6 +80,7 @@ from wcm import (
 __all__ = [
     "ATTESTATION_TYPE_BY_PLATFORM",
     "MAA_CLAIMS",
+    "DEBUG_CLAIM_BY_ATTESTATION_TYPE",
     "SKR_POLICY_VERSION",
     "SkrPolicyError",
     "build_release_policy",
@@ -89,10 +100,9 @@ ATTESTATION_TYPE_BY_PLATFORM = {
 
 #: MAA claims this module reads or emits, with what each one is.
 #:
-#: Restricted to SEV-SNP CVM claims Microsoft documents. A claim not listed here
-#: is not emitted by default and must be named explicitly by the caller, because
-#: a policy referencing a claim MAA does not issue never matches and presents as
-#: a broken CVM.
+#: Restricted to CVM claims Microsoft documents (see the module docstring for the
+#: pages). A claim not listed here is refused, because a policy referencing a
+#: claim MAA does not issue never matches and presents as a broken CVM.
 MAA_CLAIMS = {
     "x-ms-attestation-type": "sevsnpvm or tdxvm; which TEE produced the token",
     "x-ms-compliance-status": "azure-compliant-cvm when the platform met Azure's CVM baseline",
@@ -101,7 +111,39 @@ MAA_CLAIMS = {
     "x-ms-sevsnpvm-hostdata": "256-bit host-supplied data, 64 hex characters",
     "x-ms-sevsnpvm-idkeydigest": "digest of the key that signed the guest's ID block",
     "x-ms-sevsnpvm-guestsvn": "guest security version number",
+    "tdx_td_attributes_debug": "true when the TD runs in TD debug mode (host VMM can read it)",
+    "tdx_mrtd": "384-bit measurement of the TD's initial contents, 96 hex characters",
+    "tdx_rtmr0": "384-bit runtime measurement register 0, 96 hex characters",
+    "tdx_rtmr1": "384-bit runtime measurement register 1, 96 hex characters",
+    "tdx_rtmr2": "384-bit runtime measurement register 2, 96 hex characters",
+    "tdx_rtmr3": "384-bit runtime measurement register 3, 96 hex characters",
+    "tdx_mrconfigid": "384-bit software-defined configuration ID, 96 hex characters",
+    "tdx_mrowner": "384-bit software-defined owner ID, 96 hex characters",
+    "tdx_mrownerconfig": "384-bit owner-defined configuration ID, 96 hex characters",
+    "tdx_report_data": "512-bit TD report data, 128 hex characters",
 }
+
+#: Attestation type -> the claim that says the guest was launched debuggable.
+#: SNP: MAA claim sets page. TDX: MAA TDX EAT profile; the tdxvm sample token on
+#: the token examples page carries ``"tdx_td_attributes_debug": false``.
+DEBUG_CLAIM_BY_ATTESTATION_TYPE = {
+    "sevsnpvm": "x-ms-sevsnpvm-is-debuggable",
+    "tdxvm": "tdx_td_attributes_debug",
+}
+
+#: Claim-name prefix -> the only attestation type whose tokens carry it.
+_TEE_CLAIM_PREFIX = {
+    "x-ms-sevsnpvm-": "sevsnpvm",
+    "tdx_": "tdxvm",
+}
+
+
+def _claim_tee(claim: str) -> str | None:
+    """The attestation type a claim belongs to, or None if it is TEE-neutral."""
+    for prefix, attestation_type in _TEE_CLAIM_PREFIX.items():
+        if claim.startswith(prefix):
+            return attestation_type
+    return None
 
 #: Claims whose width makes them incompatible with a WCM HashValue, and why.
 #: build_release_policy checks this before emitting a condition, so the failure
@@ -110,6 +152,15 @@ _CLAIM_HEX_WIDTH = {
     "x-ms-sevsnpvm-launchmeasurement": 96,
     "x-ms-sevsnpvm-hostdata": 64,
     "x-ms-sevsnpvm-idkeydigest": 96,
+    "tdx_mrtd": 96,
+    "tdx_rtmr0": 96,
+    "tdx_rtmr1": 96,
+    "tdx_rtmr2": 96,
+    "tdx_rtmr3": 96,
+    "tdx_mrconfigid": 96,
+    "tdx_mrowner": 96,
+    "tdx_mrownerconfig": 96,
+    "tdx_report_data": 128,
 }
 
 
@@ -158,11 +209,68 @@ def _usable_measurements(manifest: WeightCustodyManifest) -> list[str]:
     ]
 
 
+def _measurement_claims_by_type(
+    measurement_claim: str | Mapping[str, str], attestation_types: Sequence[str]
+) -> dict[str, str]:
+    """Resolve ``measurement_claim`` to one claim per attestation type, or refuse."""
+    if isinstance(measurement_claim, str):
+        requested = {attestation_type: measurement_claim for attestation_type in attestation_types}
+    else:
+        requested = dict(measurement_claim)
+        unknown = sorted(set(requested) - set(DEBUG_CLAIM_BY_ATTESTATION_TYPE))
+        if unknown:
+            raise SkrPolicyError(
+                f"measurement_claim keys {unknown} are not MAA attestation types; use "
+                f"{sorted(DEBUG_CLAIM_BY_ATTESTATION_TYPE)}"
+            )
+    resolved: dict[str, str] = {}
+    for attestation_type in attestation_types:
+        claim = requested.get(attestation_type)
+        if claim is None:
+            raise SkrPolicyError(
+                f"no measurement_claim for {attestation_type}. The manifest allows it, and "
+                "a branch without a measurement condition would release the key to any "
+                "compliant CVM of that type. Pass a mapping with a claim for every "
+                "attestation type."
+            )
+        if claim not in MAA_CLAIMS:
+            raise SkrPolicyError(
+                f"{claim!r} is not in MAA_CLAIMS. A policy referencing a "
+                "claim MAA does not issue never matches, and presents as a broken CVM "
+                "rather than as a policy error. Add it to MAA_CLAIMS with a description "
+                "once you have confirmed Azure issues it."
+            )
+        tee = _claim_tee(claim)
+        if tee is not None and tee != attestation_type:
+            raise SkrPolicyError(
+                f"{claim} is only issued on {tee} tokens, so it can never match on the "
+                f"{attestation_type} branch this manifest requires. Pass a mapping from "
+                "attestation type to a claim of that type."
+            )
+        resolved[attestation_type] = claim
+    return resolved
+
+
+def _check_measurement_width(claim: str, measurements: Sequence[str]) -> None:
+    width = _CLAIM_HEX_WIDTH.get(claim)
+    for measurement in measurements:
+        digest = measurement.split(":", 1)[1]
+        if width is not None and len(digest) != width:
+            raise SkrPolicyError(
+                f"measurement {measurement} has {len(digest)} hex characters but "
+                f"{claim} carries {width}. These are values from "
+                "different chains; comparing them would produce a policy that "
+                "never matches. On Azure the WCM path binds a SHA-256 PCR 23 "
+                "digest (see wcm.azure_vtpm), which is not the SNP launch "
+                "measurement."
+            )
+
+
 def build_release_policy(
     manifest: WeightCustodyManifest,
     *,
     authority: str,
-    measurement_claim: str | None = None,
+    measurement_claim: str | Mapping[str, str] | None = None,
     allow_unbound_workload: bool = False,
     require_not_debuggable: bool = True,
 ) -> dict[str, Any]:
@@ -175,7 +283,10 @@ def build_release_policy(
 
     ``measurement_claim`` names the MAA claim carrying the value the manifest's
     ``accepted_measurements`` hold. See the module docstring for why this cannot
-    be inferred.
+    be inferred. When the manifest allows more than one TEE, pass a mapping from
+    attestation type (``sevsnpvm``, ``tdxvm``) to claim: a TEE-specific claim
+    such as ``x-ms-sevsnpvm-hostdata`` is only issued on that TEE's tokens, so it
+    cannot bind the other TEE's branch.
     """
     if not authority.startswith("https://"):
         raise SkrPolicyError(
@@ -207,46 +318,32 @@ def build_release_policy(
                 "allow_unbound_workload=True to emit platform conditions only and "
                 "accept that any compliant CVM in this authority can obtain the key."
             )
+        claim_by_type: dict[str, str] = {}
     else:
-        if measurement_claim not in MAA_CLAIMS:
-            raise SkrPolicyError(
-                f"{measurement_claim!r} is not in MAA_CLAIMS. A policy referencing a "
-                "claim MAA does not issue never matches, and presents as a broken CVM "
-                "rather than as a policy error. Add it to MAA_CLAIMS with a description "
-                "once you have confirmed Azure issues it."
-            )
-        width = _CLAIM_HEX_WIDTH.get(measurement_claim)
-        for measurement in measurements:
-            digest = measurement.split(":", 1)[1]
-            if width is not None and len(digest) != width:
-                raise SkrPolicyError(
-                    f"measurement {measurement} has {len(digest)} hex characters but "
-                    f"{measurement_claim} carries {width}. These are values from "
-                    "different chains; comparing them would produce a policy that "
-                    "never matches. On Azure the WCM path binds a SHA-256 PCR 23 "
-                    "digest (see wcm.azure_vtpm), which is not the SNP launch "
-                    "measurement."
-                )
-
-    base_conditions: list[dict[str, Any]] = [
-        {"claim": "x-ms-attestation-type", "equals": attestation_types[0]}
-    ]
-    if manifest.release_policy.required_assurance_tier is AssuranceTier.hardware_attested:
-        base_conditions.append(
-            {"claim": "x-ms-compliance-status", "equals": "azure-compliant-cvm"}
-        )
-    if require_not_debuggable and attestation_types[0] == "sevsnpvm":
-        # A debuggable guest can be inspected by the host, which defeats the
-        # software-adversary half of WCM's guarantee before any key moves.
-        base_conditions.append({"claim": "x-ms-sevsnpvm-is-debuggable", "equals": "false"})
+        claim_by_type = _measurement_claims_by_type(measurement_claim, attestation_types)
+        for claim in dict.fromkeys(claim_by_type.values()):
+            _check_measurement_width(claim, measurements)
 
     branches: list[dict[str, Any]] = []
     for attestation_type in attestation_types:
-        conditions = [dict(condition) for condition in base_conditions]
-        conditions[0] = {"claim": "x-ms-attestation-type", "equals": attestation_type}
+        # Built from this branch's own attestation type. Deriving any of it from
+        # attestation_types[0] made the debug gate depend on the order of
+        # required_hw_platform and put SNP-only claims on TDX branches.
+        conditions: list[dict[str, Any]] = [
+            {"claim": "x-ms-attestation-type", "equals": attestation_type}
+        ]
+        if manifest.release_policy.required_assurance_tier is AssuranceTier.hardware_attested:
+            conditions.append({"claim": "x-ms-compliance-status", "equals": "azure-compliant-cvm"})
+        if require_not_debuggable:
+            # A debuggable guest can be inspected by the host, which defeats the
+            # software-adversary half of WCM's guarantee before any key moves.
+            conditions.append(
+                {"claim": DEBUG_CLAIM_BY_ATTESTATION_TYPE[attestation_type], "equals": "false"}
+            )
         if measurement_claim is None:
             branches.append({"authority": authority, "allOf": conditions})
             continue
+        claim = claim_by_type[attestation_type]
         # One branch per accepted measurement: SKR's grammar has anyOf at the
         # branch level and allOf inside, with no disjunction over a single claim.
         for measurement in measurements:
@@ -254,7 +351,7 @@ def build_release_policy(
                 {
                     "authority": authority,
                     "allOf": conditions
-                    + [{"claim": measurement_claim, "equals": measurement.split(":", 1)[1]}],
+                    + [{"claim": claim, "equals": measurement.split(":", 1)[1]}],
                 }
             )
 
@@ -312,7 +409,7 @@ def evidence_from_maa_claims(
             "meet Azure's CVM baseline, so this is not hardware-attested evidence and "
             "must not be built into a CompositeEvidence that says it is."
         )
-    if str(claims.get("x-ms-sevsnpvm-is-debuggable", "false")).lower() == "true":
+    if str(claims.get(DEBUG_CLAIM_BY_ATTESTATION_TYPE[attestation_type], "false")).lower() == "true":
         raise SkrPolicyError(
             "the guest was launched debuggable, so the host can inspect it. Evidence "
             "from a debuggable guest does not support a hardware-attested assurance "

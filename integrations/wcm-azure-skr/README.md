@@ -59,8 +59,17 @@ python wcm_azure_skr.py --describe-claims --authority https://... ignored
 ```
 
 TDX maps to `x-ms-attestation-type: tdxvm` and gets the compliance-status
-condition. Its measurement claim names are **not asserted here** and must be
-supplied like any other.
+condition and its own debug gate, `tdx_td_attributes_debug equals false`
+([MAA TDX EAT profile](https://learn.microsoft.com/azure/attestation/trust-domain-extensions-eat-profile),
+[tdxvm sample token](https://learn.microsoft.com/azure/attestation/attestation-token-examples)).
+Every branch is built from its own attestation type, so a branch never carries
+the other TEE's claims (which MAA does not issue on that token, so the branch
+would never match). A TEE-specific `--measurement-claim` such as
+`x-ms-sevsnpvm-hostdata` is refused when the manifest also allows the other TEE;
+from Python, pass a mapping `{"sevsnpvm": ..., "tdxvm": ...}`. Every documented
+TDX measurement register (`tdx_mrtd`, `tdx_rtmr0..3`, `tdx_mrconfigid`,
+`tdx_mrowner`, `tdx_mrownerconfig`) is 96 hex and `tdx_report_data` is 128, so
+none can carry a 64-hex WCM measurement and the width check refuses them.
 
 `nvidia-cc-gpu` has no attestation-type value: MAA's CVM attestation describes
 the virtual machine, and there is no claim meaning "the GPU is in CC mode". GPU
@@ -72,7 +81,8 @@ binding stays with the WCM broker's GPU check, and a GPU-only requirement raises
 |---|---|
 | `required_hw_platform: [amd-sev-snp]` | `x-ms-attestation-type equals sevsnpvm` |
 | `required_assurance_tier: hardware-attested` | `x-ms-compliance-status equals azure-compliant-cvm` |
-| (always, on SNP) | `x-ms-sevsnpvm-is-debuggable equals false` |
+| (always, on each SNP branch) | `x-ms-sevsnpvm-is-debuggable equals false` |
+| (always, on each TDX branch) | `tdx_td_attributes_debug equals false` |
 | `accepted_measurements`, status not `revoked` | one `anyOf` branch per measurement |
 | `authority` | pinned on every branch |
 
