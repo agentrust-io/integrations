@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "ComputeID AgentPassport TRACE v0.2 adapter and offline verification tools",
   "main": "convert-to-trace.js",
+  "scripts": {
+    "test": "node --test test/offline-verifier.test.js"
+  },
   "license": "Apache-2.0",
   "dependencies": {
     "canonicalize": "2.1.0",

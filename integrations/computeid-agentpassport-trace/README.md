@@ -24,6 +24,14 @@ Expected output: `Result: FAIL (7 checks, 1 failure(s), 0 skipped)` — see CONF
 
 A reviewer can reproduce, from this repository alone, with no live dependency on ComputeID's service beyond registering one fresh passport: that a ComputeID `/verify` response is independently checkable via `offline-verifier.js` and the included `ca-cert.pem` with zero network calls once captured (both the classical RSA-SHA256 and ML-DSA-65 signatures are recomputed from raw key/signature/payload bytes in the bundle, not read from the service's own claimed result — verified adversarially against a tampered payload); that converting real evidence into a TRACE record produces the result in CONFORMANCE.md; and that the hash-chained ComputeID audit log is independently verifiable via `verify-audit-chain.js` (requires live database access — documented as the one check that cannot be reproduced from a static bundle alone).
 
+## What the CA receipt binds, and what it does not
+
+`offline-verifier.js` reads `passport_id`, `status`, `issued_at` and `expires_at` only from the CA-signed `verification_receipt.receipt_payload`, after its signature verifies against `ca-cert.pem`, and requires them to equal the bundle's own `passport_id` and `status` and the unsigned copies in `verification_receipt`. Freshness and revocation are never taken from unsigned fields.
+
+The receipt ComputeID issues today signs `expires_at`, `issued_at`, `key_id` (the CA key: first 16 hex of sha256 over the CA public key PEM), `passport_id`, `signature_valid` and `status`. It does not sign `public_key` or `pq_public_key`, so the passport keys are self-embedded in the bundle and a bundle carrying someone else's keys with a genuine receipt cannot be told apart from the real one. `issuer_trusted`, and so `overall_pass`, is therefore `false` for every current ComputeID bundle, with the reason in `verification_reasons.receipt_binding`. It becomes `true` once the signed receipt carries `public_key` and `pq_public_key` equal to the bundle's.
+
+Pin the clock with `--now <iso-8601>` (or `verify(path, ca, { now })`) to evaluate a captured bundle inside its receipt window. Tests: `npm test` (Node's built-in runner).
+
 ## Maintainer
 
 trustedaicompute-ops (GitHub org) — contact via computeid-backend issues.
