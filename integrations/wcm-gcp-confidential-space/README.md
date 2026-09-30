@@ -76,6 +76,9 @@ and is not.
 
 It does refuse claim sets that cannot support the tier: a non-Confidential-Space
 `swname`, an unmapped `hwmodel`, or a `dbgstat` other than `disabled-since-boot`.
+It also refuses a token whose `eat_nonce` does not include the challenge nonce,
+so request the token with that nonce. `nonce_echo` is taken from the token, not
+the challenge.
 
 ## Run it
 

@@ -92,6 +92,7 @@ def good_claims(**overrides: object) -> dict:
         "x-ms-compliance-status": "azure-compliant-cvm",
         "x-ms-sevsnpvm-is-debuggable": "false",
         "x-ms-sevsnpvm-idkeydigest": "cd" * 48,
+        "x-ms-runtime": {"nonce": "a" * 64},
     }
     claims.update(overrides)
     return claims
@@ -301,3 +302,25 @@ def test_cli_warns_loudly_when_the_workload_is_unbound(tmp_path: pathlib.Path, c
 def test_cli_describes_claims(capsys) -> None:
     assert main(["ignored", "--authority", AUTHORITY, "--describe-claims"]) == 0
     assert "x-ms-compliance-status" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize(
+    "claims",
+    [
+        {"x-ms-runtime": {"nonce": "b" * 64}},
+        {"x-ms-runtime": {}, "nonce": "b" * 64},
+        {"x-ms-runtime": {"nonce": "a" * 64}, "nonce": "b" * 64},
+    ],
+)
+def test_a_token_minted_for_another_challenge_is_refused(claims: dict) -> None:
+    """nonce_echo used to be copied from the verifier's own challenge, so a stale
+    token was reported as fresh."""
+    with pytest.raises(SkrPolicyError, match="does not match"):
+        evidence_from_maa_claims(good_claims(**claims), challenge(), serving_image_measurement=SERVING)
+
+
+def test_a_token_with_no_nonce_is_refused() -> None:
+    with pytest.raises(SkrPolicyError, match="no nonce"):
+        evidence_from_maa_claims(
+            good_claims(**{"x-ms-runtime": {}}), challenge(), serving_image_measurement=SERVING
+        )

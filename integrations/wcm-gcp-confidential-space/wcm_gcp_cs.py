@@ -91,6 +91,28 @@ _DIGEST_RE = re.compile(r"^sha256:[0-9a-f]{64}$")
 _CLAIM_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)*$")
 
 
+def _token_nonce(claims: Mapping[str, Any], expected: str) -> str:
+    """Return the ``eat_nonce`` value matching ``expected``, or refuse.
+
+    Confidential Space carries caller nonces in ``eat_nonce``, as a string or a
+    list. Copying the verifier's own challenge into ``nonce_echo`` instead would
+    make a stale token look fresh.
+    """
+    value = claims.get("eat_nonce")
+    values = [value] if isinstance(value, str) else list(value or [])
+    if not values:
+        raise ConfidentialSpaceError(
+            "the token carries no eat_nonce, so nothing binds it to this challenge. "
+            "Request the token with the challenge nonce."
+        )
+    if expected not in values:
+        raise ConfidentialSpaceError(
+            "the token's eat_nonce does not include this challenge's nonce, so the "
+            "token was not produced for this request"
+        )
+    return expected
+
+
 class ConfidentialSpaceError(ValueError):
     """Raised when a manifest cannot be turned into a usable condition."""
 
@@ -283,7 +305,7 @@ def evidence_from_cs_claims(
             platform=platform,
             assurance_tier=AssuranceTier.hardware_attested.value,
             serving_image_measurement=digest,
-            nonce_echo=challenge.nonce,
+            nonce_echo=_token_nonce(claims, challenge.nonce),
             attestation_key_id=str(claims.get("iss", "confidential-space-token")),
             transport_public_key=transport_public_key,
         )

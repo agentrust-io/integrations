@@ -106,12 +106,20 @@ class TestSkillFingerprintCoversTheWholeDirectory:
         (d / "state" / "progress.json").write_text('{"runs": 2}', encoding="utf-8")
         assert capture.diff(before, _skills_snap()) == []
 
-    @pytest.mark.parametrize("junk", ["run.log", "cached.pyc", "scratch.tmp"])
+    @pytest.mark.parametrize("junk", ["run.log", "scratch.tmp"])
     def test_run_artifacts_do_not_alarm(self, tmp_path, monkeypatch, junk):
         d = _skill(tmp_path, monkeypatch)
         before = _skills_snap()
         (d / junk).write_text("noise", encoding="utf-8")
         assert capture.diff(before, _skills_snap()) == []
+
+    @pytest.mark.parametrize("payload", ["cached.pyc", "node_modules/x/index.js", "state/run.py"])
+    def test_loadable_code_alarms_even_where_data_is_excluded(self, tmp_path, monkeypatch, payload):
+        d = _skill(tmp_path, monkeypatch)
+        before = _skills_snap()
+        (d / payload).parent.mkdir(parents=True, exist_ok=True)
+        (d / payload).write_text("payload", encoding="utf-8")
+        assert capture.diff(before, _skills_snap()) != []
 
     def test_directory_without_a_manifest_is_not_a_skill(self, tmp_path, monkeypatch):
         claude = tmp_path / ".claude"

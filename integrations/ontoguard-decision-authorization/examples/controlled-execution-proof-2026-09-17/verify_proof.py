@@ -91,10 +91,16 @@ def main() -> int:
     else:
         ok("checksum manifest")
 
-    auth = load("positive/ontoguard_authorization.exact.json")
     sig = load("positive/ontoguard_authorization.signature.json")
     og_jwk = load("positive/ontoguard_public_jwk.json")
     exact = sig["exact_bytes"].encode("utf-8")
+    # Every binding below reads the signed bytes. The .exact.json sibling is a
+    # convenience copy with no signature over it, so it must equal them.
+    auth = json.loads(exact)
+    if load("positive/ontoguard_authorization.exact.json") == auth:
+        ok("authorization copy matches the signed bytes")
+    else:
+        fail("authorization copy matches the signed bytes")
     if digest_bytes(exact) == sig["digest"]:
         ok("OntoGuard authorization exact-byte digest")
     else:
@@ -142,7 +148,12 @@ def main() -> int:
     else:
         fail("independent executable-action digest", recomputed)
 
-    receipt = load("positive/execution_receipt.json")
+    receipt_file = load("positive/execution_receipt.json")
+    receipt = json.loads(receipt_file["receipt_bytes"])
+    if all(receipt_file.get(k) == v for k, v in receipt.items()):
+        ok("receipt fields match the signed receipt bytes")
+    else:
+        fail("receipt fields match the signed receipt bytes")
     if receipt.get("executed_action_binding_digest") == auth["action_binding_digest"]:
         ok("executed action == authorized action")
     else:
@@ -150,8 +161,8 @@ def main() -> int:
 
     ex_jwk = load("positive/execution_public_jwk.json")
     ok("execution runtime signing key present in pack")
-    raw_receipt = receipt["receipt_bytes"].encode("utf-8")
-    if verify_ed25519(ex_jwk, raw_receipt, receipt["signature"]):
+    raw_receipt = receipt_file["receipt_bytes"].encode("utf-8")
+    if verify_ed25519(ex_jwk, raw_receipt, receipt_file["signature"]):
         ok("execution receipt Ed25519 signature")
     else:
         fail("execution receipt Ed25519 signature")

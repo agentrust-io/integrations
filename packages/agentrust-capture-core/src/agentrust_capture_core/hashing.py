@@ -21,6 +21,7 @@ from pathlib import Path
 __all__ = [
     "EXCLUDE_DIRS",
     "EXCLUDE_SUFFIXES",
+    "EXECUTABLE_SUFFIXES",
     "UNVERIFIABLE_PREFIX",
     "now_iso",
     "safe_sha_file",
@@ -42,12 +43,27 @@ UNVERIFIABLE_PREFIX = "unverifiable:"
 #: per-component ignore file would let the thing being measured decide what gets
 #: measured, so a hostile component could ship a rule covering its own payload.
 #: Adding a name here is a reviewed change to this package.
-EXCLUDE_DIRS = frozenset({
-    "state", ".cache", "__pycache__", ".git", ".pytest_cache", "node_modules",
-})
+#:
+#: ``node_modules`` and ``__pycache__`` are deliberately absent. Both hold code the
+#: runtime loads: Node resolves ``require`` into ``node_modules``, and CPython
+#: imports a ``.pyc`` in place of its source whenever the header matches, which an
+#: attacker can arrange. Excluding them let a payload edit report "nothing added,
+#: nothing subtracted". Digesting them costs one extra drift report when bytecode
+#: is first written, which is the right trade.
+EXCLUDE_DIRS = frozenset({"state", ".cache", ".git", ".pytest_cache"})
 
 #: File suffixes skipped for the same reason: run artifacts, not behaviour.
-EXCLUDE_SUFFIXES = frozenset({".log", ".tmp", ".pyc", ".pyo"})
+EXCLUDE_SUFFIXES = frozenset({".log", ".tmp"})
+
+#: Files with these suffixes are digested wherever they sit, including inside an
+#: excluded directory. The exclusions exist for data a component writes, and a
+#: script dropped into ``state/`` is not data.
+EXECUTABLE_SUFFIXES = frozenset({
+    ".py", ".pyc", ".pyo", ".pyd", ".pyz",
+    ".js", ".mjs", ".cjs", ".ts", ".mts", ".cts", ".wasm", ".node",
+    ".sh", ".bash", ".zsh", ".fish", ".ps1", ".psm1", ".bat", ".cmd",
+    ".exe", ".dll", ".so", ".dylib", ".jar", ".rb", ".pl", ".php", ".lua",
+})
 
 
 def sha_bytes(payload: bytes) -> str:
@@ -124,9 +140,9 @@ def tree_digest(
             relative = path.relative_to(root)
         except (OSError, ValueError):
             continue
-        if exclude_dirs & set(relative.parts[:-1]):
-            continue
-        if path.suffix in exclude_suffixes:
+        if path.suffix.lower() not in EXECUTABLE_SUFFIXES and (
+            exclude_dirs & set(relative.parts[:-1]) or path.suffix in exclude_suffixes
+        ):
             continue
         digest.update(relative.as_posix().encode("utf-8"))
         try:

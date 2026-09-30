@@ -113,6 +113,31 @@ _CLAIM_HEX_WIDTH = {
 }
 
 
+def _token_nonce(claims: Mapping[str, Any], expected: str) -> str:
+    """Return the nonce the MAA token carries, after checking it is ``expected``.
+
+    The nonce can arrive top level or inside ``x-ms-runtime``. Every place it is
+    present must match, and at least one must be present. Copying the verifier's
+    own challenge into ``nonce_echo`` instead would make a stale token look fresh.
+    """
+    runtime = claims.get("x-ms-runtime")
+    found = [claims.get("nonce")]
+    if isinstance(runtime, Mapping):
+        found.append(runtime.get("nonce"))
+    found = [value for value in found if value is not None]
+    if not found:
+        raise SkrPolicyError(
+            "the MAA token carries no nonce, so nothing binds it to this challenge. "
+            "Pass the challenge nonce to the attestation request."
+        )
+    if any(value != expected for value in found):
+        raise SkrPolicyError(
+            "the MAA token's nonce does not match this challenge, so the token was "
+            "not produced for this request"
+        )
+    return expected
+
+
 class SkrPolicyError(ValueError):
     """Raised when a manifest cannot be translated into a usable SKR policy."""
 
@@ -299,7 +324,7 @@ def evidence_from_maa_claims(
             platform=platform,
             assurance_tier=AssuranceTier.hardware_attested.value,
             serving_image_measurement=serving_image_measurement,
-            nonce_echo=challenge.nonce,
+            nonce_echo=_token_nonce(claims, challenge.nonce),
             attestation_key_id=str(claims.get("x-ms-sevsnpvm-idkeydigest", "maa-token")),
             transport_public_key=transport_public_key,
         )

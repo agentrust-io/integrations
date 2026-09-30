@@ -29,6 +29,7 @@ from .compare import (
 from .hashing import (
     EXCLUDE_DIRS,
     EXCLUDE_SUFFIXES,
+    EXECUTABLE_SUFFIXES,
     UNVERIFIABLE_PREFIX,
     now_iso,
     safe_sha_file,
@@ -58,11 +59,12 @@ from .seal import (
 )
 from .state import StatePaths, atomic_write, load_state, save_baseline, save_state
 
-__version__ = "0.1.2"
+__version__ = "0.1.3"
 
 __all__ = [
     "EXCLUDE_DIRS",
     "EXCLUDE_SUFFIXES",
+    "EXECUTABLE_SUFFIXES",
     "INTEGRITY_BROKEN",
     "INTEGRITY_OK",
     "INTEGRITY_UNSEALED",

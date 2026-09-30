@@ -8,6 +8,8 @@ from sentinel.models import (
 )
 from sentinel.risk_engine import RiskEngine
 from sentinel.replay_engine import ReplayEngine
+from sentinel.trace_claim_generator import load_signing_key
+from cryptography.exceptions import InvalidSignature
 import traceback
 import uuid
 import json
@@ -44,10 +46,28 @@ def log_enforcement(action: str, claim_id: str, result: dict, status: str = "SUC
     print(f"Result: {result.get('message', result)}")
     print(f"Status: {status}\n")
 
+def _canonical(payload: dict) -> bytes:
+    return json.dumps(payload, sort_keys=True).encode('utf-8')
+
 def sign_payload(payload: dict) -> str:
-    data = json.dumps(payload, sort_keys=True).encode('utf-8')
-    hash_digest = hashlib.sha256(data).digest()
-    return base64.b64encode(hash_digest + b"signed").decode('utf-8')
+    """Ed25519-sign a report with the same key that signs Sentinel's TRACE claims.
+
+    The previous "signature" was sha256(payload) + b"signed", which anyone could
+    recompute, so /verify reported a forged report as VERIFIED. Without a key this
+    raises, matching the fail-closed rule for TRACE claims.
+    """
+    key = load_signing_key()
+    return base64.b64encode(key.sign(_canonical(payload))).decode('utf-8')
+
+def verify_payload_signature(payload: dict, signature: object) -> bool:
+    if not isinstance(signature, str):
+        return False
+    try:
+        sig = base64.b64decode(signature, validate=True)
+        load_signing_key().public_key().verify(sig, _canonical(payload))
+        return True
+    except (ValueError, InvalidSignature):
+        return False
 
 def hash_payload(payload: dict) -> str:
     data = json.dumps(payload, sort_keys=True).encode('utf-8')
@@ -329,11 +349,10 @@ async def verify_incident(claim_id: str, request: Request):
             "risk_score": report_data.get("risk_score")
         })
         recomputed_incident_hash = hash_payload(report_copy)
-        recomputed_signature = sign_payload(report_copy)
 
         valid_claim_hash = recomputed_claim_hash == report_data.get("claim_hash")
         valid_incident_hash = recomputed_incident_hash == report_data.get("incident_hash")
-        valid_signature = recomputed_signature == report_data.get("signature")
+        valid_signature = verify_payload_signature(report_copy, report_data.get("signature"))
 
         status = "VERIFIED" if (valid_claim_hash and valid_incident_hash and valid_signature) else "TAMPERED"
         return JSONResponse(content={

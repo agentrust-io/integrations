@@ -98,7 +98,9 @@ available in this file.
 
 It does refuse claim sets that cannot support the tier: an unknown attestation
 type, a compliance status other than `azure-compliant-cvm`, or a debuggable
-guest.
+guest. It also refuses a token whose nonce, top level or in `x-ms-runtime`, is
+absent or differs from the challenge, so pass the challenge nonce to the
+attestation request. `nonce_echo` is taken from the token, not the challenge.
 
 ## Run it
 

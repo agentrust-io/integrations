@@ -456,13 +456,22 @@ class TestSkillDigestCoversTheWholeDirectory:
         (skill / "state" / "progress.json").write_text('{"runs": 2}', encoding="utf-8")
         assert capture._skill_fingerprints([workspace]) == before
 
-    @pytest.mark.parametrize("junk", ["run.log", "cached.pyc", "scratch.tmp"])
+    @pytest.mark.parametrize("junk", ["run.log", "scratch.tmp"])
     def test_run_artifacts_do_not_alarm(self, tmp_path, monkeypatch, junk):
         _home, codex_home, _state, workspace = _isolated_layout(tmp_path, monkeypatch)
         skill = _write_skill(codex_home)
         before = capture._skill_fingerprints([workspace])
         (skill / junk).write_text("noise", encoding="utf-8")
         assert capture._skill_fingerprints([workspace]) == before
+
+    @pytest.mark.parametrize("payload", ["cached.pyc", "node_modules/x/index.js", "state/run.py"])
+    def test_loadable_code_alarms_even_where_data_is_excluded(self, tmp_path, monkeypatch, payload):
+        _home, codex_home, _state, workspace = _isolated_layout(tmp_path, monkeypatch)
+        skill = _write_skill(codex_home)
+        before = capture._skill_fingerprints([workspace])
+        (skill / payload).parent.mkdir(parents=True, exist_ok=True)
+        (skill / payload).write_text("payload", encoding="utf-8")
+        assert capture._skill_fingerprints([workspace]) != before
 
     def test_workspace_skills_are_covered_too(self, tmp_path, monkeypatch):
         """A cloned repo can carry .agents/skills, so workspace roots matter."""

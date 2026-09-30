@@ -93,6 +93,7 @@ def cs_claims(**overrides: object) -> dict:
         "dbgstat": "disabled-since-boot",
         "iss": "https://confidentialcomputing.googleapis.com/",
         "submods": {"container": {"image_digest": IMAGE}},
+        "eat_nonce": "a" * 64,
     }
     claims.update(overrides)
     return claims
@@ -341,3 +342,23 @@ def test_cli_prints_claims_for_confirming_hwmodel(tmp_path: pathlib.Path, capsys
 
     assert main(["ignored", "--print-claims", str(token)]) == 0
     assert "GCP_AMD_SEV_SNP" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("eat_nonce", ["b" * 64, ["b" * 64, "c" * 64]])
+def test_a_token_minted_for_another_challenge_is_refused(eat_nonce: object) -> None:
+    """nonce_echo used to be copied from the verifier's own challenge, so a stale
+    token was reported as fresh."""
+    with pytest.raises(ConfidentialSpaceError, match="does not include"):
+        evidence_from_cs_claims(cs_claims(eat_nonce=eat_nonce), challenge())
+
+
+def test_a_token_with_no_eat_nonce_is_refused() -> None:
+    claims = cs_claims()
+    del claims["eat_nonce"]
+    with pytest.raises(ConfidentialSpaceError, match="no eat_nonce"):
+        evidence_from_cs_claims(claims, challenge())
+
+
+def test_a_nonce_list_containing_the_challenge_is_accepted() -> None:
+    evidence = evidence_from_cs_claims(cs_claims(eat_nonce=["b" * 64, "a" * 64]), challenge())
+    assert evidence.cpu.nonce_echo == "a" * 64
