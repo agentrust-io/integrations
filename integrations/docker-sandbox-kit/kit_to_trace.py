@@ -50,7 +50,7 @@ import sys
 from dataclasses import dataclass
 from typing import Any
 
-from agentrust_trace_adapters import MissingEvidence, SourceSystem, build_record, digest_bytes
+from agentrust_trace_adapters import MissingEvidence, PolicyEvidence, SourceSystem, build_record
 
 SPEC_URL = "https://github.com/docker/sandbox-kit-spec/blob/main/docs/spec/SPEC-v3.md"
 ADAPTER_URI = "https://github.com/agentrust-io/integrations/tree/main/integrations/docker-sandbox-kit"
@@ -68,36 +68,6 @@ IMAGE_INDEX = "application/vnd.oci.image.index.v1+json"
 DOCKER_LIST = "application/vnd.docker.distribution.manifest.list.v2+json"
 
 _REFERENCE_RE = re.compile(r"^[a-z0-9]+([._-][a-z0-9]+)*(:[0-9]+)?(/[a-z0-9]+([._-][a-z0-9]+)*)+$")
-
-
-@dataclass(frozen=True)
-class DeclaredPolicy:
-    """``policy`` block for a descriptor nothing evaluated.
-
-    ``agentrust_trace_adapters.PolicyEvidence`` 0.1.1, the released version,
-    predates ``declared`` and rejects it; ``agentrust-trace`` 0.9.0 and later
-    accept it. ``build_record`` reads only ``bundle_hash`` and ``to_policy()``,
-    so this carries the same two members with the mode fixed. Replace it with
-    ``PolicyEvidence`` once a release includes the ``declared`` mode.
-    """
-
-    bundle: bytes
-    version: str
-    policy_uri: str | None = None
-
-    @property
-    def bundle_hash(self) -> str:
-        return digest_bytes(self.bundle)
-
-    def to_policy(self) -> dict[str, object]:
-        block: dict[str, object] = {
-            "bundle_hash": self.bundle_hash,
-            "enforcement_mode": "declared",
-            "version": self.version,
-        }
-        if self.policy_uri is not None:
-            block["policy_uri"] = self.policy_uri
-        return block
 
 
 @dataclass(frozen=True)
@@ -250,8 +220,9 @@ def build_from_kit(
         model_provider=model_provider,
         model_id=model_id,
         model_version=model_version,
-        policy=DeclaredPolicy(
+        policy=PolicyEvidence(
             bundle=evidence.descriptor,
+            enforcement_mode="declared",
             version="docker-sandbox-kit-v3",
             policy_uri=policy_uri,
         ),

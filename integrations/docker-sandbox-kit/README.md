@@ -93,7 +93,3 @@ The suite builds, schema-checks, signs and verifies a record from both Kits
 with the released packages pinned in `requirements.txt`, and checks every
 refusal above. A signed record from either Kit passes
 `trace-tests verify --level 0`.
-
-`agentrust-trace-adapters` 0.1.1 predates the `declared` mode, so the adapter
-passes `build_record` a small policy object of its own. It switches to
-`PolicyEvidence` once a release includes that mode.
