@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "agentrust-trace-adapters"
-version = "0.1.1"
+version = "0.2.0"
 description = "Build TRACE Trust Records from evidence another system produced, without fabricating what is not there"
 readme = "README.md"
 license = "Apache-2.0"
@@ -26,7 +26,7 @@ classifiers = [
 ]
 requires-python = ">=3.11"
 # TRACE 0.7.0 introduced the origin block and its software-only platform rule.
-# The declared evidence-constructor default additionally requires TRACE 0.9.0;
+# The "declared" enforcement mode additionally requires TRACE 0.9.0;
 # earlier models reject that policy mode.
 dependencies = ["agentrust-trace>=0.9.0", "cryptography>=43.0.0"]
 

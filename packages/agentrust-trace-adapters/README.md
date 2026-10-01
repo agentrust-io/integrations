@@ -73,7 +73,7 @@ record = build_record(
 assert record["policy"]["enforcement_mode"] == "declared"
 ```
 
-`enforcement_mode` is required and has no default. Omitting it used to emit
+Since 0.2.0, `enforcement_mode` is required and has no default. In 0.1.1 omitting it emitted
 `"enforce"`, which claims enforcement the constructor cannot know about, and TRACE
 spec section 4.3 says `"declared"` MUST NOT be a default either. Pass `"declared"`
 when the policy is bound but nothing here evaluated it, and `"enforce"`,
