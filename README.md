@@ -58,6 +58,7 @@ TRACE only works as a standard if it is genuinely neutral. Integrations are list
 | [OpenAI Agents SDK](integrations/openai-agents/) | agentrust-io | trace | verified |
 | [OpenShell TRACE Adapter](integrations/openshell/) | agentrust-io | trace | community |
 | [OpenTelemetry GenAI](integrations/otel-genai/) | agentrust-io | trace | community |
+| [Observed-effect references](integrations/probityai-observed-effect/) | probityai | trace | community |
 | [ramen-ai cMCP Adapter](integrations/ramen-ai-cmcp/) | ramen-ai | cmcp, trace | verified |
 | [SAGE AgenTrust Bridge](integrations/sage-agenttrust/) | SAGE | cmcp, trace | community |
 | [Agent Sentinel](integrations/sentinel/) | a1k7 | trace | community |

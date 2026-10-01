@@ -1,0 +1,56 @@
+# Observed-effect references workflow.
+#
+# floating  installs the latest released agentrust-trace, unpinned on purpose,
+#           as drift detection.
+# fixed     installs the agentrust-trace version named in integration.yaml
+#           tested_against, so that claim cannot move underneath itself.
+# Both replay the published vectors-observed-effect corpus pinned to one release.
+# This integration is an external-evidence-source and asserts no TRACE level.
+name: probityai-observed-effect conformance
+on:
+  push:
+    paths:
+      - "integrations/probityai-observed-effect/**"
+      - ".github/workflows/probityai-observed-effect-conformance.yml"
+  pull_request:
+    paths:
+      - "integrations/probityai-observed-effect/**"
+      - ".github/workflows/probityai-observed-effect-conformance.yml"
+  schedule:
+    - cron: "0 6 * * 1"   # weekly: catch drift against the latest released packages
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: ${{ matrix.mode }} (py${{ matrix.python }})
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12", "3.13", "3.14"]
+        mode: [floating, fixed]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install agentrust-trace (latest release)
+        if: matrix.mode == 'floating'
+        run: pip install agentrust-trace
+      - name: Install agentrust-trace (tested_against)
+        if: matrix.mode == 'fixed'
+        run: |
+          v=$(sed -n 's/^  agentrust-trace: "\(.*\)"$/\1/p' integrations/probityai-observed-effect/integration.yaml)
+          test -n "$v"
+          pip install "agentrust-trace==$v"
+      - name: Install this integration
+        run: pip install -e "integrations/probityai-observed-effect[test]"
+      - name: Integration tests
+        run: pytest integrations/probityai-observed-effect/tests -q
+      - name: Replay the published observed-effect corpus
+        run: |
+          pip install "agent-evidence-vectors==0.15.0"
+          agent-evidence-vectors --corpus vectors-observed-effect

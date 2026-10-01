@@ -1,0 +1,25 @@
+name: Observed-effect references
+vendor: probityai
+integrates_with:
+  - trace
+description: >-
+  TRACE Trust Records citing an observer-signed in-toto statement of what changed
+  while the agent ran, checked for digest match and observer signature.
+maintainer:
+  github: astrogilda
+repository: https://github.com/probityai/agent-evidence-vectors
+license: Apache-2.0
+tier: community
+marketplace:
+  category: Evidence & receipts
+  mark: OE
+  keywords: [observed-effect, references, in-toto, dsse, conformance]
+# Role. The referenced objects are another party's signed evidence: in-toto
+# statements an observer outside the agent signed, copied byte for byte from the
+# published vectors-observed-effect corpus. The five Trust Records that cite them
+# are fixtures signed by a demo key derived from a published seed, so this
+# integration issues no Trust Record of its own and declares no conformance level.
+trace_roles:
+  - external-evidence-source
+tested_against:
+  agentrust-trace: "0.11.0"

@@ -1,6 +1,6 @@
 {
   "catalog_version": 1,
-  "count": 41,
+  "count": 42,
   "integrations": [
     {
       "name": "Claude Code",
@@ -589,6 +589,30 @@
         "gpu",
         "attestation",
         "confidential-computing"
+      ]
+    },
+    {
+      "name": "Observed-effect references",
+      "package_name": "Observed-effect references",
+      "vendor": "probityai",
+      "description": "TRACE Trust Records citing an observer-signed in-toto statement of what changed while the agent ran, checked for digest match and observer signature.",
+      "path": "integrations/probityai-observed-effect",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/probityai-observed-effect",
+      "homepage": null,
+      "repository": "https://github.com/probityai/agent-evidence-vectors",
+      "tier": "community",
+      "stack": [
+        "TRACE"
+      ],
+      "category": "Evidence & receipts",
+      "mark": "OE",
+      "featured": null,
+      "keywords": [
+        "observed-effect",
+        "references",
+        "in-toto",
+        "dsse",
+        "conformance"
       ]
     },
     {

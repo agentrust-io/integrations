@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "probityai-observed-effect-integration"
+version = "0.1.0"
+description = "TRACE Trust Records citing observer-signed in-toto statements through an observed-effect reference"
+requires-python = ">=3.11"
+license = "Apache-2.0"
+dependencies = [
+  # 0.11.0 verifies a record carrying a references entry with an open rel value.
+  "agentrust-trace>=0.11.0",
+  "rfc8785",
+  "cryptography",
+]
+
+[project.optional-dependencies]
+test = ["pytest"]
+
+[tool.setuptools]
+py-modules = []
