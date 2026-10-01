@@ -1,6 +1,6 @@
 {
   "catalog_version": 1,
-  "count": 41,
+  "count": 42,
   "integrations": [
     {
       "name": "Claude Code",
@@ -452,6 +452,29 @@
         "runtime",
         "governance",
         "policy"
+      ]
+    },
+    {
+      "name": "Docker Sandbox Kit",
+      "package_name": "Docker Sandbox Kit",
+      "vendor": "agentrust-io",
+      "description": "Binds a Docker Sandbox Kit v3 descriptor into a TRACE Trust Record as a declared policy, refusing any manifest that is not a published v3 Kit.",
+      "path": "integrations/docker-sandbox-kit",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/docker-sandbox-kit",
+      "homepage": "https://github.com/docker/sandbox-kit-spec",
+      "repository": "https://github.com/agentrust-io/integrations",
+      "tier": "community",
+      "stack": [
+        "TRACE"
+      ],
+      "category": "Security & policy",
+      "mark": "SK",
+      "featured": null,
+      "keywords": [
+        "Docker",
+        "OCI",
+        "sandbox",
+        "permissions"
       ]
     },
     {

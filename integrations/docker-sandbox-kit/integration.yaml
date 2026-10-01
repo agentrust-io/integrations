@@ -1,0 +1,21 @@
+name: Docker Sandbox Kit
+vendor: agentrust-io
+integrates_with:
+  - trace
+description: Binds a Docker Sandbox Kit v3 descriptor into a TRACE Trust Record as a declared policy, refusing any manifest that is not a published v3 Kit.
+maintainer:
+  github: imran-siddique
+repository: https://github.com/agentrust-io/integrations
+homepage: https://github.com/docker/sandbox-kit-spec
+license: Apache-2.0
+tier: community
+marketplace:
+  category: Security & policy
+  mark: SK
+  keywords: [Docker, OCI, sandbox, permissions]
+trace_roles:
+  - record-producer
+trace_conformance_level: 0
+tested_against:
+  agentrust-trace: "0.11.0"
+  agentrust-trace-tests: "0.6.1"

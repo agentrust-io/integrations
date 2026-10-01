@@ -1,3 +1,6 @@
 # Preserve the exact bytes used by aeoess-aps fixture checksums.
 integrations/aeoess-aps/fixtures/delegation-chain/*.json text eol=lf
 integrations/aeoess-aps/fixtures/action-receipt/*.json text eol=lf
+
+# Registry bytes; the tests check them against the digests Docker Hub serves.
+integrations/docker-sandbox-kit/fixtures/*.json -text

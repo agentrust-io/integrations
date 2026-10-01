@@ -48,6 +48,7 @@ TRACE only works as a standard if it is genuinely neutral. Integrations are list
 | [comply54](integrations/comply54/) | comply54 | trace | community |
 | [ComputeID AgentPassport TRACE Adapter](integrations/computeid-agentpassport-trace/) | ComputeID | trace | community |
 | [DecisionAssure](integrations/decisionassure/) | DecisionAssure (a1k7) | trace | community |
+| [Docker Sandbox Kit](integrations/docker-sandbox-kit/) | agentrust-io | trace | community |
 | [EPI Recorder](integrations/epilabs-epi-recorder/) | EPI Labs | trace, wcm | verified |
 | [Google ADK](integrations/google-adk/) | agentrust-io | trace | verified |
 | [LangChain](integrations/langchain/) | agentrust-io | trace | verified |
