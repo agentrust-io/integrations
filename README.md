@@ -15,7 +15,7 @@ project governance.
 
 | Location | What belongs there | Who contributes |
 |---|---|---|
-| [cmcp](https://github.com/agentrust-io/cmcp), [agent-manifest](https://github.com/agentrust-io/agent-manifest), [trace-spec](https://github.com/agentrust-io/trace-spec), [trace-tests](https://github.com/agentrust-io/trace-tests) | The standard and reference implementation. Bug fixes and spec feedback welcome; no vendor product code. | Maintainers; community fixes |
+| [cmcp](https://github.com/agentrust-io/cmcp), [agent-manifest](https://github.com/agentrust-io/agent-manifest), [trace-spec](https://github.com/agentrust-io/trace-spec), [TRACE conformance](https://github.com/agentrust-io/trace-spec/tree/main/conformance) | The standard and reference implementation. Bug fixes and spec feedback welcome; no vendor product code. | Maintainers; community fixes |
 | [examples/](examples/) | First-party, end-to-end runnable examples, plus flagship partner examples by invitation. Every line is reviewed and every claim verified before merge. | Maintainers; invited partners |
 | [integrations/](integrations/) | Your product's integration with cMCP, TRACE, or Agent Manifest: adapters, exporters, dashboards, policy packs, verifiers. Vendor-maintained. | Anyone, self-serve |
 | [awesome-ai-governance](https://github.com/agentrust-io/awesome-ai-governance) | Neutral listings of notable agent-governance tools, including ones that do not integrate with this stack. | Anyone meeting the listing criteria |
