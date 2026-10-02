@@ -190,14 +190,14 @@ Business-boundary refusal, retry, and concurrency cases are in
 
 ## Released sources and nonclaims
 
-- [UCP v2026-08-25 Checkout schema](https://github.com/Universal-Commerce-Protocol/ucp/blob/v2026-08-25/source/schemas/shopping/checkout.json),
-  [REST binding](https://github.com/Universal-Commerce-Protocol/ucp/blob/v2026-08-25/docs/specification/shopping/checkout/rest.md),
-  and [HTTP signatures](https://github.com/Universal-Commerce-Protocol/ucp/blob/v2026-08-25/docs/specification/signatures.md).
+- [UCP v2026-08-25 Checkout schema](https://raw.githubusercontent.com/Universal-Commerce-Protocol/ucp/v2026-08-25/source/schemas/shopping/checkout.json),
+  [REST binding](https://raw.githubusercontent.com/Universal-Commerce-Protocol/ucp/v2026-08-25/docs/specification/shopping/checkout/rest.md),
+  and [HTTP signatures](https://raw.githubusercontent.com/Universal-Commerce-Protocol/ucp/v2026-08-25/docs/specification/signatures.md).
 - [Official UCP Python SDK release](https://github.com/Universal-Commerce-Protocol/python-sdk/releases/tag/v2026-08-25),
   installed as `ucp-sdk==0.5.0`; JSON Schema validation complements its models.
 - [http-message-signatures v2.0.1](https://github.com/pyauth/http-message-signatures/tree/v2.0.1),
   [joserfc 1.7.5](https://pypi.org/project/joserfc/1.7.5/), and
-  [TRACE v0.10.0 signing/verification](https://github.com/agentrust-io/trace-spec/blob/v0.10.0/src/agentrust_trace/sign.py).
+  [TRACE v0.10.0 signing/verification](https://raw.githubusercontent.com/agentrust-io/trace-spec/v0.10.0/src/agentrust_trace/sign.py).
 
 This demonstrates application-level accountability under configured local keys
 and policy. It does **not** establish real merchant identity, buyer consent,

@@ -4,7 +4,7 @@ The other examples in this repo govern the **agent-to-tool** boundary: cMCP deci
 
 It uses the credit-risk workflow from [`financial-services/`](../financial-services/README.md) as the worked case, and maps the same pattern onto the other examples at the bottom.
 
-> **Scope of what runs here.** cA2A is in alpha. This example exercises the part that is built today: **attenuated delegation credentials and offline chain verification** (`ca2a_runtime.delegation`). The live peer path (attesting an inbound peer, sealing the payload to its measurement) and the per-hop TRACE provenance record are cA2A roadmap. See the [cA2A ROADMAP](https://github.com/agentrust-io/ca2a/blob/main/ROADMAP.md) and [LIMITATIONS](https://github.com/agentrust-io/ca2a/blob/main/LIMITATIONS.md).
+> **Scope of what runs here.** cA2A is in alpha. This example exercises the part that is built today: **attenuated delegation credentials and offline chain verification** (`ca2a_runtime.delegation`). The live peer path (attesting an inbound peer, sealing the payload to its measurement) and the per-hop TRACE provenance record are cA2A roadmap. See the [cA2A ROADMAP](https://raw.githubusercontent.com/agentrust-io/ca2a/main/ROADMAP.md) and [LIMITATIONS](https://raw.githubusercontent.com/agentrust-io/ca2a/main/LIMITATIONS.md).
 
 ---
 

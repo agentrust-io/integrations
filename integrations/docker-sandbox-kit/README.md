@@ -7,7 +7,7 @@ credentials, volumes, ports. This adapter takes a published Kit's platform
 manifest and builds a TRACE Level 0 Trust Record whose `policy.bundle_hash` is
 the digest of that descriptor, byte for byte as the frontend published it.
 
-Written against [SPEC-v3](https://github.com/docker/sandbox-kit-spec/blob/main/docs/spec/SPEC-v3.md)
+Written against [SPEC-v3](https://raw.githubusercontent.com/docker/sandbox-kit-spec/main/docs/spec/SPEC-v3.md)
 at commit `31791ea` (2026-10-01).
 
 ## Run it
