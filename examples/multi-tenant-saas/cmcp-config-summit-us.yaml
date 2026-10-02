@@ -1,0 +1,10 @@
+policy_bundle_path: ./tenants/summit-us/policy
+catalog_path: ./catalog.json
+listen_addr: 127.0.0.1:8443
+audit_db_path: ./audit-summit-us.db
+attestation:
+  provider: auto
+  # Summit (US) runs advisory: a matched forbid is logged and surfaced as
+  # would_have_denied + advice, but the call is not blocked.
+  enforcement_mode: advisory
+  validity_seconds: 86400

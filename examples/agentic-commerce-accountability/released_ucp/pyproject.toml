@@ -1,0 +1,56 @@
+[project]
+name = "released-ucp-accountability-example"
+version = "0.1.0"
+description = "Offline released-UCP purchase authorization and evidence example"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "agentrust-trace==0.10.0",
+  "cryptography==50.0.1",
+  "http-message-signatures==2.0.1",
+  "joserfc==1.7.5",
+  "jsonschema[format]==4.26.0",
+  "pydantic==2.13.5",
+    "requests==2.33.0",
+  "rfc8785==0.1.4",
+  "ucp-sdk==0.5.0",
+]
+
+[dependency-groups]
+dev = [
+  "bandit==1.9.4",
+  "coverage==7.16.0",
+  "detect-secrets==1.5.0",
+  "mypy==2.3.1",
+  "pip-audit==2.10.1",
+  "pytest==9.1.1",
+  "ruff==0.16.5",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-ra --strict-config --strict-markers"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.mypy]
+python_version = "3.12"
+check_untyped_defs = true
+ignore_missing_imports = true
+files = ["ucp_commerce"]
+
+[tool.coverage.run]
+branch = true
+source = ["ucp_commerce"]
+
+[tool.coverage.report]
+show_missing = true
+precision = 2

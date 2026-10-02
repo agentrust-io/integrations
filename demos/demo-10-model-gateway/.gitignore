@@ -1,0 +1,5 @@
+audit*.db
+audit*.db-shm
+audit*.db-wal
+*.log
+trace-claim.json

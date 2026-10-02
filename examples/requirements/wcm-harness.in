@@ -1,0 +1,6 @@
+# The runner for the weight-custody demos. The SDK itself is installed
+# separately and stays resolved from PyPI, because these demos exist to
+# exercise the published release. Compile with:
+#   uv pip compile requirements/wcm-harness.in --generate-hashes --universal \
+#     --python-version 3.11 -o requirements/wcm-harness.txt
+pytest

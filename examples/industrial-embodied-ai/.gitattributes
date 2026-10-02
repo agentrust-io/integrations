@@ -1,0 +1,6 @@
+# Hash-bound artifacts must check out byte-identical on every platform.
+# core.autocrlf=true otherwise rewrites LF to CRLF on Windows and breaks
+# the system_prompt_hash check in validate_artifacts.py.
+artifacts/** -text
+artifact-hashes.json -text
+trace-output/*.json -text

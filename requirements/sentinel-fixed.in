@@ -1,0 +1,7 @@
+# Compile with:
+#   uv pip compile requirements/sentinel-fixed.in --generate-hashes --universal \
+#     --python-version 3.11 -o requirements/sentinel-fixed.txt
+# Lock the integration's runtime and conformance dependencies together.
+-r ../integrations/sentinel/requirements-dev.txt
+# The older runtime lock's urllib3 2.7.0 is affected by CVE-2026-97687.
+urllib3>=2.8.0

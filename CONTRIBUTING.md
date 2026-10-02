@@ -1,8 +1,16 @@
-# Contributing an integration
+# Contributing
 
 One directory per integration, one PR per change. Self-serve: you do not need an invitation.
 
-## Layout
+## Examples and demos
+
+`examples/` contains first-party scenarios and invited partner examples. Maintainers review every line and verify each documented claim against a run before merge. See [the example contribution rules](examples/CONTRIBUTING.md). Vendor integrations belong under `integrations/` and retain the tier rules below.
+
+`demos/` contains short demonstrations and the browser console. Contributions must include reproducible steps and retain the software-only and hardware-evidence limitations. Maintainers review changes and CI runs the demo suite. See [the demo contribution rules](demos/CONTRIBUTING.md).
+
+An integration listing does not imply that its code has received the example or demo review.
+
+## Integration layout
 
 ```
 integrations/<vendor>-<product>/

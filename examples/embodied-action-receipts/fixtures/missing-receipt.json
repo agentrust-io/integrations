@@ -1,0 +1,23 @@
+{
+  "action": {
+    "action_ref": "sha256:6572d6707269d815b6f59aadeca709e29a5a7d73330265f2b5feb92d0290b21f",
+    "action_scope": "robot-cell-7/material-bin-a",
+    "action_timestamp": "2026-06-25T16:30:00Z",
+    "action_type": "move_material",
+    "agent_id": "spiffe://factory.example/agent/material-movement/dev"
+  },
+  "case": "missing-receipt",
+  "expected": {
+    "receipt_state": "missing",
+    "result": "invalid"
+  },
+  "receipts": [],
+  "trace": {
+    "cmcp_call_id": "call-material-move-001",
+    "policy_decision": "allow",
+    "trace_id": "trace-session-embodied-001",
+    "verification": {
+      "action_receipts": "required"
+    }
+  }
+}

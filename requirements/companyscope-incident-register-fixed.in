@@ -1,0 +1,7 @@
+# Compile with:
+#   uv pip compile requirements/companyscope-incident-register-fixed.in --generate-hashes --universal \
+#     --python-version 3.11 -o requirements/companyscope-incident-register-fixed.txt
+# Match the published version recorded in integration.yaml; keep the existing
+# floating job as drift detection against current releases.
+agent-manifest==0.12.0
+pytest

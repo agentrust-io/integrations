@@ -1,0 +1,7 @@
+{
+  "key_id": "c1b47b97b024ed8ef89572fb0ed92a15fdd48496d6138ec260e018bd345d3d2d",
+  "public_key_base64url": "eOBimyX_-wLLvWhQ3Jl2KnRULU8ZU-vK0z7eAn2gNoo",
+  "algorithm": "Ed25519",
+  "issuer": "spiffe://factory.example/controller/robot-cell-7",
+  "usage": "development-only external_execution_evidence verification key"
+}

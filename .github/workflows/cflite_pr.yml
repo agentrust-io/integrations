@@ -3,6 +3,8 @@ name: ClusterFuzzLite PR
 on:
   pull_request:
     paths:
+      - "examples/**"
+      - "demos/**"
       - 'packages/agentrust-capture-core/src/**'
       - 'packages/agentrust-trace-adapters/src/**'
       - '.clusterfuzzlite/**'

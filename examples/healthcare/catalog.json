@@ -1,0 +1,165 @@
+[
+  {
+    "tool_name": "ehr.patient_record_lookup",
+    "server": {
+      "display_name": "Hospital EHR MCP Server",
+      "url": "http://localhost:8080/mcp",
+      "tls_fingerprint": "SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+      "transport": "http-sse"
+    },
+    "approved_definition": {
+      "description": "Look up patient clinical record from the EHR system",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "patient_id": {
+            "type": "string"
+          },
+          "record_type": {
+            "type": "string",
+            "enum": [
+              "demographics",
+              "diagnoses",
+              "medications",
+              "labs",
+              "vitals",
+              "full"
+            ]
+          }
+        },
+        "required": [
+          "patient_id"
+        ]
+      }
+    },
+    "definition_hash": "sha256:8849c45c3aab0a43885a66b44a836578a2e6c5f006154d5cda2bb72ba5c85be3",
+    "compliance_domain": "hipaa_phi",
+    "requires_baa": true,
+    "sensitivity_level": "confidential",
+    "added_at": "2026-06-01T00:00:00Z",
+    "approved_by": "compliance@hospital.example"
+  },
+  {
+    "tool_name": "ehr.clinical_decision_support",
+    "server": {
+      "display_name": "Hospital EHR MCP Server",
+      "url": "http://localhost:8080/mcp",
+      "tls_fingerprint": "SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+      "transport": "http-sse"
+    },
+    "approved_definition": {
+      "description": "Run AI-assisted differential diagnosis and clinical decision support",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "patient_id": {
+            "type": "string"
+          },
+          "presenting_symptoms": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "lab_values": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "patient_id",
+          "presenting_symptoms"
+        ]
+      }
+    },
+    "definition_hash": "sha256:7a4320c8f4f12c1350ab74bbf266510e6a732f6bbb921ac78c717ba5621f5d20",
+    "compliance_domain": "hipaa_phi",
+    "requires_baa": true,
+    "sensitivity_level": "confidential",
+    "added_at": "2026-06-01T00:00:00Z",
+    "approved_by": "compliance@hospital.example"
+  },
+  {
+    "tool_name": "ehr.drug_interaction_check",
+    "server": {
+      "display_name": "Hospital EHR MCP Server",
+      "url": "http://localhost:8080/mcp",
+      "tls_fingerprint": "SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+      "transport": "http-sse"
+    },
+    "approved_definition": {
+      "description": "Check proposed medications against the patient's current medications and documented allergies",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "patient_id": {
+            "type": "string"
+          },
+          "proposed_medications": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "patient_id",
+          "proposed_medications"
+        ]
+      }
+    },
+    "definition_hash": "sha256:7d68570e326a9dde2ca0d2f1fe65b5be6e7219fa5d29a3ddd0d75d8b382e5acc",
+    "compliance_domain": "hipaa_phi",
+    "requires_baa": true,
+    "sensitivity_level": "confidential",
+    "added_at": "2026-06-01T00:00:00Z",
+    "approved_by": "compliance@hospital.example"
+  },
+  {
+    "tool_name": "ehr.treatment_plan_writer",
+    "server": {
+      "display_name": "Hospital EHR MCP Server",
+      "url": "http://localhost:8080/mcp",
+      "tls_fingerprint": "SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+      "transport": "http-sse"
+    },
+    "approved_definition": {
+      "description": "Write a treatment plan to the patient record",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "patient_id": {
+            "type": "string"
+          },
+          "diagnosis": {
+            "type": "string"
+          },
+          "treatment": {
+            "type": "string"
+          },
+          "patient_risk_category": {
+            "type": "string",
+            "enum": [
+              "standard",
+              "high"
+            ]
+          },
+          "has_severe_contraindication": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "patient_id",
+          "diagnosis",
+          "treatment",
+          "patient_risk_category"
+        ]
+      }
+    },
+    "definition_hash": "sha256:a2e568165b6a2d3e9dd3f20f4b1df4fe76bc865113dd3007d7ed6a0d265d1e9d",
+    "compliance_domain": "hipaa_phi",
+    "requires_baa": true,
+    "sensitivity_level": "confidential",
+    "added_at": "2026-06-01T00:00:00Z",
+    "approved_by": "compliance@hospital.example"
+  }
+]

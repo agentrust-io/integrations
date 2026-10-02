@@ -21,3 +21,7 @@ PYI_ARGS=(--collect-submodules=email)
 for target in "$SRC"/integrations/.clusterfuzzlite/fuzz_*.py; do
   compile_python_fuzzer "$target" "${PYI_ARGS[@]}"
 done
+
+# Build the imported suites from the same checkout. Each keeps its reviewed lock.
+bash "$SRC/integrations/examples/.clusterfuzzlite/build.sh"
+bash "$SRC/integrations/demos/.clusterfuzzlite/build.sh"

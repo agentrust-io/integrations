@@ -1,11 +1,11 @@
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Discord](https://dcbadge.limes.pink/api/server/grgzFEHgkj?style=flat)](https://discord.gg/grgzFEHgkj)
 
-# agentrust-io Integrations
+# AgenTrust integrations, examples, and demos
 
 Community updates and contributor highlights: [AgenTrust on LinkedIn](https://www.linkedin.com/company/agentrust-io/).
 
-The ecosystem front door for cMCP, TRACE, and Agent Manifest. Vendors and community projects integrate here, on their own terms, under published rules - while the core repos stay first-party.
+One place to try and integrate cMCP, cA2A, TRACE, Agent Manifest, and WCM. Vendors and community projects integrate here, on their own terms, under published rules - while the core repos stay first-party.
 
 Project support is recognized in [SPONSORS.md](SPONSORS.md). Sponsorship is
 separate from marketplace listing, verification tier, maintainership, and
@@ -13,12 +13,21 @@ project governance.
 
 ## Where things live
 
-| Repo | What belongs there | Who contributes |
+| Location | What belongs there | Who contributes |
 |---|---|---|
-| [cmcp](https://github.com/agentrust-io/cmcp), [agent-manifest](https://github.com/agentrust-io/agent-manifest), [trace-spec](https://github.com/agentrust-io/trace-spec), [trace-tests](https://github.com/agentrust-io/trace-tests) | The standard and reference implementation. Bug fixes and spec feedback welcome; no vendor product code. | Maintainers; community fixes |
-| [examples](https://github.com/agentrust-io/examples) | First-party, end-to-end runnable examples, plus flagship partner examples by invitation. Every line is reviewed and every claim verified before merge. | Maintainers; invited partners |
-| **this repo** | Your product's integration with cMCP, TRACE, or Agent Manifest: adapters, exporters, dashboards, policy packs, verifiers. Vendor-maintained. | Anyone, self-serve |
+| [cmcp](https://github.com/agentrust-io/cmcp), [agent-manifest](https://github.com/agentrust-io/agent-manifest), [trace-spec](https://github.com/agentrust-io/trace-spec), [TRACE conformance](https://github.com/agentrust-io/trace-spec/tree/main/conformance) | The standard and reference implementation. Bug fixes and spec feedback welcome; no vendor product code. | Maintainers; community fixes |
+| [examples/](examples/) | First-party, end-to-end runnable examples, plus flagship partner examples by invitation. Every line is reviewed and every claim verified before merge. | Maintainers; invited partners |
+| [integrations/](integrations/) | Your product's integration with cMCP, TRACE, or Agent Manifest: adapters, exporters, dashboards, policy packs, verifiers. Vendor-maintained. | Anyone, self-serve |
 | [awesome-ai-governance](https://github.com/agentrust-io/awesome-ai-governance) | Neutral listings of notable agent-governance tools, including ones that do not integrate with this stack. | Anyone meeting the listing criteria |
+| [demos/](demos/) | Short runnable demonstrations and the browser console, using the examples in this repository. | Maintainers; reviewed contributions |
+
+## Try the stack
+
+- [Examples](examples/README.md): complete scenarios and offline evidence verification.
+- [Demos](demos/README.md): short demonstrations and the browser console.
+- [Integrations](#index): adapters and vendor-maintained connections.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the review rules for each directory. Existing adapter and package paths remain supported. Examples retain [Apache-2.0](examples/LICENSE); demos retain [MIT](demos/LICENSE).
 
 ## Tiers
 
@@ -42,12 +51,14 @@ TRACE only works as a standard if it is genuinely neutral. Integrations are list
 | [cA2A Cross-Operator Delegation](integrations/agentrust-ca2a-cross-operator/) | agentrust-io | ca2a | community |
 | [Confidential Workflow Acceptance Harness](integrations/agentrust-confidential-workflow-harness/) | agentrust-io | cmcp, ca2a | community |
 | [Agent Replay](integrations/altrudev-agent-replay/) | Altru.dev | trace | verified |
+| [Frequency Agent Execution Assurance](integrations/altrudev-frequency-agent-execution-assurance/) | Altru.dev | trace | community |
 | [Bernstein MCP verifier](integrations/bernstein-mcp/) | Bernstein | trace | verified |
 | [CHAP](integrations/chap/) | agentrust-io | trace | verified |
 | [AI Agent Incident Register](integrations/companyscope-incident-register/) | CompanyScope | agent-manifest | verified |
 | [comply54](integrations/comply54/) | comply54 | trace | community |
 | [ComputeID AgentPassport TRACE Adapter](integrations/computeid-agentpassport-trace/) | ComputeID | trace | community |
 | [DecisionAssure](integrations/decisionassure/) | DecisionAssure (a1k7) | trace | community |
+| [Docker Sandbox Kit](integrations/docker-sandbox-kit/) | agentrust-io | trace | community |
 | [EPI Recorder](integrations/epilabs-epi-recorder/) | EPI Labs | trace, wcm | verified |
 | [Google ADK](integrations/google-adk/) | agentrust-io | trace | verified |
 | [LangChain](integrations/langchain/) | agentrust-io | trace | verified |

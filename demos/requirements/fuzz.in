@@ -1,0 +1,7 @@
+# Runtime of the two demo servers the ClusterFuzzLite targets import
+# (server/server.py and demo-10-model-gateway/endpoint.py). Atheris itself comes
+# with the base-builder-python image. Installed with --require-hashes by
+# .clusterfuzzlite/build.sh. Compile with:
+#   uv pip compile requirements/fuzz.in --generate-hashes --universal \
+#     --python-version 3.11 -o requirements/fuzz.txt
+starlette>=1.6.0

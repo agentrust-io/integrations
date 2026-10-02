@@ -21,6 +21,7 @@ jobs:
           persist-credentials: false
       - uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
         with:
+          # These three ISO pages were verified manually; ISO rejects the CI crawler with 403.
           args: >-
             --no-progress
             --exclude-path .nox
@@ -29,6 +30,7 @@ jobs:
             --exclude 'https://dcbadge\.limes\.pink/.*'
             --exclude 'https://www\.npmjs\.com/.*'
             --exclude 'https://agent-passport\.org/.*'
+            --exclude '^https://www\.iso\.org/standard/(73933|73934|73481)\.html$'
             --max-retries 3
             '**/*.md'
             '**/integration.yaml'

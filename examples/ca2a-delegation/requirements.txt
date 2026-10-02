@@ -1,0 +1,3 @@
+# cA2A is in alpha, so this is a pre-release. Install with:
+#   pip install --pre ca2a-runtime
+ca2a-runtime>=0.2.0

@@ -1,1 +1,7 @@
 * @imran-siddique @carloshvp @agentrust-io/maintainers
+
+# Reviewed first-party scenarios and demonstrations.
+/examples/ @imran-siddique @carloshvp @agentrust-io/maintainers
+/demos/ @imran-siddique @pforest @podcastinator @Qiang-Xu @agentrust-io/maintainers
+/.github/workflows/examples-* @imran-siddique @carloshvp @agentrust-io/maintainers
+/.github/workflows/demos-* @imran-siddique @pforest @podcastinator @Qiang-Xu @agentrust-io/maintainers

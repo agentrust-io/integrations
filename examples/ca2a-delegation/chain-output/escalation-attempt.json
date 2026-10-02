@@ -1,0 +1,44 @@
+{
+  "chain": [
+    {
+      "credential_id": "credit-cred-0",
+      "issuer": "a8ea035f0d574cb3ace5c8e988fa10b972935887f266af109b725b909e91d243",
+      "subject": "e5c7125ecce92f4de683e32e4fa28b9d8ab87fe5a10ceb7de35077a8ab95c435",
+      "scope": [
+        "read:bureau",
+        "read:documents",
+        "run:risk-model",
+        "screen:sanctions",
+        "write:risk-report"
+      ],
+      "depth": 0,
+      "parent_id": null,
+      "signature": "6a7bdb7d20800d7e415173449b6a93fddedacbe1e103a6add8e92e52ebd017ae7590aa498721002aea168cd1354f692e38249edb1654ce216f8302295b3ea000"
+    },
+    {
+      "credential_id": "credit-cred-1",
+      "issuer": "e5c7125ecce92f4de683e32e4fa28b9d8ab87fe5a10ceb7de35077a8ab95c435",
+      "subject": "915f9a0266a99eb6c4d92dea2c8a476f53b8ff8ef77fc749dd935a353fc1721b",
+      "scope": [
+        "read:bureau",
+        "read:documents",
+        "screen:sanctions"
+      ],
+      "depth": 1,
+      "parent_id": "credit-cred-0",
+      "signature": "34ee23de76780d88168a7f80abde7b5437aaa029073cd9c37978d7ff205d45c8c7fb12c3409dfeaff601fbbeb1f2ef7da93c087bc6c76cfc36b4aef0a9a88f07"
+    },
+    {
+      "credential_id": "credit-cred-2",
+      "issuer": "915f9a0266a99eb6c4d92dea2c8a476f53b8ff8ef77fc749dd935a353fc1721b",
+      "subject": "a90c204fa79fc6a2f222ad5a9a5581d7cd1f7d47f0e65dba9a269627b275bc9f",
+      "scope": [
+        "read:bureau",
+        "write:risk-report"
+      ],
+      "depth": 2,
+      "parent_id": "credit-cred-1",
+      "signature": "7bd69aa6ef7b6ce975b26aa65b15fdcd6c6df7c96a4fefb6ac6e12eea4a9a8d6020586de2e9e706c058906c1be50b9aaae3fb36f616b2ba4509f20664cc76708"
+    }
+  ]
+}

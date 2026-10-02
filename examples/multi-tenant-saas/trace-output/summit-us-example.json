@@ -1,0 +1,103 @@
+{
+  "cmcp_version": "1.0",
+  "trace": {
+    "eat_profile": "tag:agentrust.io,2026:trace-v0.1",
+    "iat": 1784649599,
+    "subject": "spiffe://cmcp.gateway/tee/a410b1695a747cf5",
+    "runtime": {
+      "platform": "software-only",
+      "measurement": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "firmware_version": "software-only-dev-mode"
+    },
+    "policy": {
+      "bundle_hash": "sha256:2fe90e86b22e6319ba5f87cbf78971087058a80959a45b45808d9d50a1f32bc3",
+      "enforcement_mode": "advisory",
+      "version": "summit-us-v1.0"
+    },
+    "data_class": "confidential",
+    "tool_transcript": {
+      "hash": "sha256:1eeb0e3e203eef819816027d06139328ba465ab12cb57ce76895581d456557ed",
+      "call_count": 4,
+      "entries": [
+        {
+          "tool_name": "people.headcount_analytics",
+          "data_class": "public",
+          "decision": "allow"
+        },
+        {
+          "tool_name": "people.employee_record_lookup",
+          "data_class": "confidential",
+          "decision": "allow"
+        },
+        {
+          "tool_name": "people.data_export",
+          "data_class": "confidential",
+          "decision": "allow"
+        },
+        {
+          "tool_name": "people.employee_record_lookup",
+          "data_class": "confidential",
+          "decision": "advisory_deny"
+        }
+      ]
+    },
+    "cnf": {
+      "jwk": {
+        "kty": "OKP",
+        "crv": "Ed25519",
+        "x": "pBCxaVp0fPW-gWXAkB0HpkXYUsAkvTJxBqzpGdRgUuE",
+        "kid": "cmcp-a410b169"
+      }
+    }
+  },
+  "gateway": {
+    "session_id": "44c66904-7457-464c-8f03-e0befaf2ef6b",
+    "gateway_version": "0.3.0",
+    "sequence_number": 2,
+    "prev_claim_hash": "sha256:ea655ef99428f704dfec3115a00f67823139e485b702d306b59b6f393dc456d8",
+    "audit_chain": {
+      "root": "b9bba95881e96e7aa11c7cfec299a99956bc5efb4144368db1226e0f481e1f38",
+      "tip": "1eeb0e3e203eef819816027d06139328ba465ab12cb57ce76895581d456557ed",
+      "length": 6
+    },
+    "call_summary": {
+      "tool_calls_total": 4,
+      "tool_calls_allowed": 3,
+      "tool_calls_denied": 1,
+      "tool_calls_faulted": 0,
+      "tools_invoked": [
+        "people.data_export",
+        "people.employee_record_lookup",
+        "people.headcount_analytics"
+      ],
+      "session_max_sensitivity": "confidential",
+      "call_graph_summary": {
+        "compliance_domains_touched": [
+          "internal",
+          "pii"
+        ],
+        "cross_boundary_events": [],
+        "edges_represent": "Edges represent temporal adjacency (call order), not data provenance. A -> B means B was called immediately after A within this session."
+      }
+    },
+    "catalog": {
+      "hash": "sha256:4e4e33266c49c74838238b669dc9b30b583c70ac9f5e1e7ad884deda6133f522",
+      "drift_detected": false
+    },
+    "attestation_generated_at": "2026-07-21T15:59:29.006308+00:00",
+    "attestation_validity_seconds": 86400,
+    "attestation_stale": false,
+    "catalog_exceptions": [],
+    "call_log_summary": {
+      "total_calls": 4,
+      "tools_called": [
+        "people.headcount_analytics",
+        "people.employee_record_lookup",
+        "people.data_export"
+      ],
+      "suspicious_sequences_detected": 0
+    },
+    "kill_switch_triggered": false
+  },
+  "signature": "vahNTMpq2zPFpDbxLGDwSCimOxUuVjrrVq_cIT1Ov5jnQN5BtfD3IDMOGSoG0ZkI9rGY3k-T_fixOxRYoCbIBg"
+}

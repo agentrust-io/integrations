@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ucp.dev/schemas/shopping/checkout.json",
+  "name": "dev.ucp.shopping.checkout",
+  "title": "Checkout",
+  "description": "Base checkout schema. Extensions compose onto this using allOf.",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "signals": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://ucp.dev/schemas/common/types/signals.json",
+      "title": "Signals",
+      "description": "Environment data provided by the platform to support authorization and abuse prevention. Values MUST NOT be buyer-asserted claims — platforms provide signals based on direct observation or independently verifiable third-party attestations. All signal keys MUST use reverse-domain naming to ensure provenance and prevent collisions when multiple extensions contribute to the shared namespace.",
+      "type": "object",
+      "propertyNames": {
+        "description": "Reverse-domain identifier (e.g., dev.ucp.buyer_ip, com.example.device_id).",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://ucp.dev/schemas/common/types/reverse_domain_name.json",
+        "title": "Reverse Domain Name",
+        "type": "string",
+        "pattern": "^[a-z](?:[a-z0-9-]*[a-z0-9])?(?:\\.[a-z0-9](?:[a-z0-9_-]*[a-z0-9_])?)+$",
+        "examples": [
+          "dev.ucp.shopping.checkout",
+          "dev.ucp.common.identity_linking",
+          "com.example.loyalty_gold",
+          "com.example-shop.checkout",
+          "com.2example.cart",
+          "uk.co.example-shop.checkout",
+          "xn--p1ai.example.checkout"
+        ]
+      },
+      "properties": {
+        "dev.ucp.buyer_ip": {
+          "type": "string",
+          "description": "Client's IP address (IPv4 or IPv6)."
+        },
+        "dev.ucp.user_agent": {
+          "type": "string",
+          "description": "Client's HTTP User-Agent header or equivalent."
+        }
+      },
+      "additionalProperties": true
+    },
+    "attribution": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://ucp.dev/schemas/shopping/types/attribution.json",
+      "title": "Attribution",
+      "description": "Platform-emitted referral and conversion-event context — campaign identifiers, click IDs, source/medium markers, etc. The same parameters platforms communicate via URL query parameters in browser-based flows.",
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "description": "URL-style parameter value, encoded as a string. Numeric or boolean values MUST be string-encoded as they would be in a URL query string."
+      }
+    },
+    "payment": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://ucp.dev/schemas/common/types/payment.json",
+      "title": "Payment",
+      "description": "Payment configuration containing handlers.",
+      "type": "object",
+      "properties": {
+        "instruments": {
+          "type": "array",
+          "items": {
+            "title": "Selected Payment Instrument",
+            "description": "A payment instrument with selection state.",
+            "allOf": [
+              {
+                "$ref": "#"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "selected": {
+                    "type": "boolean",
+                    "description": "Whether this instrument is selected by the user."
+                  }
+                }
+              }
+            ]
+          },
+          "description": "The payment instruments available for this payment. Each instrument is associated with a specific handler via the handler_id field. Handlers can extend the base payment_instrument schema to add handler-specific fields."
+        }
+      }
+    }
+  },
+  "required": [
+    "payment"
+  ],
+  "$comment": "Generated from UCP v2026-08-25 by ucp-schema 1.4.1: bundled references and resolved visibility annotations; added this non-normative notice. See provenance.json and LICENSE-UCP."
+}

@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 2,
+  "mediaType": "application/vnd.oci.image.manifest.v1+json",
+  "config": {
+    "mediaType": "application/vnd.oci.image.config.v1+json",
+    "digest": "sha256:c014d74e53ed36c41f6f21082bfff58895e5e611c7d7076908fb1e17509b7e3d",
+    "size": 7581
+  },
+  "layers": [
+    {
+      "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+      "digest": "sha256:f7ee36c9aa34bbb665f975c76e5c0d1607f0674b94c84cfb0061f87006ea5d10",
+      "size": 3787595
+    },
+    {
+      "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+      "digest": "sha256:258a0c4b9d8fdcb40d277c42514cf069338a638ff7ac8086d23c57ba2f7edb82",
+      "size": 34778636
+    },
+    {
+      "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+      "digest": "sha256:bf362782d85ca1b887c36aa07917ea376bd505792a196ff0ef0342130ce42026",
+      "size": 295
+    },
+    {
+      "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+      "digest": "sha256:1041346e8a5699d54f8121bb1b14ae14b9b71416045445e4d556eb90265d4ba8",
+      "size": 185
+    },
+    {
+      "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+      "digest": "sha256:2ac258d6784fcd78e95afb355786898b767edb9834c7bb155fc21dbf7f1ca8df",
+      "size": 3661750
+    },
+    {
+      "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+      "digest": "sha256:c2d770e84b7946570236f95f57c50d55b21d59805c5b3641b652938458268e24",
+      "size": 142
+    },
+    {
+      "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+      "digest": "sha256:3015b1d1510bad3431adecf1c2ced6e1dfd73e36d13f8769edeeb459c79229b1",
+      "size": 92
+    },
+    {
+      "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+      "digest": "sha256:1a9fa16fe7948f9554eca1e64c8e50bb672790ec6b692ebfeed7c010b7bdfb28",
+      "size": 15654059
+    },
+    {
+      "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+      "digest": "sha256:f7152a78b78a6d46adcd39d41e49e97315fb1cec993e0781726a36079b5ca096",
+      "size": 404
+    },
+    {
+      "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+      "digest": "sha256:33216e54d51cb413a78b16d76f155cbc6a88b6720d8f321e34e70d499bbfe150",
+      "size": 8844
+    },
+    {
+      "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+      "digest": "sha256:3e06f39ce59ad9fd5d0b219a67504c3143bfbbd5e66226522ab792a7f696e6cb",
+      "size": 1259258
+    },
+    {
+      "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+      "digest": "sha256:ebcdde06a840f1b396b310e3980842e4dec971f8e5275d30659836b29a580a5b",
+      "size": 7372631
+    },
+    {
+      "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+      "digest": "sha256:4f4fb700ef54461cfa02571ae0db9a0dc1e0cdb5577484a6d75e68dc38e8acc1",
+      "size": 32
+    },
+    {
+      "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+      "digest": "sha256:1d689ecfff9bbdabda8d253282b40e906db4db8b98acf99d8e71237ca1df6273",
+      "size": 687
+    },
+    {
+      "mediaType": "application/vnd.oci.image.layer.v1.tar+gzip",
+      "digest": "sha256:6e28536b60eb2f35b7c2398ae63e4d96235c4812a26032e8de23560b87c18cff",
+      "size": 2011
+    }
+  ],
+  "annotations": {
+    "org.opencontainers.image.description": "Runs docker/doodle — the terminal Moby viewer built with OpenTUI and Bun — as the sandbox's interactive process.",
+    "org.opencontainers.image.source": "https://github.com/cdupuis/sbx-kits",
+    "org.opencontainers.image.title": "Docker Doodle",
+    "org.opencontainers.image.version": "2026",
+    "vnd.docker.sandbox.kit.capabilities": "com.docker.sandbox/agent-context@1,com.docker.sandbox/sbx@1",
+    "vnd.docker.sandbox.kit.descriptor": "{\"schemaVersion\":\"3\",\"displayName\":\"Docker Doodle\",\"description\":\"Runs docker/doodle — the terminal Moby viewer built with OpenTUI and Bun — as the sandbox's interactive process.\",\"sourceUrl\":\"https://github.com/cdupuis/sbx-kits\",\"version\":\"2026\",\"kind\":\"workload\",\"provides\":[\"doodle@2026\",\"apk/alpine-baselayout-data@3.7.0\",\"apk/alpine-baselayout@3.7.0\",\"apk/alpine-keys@2.5\",\"apk/alpine-release@3.22.5\",\"apk/apk-tools@2.14.10\",\"apk/bash@5.2.37\",\"apk/brotli-libs@1.1.0\",\"apk/busybox-binsh@1.37.0\",\"apk/busybox@1.37.0\",\"apk/c-ares@1.34.8\",\"apk/ca-certificates-bundle@20260611\",\"apk/ca-certificates@20260909\",\"apk/curl@8.14.1\",\"apk/git-init-template@2.49.1\",\"apk/git@2.49.1\",\"apk/libapk2@2.14.10\",\"apk/libcrypto3@3.5.7\",\"apk/libcurl@8.14.1\",\"apk/libexpat@2.8.4\",\"apk/libgcc@14.2.0\",\"apk/libidn2@2.3.7\",\"apk/libncursesw@6.5\",\"apk/libpsl@0.21.5\",\"apk/libssl3@3.5.7\",\"apk/libstdc++@14.2.0\",\"apk/libunistring@1.3\",\"apk/musl-utils@1.2.5\",\"apk/musl@1.2.5\",\"apk/ncurses-terminfo-base@6.5\",\"apk/nghttp2-libs@1.69.0\",\"apk/pcre2@10.46\",\"apk/readline@8.2.13\",\"apk/scanelf@1.3.8\",\"apk/zlib@1.3.2\",\"apk/zstd-libs@1.5.7\"],\"capabilities\":[{\"type\":\"com.docker.sandbox/sbx@1\"},{\"type\":\"com.docker.sandbox/agent-context@1\",\"config\":{\"contentFile\":\"/usr/share/sandbox/kit/doodle/doodle-context.md\",\"filename\":\"AGENTS.md\"}}],\"args\":{\"tag\":{\"default\":\"2026\",\"description\":\"docker/doodle image tag to run.\",\"pattern\":\"^[0-9]+(\\\\.[0-9A-Za-z-]+)*$\",\"buildArg\":\"DOODLE_TAG\"}}}",
+    "vnd.docker.sandbox.kit.schema-version": "3"
+  }
+}

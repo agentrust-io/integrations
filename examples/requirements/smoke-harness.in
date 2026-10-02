@@ -1,0 +1,6 @@
+# The HTTP client the cMCP smoke tests drive the gateway with. cmcp-runtime
+# itself is the subject of those tests and stays resolved from PyPI.
+# Compile with:
+#   uv pip compile requirements/smoke-harness.in --generate-hashes --universal \
+#     --python-version 3.11 -o requirements/smoke-harness.txt
+httpx

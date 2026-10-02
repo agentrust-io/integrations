@@ -1,0 +1,27 @@
+[
+  {
+    "tool_name": "test.echo",
+    "server": {
+      "display_name": "Local Test Server",
+      "url": "http://localhost:8080/mcp",
+      "tls_fingerprint": "SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+      "transport": "http-sse"
+    },
+    "approved_definition": {
+      "description": "Echo a message back for testing",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "message": {"type": "string"}
+        },
+        "required": ["message"]
+      }
+    },
+    "definition_hash": "sha256:d53cc01e40ecd15dabff6e2e0562f824dcb1eda885f722d96e1583f4c2ea8273",
+    "compliance_domain": "internal",
+    "requires_baa": false,
+    "sensitivity_level": "public",
+    "added_at": "2026-06-01T00:00:00Z",
+    "approved_by": "developer@example.com"
+  }
+]

@@ -1,0 +1,4 @@
+# The YAML validation step's only dependency. Compile with:
+#   uv pip compile requirements/yaml-lint.in --generate-hashes --universal \
+#     --python-version 3.11 -o requirements/yaml-lint.txt
+pyyaml

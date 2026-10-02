@@ -1,0 +1,81 @@
+name: Demos
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  CMCP_DEV_MODE: "1"
+  CMCP_BEARER_TOKEN: demo-token
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: demos
+
+jobs:
+  demos:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.11"
+
+      # requirements.txt holds the floors for cmcp-runtime (demos 1-5) and
+      # weight-custody-manifest (demos 6-9); installing cmcp-runtime alone once
+      # left the WCM demos unrunnable. requirements/ci.txt is that file plus
+      # pytest and httpx, resolved and hash-locked, so CI installs exactly what
+      # was reviewed.
+      - name: Install demo dependencies
+        run: pip install --require-hashes -r requirements/ci.txt
+
+      - name: Validate shared financial-services example
+        run: |
+          test -f ../examples/financial-services/catalog.json
+          test -f ../examples/financial-services/policy/allow.cedar
+          python -m py_compile web-console/run.py web-console/webserver.py web-console/policy_variants.py
+
+      # Static checks first: they need no ports and fail in under a second.
+      # test_catalog_definition_drift catches a catalog that no longer matches
+      # its upstream server, which the gateway treats as a rug pull and denies.
+      - name: Tests
+        run: python -m pytest tests/ -q
+
+      # Run in order: demo-01 produces workspace/trace-claim.json, which
+      # demo-02 and demo-03 consume.
+      - name: Demo 1 - cMCP in action
+        run: python demo-01-cmcp-in-action/run.py
+
+      - name: Demo 2 - policy swap
+        run: python demo-02-policy-swap/run.py
+
+      - name: Demo 3 - offline TRACE verification
+        run: python demo-03-offline-trace/run.py
+
+      - name: Demo 4 - context-aware enforcement
+        run: python demo-04-context-enforcement/run.py
+
+      - name: Demo 5 - attribute-based enforcement (BAA coverage)
+        run: python demo-05-compliance-domain/run.py
+
+      # Demos 6-9 are offline: no gateway, no ports, no MCP server.
+      - name: Demos 6-9 - weight custody
+        run: |
+          for d in demo-06-weight-custody demo-07-closed-weight                    demo-08-derivative-lineage demo-09-sovereign-threshold; do
+            echo "== $d =="
+            python "$d/run.py"
+          done
+
+      - name: Demo 10 - governed model calls
+        run: python demo-10-model-gateway/run.py

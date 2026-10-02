@@ -1,0 +1,9 @@
+policy_bundle_path: ./tenants/metzler-eu/policy
+catalog_path: ./catalog.json
+listen_addr: 127.0.0.1:8443
+audit_db_path: ./audit-metzler-eu.db
+attestation:
+  provider: auto
+  # Metzler (EU) runs enforcing: GDPR guardrails block the call.
+  enforcement_mode: enforcing
+  validity_seconds: 86400

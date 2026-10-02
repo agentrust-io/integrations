@@ -1,0 +1,9 @@
+# CI lock for the demos workflow. requirements.txt stays the human-facing
+# install line and the single place the floors live; this file adds pytest and
+# httpx (starlette's TestClient, used by tests/test_request_hardening.py) on
+# top of it. Installed with --require-hashes. Compile with:
+#   uv pip compile requirements/ci.in --generate-hashes --universal \
+#     --python-version 3.11 -o requirements/ci.txt
+-r ../requirements.txt
+pytest>=8.0
+httpx>=0.27

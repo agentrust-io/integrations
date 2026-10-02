@@ -1,0 +1,6 @@
+{
+  "cmcp_catalog_hash": "sha256:792c86ff8152fa9713d52584c084611eb4929fa5ebf3ec8271dd21f0e0aa7eeb",
+  "cmcp_policy_bundle_hash": "sha256:c8358148d201749ebd05651ea03cf92fb3ff8cc9cf05816483c394ebc3e1cac9",
+  "agent_manifest_tool_catalog_root": "sha256:3c7460301bbf38612b492de4a2095ccf40b7d921bdc9ce96e8ea0f50068d66e0",
+  "system_prompt_hash": "sha256:9b364864a1d6682f56f572052dd7a0701b35d9726046bcb06d5fa5d87b49a70f"
+}

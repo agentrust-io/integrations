@@ -1,0 +1,10 @@
+{
+  "controller_signers": {
+    "robot-cell-7-controller": {
+      "alg": "Ed25519",
+      "issuer": "spiffe://factory.example/controller/robot-cell-7",
+      "public_key_b64url": "A6EHv_POEL4dcN0Y50vAmWfk1jCbpQ1fHdyGZBJVMbg"
+    }
+  },
+  "note": "Public test verifier key for deterministic fixtures. Never use the signing seed in production."
+}

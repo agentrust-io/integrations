@@ -1,0 +1,59 @@
+{
+  "cmcp_version": "1.0",
+  "trace": {
+    "eat_profile": "tag:agentrust.io,2026:trace-v0.1",
+    "iat": 1781280200,
+    "subject": "spiffe://cmcp.gateway/session/uk-nhs-demo-session-001",
+    "runtime": {
+      "platform": "intel-tdx",
+      "measurement": "sha256:c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6",
+      "firmware_version": "intel-tdx-1.5.0",
+      "region": "uk-south",
+      "provider": "azure-confidential-compute"
+    },
+    "policy": {
+      "bundle_hash": "sha256:e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8",
+      "enforcement_mode": "enforce",
+      "version": "radiology-nhs-v1.0"
+    },
+    "data_class": "nhs-patient-data",
+    "tool_transcript": {
+      "hash": "sha256:a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0",
+      "call_count": 3
+    },
+    "cnf": {
+      "jwk": {
+        "kty": "OKP",
+        "crv": "Ed25519",
+        "x": "k5b2YtKvWY2FwTDnV8SV194FPh4loN3FwkjRt2b2y47",
+        "kid": "cmcp-uk-nhs-01"
+      }
+    }
+  },
+  "gateway": {
+    "session_id": "uk-nhs-demo-session-001",
+    "gateway_version": "1.0.0",
+    "sequence_number": 3,
+    "audit_chain": {
+      "root": "c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4",
+      "tip": "a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0",
+      "length": 5
+    },
+    "call_summary": {
+      "tool_calls_total": 3,
+      "tool_calls_allowed": 3,
+      "tool_calls_denied": 0,
+      "tools_invoked": [
+        "radiology.imaging_read",
+        "radiology.run_diagnostic_inference",
+        "radiology.write_diagnostic_report"
+      ],
+      "session_max_sensitivity": "nhs-patient-data",
+      "call_graph_summary": {
+        "compliance_domains_touched": ["nhs-patient-data", "uk-gdpr-art-22", "nhs-dspt"],
+        "data_residency_violations": [],
+        "dspt_token_present": true
+      }
+    }
+  }
+}

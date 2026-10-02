@@ -1,0 +1,6 @@
+# The embodied-action-receipts verifier and its tests. cryptography is the only
+# dependency, and nothing here is a published subject under test, so it is
+# pinned like the rest of the harness. Compile with:
+#   uv pip compile requirements/receipts-tests.in --generate-hashes --universal \
+#     --python-version 3.11 -o requirements/receipts-tests.txt
+cryptography>=50.0.1

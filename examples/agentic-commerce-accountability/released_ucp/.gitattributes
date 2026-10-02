@@ -1,0 +1,5 @@
+# Preserve the bytes covered by schemas/provenance.json on every checkout.
+schemas/*.json text eol=lf
+schemas/LICENSE-UCP text eol=lf
+# Executable POSIX scripts must not acquire CRLF line endings.
+scripts/*.sh text eol=lf
