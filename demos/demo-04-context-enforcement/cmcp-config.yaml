@@ -1,0 +1,16 @@
+attestation:
+  provider: auto           # falls back to software-only when CMCP_DEV_MODE=1
+  enforcement_mode: enforcing
+  validity_seconds: 3600
+
+# 'finance' is not one of cMCP's built-in compliance domains. Declaring it here
+# is what makes the catalog loadable, and regulated: true is what makes a call
+# leaving it a recorded compliance boundary crossing in the TRACE claim.
+sensitivity:
+  compliance_domains:
+    finance: true
+
+policy_bundle_path: ./policies/
+catalog_path: ./catalog.json
+listen_addr: "127.0.0.1:8443"
+audit_db_path: ./audit.db

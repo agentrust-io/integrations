@@ -1,0 +1,28 @@
+{
+  "ucp_source": {
+    "repository": "https://github.com/Universal-Commerce-Protocol/ucp",
+    "release": "v2026-08-25",
+    "commit": "cd78fb38e819de77d9b527d110476eccb876f1bd",
+    "entrypoint": "source/schemas/shopping/checkout.json",
+    "entrypoint_sha256": "1a856fabbe86e031baab0c35745cb0b44481da29a2075ee1e73f720e6337204d",
+    "license": "Apache-2.0"
+  },
+  "resolver": {
+    "repository": "https://github.com/Universal-Commerce-Protocol/ucp-schema",
+    "version": "1.4.1",
+    "commit": "6dd2a613d38828c97dca723bdb9ccfc79b2a7e80",
+    "install_command": "cargo install ucp-schema --version 1.4.1 --locked",
+    "published_crate_cargo_lock_sha256": "427f0bf6095e670ef5e9972f6a4385158d062b9d020c220d8a9c4ea5c04f6702"
+  },
+  "resolution_commands_from_ucp_source_root": [
+    "ucp-schema resolve source/schemas/shopping/checkout.json --response --op read --bundle --pretty --schema-local-base source/schemas --schema-remote-base https://ucp.dev/schemas --output checkout-response.json",
+    "ucp-schema resolve source/schemas/shopping/checkout.json --request --op complete --bundle --pretty --schema-local-base source/schemas --schema-remote-base https://ucp.dev/schemas --output checkout-complete-request.json"
+  ],
+  "postprocessing": "jq adds a non-normative $comment identifying the transformation; no validation keyword is manually changed. scripts/regenerate_schemas.sh is the complete regeneration procedure.",
+  "artifact_sha256": {
+    "checkout-response.json": "4768260556990c4ecd66275f9149d973434db5d7d177449a336de5bd5c19106d",
+    "checkout-complete-request.json": "d77977e20d5a637b5f277e7ee5ee8789cdfe7499a533cef58134fab099d52c7b",
+    "LICENSE-UCP": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+  },
+  "scope": "Base checkout response/read and request/complete shapes only. No runtime network lookup, arbitrary capability composition, handler-specific validation, or payment processing. The controller separately restricts the supported example profile."
+}

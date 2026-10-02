@@ -1,0 +1,8 @@
+policy_bundle_path: ./policy
+catalog_path: ./catalog.json
+listen_addr: 127.0.0.1:8443  # tokenless dev mode binds to loopback; set CMCP_BEARER_TOKEN for non-loopback binds
+max_response_size_bytes: 2097152
+attestation:
+  provider: auto
+  enforcement_mode: enforcing
+  validity_seconds: 86400

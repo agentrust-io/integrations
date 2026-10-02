@@ -1,0 +1,92 @@
+name: Examples smoke
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+  # cmcp CLI prints unicode glyphs; force UTF-8 so it is safe on any runner locale.
+  PYTHONUTF8: "1"
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: examples
+
+jobs:
+  smoke:
+    name: smoke (${{ matrix.name }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: startup-tpm
+            dir: startup-tpm
+            config: cmcp-config.yaml
+            agent: agent/echo_agent.py
+            args: ""
+          - name: financial-services
+            dir: financial-services
+            config: cmcp-config.yaml
+            agent: agent/credit_risk_agent.py
+            args: ""
+          - name: healthcare
+            dir: healthcare
+            config: cmcp-config.yaml
+            agent: agent/clinical_decision_agent.py
+            args: ""
+          - name: multi-tenant-metzler-eu
+            dir: multi-tenant-saas
+            config: cmcp-config-metzler-eu.yaml
+            agent: agent/saas_agent.py
+            args: "--tenant metzler-eu"
+          - name: multi-tenant-summit-us
+            dir: multi-tenant-saas
+            config: cmcp-config-summit-us.yaml
+            agent: agent/saas_agent.py
+            args: "--tenant summit-us"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        # cmcp-runtime is the subject of these smoke tests and stays resolved
+        # from PyPI; the HTTP client driving them is pinned.
+        run: |
+          pip install --require-hashes -r requirements/smoke-harness.txt
+          pip install cmcp-runtime
+
+      - name: Start mock MCP server
+        run: python ${{ matrix.dir }}/server/mock_mcp_server.py &
+
+      - name: Start cMCP gateway
+        working-directory: examples/${{ matrix.dir }}
+        env:
+          CMCP_DEV_MODE: "1"
+        run: cmcp start --config ${{ matrix.config }} &
+
+      - name: Wait for gateway
+        run: |
+          for i in $(seq 1 20); do
+            if curl -sf http://localhost:8443/health > /dev/null 2>&1; then
+              echo "Gateway ready"
+              exit 0
+            fi
+            echo "Waiting ($i)..."
+            sleep 2
+          done
+          echo "Gateway did not become ready in time" >&2
+          exit 1
+
+      - name: Run agent
+        run: python ${{ matrix.dir }}/${{ matrix.agent }} ${{ matrix.args }}

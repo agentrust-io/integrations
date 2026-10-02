@@ -1,0 +1,128 @@
+{
+  "cmcp_version": "1.0",
+  "trace": {
+    "eat_profile": "tag:agentrust.io,2026:trace-v0.1",
+    "iat": 1784610814,
+    "subject": "spiffe://cmcp.gateway/tee/e36c15f8abfcb5c4",
+    "runtime": {
+      "platform": "software-only",
+      "measurement": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "firmware_version": "software-only-dev-mode"
+    },
+    "policy": {
+      "bundle_hash": "sha256:6ed4ecc2813edf8e8e86fefc5781df3162b81bfe2ba18c44e6d6ae054d318a79",
+      "enforcement_mode": "enforce",
+      "version": "credit-risk-v5.0"
+    },
+    "data_class": "confidential",
+    "tool_transcript": {
+      "hash": "sha256:f2a45e0baa83eaaf3500d78e7d2207ea34692e3963fe611e8087447c21300f1c",
+      "call_count": 6,
+      "entries": [
+        {
+          "tool_name": "finance.document_reader",
+          "data_class": "confidential",
+          "decision": "allow"
+        },
+        {
+          "tool_name": "finance.sanctions_screening",
+          "data_class": "confidential",
+          "decision": "allow"
+        },
+        {
+          "tool_name": "finance.credit_bureau_lookup",
+          "data_class": "confidential",
+          "decision": "allow"
+        },
+        {
+          "tool_name": "finance.exposure_aggregation",
+          "data_class": "confidential",
+          "decision": "allow"
+        },
+        {
+          "tool_name": "finance.risk_model",
+          "data_class": "confidential",
+          "decision": "allow"
+        },
+        {
+          "tool_name": "finance.risk_report_writer",
+          "data_class": "confidential",
+          "decision": "deny"
+        }
+      ]
+    },
+    "cnf": {
+      "jwk": {
+        "kty": "OKP",
+        "crv": "Ed25519",
+        "x": "42wV-Kv8tcSo8JfX42tAsleWpFqY7yp_cf3IUSfynPs",
+        "kid": "cmcp-e36c15f8"
+      }
+    }
+  },
+  "gateway": {
+    "session_id": "f752c840-7c73-452d-a984-1887417d2d5d",
+    "gateway_version": "0.3.0",
+    "sequence_number": 3,
+    "prev_claim_hash": "sha256:2800f6ce64289cf0f92c3aabd5b4be6bec0815cd475bbbd699cc8a9cc87a4f25",
+    "audit_chain": {
+      "root": "3377da44e3074a7a1b956db8ccd0a1ed41178b85c12ae8810047fde243cb4260",
+      "tip": "f2a45e0baa83eaaf3500d78e7d2207ea34692e3963fe611e8087447c21300f1c",
+      "length": 8
+    },
+    "call_summary": {
+      "tool_calls_total": 6,
+      "tool_calls_allowed": 5,
+      "tool_calls_denied": 1,
+      "tool_calls_faulted": 0,
+      "tools_invoked": [
+        "finance.credit_bureau_lookup",
+        "finance.document_reader",
+        "finance.exposure_aggregation",
+        "finance.risk_model",
+        "finance.risk_report_writer",
+        "finance.sanctions_screening"
+      ],
+      "session_max_sensitivity": "confidential",
+      "call_graph_summary": {
+        "compliance_domains_touched": [
+          "internal",
+          "mnpi",
+          "pii"
+        ],
+        "cross_boundary_events": [
+          {
+            "from_domain": "pii",
+            "to_domain": "internal",
+            "call_id": "60e3a027-8c58-4275-84cd-0ebbf2669399",
+            "tool_name": "finance.exposure_aggregation",
+            "sequence_number": 3
+          }
+        ],
+        "edges_represent": "Edges represent temporal adjacency (call order), not data provenance. A -> B means B was called immediately after A within this session."
+      }
+    },
+    "catalog": {
+      "hash": "sha256:4332bdb99e95034e582019c93a176674bc2b2280c872e96ec574c2da8b342e03",
+      "drift_detected": false
+    },
+    "attestation_generated_at": "2026-07-21T05:12:13.092919+00:00",
+    "attestation_validity_seconds": 86400,
+    "attestation_stale": false,
+    "catalog_exceptions": [],
+    "call_log_summary": {
+      "total_calls": 6,
+      "tools_called": [
+        "finance.document_reader",
+        "finance.sanctions_screening",
+        "finance.credit_bureau_lookup",
+        "finance.exposure_aggregation",
+        "finance.risk_model",
+        "finance.risk_report_writer"
+      ],
+      "suspicious_sequences_detected": 0
+    },
+    "kill_switch_triggered": false
+  },
+  "signature": "KdjlwOfVLf_-nrdvpXOTcl2KSNKTpBWwdWHu91dKdxQHfxvgT35ivW-yhSi9mbC7v3uiM9DQ6UDaongMUN-OBQ"
+}

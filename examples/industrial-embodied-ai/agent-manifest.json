@@ -1,0 +1,88 @@
+{
+  "@context": "https://agentmanifest.agentrust.io/v0.1/context.json",
+  "@type": "AgentManifest",
+  "manifest_id": "0197739a-8c00-7000-8000-000000000001",
+  "agent_id": "spiffe://factory.example/agent/material-movement/dev",
+  "version": "0.1",
+  "issued_at": "2026-06-12T00:00:00Z",
+  "expires_at": "2026-09-10T00:00:00Z",
+  "issuer": "spiffe://factory.example/signing-authority/development",
+  "crypto_profile": "standard",
+  "artifacts": {
+    "system_prompt": {
+      "hash": "sha256:9b364864a1d6682f56f572052dd7a0701b35d9726046bcb06d5fa5d87b49a70f",
+      "hash_algorithm": "SHA-256",
+      "version": "0.1.0",
+      "classification": "internal",
+      "bound_at": "2026-06-12T00:00:00Z"
+    },
+    "policy_bundle": {
+      "hash": "sha256:c8358148d201749ebd05651ea03cf92fb3ff8cc9cf05816483c394ebc3e1cac9",
+      "policy_language": "cedar",
+      "version": "0.1.0",
+      "enforcement_mode": "enforce",
+      "scope": [
+        "cell.read_safety_state",
+        "robot.request_motion"
+      ],
+      "bound_at": "2026-06-12T00:00:00Z"
+    },
+    "tool_manifest": {
+      "catalog_hash": "sha256:3c7460301bbf38612b492de4a2095ccf40b7d921bdc9ce96e8ea0f50068d66e0",
+      "tools": [
+        {
+          "tool_id": "spiffe://factory.example/tool/cell.read_safety_state",
+          "name": "cell.read_safety_state",
+          "server_id": "spiffe://factory.example/controller/robot-cell-7",
+          "schema_hash": "sha256:99334726611ccf58a148b0814696bfa6fe08c1b2d027e946beccf5a74331c9aa",
+          "description_hash": "sha256:1a4030f710f75b6d7cabddbde5a774ca541450f7a8dcb5f46fcbf9a119dd6de7",
+          "version": "0.1.0",
+          "permission_scope": "safety-state:read",
+          "egress_destinations": []
+        },
+        {
+          "tool_id": "spiffe://factory.example/tool/robot.request_motion",
+          "name": "robot.request_motion",
+          "server_id": "spiffe://factory.example/controller/robot-cell-7",
+          "schema_hash": "sha256:d74b377cfce397a9074d2b6b377615f32f370e218a59594346cbaadd8ca88d00",
+          "description_hash": "sha256:6b67d52c678da09fc6bce54367ba3bf0a44ff92f3930db8a66e3d43af7ab6975",
+          "version": "0.1.0",
+          "permission_scope": "motion:request",
+          "egress_destinations": []
+        }
+      ],
+      "allow_dynamic_registration": false,
+      "rug_pull_policy": "deny-and-alert",
+      "bound_at": "2026-06-12T00:00:00Z"
+    },
+    "model_identity": {
+      "provider": "example",
+      "model_id": "industrial-material-movement-planner",
+      "version": "development-simulation-v1",
+      "deployment_type": "api",
+      "bound_at": "2026-06-12T00:00:00Z"
+    }
+  },
+  "delegation_chain": [],
+  "signature": {
+    "algorithm": "Ed25519",
+    "key_id": "cd3708166771d7bd74a49e8d307842c318aded09c0348688d7ac6e40952a5522",
+    "key_type": "software",
+    "signed_at": "2026-06-12T00:00:00Z",
+    "signed_fields": [
+      "@context",
+      "@type",
+      "manifest_id",
+      "agent_id",
+      "version",
+      "issued_at",
+      "expires_at",
+      "issuer",
+      "crypto_profile",
+      "artifacts",
+      "delegation_chain",
+      "hitl_record"
+    ],
+    "signature_value": "zYvzfGDshwKcAApc_JWmCXigNytQDhokavCQCTUwOtsQeDLYEoPETxgii3Acz2hl7RNIH-O4FKTdtYlNXt6MBA"
+  }
+}

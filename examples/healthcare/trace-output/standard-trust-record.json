@@ -1,0 +1,104 @@
+{
+  "cmcp_version": "1.0",
+  "trace": {
+    "eat_profile": "tag:agentrust.io,2026:trace-v0.1",
+    "iat": 1784651772,
+    "subject": "spiffe://cmcp.gateway/tee/9a013bf66a5aa07d",
+    "runtime": {
+      "platform": "software-only",
+      "measurement": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "firmware_version": "software-only-dev-mode"
+    },
+    "policy": {
+      "bundle_hash": "sha256:44ec5f0c1fcdb7c0108dc3e4f73ec2ec73f02705712656cd2bc718ccc72164c4",
+      "enforcement_mode": "enforce",
+      "version": "clinical-safety-v3.0"
+    },
+    "data_class": "confidential",
+    "tool_transcript": {
+      "hash": "sha256:b031e6ee9bcdc71747d2faf34c15b1e06ceb1ff5bee87e95ff5dc96d90355e90",
+      "call_count": 4,
+      "entries": [
+        {
+          "tool_name": "ehr.patient_record_lookup",
+          "data_class": "confidential",
+          "decision": "allow"
+        },
+        {
+          "tool_name": "ehr.clinical_decision_support",
+          "data_class": "confidential",
+          "decision": "allow"
+        },
+        {
+          "tool_name": "ehr.drug_interaction_check",
+          "data_class": "confidential",
+          "decision": "allow"
+        },
+        {
+          "tool_name": "ehr.treatment_plan_writer",
+          "data_class": "confidential",
+          "decision": "allow"
+        }
+      ]
+    },
+    "cnf": {
+      "jwk": {
+        "kty": "OKP",
+        "crv": "Ed25519",
+        "x": "mgE79mpaoH14uN7ZMgcitNBkOAy5K9vpQZHwVuu8v8U",
+        "kid": "cmcp-9a013bf6"
+      }
+    }
+  },
+  "gateway": {
+    "session_id": "be8094f5-9939-4995-b0c7-612429626983",
+    "gateway_version": "0.3.0",
+    "sequence_number": 4,
+    "prev_claim_hash": "sha256:185ab93cf14ec485f6cb573c825a40dbb0f9358fc2dd11dfe81ceea6bcc0876b",
+    "audit_chain": {
+      "root": "93b80590e0903464c38e3fe002a3bec306052e1933c91a03edeb45486cc5e0e0",
+      "tip": "b031e6ee9bcdc71747d2faf34c15b1e06ceb1ff5bee87e95ff5dc96d90355e90",
+      "length": 6
+    },
+    "call_summary": {
+      "tool_calls_total": 4,
+      "tool_calls_allowed": 4,
+      "tool_calls_denied": 0,
+      "tool_calls_faulted": 0,
+      "tools_invoked": [
+        "ehr.clinical_decision_support",
+        "ehr.drug_interaction_check",
+        "ehr.patient_record_lookup",
+        "ehr.treatment_plan_writer"
+      ],
+      "session_max_sensitivity": "confidential",
+      "call_graph_summary": {
+        "compliance_domains_touched": [
+          "hipaa_phi"
+        ],
+        "cross_boundary_events": [],
+        "edges_represent": "Edges represent temporal adjacency (call order), not data provenance. A -> B means B was called immediately after A within this session."
+      }
+    },
+    "catalog": {
+      "hash": "sha256:174412ac2254484e3fa65a8c0b29495d5be5e2648e4b3b02398a3f0c9b82f3c7",
+      "drift_detected": false
+    },
+    "attestation_generated_at": "2026-07-21T16:35:29.936660+00:00",
+    "attestation_validity_seconds": 86400,
+    "attestation_stale": false,
+    "catalog_exceptions": [],
+    "call_log_summary": {
+      "total_calls": 4,
+      "tools_called": [
+        "ehr.patient_record_lookup",
+        "ehr.clinical_decision_support",
+        "ehr.drug_interaction_check",
+        "ehr.treatment_plan_writer"
+      ],
+      "suspicious_sequences_detected": 0
+    },
+    "kill_switch_triggered": false
+  },
+  "signature": "rxnRxuZVljzM1Juop54J2uCouHtIoP_7RG44PRyWcbWT2hAYa9yo5cPkYSNbVOm3wnr-grLs__yIeuzp6SqoDw"
+}

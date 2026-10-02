@@ -1,0 +1,150 @@
+[
+  {
+    "tool_name": "cell.read_safety_state",
+    "server": {
+      "display_name": "Independent Robot Cell Safety Controller (mock)",
+      "url": "http://localhost:8080/mcp",
+      "tls_fingerprint": "SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+      "transport": "http-sse"
+    },
+    "approved_definition": {
+      "description": "Read an authenticated, short-lived safety-state snapshot from the independent robot cell controller.",
+      "input_schema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "controller_id": {
+            "type": "string"
+          },
+          "sequence": {
+            "type": "integer"
+          },
+          "observed_at_ms": {
+            "type": "integer"
+          },
+          "operating_mode": {
+            "type": "string"
+          },
+          "emergency_stop_active": {
+            "type": "boolean"
+          },
+          "protective_stop_active": {
+            "type": "boolean"
+          },
+          "human_detected": {
+            "type": "boolean"
+          },
+          "state_token": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "controller_id",
+          "sequence",
+          "observed_at_ms",
+          "operating_mode",
+          "emergency_stop_active",
+          "protective_stop_active",
+          "human_detected",
+          "state_token"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "definition_hash": "sha256:c17915c854b0da7a6bc4b1fd7388914fb3783a7f333d558525a38568401af990",
+    "compliance_domain": "internal",
+    "requires_baa": false,
+    "sensitivity_level": "confidential",
+    "added_at": "2026-06-11T00:00:00Z",
+    "approved_by": "community-example@agentrust.io"
+  },
+  {
+    "tool_name": "robot.request_motion",
+    "server": {
+      "display_name": "Independent Robot Cell Safety Controller (mock)",
+      "url": "http://localhost:8080/mcp",
+      "tls_fingerprint": "SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+      "transport": "http-sse"
+    },
+    "approved_definition": {
+      "description": "Request a bounded material-movement operation. The independent controller may reject the request regardless of cMCP authorization.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "motion_id": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string",
+            "enum": [
+              "buffer-zone-1",
+              "transfer-station-b"
+            ]
+          },
+          "max_speed_mps": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 0.5
+          },
+          "safety_state_token": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "motion_id",
+          "target",
+          "max_speed_mps",
+          "safety_state_token"
+        ],
+        "additionalProperties": false
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "controller_id": {
+            "type": "string"
+          },
+          "motion_id": {
+            "type": "string"
+          },
+          "request_digest": {
+            "type": "string"
+          },
+          "controller_decision": {
+            "type": "string",
+            "enum": [
+              "accepted",
+              "rejected"
+            ]
+          },
+          "execution_status": {
+            "type": "string",
+            "enum": [
+              "not_started",
+              "completed",
+              "failed"
+            ]
+          }
+        },
+        "required": [
+          "controller_id",
+          "motion_id",
+          "request_digest",
+          "controller_decision",
+          "execution_status"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "definition_hash": "sha256:d65ecd2651a7ceaae0f6ef0e03ca951b2a52efea3052889899278fc6bfc067af",
+    "compliance_domain": "internal",
+    "requires_baa": false,
+    "sensitivity_level": "confidential",
+    "added_at": "2026-06-11T00:00:00Z",
+    "approved_by": "community-example@agentrust.io"
+  }
+]

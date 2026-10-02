@@ -1,0 +1,60 @@
+{
+  "cmcp_version": "1.0",
+  "trace": {
+    "eat_profile": "tag:agentrust.io,2026:trace-v0.1",
+    "iat": 1781280300,
+    "subject": "spiffe://cmcp.gateway/session/sg-moh-demo-session-001",
+    "runtime": {
+      "platform": "amd-sev-snp",
+      "measurement": "sha256:d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7",
+      "firmware_version": "amd-sev-snp-milan-1.55.21",
+      "region": "ap-southeast-1",
+      "provider": "aws-nitro-enclaves"
+    },
+    "policy": {
+      "bundle_hash": "sha256:f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9",
+      "enforcement_mode": "enforce",
+      "version": "radiology-sg-v1.0"
+    },
+    "data_class": "sensitive-personal-data",
+    "tool_transcript": {
+      "hash": "sha256:b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1",
+      "call_count": 3
+    },
+    "cnf": {
+      "jwk": {
+        "kty": "OKP",
+        "crv": "Ed25519",
+        "x": "l6c3ZuLwXZ3GxUEoW9TW205GQi5mpO4GxlkSu3c3z58",
+        "kid": "cmcp-sg-moh-01"
+      }
+    }
+  },
+  "gateway": {
+    "session_id": "sg-moh-demo-session-001",
+    "gateway_version": "1.0.0",
+    "sequence_number": 3,
+    "audit_chain": {
+      "root": "d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5",
+      "tip": "b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1",
+      "length": 5
+    },
+    "call_summary": {
+      "tool_calls_total": 3,
+      "tool_calls_allowed": 3,
+      "tool_calls_denied": 0,
+      "tools_invoked": [
+        "radiology.imaging_read",
+        "radiology.run_diagnostic_inference",
+        "radiology.write_diagnostic_report"
+      ],
+      "session_max_sensitivity": "sensitive-personal-data",
+      "call_graph_summary": {
+        "compliance_domains_touched": ["sensitive-personal-data", "imda-ai-governance-framework-v2", "pdpa-2012"],
+        "data_residency_violations": [],
+        "consent_ref_present": true,
+        "imda_tier": "tier1"
+      }
+    }
+  }
+}

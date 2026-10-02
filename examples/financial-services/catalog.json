@@ -1,0 +1,223 @@
+[
+  {
+    "tool_name": "finance.document_reader",
+    "server": {
+      "display_name": "EU Credit Risk MCP Server",
+      "url": "http://localhost:8080/mcp",
+      "tls_fingerprint": "SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+      "transport": "http-sse"
+    },
+    "approved_definition": {
+      "description": "Read filed annual financial statements for a corporate client from the secure document vault",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "client_id": {
+            "type": "string"
+          },
+          "document_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "client_id"
+        ]
+      }
+    },
+    "definition_hash": "sha256:24613a660da9855e9c5f0e1cae8a34c2e771b8a29affc3e17fae36f26c0e70f1",
+    "compliance_domain": "mnpi",
+    "requires_baa": false,
+    "sensitivity_level": "confidential",
+    "added_at": "2026-06-01T00:00:00Z",
+    "approved_by": "risk-committee@bank.eu"
+  },
+  {
+    "tool_name": "finance.sanctions_screening",
+    "server": {
+      "display_name": "EU Credit Risk MCP Server",
+      "url": "http://localhost:8080/mcp",
+      "tls_fingerprint": "SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+      "transport": "http-sse"
+    },
+    "approved_definition": {
+      "description": "Screen a corporate client and its beneficial owners against EU/UN sanctions and PEP lists (CDD/AML)",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "client_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "client_id"
+        ]
+      }
+    },
+    "definition_hash": "sha256:182484c9fb9aacd66b97527b9d1c889ae0a9eac757ae4b50fd4665183aac9022",
+    "compliance_domain": "pii",
+    "requires_baa": false,
+    "sensitivity_level": "confidential",
+    "added_at": "2026-06-01T00:00:00Z",
+    "approved_by": "risk-committee@bank.eu"
+  },
+  {
+    "tool_name": "finance.credit_bureau_lookup",
+    "server": {
+      "display_name": "EU Credit Risk MCP Server",
+      "url": "http://localhost:8080/mcp",
+      "tls_fingerprint": "SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+      "transport": "http-sse"
+    },
+    "approved_definition": {
+      "description": "Retrieve a commercial credit-bureau report for a client",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "client_id": {
+            "type": "string"
+          },
+          "bureau": {
+            "type": "string",
+            "enum": [
+              "creditreform",
+              "schufa",
+              "crif",
+              "banque-de-france-fiben"
+            ]
+          }
+        },
+        "required": [
+          "client_id"
+        ]
+      }
+    },
+    "definition_hash": "sha256:a581f359451d7f8ce2082ae185d991a719458579e23008817781697a535f78f7",
+    "compliance_domain": "pii",
+    "requires_baa": false,
+    "sensitivity_level": "confidential",
+    "added_at": "2026-06-01T00:00:00Z",
+    "approved_by": "risk-committee@bank.eu"
+  },
+  {
+    "tool_name": "finance.exposure_aggregation",
+    "server": {
+      "display_name": "EU Credit Risk MCP Server",
+      "url": "http://localhost:8080/mcp",
+      "tls_fingerprint": "SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+      "transport": "http-sse"
+    },
+    "approved_definition": {
+      "description": "Aggregate existing group exposure with the proposed facility and test it against the single-obligor concentration limit",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "client_id": {
+            "type": "string"
+          },
+          "proposed_facility_eur": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "client_id",
+          "proposed_facility_eur"
+        ]
+      }
+    },
+    "definition_hash": "sha256:aa25379a11f8b6e7b730efcf685f26370c52655b34b9f021ee0f79371c673021",
+    "compliance_domain": "internal",
+    "requires_baa": false,
+    "sensitivity_level": "confidential",
+    "added_at": "2026-06-01T00:00:00Z",
+    "approved_by": "risk-committee@bank.eu"
+  },
+  {
+    "tool_name": "finance.risk_model",
+    "server": {
+      "display_name": "EU Credit Risk MCP Server",
+      "url": "http://localhost:8080/mcp",
+      "tls_fingerprint": "SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+      "transport": "http-sse"
+    },
+    "approved_definition": {
+      "description": "Compute PD/LGD/EAD, the internal rating grade and the IFRS 9 stage for a proposed facility",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "client_id": {
+            "type": "string"
+          },
+          "proposed_facility_eur": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "client_id",
+          "proposed_facility_eur"
+        ]
+      }
+    },
+    "definition_hash": "sha256:5ec6f11017e587afa44af58fd0b70574c02127a0462f3b089cb5deba7566fc20",
+    "compliance_domain": "internal",
+    "requires_baa": false,
+    "sensitivity_level": "confidential",
+    "added_at": "2026-06-01T00:00:00Z",
+    "approved_by": "risk-committee@bank.eu"
+  },
+  {
+    "tool_name": "finance.risk_report_writer",
+    "server": {
+      "display_name": "EU Credit Risk MCP Server",
+      "url": "http://localhost:8080/mcp",
+      "tls_fingerprint": "SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+      "transport": "http-sse"
+    },
+    "approved_definition": {
+      "description": "Write the credit risk assessment to the core banking system",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "client_id": {
+            "type": "string"
+          },
+          "internal_rating": {
+            "type": "string"
+          },
+          "pd_1y": {
+            "type": "number"
+          },
+          "ifrs9_stage": {
+            "type": "number"
+          },
+          "amount_eur": {
+            "type": "number"
+          },
+          "aggregate_exposure_eur": {
+            "type": "number"
+          },
+          "breaches_concentration_limit": {
+            "type": "boolean"
+          },
+          "cdd_cleared": {
+            "type": "boolean"
+          },
+          "recommendation": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "client_id",
+          "amount_eur",
+          "recommendation",
+          "cdd_cleared"
+        ]
+      }
+    },
+    "definition_hash": "sha256:e92a42ec46321042f852b516426e91d4e5c685130e4c35effcf3fd9c206b9ba6",
+    "compliance_domain": "internal",
+    "requires_baa": false,
+    "sensitivity_level": "confidential",
+    "added_at": "2026-06-01T00:00:00Z",
+    "approved_by": "risk-committee@bank.eu"
+  }
+]

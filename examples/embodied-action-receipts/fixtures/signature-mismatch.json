@@ -1,0 +1,54 @@
+{
+  "action": {
+    "action_ref": "sha256:6572d6707269d815b6f59aadeca709e29a5a7d73330265f2b5feb92d0290b21f",
+    "action_scope": "robot-cell-7/material-bin-a",
+    "action_timestamp": "2026-06-25T16:30:00Z",
+    "action_type": "move_material",
+    "agent_id": "spiffe://factory.example/agent/material-movement/dev"
+  },
+  "case": "signature-mismatch",
+  "expected": {
+    "receipt_state": "invalid_signature",
+    "result": "invalid"
+  },
+  "receipts": [
+    {
+      "action_ref": "sha256:6572d6707269d815b6f59aadeca709e29a5a7d73330265f2b5feb92d0290b21f",
+      "call_id": "call-material-move-001",
+      "issuer": "spiffe://factory.example/controller/robot-cell-7",
+      "issuer_key_id": "robot-cell-7-controller",
+      "observed_at": "2026-06-25T16:30:01Z",
+      "prev_receipt_hash": null,
+      "receipt_id": "receipt-001",
+      "sequence": 1,
+      "signature": "ed25519:GqkLo5j8ZJzjOGwyv8hzS8vdgaYr_1VAZtdgoNTyjMU0NDuCAXK0oDiC2TTz2raMdXy7KiOoWlr4LgBDzWlGDA",
+      "terminal_state": "handoff_accepted",
+      "trace_id": "trace-session-embodied-001",
+      "type": "embodied.action_receipt.v0",
+      "verdict": "accepted"
+    },
+    {
+      "action_ref": "sha256:6572d6707269d815b6f59aadeca709e29a5a7d73330265f2b5feb92d0290b21f",
+      "call_id": "call-material-move-001",
+      "issuer": "spiffe://factory.example/controller/robot-cell-7",
+      "issuer_key_id": "robot-cell-7-controller",
+      "observed_at": "2026-06-25T16:30:05Z",
+      "prev_receipt_hash": "sha256:997a9dd7abb8e6a32bab079da314b62bf867605428f7920e91f2a806db1cd338",
+      "receipt_id": "receipt-002",
+      "sequence": 2,
+      "signature": "ed25519:RdJXHXzttRHLqKm6ockpPAU5-Odc3mZuEwzw4wNZRlm-QNPiQTvp2_LJ33TWqquhebJ9PFaq0SS4UEBW3G7bAQ",
+      "terminal_state": "controller_completed",
+      "trace_id": "trace-session-embodied-001",
+      "type": "embodied.action_receipt.v0",
+      "verdict": "accepted"
+    }
+  ],
+  "trace": {
+    "cmcp_call_id": "call-material-move-001",
+    "policy_decision": "allow",
+    "trace_id": "trace-session-embodied-001",
+    "verification": {
+      "action_receipts": "required"
+    }
+  }
+}

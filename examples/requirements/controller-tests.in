@@ -1,0 +1,4 @@
+# The industrial-embodied-ai controller tests. Compile with:
+#   uv pip compile requirements/controller-tests.in --generate-hashes --universal \
+#     --python-version 3.11 -o requirements/controller-tests.txt
+cryptography>=50.0.0

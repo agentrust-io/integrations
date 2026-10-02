@@ -1,0 +1,2063 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ucp.dev/schemas/shopping/checkout.json",
+  "name": "dev.ucp.shopping.checkout",
+  "title": "Checkout",
+  "description": "Base checkout schema. Extensions compose onto this using allOf.",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "ucp": {
+      "title": "UCP Checkout Response Schema",
+      "description": "UCP metadata for checkout responses.",
+      "allOf": [
+        {
+          "description": "Base UCP metadata with shared properties for all schema types.",
+          "type": "object",
+          "properties": {
+            "version": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "description": "Version identifier in YYYY-MM-DD format."
+            },
+            "map_order": {
+              "description": "Preferred key-traversal order for sibling registry fields inside the root `ucp` envelope (`services`, `capabilities`, and `payment_handlers`).",
+              "type": "object",
+              "additionalProperties": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "success",
+                "error"
+              ],
+              "default": "success",
+              "description": "Application-level status of the UCP operation."
+            },
+            "services": {
+              "type": "object",
+              "description": "Service registry keyed by reverse-domain name.",
+              "propertyNames": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "$id": "https://ucp.dev/schemas/common/types/reverse_domain_name.json",
+                "title": "Reverse Domain Name",
+                "description": "Reverse-domain identifier used for collision-safe namespacing of capabilities, services, handlers, eligibility claims, and extension-contributed keys. Must contain at least two dot-separated segments (e.g., 'dev.ucp.shopping.checkout', 'com.example.loyalty_gold'). Segments after the first are domain- or identifier-derived: they may contain interior hyphens, may start with a digit, and may contain underscores (e.g., 'com.example-shop.checkout', 'com.2example.cart', 'dev.ucp.common.identity_linking'), but must not start or end with a hyphen. The first segment (the reversed top-level domain) is letters and digits, and may contain interior hyphens to support internationalized (punycode) top-level domains such as 'xn--p1ai'.",
+                "type": "string",
+                "pattern": "^[a-z](?:[a-z0-9-]*[a-z0-9])?(?:\\.[a-z0-9](?:[a-z0-9_-]*[a-z0-9_])?)+$",
+                "examples": [
+                  "dev.ucp.shopping.checkout",
+                  "dev.ucp.common.identity_linking",
+                  "com.example.loyalty_gold",
+                  "com.example-shop.checkout",
+                  "com.2example.cart",
+                  "uk.co.example-shop.checkout",
+                  "xn--p1ai.example.checkout"
+                ]
+              },
+              "additionalProperties": {
+                "type": "array",
+                "items": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "description": "Shared foundation for all UCP entities.",
+                      "properties": {
+                        "version": {
+                          "description": "Entity version in YYYY-MM-DD format.",
+                          "type": "string",
+                          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                        },
+                        "spec": {
+                          "type": "string",
+                          "format": "uri",
+                          "description": "URL to human-readable specification document."
+                        },
+                        "schema": {
+                          "type": "string",
+                          "format": "uri",
+                          "description": "URL to JSON Schema defining this entity's structure and payloads."
+                        },
+                        "id": {
+                          "type": "string",
+                          "description": "Unique identifier for this entity instance. Used to disambiguate when multiple instances exist."
+                        },
+                        "config": {
+                          "type": "object",
+                          "description": "Entity-specific configuration. Structure defined by each entity's schema.",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "version"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "transport": {
+                          "type": "string",
+                          "enum": [
+                            "rest",
+                            "mcp",
+                            "a2a",
+                            "embedded"
+                          ],
+                          "description": "Transport protocol for this service binding."
+                        },
+                        "endpoint": {
+                          "type": "string",
+                          "format": "uri",
+                          "description": "Endpoint URL for this transport binding."
+                        }
+                      },
+                      "required": [
+                        "transport"
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            "capabilities": {
+              "type": "object",
+              "description": "Capability registry keyed by reverse-domain name.",
+              "propertyNames": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "$id": "https://ucp.dev/schemas/common/types/reverse_domain_name.json",
+                "title": "Reverse Domain Name",
+                "description": "Reverse-domain identifier used for collision-safe namespacing of capabilities, services, handlers, eligibility claims, and extension-contributed keys. Must contain at least two dot-separated segments (e.g., 'dev.ucp.shopping.checkout', 'com.example.loyalty_gold'). Segments after the first are domain- or identifier-derived: they may contain interior hyphens, may start with a digit, and may contain underscores (e.g., 'com.example-shop.checkout', 'com.2example.cart', 'dev.ucp.common.identity_linking'), but must not start or end with a hyphen. The first segment (the reversed top-level domain) is letters and digits, and may contain interior hyphens to support internationalized (punycode) top-level domains such as 'xn--p1ai'.",
+                "type": "string",
+                "pattern": "^[a-z](?:[a-z0-9-]*[a-z0-9])?(?:\\.[a-z0-9](?:[a-z0-9_-]*[a-z0-9_])?)+$",
+                "examples": [
+                  "dev.ucp.shopping.checkout",
+                  "dev.ucp.common.identity_linking",
+                  "com.example.loyalty_gold",
+                  "com.example-shop.checkout",
+                  "com.2example.cart",
+                  "uk.co.example-shop.checkout",
+                  "xn--p1ai.example.checkout"
+                ]
+              },
+              "additionalProperties": {
+                "type": "array",
+                "items": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "description": "Shared foundation for all UCP entities.",
+                      "properties": {
+                        "version": {
+                          "description": "Entity version in YYYY-MM-DD format.",
+                          "type": "string",
+                          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                        },
+                        "spec": {
+                          "type": "string",
+                          "format": "uri",
+                          "description": "URL to human-readable specification document."
+                        },
+                        "schema": {
+                          "type": "string",
+                          "format": "uri",
+                          "description": "URL to JSON Schema defining this entity's structure and payloads."
+                        },
+                        "id": {
+                          "type": "string",
+                          "description": "Unique identifier for this entity instance. Used to disambiguate when multiple instances exist."
+                        },
+                        "config": {
+                          "type": "object",
+                          "description": "Entity-specific configuration. Structure defined by each entity's schema.",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "version"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "extends": {
+                          "oneOf": [
+                            {
+                              "$schema": "https://json-schema.org/draft/2020-12/schema",
+                              "$id": "https://ucp.dev/schemas/common/types/reverse_domain_name.json",
+                              "title": "Reverse Domain Name",
+                              "description": "Reverse-domain identifier used for collision-safe namespacing of capabilities, services, handlers, eligibility claims, and extension-contributed keys. Must contain at least two dot-separated segments (e.g., 'dev.ucp.shopping.checkout', 'com.example.loyalty_gold'). Segments after the first are domain- or identifier-derived: they may contain interior hyphens, may start with a digit, and may contain underscores (e.g., 'com.example-shop.checkout', 'com.2example.cart', 'dev.ucp.common.identity_linking'), but must not start or end with a hyphen. The first segment (the reversed top-level domain) is letters and digits, and may contain interior hyphens to support internationalized (punycode) top-level domains such as 'xn--p1ai'.",
+                              "type": "string",
+                              "pattern": "^[a-z](?:[a-z0-9-]*[a-z0-9])?(?:\\.[a-z0-9](?:[a-z0-9_-]*[a-z0-9_])?)+$",
+                              "examples": [
+                                "dev.ucp.shopping.checkout",
+                                "dev.ucp.common.identity_linking",
+                                "com.example.loyalty_gold",
+                                "com.example-shop.checkout",
+                                "com.2example.cart",
+                                "uk.co.example-shop.checkout",
+                                "xn--p1ai.example.checkout"
+                              ]
+                            },
+                            {
+                              "type": "array",
+                              "items": {
+                                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                                "$id": "https://ucp.dev/schemas/common/types/reverse_domain_name.json",
+                                "title": "Reverse Domain Name",
+                                "description": "Reverse-domain identifier used for collision-safe namespacing of capabilities, services, handlers, eligibility claims, and extension-contributed keys. Must contain at least two dot-separated segments (e.g., 'dev.ucp.shopping.checkout', 'com.example.loyalty_gold'). Segments after the first are domain- or identifier-derived: they may contain interior hyphens, may start with a digit, and may contain underscores (e.g., 'com.example-shop.checkout', 'com.2example.cart', 'dev.ucp.common.identity_linking'), but must not start or end with a hyphen. The first segment (the reversed top-level domain) is letters and digits, and may contain interior hyphens to support internationalized (punycode) top-level domains such as 'xn--p1ai'.",
+                                "type": "string",
+                                "pattern": "^[a-z](?:[a-z0-9-]*[a-z0-9])?(?:\\.[a-z0-9](?:[a-z0-9_-]*[a-z0-9_])?)+$",
+                                "examples": [
+                                  "dev.ucp.shopping.checkout",
+                                  "dev.ucp.common.identity_linking",
+                                  "com.example.loyalty_gold",
+                                  "com.example-shop.checkout",
+                                  "com.2example.cart",
+                                  "uk.co.example-shop.checkout",
+                                  "xn--p1ai.example.checkout"
+                                ]
+                              },
+                              "minItems": 1
+                            }
+                          ],
+                          "description": "Parent capability(s) this extends. Present for extensions, absent for root capabilities. Use array for multi-parent extensions."
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "payment_handlers": {
+              "type": "object",
+              "description": "Payment handler registry keyed by reverse-domain name.",
+              "propertyNames": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "$id": "https://ucp.dev/schemas/common/types/reverse_domain_name.json",
+                "title": "Reverse Domain Name",
+                "description": "Reverse-domain identifier used for collision-safe namespacing of capabilities, services, handlers, eligibility claims, and extension-contributed keys. Must contain at least two dot-separated segments (e.g., 'dev.ucp.shopping.checkout', 'com.example.loyalty_gold'). Segments after the first are domain- or identifier-derived: they may contain interior hyphens, may start with a digit, and may contain underscores (e.g., 'com.example-shop.checkout', 'com.2example.cart', 'dev.ucp.common.identity_linking'), but must not start or end with a hyphen. The first segment (the reversed top-level domain) is letters and digits, and may contain interior hyphens to support internationalized (punycode) top-level domains such as 'xn--p1ai'.",
+                "type": "string",
+                "pattern": "^[a-z](?:[a-z0-9-]*[a-z0-9])?(?:\\.[a-z0-9](?:[a-z0-9_-]*[a-z0-9_])?)+$",
+                "examples": [
+                  "dev.ucp.shopping.checkout",
+                  "dev.ucp.common.identity_linking",
+                  "com.example.loyalty_gold",
+                  "com.example-shop.checkout",
+                  "com.2example.cart",
+                  "uk.co.example-shop.checkout",
+                  "xn--p1ai.example.checkout"
+                ]
+              },
+              "additionalProperties": {
+                "type": "array",
+                "items": {
+                  "allOf": [
+                    {
+                      "type": "object",
+                      "description": "Shared foundation for all UCP entities.",
+                      "properties": {
+                        "version": {
+                          "description": "Entity version in YYYY-MM-DD format.",
+                          "type": "string",
+                          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                        },
+                        "spec": {
+                          "type": "string",
+                          "format": "uri",
+                          "description": "URL to human-readable specification document."
+                        },
+                        "schema": {
+                          "type": "string",
+                          "format": "uri",
+                          "description": "URL to JSON Schema defining this entity's structure and payloads."
+                        },
+                        "id": {
+                          "type": "string",
+                          "description": "Unique identifier for this entity instance. Used to disambiguate when multiple instances exist."
+                        },
+                        "config": {
+                          "type": "object",
+                          "description": "Entity-specific configuration. Structure defined by each entity's schema.",
+                          "additionalProperties": true
+                        }
+                      },
+                      "required": [
+                        "version"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "id"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "available_instruments": {
+                          "type": "array",
+                          "items": {
+                            "$schema": "https://json-schema.org/draft/2020-12/schema",
+                            "$id": "https://ucp.dev/schemas/common/types/available_payment_instrument.json",
+                            "title": "Available Payment Instrument",
+                            "description": "An instrument type available from a payment handler with optional constraints.",
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "description": "The instrument type identifier (e.g., 'card', 'gift_card'). References an instrument schema's type constant."
+                              },
+                              "constraints": {
+                                "description": "A Constraint Expression describing the instrument this entry makes available. Keys in `properties` name members of the `constraint_target` declared by the instrument schema for this `type`. Requirements on submitted request data belong in `ucp.request_constraints` instead.",
+                                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                                "$id": "https://ucp.dev/schemas/common/types/constraint_expression.json",
+                                "title": "Constraint Expression",
+                                "type": "object",
+                                "properties": {
+                                  "required": {
+                                    "type": "array",
+                                    "description": "Property names required by the constrained object. Must be non-empty: an empty array applies no constraint.",
+                                    "minItems": 1,
+                                    "uniqueItems": true,
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "properties": {
+                                    "type": "object",
+                                    "description": "Constraints keyed by property name. Must be non-empty: an empty object applies no constraint.",
+                                    "minProperties": 1,
+                                    "additionalProperties": {
+                                      "oneOf": [
+                                        {
+                                          "$ref": "#"
+                                        },
+                                        {
+                                          "type": "object",
+                                          "description": "A Value Constraint containing `enum`, `const`, or both.",
+                                          "anyOf": [
+                                            {
+                                              "required": [
+                                                "enum"
+                                              ]
+                                            },
+                                            {
+                                              "required": [
+                                                "const"
+                                              ]
+                                            }
+                                          ],
+                                          "properties": {
+                                            "enum": {
+                                              "type": "array",
+                                              "description": "A non-empty array of unique JSON values.",
+                                              "minItems": 1,
+                                              "uniqueItems": true
+                                            },
+                                            "const": {}
+                                          },
+                                          "additionalProperties": false
+                                        }
+                                      ]
+                                    }
+                                  },
+                                  "anyOf": {
+                                    "type": "array",
+                                    "description": "Alternative Object Constraints. The constrained object must satisfy at least one. A branch must be non-empty: an empty branch is satisfied by every object and neutralizes the alternation.",
+                                    "minItems": 1,
+                                    "items": {
+                                      "$ref": "#",
+                                      "minProperties": 1
+                                    }
+                                  }
+                                },
+                                "additionalProperties": false,
+                                "$defs": {
+                                  "value_constraint": {
+                                    "type": "object",
+                                    "description": "A Value Constraint containing `enum`, `const`, or both.",
+                                    "anyOf": [
+                                      {
+                                        "required": [
+                                          "enum"
+                                        ]
+                                      },
+                                      {
+                                        "required": [
+                                          "const"
+                                        ]
+                                      }
+                                    ],
+                                    "properties": {
+                                      "enum": {
+                                        "type": "array",
+                                        "description": "A non-empty array of unique JSON values.",
+                                        "minItems": 1,
+                                        "uniqueItems": true
+                                      },
+                                      "const": {}
+                                    },
+                                    "additionalProperties": false
+                                  }
+                                }
+                              }
+                            },
+                            "required": [
+                              "type"
+                            ]
+                          },
+                          "description": "Instrument types this handler supports, with optional constraints. When absent, every instrument should be considered available.",
+                          "minItems": 1
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "required": [
+            "version"
+          ]
+        },
+        {
+          "properties": {
+            "services": {
+              "additionalProperties": {
+                "items": {
+                  "title": "Service (Response Schema)",
+                  "description": "Service binding in API responses. Includes per-resource transport configuration via typed config.",
+                  "allOf": [
+                    {
+                      "allOf": [
+                        {
+                          "type": "object",
+                          "description": "Shared foundation for all UCP entities.",
+                          "properties": {
+                            "version": {
+                              "description": "Entity version in YYYY-MM-DD format.",
+                              "type": "string",
+                              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                            },
+                            "spec": {
+                              "type": "string",
+                              "format": "uri",
+                              "description": "URL to human-readable specification document."
+                            },
+                            "schema": {
+                              "type": "string",
+                              "format": "uri",
+                              "description": "URL to JSON Schema defining this entity's structure and payloads."
+                            },
+                            "id": {
+                              "type": "string",
+                              "description": "Unique identifier for this entity instance. Used to disambiguate when multiple instances exist."
+                            },
+                            "config": {
+                              "type": "object",
+                              "description": "Entity-specific configuration. Structure defined by each entity's schema.",
+                              "additionalProperties": true
+                            }
+                          },
+                          "required": [
+                            "version"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "transport": {
+                              "type": "string",
+                              "enum": [
+                                "rest",
+                                "mcp",
+                                "a2a",
+                                "embedded"
+                              ],
+                              "description": "Transport protocol for this service binding."
+                            },
+                            "endpoint": {
+                              "type": "string",
+                              "format": "uri",
+                              "description": "Endpoint URL for this transport binding."
+                            }
+                          },
+                          "required": [
+                            "transport"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "anyOf": [
+                        {
+                          "properties": {
+                            "transport": {
+                              "const": "rest"
+                            }
+                          }
+                        },
+                        {
+                          "properties": {
+                            "transport": {
+                              "const": "mcp"
+                            }
+                          }
+                        },
+                        {
+                          "properties": {
+                            "transport": {
+                              "const": "a2a"
+                            }
+                          }
+                        },
+                        {
+                          "properties": {
+                            "transport": {
+                              "const": "embedded"
+                            },
+                            "config": {
+                              "$schema": "https://json-schema.org/draft/2020-12/schema",
+                              "$id": "https://ucp.dev/schemas/transports/embedded_config.json",
+                              "title": "Embedded Transport Config",
+                              "description": "Per-session configuration for embedded transport binding. Allows businesses to vary EP availability and delegations based on cart contents, agent authorization, or policy.",
+                              "type": "object",
+                              "properties": {
+                                "delegate": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  },
+                                  "description": "Delegations the business allows. At service-level, declares available delegations. In UCP responses, confirms accepted delegations for this session."
+                                },
+                                "color_scheme": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string",
+                                    "enum": [
+                                      "light",
+                                      "dark"
+                                    ]
+                                  },
+                                  "description": "Color schemes the business supports. Hosts use ec_color_scheme query parameter to request a scheme from this list."
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            "capabilities": {
+              "additionalProperties": {
+                "items": {
+                  "title": "Capability (Response Schema)",
+                  "description": "Capability reference in responses. Only name/version required to confirm active capabilities.",
+                  "allOf": [
+                    {
+                      "allOf": [
+                        {
+                          "type": "object",
+                          "description": "Shared foundation for all UCP entities.",
+                          "properties": {
+                            "version": {
+                              "description": "Entity version in YYYY-MM-DD format.",
+                              "type": "string",
+                              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                            },
+                            "spec": {
+                              "type": "string",
+                              "format": "uri",
+                              "description": "URL to human-readable specification document."
+                            },
+                            "schema": {
+                              "type": "string",
+                              "format": "uri",
+                              "description": "URL to JSON Schema defining this entity's structure and payloads."
+                            },
+                            "id": {
+                              "type": "string",
+                              "description": "Unique identifier for this entity instance. Used to disambiguate when multiple instances exist."
+                            },
+                            "config": {
+                              "type": "object",
+                              "description": "Entity-specific configuration. Structure defined by each entity's schema.",
+                              "additionalProperties": true
+                            }
+                          },
+                          "required": [
+                            "version"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "extends": {
+                              "oneOf": [
+                                {
+                                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                                  "$id": "https://ucp.dev/schemas/common/types/reverse_domain_name.json",
+                                  "title": "Reverse Domain Name",
+                                  "description": "Reverse-domain identifier used for collision-safe namespacing of capabilities, services, handlers, eligibility claims, and extension-contributed keys. Must contain at least two dot-separated segments (e.g., 'dev.ucp.shopping.checkout', 'com.example.loyalty_gold'). Segments after the first are domain- or identifier-derived: they may contain interior hyphens, may start with a digit, and may contain underscores (e.g., 'com.example-shop.checkout', 'com.2example.cart', 'dev.ucp.common.identity_linking'), but must not start or end with a hyphen. The first segment (the reversed top-level domain) is letters and digits, and may contain interior hyphens to support internationalized (punycode) top-level domains such as 'xn--p1ai'.",
+                                  "type": "string",
+                                  "pattern": "^[a-z](?:[a-z0-9-]*[a-z0-9])?(?:\\.[a-z0-9](?:[a-z0-9_-]*[a-z0-9_])?)+$",
+                                  "examples": [
+                                    "dev.ucp.shopping.checkout",
+                                    "dev.ucp.common.identity_linking",
+                                    "com.example.loyalty_gold",
+                                    "com.example-shop.checkout",
+                                    "com.2example.cart",
+                                    "uk.co.example-shop.checkout",
+                                    "xn--p1ai.example.checkout"
+                                  ]
+                                },
+                                {
+                                  "type": "array",
+                                  "items": {
+                                    "$schema": "https://json-schema.org/draft/2020-12/schema",
+                                    "$id": "https://ucp.dev/schemas/common/types/reverse_domain_name.json",
+                                    "title": "Reverse Domain Name",
+                                    "description": "Reverse-domain identifier used for collision-safe namespacing of capabilities, services, handlers, eligibility claims, and extension-contributed keys. Must contain at least two dot-separated segments (e.g., 'dev.ucp.shopping.checkout', 'com.example.loyalty_gold'). Segments after the first are domain- or identifier-derived: they may contain interior hyphens, may start with a digit, and may contain underscores (e.g., 'com.example-shop.checkout', 'com.2example.cart', 'dev.ucp.common.identity_linking'), but must not start or end with a hyphen. The first segment (the reversed top-level domain) is letters and digits, and may contain interior hyphens to support internationalized (punycode) top-level domains such as 'xn--p1ai'.",
+                                    "type": "string",
+                                    "pattern": "^[a-z](?:[a-z0-9-]*[a-z0-9])?(?:\\.[a-z0-9](?:[a-z0-9_-]*[a-z0-9_])?)+$",
+                                    "examples": [
+                                      "dev.ucp.shopping.checkout",
+                                      "dev.ucp.common.identity_linking",
+                                      "com.example.loyalty_gold",
+                                      "com.example-shop.checkout",
+                                      "com.2example.cart",
+                                      "uk.co.example-shop.checkout",
+                                      "xn--p1ai.example.checkout"
+                                    ]
+                                  },
+                                  "minItems": 1
+                                }
+                              ],
+                              "description": "Parent capability(s) this extends. Present for extensions, absent for root capabilities. Use array for multi-parent extensions."
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            "payment_handlers": {
+              "additionalProperties": {
+                "items": {
+                  "title": "Payment Handler (Response Schema)",
+                  "description": "Handler reference in responses. May include full config state for runtime usage of the handler.",
+                  "allOf": [
+                    {
+                      "allOf": [
+                        {
+                          "type": "object",
+                          "description": "Shared foundation for all UCP entities.",
+                          "properties": {
+                            "version": {
+                              "description": "Entity version in YYYY-MM-DD format.",
+                              "type": "string",
+                              "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+                            },
+                            "spec": {
+                              "type": "string",
+                              "format": "uri",
+                              "description": "URL to human-readable specification document."
+                            },
+                            "schema": {
+                              "type": "string",
+                              "format": "uri",
+                              "description": "URL to JSON Schema defining this entity's structure and payloads."
+                            },
+                            "id": {
+                              "type": "string",
+                              "description": "Unique identifier for this entity instance. Used to disambiguate when multiple instances exist."
+                            },
+                            "config": {
+                              "type": "object",
+                              "description": "Entity-specific configuration. Structure defined by each entity's schema.",
+                              "additionalProperties": true
+                            }
+                          },
+                          "required": [
+                            "version"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "required": [
+                            "id"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "available_instruments": {
+                              "type": "array",
+                              "items": {
+                                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                                "$id": "https://ucp.dev/schemas/common/types/available_payment_instrument.json",
+                                "title": "Available Payment Instrument",
+                                "description": "An instrument type available from a payment handler with optional constraints.",
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "description": "The instrument type identifier (e.g., 'card', 'gift_card'). References an instrument schema's type constant."
+                                  },
+                                  "constraints": {
+                                    "description": "A Constraint Expression describing the instrument this entry makes available. Keys in `properties` name members of the `constraint_target` declared by the instrument schema for this `type`. Requirements on submitted request data belong in `ucp.request_constraints` instead.",
+                                    "$schema": "https://json-schema.org/draft/2020-12/schema",
+                                    "$id": "https://ucp.dev/schemas/common/types/constraint_expression.json",
+                                    "title": "Constraint Expression",
+                                    "type": "object",
+                                    "properties": {
+                                      "required": {
+                                        "type": "array",
+                                        "description": "Property names required by the constrained object. Must be non-empty: an empty array applies no constraint.",
+                                        "minItems": 1,
+                                        "uniqueItems": true,
+                                        "items": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      "properties": {
+                                        "type": "object",
+                                        "description": "Constraints keyed by property name. Must be non-empty: an empty object applies no constraint.",
+                                        "minProperties": 1,
+                                        "additionalProperties": {
+                                          "oneOf": [
+                                            {
+                                              "$ref": "#"
+                                            },
+                                            {
+                                              "type": "object",
+                                              "description": "A Value Constraint containing `enum`, `const`, or both.",
+                                              "anyOf": [
+                                                {
+                                                  "required": [
+                                                    "enum"
+                                                  ]
+                                                },
+                                                {
+                                                  "required": [
+                                                    "const"
+                                                  ]
+                                                }
+                                              ],
+                                              "properties": {
+                                                "enum": {
+                                                  "type": "array",
+                                                  "description": "A non-empty array of unique JSON values.",
+                                                  "minItems": 1,
+                                                  "uniqueItems": true
+                                                },
+                                                "const": {}
+                                              },
+                                              "additionalProperties": false
+                                            }
+                                          ]
+                                        }
+                                      },
+                                      "anyOf": {
+                                        "type": "array",
+                                        "description": "Alternative Object Constraints. The constrained object must satisfy at least one. A branch must be non-empty: an empty branch is satisfied by every object and neutralizes the alternation.",
+                                        "minItems": 1,
+                                        "items": {
+                                          "$ref": "#",
+                                          "minProperties": 1
+                                        }
+                                      }
+                                    },
+                                    "additionalProperties": false,
+                                    "$defs": {
+                                      "value_constraint": {
+                                        "type": "object",
+                                        "description": "A Value Constraint containing `enum`, `const`, or both.",
+                                        "anyOf": [
+                                          {
+                                            "required": [
+                                              "enum"
+                                            ]
+                                          },
+                                          {
+                                            "required": [
+                                              "const"
+                                            ]
+                                          }
+                                        ],
+                                        "properties": {
+                                          "enum": {
+                                            "type": "array",
+                                            "description": "A non-empty array of unique JSON values.",
+                                            "minItems": 1,
+                                            "uniqueItems": true
+                                          },
+                                          "const": {}
+                                        },
+                                        "additionalProperties": false
+                                      }
+                                    }
+                                  }
+                                },
+                                "required": [
+                                  "type"
+                                ]
+                              },
+                              "description": "Instrument types this handler supports, with optional constraints. When absent, every instrument should be considered available.",
+                              "minItems": 1
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "required": [
+            "payment_handlers"
+          ]
+        }
+      ]
+    },
+    "id": {
+      "type": "string",
+      "description": "Unique identifier of the checkout session."
+    },
+    "line_items": {
+      "type": "array",
+      "items": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://ucp.dev/schemas/shopping/types/line_item.json",
+        "title": "Line Item",
+        "type": "object",
+        "description": "Line item object. Expected to use the currency of the parent object.",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "item": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "$id": "https://ucp.dev/schemas/shopping/types/item.json",
+            "title": "Item",
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "The product identifier, often the SKU, required to resolve the product details associated with this line item. Should be recognized by both the Platform, and the Business."
+              },
+              "title": {
+                "type": "string",
+                "description": "Product title."
+              },
+              "price": {
+                "description": "Unit price in ISO 4217 minor units. Price is the amount per one whole `quantity_unit.unit` (for example, per lb or per hour); when `quantity_unit` is absent, it is per `each`.",
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "$id": "https://ucp.dev/schemas/common/types/amount.json",
+                "title": "Amount",
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "quantity_unit": {
+                "description": "Sale basis this item's `quantity` is denominated in. On an authoritative Business response, absence encodes the default `each` machine identity (`C62`, 0); the Business MUST include this descriptor for every non-`each` response. On Platform requests, omission makes no assertion: the Business interprets `quantity` using the item's authoritative sale basis. If the Platform includes this descriptor, it asserts the unit-descriptor machine identity. The Business MUST compare that machine identity (`unit`, effective `scale`), ignore `display_text` and `increment`, and resolve a mismatch by conversion surfaced as a visible line revision with a warning, or by rejection with a recoverable business outcome; silent reinterpretation is forbidden. An explicit `C62` descriptor at effective scale 0 matches an authoritative basis represented by an absent descriptor.",
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "$id": "https://ucp.dev/schemas/common/types/quantity_unit.json",
+                "title": "Quantity Unit",
+                "allOf": [
+                  {
+                    "$schema": "https://json-schema.org/draft/2020-12/schema",
+                    "$id": "https://ucp.dev/schemas/common/types/unit.json",
+                    "title": "Unit",
+                    "description": "A reusable unit descriptor for quantities and measures. Its unit-descriptor machine identity is (`unit`, effective `scale`), where effective `scale` is the provided `scale` or 0; `display_text` is excluded.",
+                    "type": "object",
+                    "properties": {
+                      "unit": {
+                        "type": "string",
+                        "description": "Stable machine identifier. The Business SHOULD use the exact UN/CEFACT Rec20 Common Code when one accurately identifies the unit. Otherwise, the Business MAY use a custom unit identifier and MUST use it consistently for the same unit. The Platform MUST treat an unrecognized identifier as opaque."
+                      },
+                      "scale": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 15,
+                        "default": 0,
+                        "description": "One step equals `10^-scale` of `unit`. When `unit` is `C62`, `scale`, if present, MUST be 0. The maximum of 15 is derived from the interoperable integer range: at scale 16 a single whole unit (10^16 steps) is no longer representable, so larger scales cannot denominate one unit of their own basis. Businesses needing finer granularity use a smaller unit."
+                      },
+                      "display_text": {
+                        "type": "string",
+                        "description": "Required printable unit label provided by the Business. The Platform MUST use it when it does not recognize `unit`; for a recognized UN/CEFACT Rec 20 Common Code, the Platform MAY substitute its own localized label. It does not participate in unit identity or mismatch comparison."
+                      }
+                    },
+                    "allOf": [
+                      {
+                        "if": {
+                          "properties": {
+                            "unit": {
+                              "const": "C62"
+                            }
+                          },
+                          "required": [
+                            "unit"
+                          ]
+                        },
+                        "then": {
+                          "properties": {
+                            "scale": {
+                              "const": 0
+                            }
+                          }
+                        }
+                      }
+                    ],
+                    "required": [
+                      "unit",
+                      "display_text"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "increment": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "default": 1,
+                        "description": "Ordering granularity, denominated in steps: the Business sells this item in integer multiples of `increment` steps. Its effective value is the provided value or 1. Advisory merchandising policy, not a representational bound: Platform-authored quantities SHOULD be integer multiples of the effective increment; the Business MAY accept, revise, or reject an off-increment request with a recoverable business outcome and MUST NOT silently reinterpret it. Business-authored quantities (checkout revisions, fulfillment events, adjustments) are bounded only by `scale`."
+                      }
+                    }
+                  }
+                ]
+              },
+              "unit_price": {
+                "description": "Pricing basis for this item. On an authoritative Business response, the Business MUST include `unit_price` on every line whose pricing basis differs from its sale basis (for example, priced per pound but sold per `each`); presence on a line marks the rate as transactional rather than display-only. When the pricing basis is the sale basis, `item.price` fully denominates the charge and this field MAY be omitted.",
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "$id": "https://ucp.dev/schemas/shopping/types/unit_price.json",
+                "title": "Unit Price",
+                "type": "object",
+                "properties": {
+                  "amount": {
+                    "description": "Unit price in ISO 4217 minor units. After satisfying the same-unit invariant, the Business MUST compute the comparator as `(price.amount / (measure.value × 10^-measure.scale)) × (reference.value × 10^-reference.scale)` and round it once to ISO 4217 minor units according to its pricing rules. The returned `unit_price.amount` is authoritative; the Platform MUST NOT recompute or substitute its own result.",
+                    "$schema": "https://json-schema.org/draft/2020-12/schema",
+                    "$id": "https://ucp.dev/schemas/common/types/amount.json",
+                    "title": "Amount",
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "currency": {
+                    "type": "string",
+                    "pattern": "^[A-Z]{3}$",
+                    "description": "ISO 4217 currency code."
+                  },
+                  "measure": {
+                    "description": "Product quantity in packaging/content (for example, a 750 mL bottle), distinct from `quantity_unit`, which defines the sale basis. Its integer `value` MUST be at least 1.",
+                    "allOf": [
+                      {
+                        "$schema": "https://json-schema.org/draft/2020-12/schema",
+                        "$id": "https://ucp.dev/schemas/common/types/measure.json",
+                        "title": "Measure",
+                        "description": "A measure composed of an integer value and a unit descriptor. Its value is the integer count of `10^-scale` units of `unit`.",
+                        "allOf": [
+                          {
+                            "$schema": "https://json-schema.org/draft/2020-12/schema",
+                            "$id": "https://ucp.dev/schemas/common/types/unit.json",
+                            "title": "Unit",
+                            "description": "A reusable unit descriptor for quantities and measures. Its unit-descriptor machine identity is (`unit`, effective `scale`), where effective `scale` is the provided `scale` or 0; `display_text` is excluded.",
+                            "type": "object",
+                            "properties": {
+                              "unit": {
+                                "type": "string",
+                                "description": "Stable machine identifier. The Business SHOULD use the exact UN/CEFACT Rec20 Common Code when one accurately identifies the unit. Otherwise, the Business MAY use a custom unit identifier and MUST use it consistently for the same unit. The Platform MUST treat an unrecognized identifier as opaque."
+                              },
+                              "scale": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 15,
+                                "default": 0,
+                                "description": "One step equals `10^-scale` of `unit`. When `unit` is `C62`, `scale`, if present, MUST be 0. The maximum of 15 is derived from the interoperable integer range: at scale 16 a single whole unit (10^16 steps) is no longer representable, so larger scales cannot denominate one unit of their own basis. Businesses needing finer granularity use a smaller unit."
+                              },
+                              "display_text": {
+                                "type": "string",
+                                "description": "Required printable unit label provided by the Business. The Platform MUST use it when it does not recognize `unit`; for a recognized UN/CEFACT Rec 20 Common Code, the Platform MAY substitute its own localized label. It does not participate in unit identity or mismatch comparison."
+                              }
+                            },
+                            "allOf": [
+                              {
+                                "if": {
+                                  "properties": {
+                                    "unit": {
+                                      "const": "C62"
+                                    }
+                                  },
+                                  "required": [
+                                    "unit"
+                                  ]
+                                },
+                                "then": {
+                                  "properties": {
+                                    "scale": {
+                                      "const": 0
+                                    }
+                                  }
+                                }
+                              }
+                            ],
+                            "required": [
+                              "unit",
+                              "display_text"
+                            ]
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "value": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991,
+                                "description": "Integer count of `10^-scale` units of `unit`."
+                              }
+                            },
+                            "required": [
+                              "value"
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "minimum": 1
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "reference": {
+                    "description": "Denominator for unit price display (for example, per 100 mL or per 1 kg). Its integer `value` MUST be at least 1.",
+                    "allOf": [
+                      {
+                        "$schema": "https://json-schema.org/draft/2020-12/schema",
+                        "$id": "https://ucp.dev/schemas/common/types/measure.json",
+                        "title": "Measure",
+                        "description": "A measure composed of an integer value and a unit descriptor. Its value is the integer count of `10^-scale` units of `unit`.",
+                        "allOf": [
+                          {
+                            "$schema": "https://json-schema.org/draft/2020-12/schema",
+                            "$id": "https://ucp.dev/schemas/common/types/unit.json",
+                            "title": "Unit",
+                            "description": "A reusable unit descriptor for quantities and measures. Its unit-descriptor machine identity is (`unit`, effective `scale`), where effective `scale` is the provided `scale` or 0; `display_text` is excluded.",
+                            "type": "object",
+                            "properties": {
+                              "unit": {
+                                "type": "string",
+                                "description": "Stable machine identifier. The Business SHOULD use the exact UN/CEFACT Rec20 Common Code when one accurately identifies the unit. Otherwise, the Business MAY use a custom unit identifier and MUST use it consistently for the same unit. The Platform MUST treat an unrecognized identifier as opaque."
+                              },
+                              "scale": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 15,
+                                "default": 0,
+                                "description": "One step equals `10^-scale` of `unit`. When `unit` is `C62`, `scale`, if present, MUST be 0. The maximum of 15 is derived from the interoperable integer range: at scale 16 a single whole unit (10^16 steps) is no longer representable, so larger scales cannot denominate one unit of their own basis. Businesses needing finer granularity use a smaller unit."
+                              },
+                              "display_text": {
+                                "type": "string",
+                                "description": "Required printable unit label provided by the Business. The Platform MUST use it when it does not recognize `unit`; for a recognized UN/CEFACT Rec 20 Common Code, the Platform MAY substitute its own localized label. It does not participate in unit identity or mismatch comparison."
+                              }
+                            },
+                            "allOf": [
+                              {
+                                "if": {
+                                  "properties": {
+                                    "unit": {
+                                      "const": "C62"
+                                    }
+                                  },
+                                  "required": [
+                                    "unit"
+                                  ]
+                                },
+                                "then": {
+                                  "properties": {
+                                    "scale": {
+                                      "const": 0
+                                    }
+                                  }
+                                }
+                              }
+                            ],
+                            "required": [
+                              "unit",
+                              "display_text"
+                            ]
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "value": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991,
+                                "description": "Integer count of `10^-scale` units of `unit`."
+                              }
+                            },
+                            "required": [
+                              "value"
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "minimum": 1
+                          }
+                        }
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "amount",
+                  "currency",
+                  "measure",
+                  "reference"
+                ]
+              },
+              "image_url": {
+                "type": "string",
+                "description": "Product image URI.",
+                "format": "uri"
+              }
+            },
+            "required": [
+              "id",
+              "title",
+              "price"
+            ]
+          },
+          "quantity": {
+            "type": "integer",
+            "description": "Always an integer step count. On Platform requests, steps use the item's Business-authoritative sale basis; omitting `item.quantity_unit` makes no assertion and does not imply `each`. On Business responses, `item.quantity_unit` describes the basis; if absent, it encodes the `each` machine identity (`C62`, 0) and `quantity` counts whole items.",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "totals": {
+            "type": "array",
+            "items": {
+              "$schema": "https://json-schema.org/draft/2020-12/schema",
+              "$id": "https://ucp.dev/schemas/common/types/total.json",
+              "title": "Total",
+              "description": "A cost breakdown entry with a category, amount, and optional display text.",
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "description": "Cost category. Well-known values: subtotal, items_discount, discount, fulfillment, tax, fee, total. Businesses MAY use additional values."
+                },
+                "display_text": {
+                  "type": "string",
+                  "description": "Text to display against the amount. Should reflect appropriate method (e.g., 'Shipping', 'Delivery')."
+                },
+                "amount": {
+                  "$schema": "https://json-schema.org/draft/2020-12/schema",
+                  "$id": "https://ucp.dev/schemas/common/types/signed_amount.json",
+                  "title": "Signed Amount",
+                  "description": "Monetary amount in the currency's minor unit as defined by ISO 4217. Refer to the currency's exponent to determine minor-to-major ratio (e.g., 2 for USD, 0 for JPY, 3 for KWD). May be negative — the sign is intrinsic to the value (e.g., discounts are negative, charges are positive).",
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                }
+              },
+              "allOf": [
+                {
+                  "if": {
+                    "properties": {
+                      "type": {
+                        "enum": [
+                          "discount",
+                          "items_discount"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "type"
+                    ]
+                  },
+                  "then": {
+                    "properties": {
+                      "amount": {
+                        "exclusiveMaximum": 0
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "type": {
+                        "enum": [
+                          "subtotal",
+                          "fulfillment",
+                          "tax",
+                          "fee"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "type"
+                    ]
+                  },
+                  "then": {
+                    "properties": {
+                      "amount": {
+                        "minimum": 0
+                      }
+                    }
+                  }
+                }
+              ],
+              "required": [
+                "type",
+                "amount"
+              ]
+            },
+            "description": "Line item totals breakdown."
+          },
+          "parent_id": {
+            "type": "string",
+            "description": "Parent line item identifier for any nested structures."
+          }
+        },
+        "required": [
+          "id",
+          "item",
+          "quantity",
+          "totals"
+        ]
+      },
+      "description": "List of line items being checked out."
+    },
+    "buyer": {
+      "description": "Representation of the buyer.",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://ucp.dev/schemas/shopping/types/buyer.json",
+      "title": "Buyer",
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "first_name": {
+          "type": "string",
+          "description": "First name of the buyer."
+        },
+        "last_name": {
+          "type": "string",
+          "description": "Last name of the buyer."
+        },
+        "email": {
+          "type": "string",
+          "description": "Email of the buyer."
+        },
+        "phone_number": {
+          "type": "string",
+          "description": "E.164 standard."
+        }
+      }
+    },
+    "context": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://ucp.dev/schemas/common/types/context.json",
+      "title": "Context",
+      "description": "Provisional buyer signals for relevance and localization—not authoritative data. Businesses SHOULD use these values when verified inputs (e.g., shipping address) are absent, and MAY ignore or down-rank them if inconsistent with higher-confidence signals (authenticated account, risk detection) or regulatory constraints (export controls). Eligibility and policy enforcement MUST occur at checkout time using binding transaction data. Context SHOULD be non-identifying and can be disclosed progressively—coarse signals early, finer resolution as the session progresses. Higher-resolution data (shipping address, billing address) supersedes context.",
+      "type": "object",
+      "additionalProperties": true,
+      "allOf": [
+        {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "$id": "https://ucp.dev/schemas/common/types/locality.json",
+          "title": "Locality",
+          "description": "A coarse geographic location — country, region, and postal code. A lightweight alternative to a full postal address.",
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "address_country": {
+              "type": "string",
+              "description": "The country, as a 2-letter ISO 3166-1 alpha-2 code (e.g. \"US\"). A 3-letter alpha-3 code or full country name MAY also be used."
+            },
+            "address_region": {
+              "type": "string",
+              "description": "The first-level administrative region within the country (e.g. a state or province such as California)."
+            },
+            "postal_code": {
+              "type": "string",
+              "description": "The postal code (e.g. \"94043\")."
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "location": {
+              "type": "string",
+              "description": "Stable, opaque identifier for a Location in the Business's namespace. This provisional, non-binding hint is distinct from the Buyer's locality. The operation specification or an active capability/extension defines its effects. A common example in retail shopping is the default home store ID selected and saved by the user when purchasing groceries."
+            },
+            "intent": {
+              "type": "string",
+              "description": "Background context describing buyer's intent (e.g., 'looking for a gift under $50', 'need something durable for outdoor use'). Informs relevance, recommendations, and personalization."
+            },
+            "language": {
+              "type": "string",
+              "description": "Preferred language for content. Use IETF BCP 47 language tags (e.g., 'en', 'fr-CA', 'zh-Hans'). For REST, equivalent to Accept-Language header—platforms SHOULD fall back to Accept-Language when this field is absent; when provided, overrides Accept-Language. Businesses MAY return content in a different language if unavailable."
+            },
+            "currency": {
+              "type": "string",
+              "description": "Preferred currency (ISO 4217, e.g., 'EUR', 'USD'). Businesses determine presentment currency from context and authoritative signals; this hint MAY inform selection in multi-currency markets. Also serves as the denomination for price filter values — platforms SHOULD include this field when sending price filters. Response prices include explicit currency confirming the resolution."
+            },
+            "eligibility": {
+              "type": "array",
+              "description": "Buyer claims about eligible benefits such as loyalty membership, payment instrument perks, and similar. Recognized claims MAY inform the Business response (e.g., member-only product availability, adjusted pricing in catalog, provisional discounts at cart or checkout). Businesses MUST ignore unrecognized values without error. Values MUST use reverse-domain naming (e.g., 'com.example.loyalty_gold', 'org.school.student') and MUST be non-identifying.",
+              "uniqueItems": true,
+              "items": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "$id": "https://ucp.dev/schemas/common/types/reverse_domain_name.json",
+                "title": "Reverse Domain Name",
+                "description": "Reverse-domain identifier used for collision-safe namespacing of capabilities, services, handlers, eligibility claims, and extension-contributed keys. Must contain at least two dot-separated segments (e.g., 'dev.ucp.shopping.checkout', 'com.example.loyalty_gold'). Segments after the first are domain- or identifier-derived: they may contain interior hyphens, may start with a digit, and may contain underscores (e.g., 'com.example-shop.checkout', 'com.2example.cart', 'dev.ucp.common.identity_linking'), but must not start or end with a hyphen. The first segment (the reversed top-level domain) is letters and digits, and may contain interior hyphens to support internationalized (punycode) top-level domains such as 'xn--p1ai'.",
+                "type": "string",
+                "pattern": "^[a-z](?:[a-z0-9-]*[a-z0-9])?(?:\\.[a-z0-9](?:[a-z0-9_-]*[a-z0-9_])?)+$",
+                "examples": [
+                  "dev.ucp.shopping.checkout",
+                  "dev.ucp.common.identity_linking",
+                  "com.example.loyalty_gold",
+                  "com.example-shop.checkout",
+                  "com.2example.cart",
+                  "uk.co.example-shop.checkout",
+                  "xn--p1ai.example.checkout"
+                ]
+              }
+            },
+            "payment": {
+              "type": "array",
+              "description": "Buyer-preferred payment handlers in priority order (most preferred first). Each entry names a handler advertised in the Business profile's `ucp.payment_handlers`, optionally narrowed to preferred instrument types. The Business SHOULD use it to preselect or prioritize the handler (and type, when given) and MAY ignore unavailable or ineligible entries; unrecognized values MUST be ignored without error.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "handler": {
+                    "description": "Handler registry key advertised in the Business profile's `ucp.payment_handlers`.",
+                    "$schema": "https://json-schema.org/draft/2020-12/schema",
+                    "$id": "https://ucp.dev/schemas/common/types/reverse_domain_name.json",
+                    "title": "Reverse Domain Name",
+                    "type": "string",
+                    "pattern": "^[a-z](?:[a-z0-9-]*[a-z0-9])?(?:\\.[a-z0-9](?:[a-z0-9_-]*[a-z0-9_])?)+$",
+                    "examples": [
+                      "dev.ucp.shopping.checkout",
+                      "dev.ucp.common.identity_linking",
+                      "com.example.loyalty_gold",
+                      "com.example-shop.checkout",
+                      "com.2example.cart",
+                      "uk.co.example-shop.checkout",
+                      "xn--p1ai.example.checkout"
+                    ]
+                  },
+                  "types": {
+                    "type": "array",
+                    "description": "Optional preferred instrument types for this handler, in priority order, aligned with the handler's advertised `payment_instrument.type` values (for example `card` or `bank`). Unrecognized values MUST be ignored.",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "handler"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "signals": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://ucp.dev/schemas/common/types/signals.json",
+      "title": "Signals",
+      "description": "Environment data provided by the platform to support authorization and abuse prevention. Values MUST NOT be buyer-asserted claims — platforms provide signals based on direct observation or independently verifiable third-party attestations. All signal keys MUST use reverse-domain naming to ensure provenance and prevent collisions when multiple extensions contribute to the shared namespace.",
+      "type": "object",
+      "propertyNames": {
+        "description": "Reverse-domain identifier (e.g., dev.ucp.buyer_ip, com.example.device_id).",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://ucp.dev/schemas/common/types/reverse_domain_name.json",
+        "title": "Reverse Domain Name",
+        "type": "string",
+        "pattern": "^[a-z](?:[a-z0-9-]*[a-z0-9])?(?:\\.[a-z0-9](?:[a-z0-9_-]*[a-z0-9_])?)+$",
+        "examples": [
+          "dev.ucp.shopping.checkout",
+          "dev.ucp.common.identity_linking",
+          "com.example.loyalty_gold",
+          "com.example-shop.checkout",
+          "com.2example.cart",
+          "uk.co.example-shop.checkout",
+          "xn--p1ai.example.checkout"
+        ]
+      },
+      "properties": {
+        "dev.ucp.buyer_ip": {
+          "type": "string",
+          "description": "Client's IP address (IPv4 or IPv6)."
+        },
+        "dev.ucp.user_agent": {
+          "type": "string",
+          "description": "Client's HTTP User-Agent header or equivalent."
+        }
+      },
+      "additionalProperties": true
+    },
+    "attribution": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://ucp.dev/schemas/shopping/types/attribution.json",
+      "title": "Attribution",
+      "description": "Platform-emitted referral and conversion-event context — campaign identifiers, click IDs, source/medium markers, etc. The same parameters platforms communicate via URL query parameters in browser-based flows.",
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "description": "URL-style parameter value, encoded as a string. Numeric or boolean values MUST be string-encoded as they would be in a URL query string."
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "incomplete",
+        "requires_escalation",
+        "ready_for_complete",
+        "complete_in_progress",
+        "completed",
+        "canceled"
+      ],
+      "description": "Checkout state indicating the current phase and required processing. See Checkout Status lifecycle documentation for state transition details."
+    },
+    "currency": {
+      "type": "string",
+      "description": "ISO 4217 currency code reflecting the merchant's market determination. Derived from address, context, and geo IP—buyers provide signals, merchants determine currency."
+    },
+    "totals": {
+      "description": "Different cart totals.",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://ucp.dev/schemas/common/types/totals.json",
+      "title": "Totals",
+      "type": "array",
+      "items": {
+        "allOf": [
+          {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "$id": "https://ucp.dev/schemas/common/types/total.json",
+            "title": "Total",
+            "description": "A cost breakdown entry with a category, amount, and optional display text.",
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "Cost category. Well-known values: subtotal, items_discount, discount, fulfillment, tax, fee, total. Businesses MAY use additional values."
+              },
+              "display_text": {
+                "type": "string",
+                "description": "Text to display against the amount. Should reflect appropriate method (e.g., 'Shipping', 'Delivery')."
+              },
+              "amount": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "$id": "https://ucp.dev/schemas/common/types/signed_amount.json",
+                "title": "Signed Amount",
+                "description": "Monetary amount in the currency's minor unit as defined by ISO 4217. Refer to the currency's exponent to determine minor-to-major ratio (e.g., 2 for USD, 0 for JPY, 3 for KWD). May be negative — the sign is intrinsic to the value (e.g., discounts are negative, charges are positive).",
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              }
+            },
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "type": {
+                      "enum": [
+                        "discount",
+                        "items_discount"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "amount": {
+                      "exclusiveMaximum": 0
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "type": {
+                      "enum": [
+                        "subtotal",
+                        "fulfillment",
+                        "tax",
+                        "fee"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "amount": {
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            ],
+            "required": [
+              "type",
+              "amount"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "lines": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "display_text": {
+                      "type": "string",
+                      "description": "Human-readable label for this sub-line."
+                    },
+                    "amount": {
+                      "$schema": "https://json-schema.org/draft/2020-12/schema",
+                      "$id": "https://ucp.dev/schemas/common/types/signed_amount.json",
+                      "title": "Signed Amount",
+                      "description": "Monetary amount in the currency's minor unit as defined by ISO 4217. Refer to the currency's exponent to determine minor-to-major ratio (e.g., 2 for USD, 0 for JPY, 3 for KWD). May be negative — the sign is intrinsic to the value (e.g., discounts are negative, charges are positive).",
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "description": "Sub-line entry. Additional metadata MAY be included.",
+                  "required": [
+                    "display_text",
+                    "amount"
+                  ]
+                },
+                "description": "Optional itemized breakdown. The parent entry is always rendered; lines are supplementary. Sum of line amounts MUST equal the parent entry amount."
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "type": {
+                  "not": {
+                    "enum": [
+                      "subtotal",
+                      "items_discount",
+                      "discount",
+                      "fulfillment",
+                      "tax",
+                      "fee",
+                      "total"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "then": {
+              "required": [
+                "display_text"
+              ]
+            }
+          }
+        ]
+      },
+      "allOf": [
+        {
+          "contains": {
+            "properties": {
+              "type": {
+                "const": "subtotal"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "minContains": 1,
+          "maxContains": 1
+        },
+        {
+          "contains": {
+            "properties": {
+              "type": {
+                "const": "total"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "minContains": 1,
+          "maxContains": 1
+        }
+      ]
+    },
+    "actions": {
+      "description": "Outstanding extension-defined Actions for this checkout.",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://ucp.dev/schemas/common/types/actions.json",
+      "title": "Actions",
+      "$defs": {
+        "instance": {
+          "type": "object",
+          "description": "Common fields for one outstanding Action instance are id and optional config. The extension declaring the Action type defines type-specific processing data under config. Additional properties are permitted for forward compatibility.",
+          "additionalProperties": true,
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Identifier for this Action instance."
+            },
+            "config": {
+              "type": "object",
+              "description": "Configuration defined by the extension that declares this Action type.",
+              "additionalProperties": true
+            }
+          },
+          "required": [
+            "id"
+          ]
+        }
+      },
+      "type": "object",
+      "propertyNames": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://ucp.dev/schemas/common/types/reverse_domain_name.json",
+        "title": "Reverse Domain Name",
+        "description": "Reverse-domain identifier used for collision-safe namespacing of capabilities, services, handlers, eligibility claims, and extension-contributed keys. Must contain at least two dot-separated segments (e.g., 'dev.ucp.shopping.checkout', 'com.example.loyalty_gold'). Segments after the first are domain- or identifier-derived: they may contain interior hyphens, may start with a digit, and may contain underscores (e.g., 'com.example-shop.checkout', 'com.2example.cart', 'dev.ucp.common.identity_linking'), but must not start or end with a hyphen. The first segment (the reversed top-level domain) is letters and digits, and may contain interior hyphens to support internationalized (punycode) top-level domains such as 'xn--p1ai'.",
+        "type": "string",
+        "pattern": "^[a-z](?:[a-z0-9-]*[a-z0-9])?(?:\\.[a-z0-9](?:[a-z0-9_-]*[a-z0-9_])?)+$",
+        "examples": [
+          "dev.ucp.shopping.checkout",
+          "dev.ucp.common.identity_linking",
+          "com.example.loyalty_gold",
+          "com.example-shop.checkout",
+          "com.2example.cart",
+          "uk.co.example-shop.checkout",
+          "xn--p1ai.example.checkout"
+        ]
+      },
+      "additionalProperties": {
+        "type": "array",
+        "description": "Non-empty instances of one Action type. JSON preserves array order; the declaring extension defines whether order has processing semantics.",
+        "minItems": 1,
+        "items": {
+          "type": "object",
+          "description": "Common fields for one outstanding Action instance are id and optional config. The extension declaring the Action type defines type-specific processing data under config. Additional properties are permitted for forward compatibility.",
+          "additionalProperties": true,
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Identifier for this Action instance."
+            },
+            "config": {
+              "type": "object",
+              "description": "Configuration defined by the extension that declares this Action type.",
+              "additionalProperties": true
+            }
+          },
+          "required": [
+            "id"
+          ]
+        }
+      }
+    },
+    "messages": {
+      "type": "array",
+      "items": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://ucp.dev/schemas/common/types/message.json",
+        "title": "Message",
+        "type": "object",
+        "description": "Container for error, warning, or info messages.",
+        "oneOf": [
+          {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "$id": "https://ucp.dev/schemas/common/types/message_error.json",
+            "title": "Message Error",
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "const": "error",
+                "description": "Message type discriminator."
+              },
+              "code": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "$id": "https://ucp.dev/schemas/common/types/error_code.json",
+                "title": "Error Code",
+                "description": "Error code identifying the type of error. Standard errors are defined in capability specifications (see examples) and have standardized semantics; freeform codes are permitted.",
+                "type": "string",
+                "examples": [
+                  "not_found",
+                  "out_of_stock",
+                  "item_unavailable",
+                  "address_undeliverable",
+                  "payment_failed",
+                  "eligibility_invalid",
+                  "identity_required",
+                  "insufficient_scope"
+                ]
+              },
+              "path": {
+                "type": "string",
+                "description": "RFC 9535 JSONPath to the component the message refers to (e.g., $.line_items[0])."
+              },
+              "content_type": {
+                "type": "string",
+                "enum": [
+                  "plain",
+                  "markdown"
+                ],
+                "default": "plain",
+                "description": "Content format, default = plain."
+              },
+              "content": {
+                "type": "string",
+                "description": "Human-readable message."
+              },
+              "severity": {
+                "type": "string",
+                "enum": [
+                  "recoverable",
+                  "requires_buyer_input",
+                  "requires_buyer_review",
+                  "unrecoverable"
+                ],
+                "description": "Reflects the resource state and recommended action. 'recoverable': platform can resolve the condition in band, for example by modifying inputs or processing a related Action, and submit a new operation when needed. 'requires_buyer_input': merchant requires information their API doesn't support collecting programmatically (checkout incomplete). 'requires_buyer_review': buyer must authorize before order placement due to policy, regulatory, or entitlement rules. 'unrecoverable': no valid resource exists to act on, retry with new resource or inputs. Errors with 'requires_*' severity contribute to 'status: requires_escalation'."
+              }
+            },
+            "required": [
+              "type",
+              "code",
+              "content",
+              "severity"
+            ]
+          },
+          {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "$id": "https://ucp.dev/schemas/common/types/message_warning.json",
+            "title": "Message Warning",
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "const": "warning",
+                "description": "Message type discriminator."
+              },
+              "path": {
+                "type": "string",
+                "description": "RFC 9535 JSONPath to the component the message refers to (e.g., $.line_items[0])."
+              },
+              "code": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "$id": "https://ucp.dev/schemas/common/types/warning_code.json",
+                "title": "Warning Code",
+                "description": "Warning code identifying the type of warning. Standard codes are defined in capability specifications (see examples) and have standardized semantics; freeform codes are permitted.",
+                "type": "string",
+                "examples": [
+                  "final_sale",
+                  "prop65",
+                  "fulfillment_changed",
+                  "payment_term_changed",
+                  "age_restricted"
+                ]
+              },
+              "content": {
+                "type": "string",
+                "description": "Human-readable warning message that MUST be displayed."
+              },
+              "content_type": {
+                "type": "string",
+                "enum": [
+                  "plain",
+                  "markdown"
+                ],
+                "default": "plain",
+                "description": "Content format, default = plain."
+              },
+              "presentation": {
+                "type": "string",
+                "default": "notice",
+                "description": "Rendering contract for this warning. 'notice' (default): platform MUST display, MAY dismiss. 'disclosure': platform MUST display in proximity to the path-referenced component, MUST NOT hide or auto-dismiss. See specification for full contract."
+              },
+              "image_url": {
+                "type": "string",
+                "format": "uri",
+                "description": "URL to a required visual element (e.g., warning symbol, energy class label)."
+              },
+              "url": {
+                "type": "string",
+                "format": "uri",
+                "description": "Reference URL for more information (e.g., regulatory site, registry entry, policy page)."
+              }
+            },
+            "required": [
+              "type",
+              "code",
+              "content"
+            ]
+          },
+          {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "$id": "https://ucp.dev/schemas/common/types/message_info.json",
+            "title": "Message Info",
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "const": "info",
+                "description": "Message type discriminator."
+              },
+              "path": {
+                "type": "string",
+                "description": "RFC 9535 JSONPath to the component the message refers to (e.g., $.line_items[0])."
+              },
+              "code": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "$id": "https://ucp.dev/schemas/common/types/info_code.json",
+                "title": "Info Code",
+                "description": "Info code identifying the type of informational message. Standard codes are defined in capability specifications (see examples) and have standardized semantics; freeform codes are permitted.",
+                "type": "string",
+                "examples": [
+                  "identity_optional",
+                  "signal",
+                  "free_shipping",
+                  "not_found"
+                ]
+              },
+              "content_type": {
+                "type": "string",
+                "enum": [
+                  "plain",
+                  "markdown"
+                ],
+                "default": "plain",
+                "description": "Content format, default = plain."
+              },
+              "content": {
+                "type": "string",
+                "description": "Human-readable message."
+              }
+            },
+            "required": [
+              "type",
+              "content"
+            ]
+          }
+        ]
+      },
+      "description": "List of messages with error and info about the checkout session state."
+    },
+    "links": {
+      "type": "array",
+      "items": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://ucp.dev/schemas/common/types/link.json",
+        "title": "Link",
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Type of link. Well-known values: `privacy_policy`, `terms_of_service`, `refund_policy`, `shipping_policy`, `faq`. Consumers SHOULD handle unknown values gracefully by displaying them using the `title` field or omitting the link."
+          },
+          "url": {
+            "type": "string",
+            "description": "The actual URL pointing to the content to be displayed.",
+            "format": "uri"
+          },
+          "title": {
+            "type": "string",
+            "description": "Optional display text for the link. When provided, use this instead of generating from type."
+          }
+        },
+        "required": [
+          "type",
+          "url"
+        ]
+      },
+      "description": "Links to be displayed by the platform (Privacy Policy, TOS). Mandatory for legal compliance."
+    },
+    "policies": {
+      "type": "array",
+      "items": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": "https://ucp.dev/schemas/common/types/policy.json",
+        "title": "Policy",
+        "description": "A durable business rule about the items in a response — return/refund terms, warranty, and the like — at the time of purchase. Every policy carries a `type` (an open reverse-DNS vocabulary) and a `description` so a platform can present it without understanding its type-specific fields; type-specific fields (gated by `type`) add structured context for platforms that model that type. Policies are reference data; the obligation to display a term to the buyer is carried by a `messages[]` warning whose `code` equals the policy `type` — see the Policies section of the specification.",
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "type": {
+            "description": "Policy type discriminator. Open reverse-DNS vocabulary. Well-known values: `dev.ucp.shopping.policy.return` (return terms), `dev.ucp.shopping.policy.warranty` (warranty terms). Businesses MAY define custom types in their own domain (e.g., `com.example.policy.price_match`). Platforms MUST tolerate unknown values.",
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "$id": "https://ucp.dev/schemas/common/types/reverse_domain_name.json",
+            "title": "Reverse Domain Name",
+            "type": "string",
+            "pattern": "^[a-z](?:[a-z0-9-]*[a-z0-9])?(?:\\.[a-z0-9](?:[a-z0-9_-]*[a-z0-9_])?)+$",
+            "examples": [
+              "dev.ucp.shopping.checkout",
+              "dev.ucp.common.identity_linking",
+              "com.example.loyalty_gold",
+              "com.example-shop.checkout",
+              "com.2example.cart",
+              "uk.co.example-shop.checkout",
+              "xn--p1ai.example.checkout"
+            ]
+          },
+          "description": {
+            "description": "Human-readable policy summary in one or more formats (plain, markdown, html). Required on every policy so a platform can present it without understanding any type-specific fields. This is not the buyer-facing disclosure — display is compelled by a `messages[]` warning (see the Policies section).",
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "$id": "https://ucp.dev/schemas/common/types/description.json",
+            "title": "Description",
+            "type": "object",
+            "properties": {
+              "plain": {
+                "type": "string",
+                "description": "Plain text content."
+              },
+              "html": {
+                "type": "string",
+                "description": "HTML-formatted content. Security: Platforms MUST sanitize before rendering—strip scripts, event handlers, and untrusted elements. Treat all rich text as untrusted input."
+              },
+              "markdown": {
+                "type": "string",
+                "description": "Markdown-formatted content."
+              }
+            },
+            "minProperties": 1
+          },
+          "applies_to": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "RFC 9535 JSONPath expressions identifying the nodes this policy applies to, relative to the embedding response root (e.g., `$.line_items[0]` in cart/checkout, `$.products[2]` in catalog). Each target covers the node it names and everything nested under it, so a target on a product also covers its variants. A singular query (RFC 9535 Section 2.3.5.1; name and index selectors only) names a single node; filters, wildcards, and slices match a set. When omitted, the policy applies to the entire response. When policies of the same `type` contest a node, the narrowest target wins and overrides the rest. See the Policies section for how specificity resolves."
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Optional link to the full policy document."
+          }
+        },
+        "required": [
+          "type",
+          "description"
+        ]
+      },
+      "description": "Policies (e.g., return/refund terms) that apply to the items in this checkout. `applies_to` targets are relative to the response root; when absent or empty, refer to the URLs in `links[]`."
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "RFC 3339 expiry timestamp. Default TTL is 6 hours from creation if not sent."
+    },
+    "continue_url": {
+      "type": "string",
+      "format": "uri",
+      "description": "URL for checkout handoff and session recovery. MUST be provided when status is requires_escalation. See specification for format and availability requirements."
+    },
+    "payment": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://ucp.dev/schemas/common/types/payment.json",
+      "title": "Payment",
+      "description": "Payment configuration containing handlers.",
+      "type": "object",
+      "properties": {
+        "instruments": {
+          "type": "array",
+          "items": {
+            "title": "Selected Payment Instrument",
+            "description": "A payment instrument with selection state.",
+            "allOf": [
+              {
+                "$ref": "#"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "selected": {
+                    "type": "boolean",
+                    "description": "Whether this instrument is selected by the user."
+                  }
+                }
+              }
+            ]
+          },
+          "description": "The payment instruments available for this payment. Each instrument is associated with a specific handler via the handler_id field. Handlers can extend the base payment_instrument schema to add handler-specific fields."
+        }
+      }
+    },
+    "order": {
+      "description": "Details about an order created for this checkout session.",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "$id": "https://ucp.dev/schemas/shopping/types/order_confirmation.json",
+      "title": "Order Confirmation",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique order identifier."
+        },
+        "label": {
+          "type": "string",
+          "description": "Human-readable label for identifying the order. MUST only be provided by the business."
+        },
+        "permalink_url": {
+          "type": "string",
+          "format": "uri",
+          "description": "Permalink to access the order on merchant site."
+        }
+      },
+      "required": [
+        "id",
+        "permalink_url"
+      ]
+    }
+  },
+  "required": [
+    "ucp",
+    "id",
+    "line_items",
+    "status",
+    "currency",
+    "totals",
+    "links"
+  ],
+  "$comment": "Generated from UCP v2026-08-25 by ucp-schema 1.4.1: bundled references and resolved visibility annotations; added this non-normative notice. See provenance.json and LICENSE-UCP."
+}

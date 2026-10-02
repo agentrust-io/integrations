@@ -1,0 +1,6 @@
+# Run-local extras for real_open_model.py only. These download a real open model
+# and, with --infer, load it and generate. Not needed for the three offline demos
+# and deliberately not installed in CI (network + heavy).
+huggingface_hub
+safetensors
+transformers

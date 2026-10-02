@@ -1,0 +1,94 @@
+[
+  {
+    "tool_name": "write_file",
+    "server": {
+      "display_name": "Demo Filesystem MCP Server",
+      "url": "http://localhost:9001/mcp",
+      "tls_fingerprint": "SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+      "rotation_mode": "key-pinned",
+      "transport": "http-sse"
+    },
+    "approved_definition": {
+      "description": "Write content to a file in the demo workspace",
+      "input_schema": {
+        "type": "object",
+        "required": [
+          "path",
+          "content"
+        ],
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "definition_hash": "sha256:a1e420dc7faa479147d132a69f55e12cfdb5f52e215f2bff78a8877924c8322b",
+    "compliance_domain": "clinical",
+    "requires_baa": false,
+    "sensitivity_level": "hipaa_phi",
+    "added_at": "2026-07-20T00:00:00Z",
+    "approved_by": "demo-setup"
+  },
+  {
+    "tool_name": "read_file",
+    "server": {
+      "display_name": "Demo Filesystem MCP Server",
+      "url": "http://localhost:9001/mcp",
+      "tls_fingerprint": "SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+      "rotation_mode": "key-pinned",
+      "transport": "http-sse"
+    },
+    "approved_definition": {
+      "description": "Read a file from the demo workspace",
+      "input_schema": {
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "path": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "definition_hash": "sha256:b62b2bd456a551a8cc0f70dce71b06e358c73a8f16b8220c1b8fea7ae8b1a0e4",
+    "compliance_domain": "clinical",
+    "requires_baa": false,
+    "sensitivity_level": "hipaa_phi",
+    "added_at": "2026-07-20T00:00:00Z",
+    "approved_by": "demo-setup"
+  },
+  {
+    "tool_name": "list_dir",
+    "server": {
+      "display_name": "Demo Filesystem MCP Server",
+      "url": "http://localhost:9001/mcp",
+      "tls_fingerprint": "SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+      "rotation_mode": "key-pinned",
+      "transport": "http-sse"
+    },
+    "approved_definition": {
+      "description": "List files in the demo workspace",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "default": ""
+          }
+        }
+      }
+    },
+    "definition_hash": "sha256:b3a1c4bd34d6f8fbb816d7c0ddad7997cdc1f319daba1fd5d1b0fff3821b04c5",
+    "compliance_domain": "external-analytics",
+    "requires_baa": true,
+    "sensitivity_level": "public",
+    "added_at": "2026-07-20T00:00:00Z",
+    "approved_by": "demo-setup"
+  }
+]

@@ -1,0 +1,137 @@
+[
+  {
+    "tool_name": "people.headcount_analytics",
+    "server": {
+      "display_name": "PeopleGraph MCP Server",
+      "url": "http://localhost:8080/mcp",
+      "tls_fingerprint": "SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+      "transport": "http-sse"
+    },
+    "approved_definition": {
+      "description": "Run a read-only, aggregate people-analytics query (no individual records)",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "metric": {
+            "type": "string"
+          },
+          "period": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "metric"
+        ]
+      }
+    },
+    "definition_hash": "sha256:08676333bb67c406a83409a0c806535b6431685b49898e3881a5982bae94a252",
+    "compliance_domain": "internal",
+    "requires_baa": false,
+    "sensitivity_level": "public",
+    "added_at": "2026-06-01T00:00:00Z",
+    "approved_by": "platform-security@peoplegraph.example"
+  },
+  {
+    "tool_name": "people.employee_record_lookup",
+    "server": {
+      "display_name": "PeopleGraph MCP Server",
+      "url": "http://localhost:8080/mcp",
+      "tls_fingerprint": "SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+      "transport": "http-sse"
+    },
+    "approved_definition": {
+      "description": "Look up an individual employee record",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "employee_id": {
+            "type": "string"
+          },
+          "legal_basis": {
+            "type": "string"
+          },
+          "include_special_category": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "employee_id"
+        ]
+      }
+    },
+    "definition_hash": "sha256:1bb7cce8b5654794544ac88a146c30be7802a9873f9bd3c3e44963552eab6bf0",
+    "compliance_domain": "pii",
+    "requires_baa": false,
+    "sensitivity_level": "confidential",
+    "added_at": "2026-06-01T00:00:00Z",
+    "approved_by": "platform-security@peoplegraph.example"
+  },
+  {
+    "tool_name": "people.data_export",
+    "server": {
+      "display_name": "PeopleGraph MCP Server",
+      "url": "http://localhost:8080/mcp",
+      "tls_fingerprint": "SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+      "transport": "http-sse"
+    },
+    "approved_definition": {
+      "description": "Export employee records to a destination region",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "scope": {
+            "type": "string"
+          },
+          "destination_region": {
+            "type": "string"
+          },
+          "legal_basis": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "destination_region"
+        ]
+      }
+    },
+    "definition_hash": "sha256:9cf09bc74122256f4fdd6a8d8f6623b085936cce3cc95af5ea993343ab5a577e",
+    "compliance_domain": "pii",
+    "requires_baa": false,
+    "sensitivity_level": "confidential",
+    "added_at": "2026-06-01T00:00:00Z",
+    "approved_by": "platform-security@peoplegraph.example"
+  },
+  {
+    "tool_name": "people.config_update",
+    "server": {
+      "display_name": "PeopleGraph MCP Server",
+      "url": "http://localhost:8080/mcp",
+      "tls_fingerprint": "SHA256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+      "transport": "http-sse"
+    },
+    "approved_definition": {
+      "description": "Update tenant configuration settings",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "value"
+        ]
+      }
+    },
+    "definition_hash": "sha256:1761ee6862e8509983983543450a6bda6ea1e91536492daeb8d11b0b380e163c",
+    "compliance_domain": "internal",
+    "requires_baa": false,
+    "sensitivity_level": "public",
+    "added_at": "2026-06-01T00:00:00Z",
+    "approved_by": "platform-security@peoplegraph.example"
+  }
+]

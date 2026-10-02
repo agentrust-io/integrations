@@ -1,0 +1,44 @@
+{
+  "authority_grant": {
+    "grant_id": "grant-2026-08-24-001",
+    "principal": "user:alice",
+    "delegate": "spiffe://buyer.example/agent/travel",
+    "allowed_operations": [
+      "ucp.checkout.complete"
+    ],
+    "allowed_merchants": [
+      "merchant:hotel-example"
+    ],
+    "currency": "USD",
+    "max_amount_minor": 20000,
+    "expires_at": "2026-08-25T00:00:00Z"
+  },
+  "purchase_request": {
+    "request_id": "checkout-001",
+    "operation": "ucp.checkout.complete",
+    "merchant_id": "merchant:hotel-example",
+    "currency": "USD",
+    "amount_minor": 50000,
+    "cart_digest": "sha256:a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+  },
+  "policy_decision": {
+    "decision_id": "agt-decision-001",
+    "outcome": "allow",
+    "policy_id": "commerce-spend-v1",
+    "authority_digest": "sha256:a81ddc9c8c8d6c442e999ed2666e0d722d6ded1be3943c1a24e884735c7e9e1c",
+    "request_digest": "sha256:7069a7a4ae68fd431f6dd697327478d9cb07cd4d04f77cf08e9e1ea6c4653324"
+  },
+  "runtime_evidence": {
+    "evidence_id": "trace-record-001",
+    "profile": "illustrative-trace-reference",
+    "runtime_identity": "spiffe://buyer.example/agent/travel",
+    "policy_decision_digest": "sha256:e0c2b5df43b9f44cc222a936d57774dfdf60857db65e2714b46cc15554cfa323",
+    "attestation_reference": "urn:example:attestation:tdx:001"
+  },
+  "purchase_receipt": {
+    "receipt_id": "merchant-receipt-001",
+    "status": "completed",
+    "request_digest": "sha256:7069a7a4ae68fd431f6dd697327478d9cb07cd4d04f77cf08e9e1ea6c4653324",
+    "runtime_evidence_digest": "sha256:712e86343a9f149a8d3a7d25a350ee9051fdbb909be694972e334021a682b8e5"
+  }
+}

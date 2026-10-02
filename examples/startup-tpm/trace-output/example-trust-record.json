@@ -1,0 +1,75 @@
+{
+  "cmcp_version": "1.0",
+  "trace": {
+    "eat_profile": "tag:agentrust.io,2026:trace-v0.1",
+    "iat": 1781138542,
+    "subject": "spiffe://cmcp.gateway/session/db17ac23-c8df-4848-a2e9-21f6d07e7e05",
+    "runtime": {
+      "platform": "tpm2",
+      "measurement": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "firmware_version": "software-only-dev-mode"
+    },
+    "policy": {
+      "bundle_hash": "sha256:93d237c9a83482c36908a5dcb634f3641e8c1d252444a0c6b916e480d7f45dde",
+      "enforcement_mode": "advisory",
+      "version": "quickstart-v1.0"
+    },
+    "data_class": "public",
+    "tool_transcript": {
+      "hash": "sha256:775dcf69fe626a3921f0a8686b829cfefc3f1a12c4c64be7db44fc1f6271ace2",
+      "call_count": 1
+    },
+    "cnf": {
+      "jwk": {
+        "kty": "OKP",
+        "crv": "Ed25519",
+        "x": "ToB3lvrNHGjbh8ZPnK0Ogh0zTxLNURCt1rjk5L_M18Q",
+        "kid": "cmcp-4e807796"
+      }
+    }
+  },
+  "gateway": {
+    "session_id": "db17ac23-c8df-4848-a2e9-21f6d07e7e05",
+    "gateway_version": "unknown",
+    "sequence_number": 2,
+    "prev_claim_hash": "sha256:6c13e26d34ad2b9cfbab7378b5a8795c4d4a2c8ad151c9b95023bcdcaf802bd1",
+    "audit_chain": {
+      "root": "8fa6b608999d3e2b39ae09e549bc2550e7e81e9a8fd6f4ea6589f97bbfd21389",
+      "tip": "775dcf69fe626a3921f0a8686b829cfefc3f1a12c4c64be7db44fc1f6271ace2",
+      "length": 3
+    },
+    "call_summary": {
+      "tool_calls_total": 1,
+      "tool_calls_allowed": 1,
+      "tool_calls_denied": 0,
+      "tool_calls_faulted": 0,
+      "tools_invoked": [
+        "test.echo"
+      ],
+      "session_max_sensitivity": "public",
+      "call_graph_summary": {
+        "compliance_domains_touched": [
+          "internal"
+        ],
+        "cross_boundary_events": [],
+        "edges_represent": "Edges represent temporal adjacency (call order), not data provenance. A -> B means B was called immediately after A within this session."
+      }
+    },
+    "catalog": {
+      "hash": "sha256:4aa10f37feea8302a6d93d3183daeb7f8ba7457c3c9eb11a36e538aa026073bf",
+      "drift_detected": false
+    },
+    "attestation_generated_at": "2026-06-11T00:41:41.751625+00:00",
+    "attestation_validity_seconds": 86400,
+    "attestation_stale": false,
+    "catalog_exceptions": [],
+    "call_log_summary": {
+      "total_calls": 1,
+      "tools_called": [
+        "test.echo"
+      ],
+      "suspicious_sequences_detected": 0
+    }
+  },
+  "signature": "dt9Afvq_MVpJp-XZ_awZ1eqfH3Zm-vCRIQBIMlhSPtaww6V-fvi4X7C5DHtrkQPwiSLTsawZJtNy3Rw47EuuDQ"
+}
