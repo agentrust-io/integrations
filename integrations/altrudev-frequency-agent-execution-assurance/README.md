@@ -2,28 +2,32 @@
 
 Frequency Agent Execution Assurance consumes standalone TRACE Trust Records as externally supplied evidence. The public TRACE adapter verifies the record with a caller-supplied trusted issuer key, fingerprints the exact record and key files, and projects selected verified fields into a claim-limited Frequency external-evidence record.
 
-The public repository now also includes an executable conformance evaluator for authority-to-execution binding, trusted independent observation, required evidence, signed closure, and claim ceilings. That evaluator is a separate public assurance surface; it does not change this marketplace integration's declared TRACE role of `record-consumer`.
+The public repository also includes an executable conformance evaluator, portable signed evidence bundles, and bounded reference adapters for external workloads. Those surfaces are separate from this marketplace integration's declared TRACE role of `record-consumer`.
 
 ## Reproduce the current public boundary
 
-Tested public commit:
+Current public release:
 
-`2b40cc45965e1feb33c91b58b54a3c41de6038bf`
+`v0.2.0`
+
+Exact release commit:
+
+`146a51a724a3dcb1afc21cc8d7955abc61bfdb83`
 
 ```bash
-git clone https://github.com/altrudev/Frequency-Agent-Execution-Assurance.git
+git clone --branch v0.2.0 --depth 1 \
+  https://github.com/altrudev/Frequency-Agent-Execution-Assurance.git
 cd Frequency-Agent-Execution-Assurance
-git checkout 2b40cc45965e1feb33c91b58b54a3c41de6038bf
 
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements-dev.txt -r adapters/agentrust-trace/requirements.txt
 
-pytest -q tests adapters/agentrust-trace/tests adapters/thrixel-world/tests
+pytest -q tests adapters/agentrust-trace/tests adapters/thrixel-world/tests adapters/aya-workcell/tests
 python -m conformance.demo
 ```
 
-At this commit the combined public suite contains 28 passing tests.
+At this release the combined public suite contains 55 passing tests.
 
 The TRACE adapter uses `agentrust-trace==0.10.0`.
 
@@ -44,19 +48,38 @@ That last field is deliberate. A valid TRACE signature is not promoted into proo
 
 Separately from TRACE record consumption, the public repository now provides a reference evaluator that checks:
 
-- intent, authority, and execution binding;
+- complete intent and run-schema binding into signed closure;
+- intent, authority, and execution correlation;
 - exact authorized-request digest;
 - authority validity window;
 - independently supplied trusted observer identity;
+- observation ordering after execution;
 - Ed25519 observer attestation;
 - execution-to-observation effect correlation;
 - required evidence references;
 - signed closing commitment;
 - claim ceilings that fail closed to `NOT VERIFIED`.
 
-The first concrete workload adapter is a non-executing Thrixel/world reference adapter. It demonstrates how a pinned external workload can be bound into the same conformance contract while leaving credentials, vendor execution, publishing, financial actions, and Frequency Core outside the public repository.
+## Portable evidence bundles
 
-The Thrixel reference adapter is not a TRACE conformance claim and does not imply endorsement or certification by Thrixel or AgenTrust.
+The public `frequency.portable-evidence-bundle.v1` surface can package an execution-evidence run for offline verification while keeping trust roots external to the bundle.
+
+A valid outer bundle signature does not upgrade invalid inner execution evidence. Nonce, adapter, source-commit, issuer and replay-context mismatches fail closed.
+
+## Reference workload adapters
+
+The public repository includes:
+
+- a non-executing Thrixel/world adapter that binds a pinned workload profile without enabling vendor execution, publishing or financial actions;
+- an AYA workcell adapter that maps AYA Score, Lease, CapabilityReport and Receipt into the Frequency evidence model while preserving AYA's research-runtime and claim boundaries.
+
+Neither reference adapter changes this integration's TRACE conformance claim or implies vendor endorsement/certification.
+
+## Public repository boundary
+
+Release `v0.2.0` also removes unrelated runtime code that had entered the original public repository and adds a regression gate that restricts tracked content to the intended Frequency Agent Execution Assurance surface.
+
+This cleanup changes the public repository boundary; it does not change the TRACE role from `record-consumer`.
 
 ## What this integration does not claim
 
