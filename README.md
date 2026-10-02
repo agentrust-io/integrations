@@ -42,6 +42,7 @@ TRACE only works as a standard if it is genuinely neutral. Integrations are list
 | [cA2A Cross-Operator Delegation](integrations/agentrust-ca2a-cross-operator/) | agentrust-io | ca2a | community |
 | [Confidential Workflow Acceptance Harness](integrations/agentrust-confidential-workflow-harness/) | agentrust-io | cmcp, ca2a | community |
 | [Agent Replay](integrations/altrudev-agent-replay/) | Altru.dev | trace | verified |
+| [Frequency Agent Execution Assurance](integrations/altrudev-frequency-agent-execution-assurance/) | Altru.dev | trace | community |
 | [Bernstein MCP verifier](integrations/bernstein-mcp/) | Bernstein | trace | verified |
 | [CHAP](integrations/chap/) | agentrust-io | trace | verified |
 | [AI Agent Incident Register](integrations/companyscope-incident-register/) | CompanyScope | agent-manifest | verified |

@@ -1,6 +1,6 @@
 {
   "catalog_version": 1,
-  "count": 42,
+  "count": 43,
   "integrations": [
     {
       "name": "Claude Code",
@@ -499,6 +499,30 @@
         "seal",
         "log-import",
         ".epi"
+      ]
+    },
+    {
+      "name": "Frequency Agent Execution Assurance",
+      "package_name": "Frequency Agent Execution Assurance",
+      "vendor": "Altru.dev",
+      "description": "Verifies standalone TRACE Trust Records with a caller-supplied trusted key and projects bounded verified fields into Frequency's public external-evidence contract.",
+      "path": "integrations/altrudev-frequency-agent-execution-assurance",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/altrudev-frequency-agent-execution-assurance",
+      "homepage": null,
+      "repository": "https://github.com/altrudev/Frequency-Agent-Execution-Assurance",
+      "tier": "community",
+      "stack": [
+        "TRACE"
+      ],
+      "category": "Security & policy",
+      "mark": "FQ",
+      "featured": null,
+      "keywords": [
+        "agent-execution",
+        "generated-artifacts",
+        "evidence",
+        "TRACE",
+        "policy"
       ]
     },
     {

@@ -1,0 +1,35 @@
+name: Frequency Agent Execution Assurance
+vendor: Altru.dev
+
+integrates_with:
+  - trace
+
+description: >-
+  Verifies standalone TRACE Trust Records with a caller-supplied trusted key and projects bounded verified fields into Frequency's public external-evidence contract.
+
+maintainer:
+  github: altrudev
+
+repository: https://github.com/altrudev/Frequency-Agent-Execution-Assurance
+
+license: Apache-2.0
+tier: community
+
+marketplace:
+  category: Security & policy
+  mark: FQ
+  keywords:
+    - agent-execution
+    - generated-artifacts
+    - evidence
+    - TRACE
+    - policy
+
+trace_roles:
+  - record-consumer
+
+trace_conformance_level: 0
+
+tested_against:
+  agentrust-trace: "0.10.0"
+  agentrust-trace-tests: "0.5.1"
