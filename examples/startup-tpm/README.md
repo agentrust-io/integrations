@@ -237,7 +237,7 @@ cmcp verify claim.json --policy-hash sha256:<approved> --catalog-hash sha256:<ap
 | Per-tenant policy isolation | `multi-tenant-saas/` |
 | Agent-to-agent delegation (attenuated authority) | `ca2a-delegation/` |
 | Hardware attestation on Azure | [Azure Trusted Launch docs](https://learn.microsoft.com/azure/virtual-machines/trusted-launch) |
-| Writing your own Cedar policies | [Cedar policy language reference](https://www.cedarpolicy.com/en/tutorial) |
+| Writing your own Cedar policies | [Cedar policy language reference](https://docs.cedarpolicy.com/) |
 | Protecting a real MCP server | Edit `catalog.json` to point `server.url` at your MCP server |
 | Production enforcement | Unset `CMCP_DEV_MODE`; set `CMCP_BEARER_TOKEN`, `CMCP_POLICY_HASH`, `CMCP_CATALOG_HASH` |
 
