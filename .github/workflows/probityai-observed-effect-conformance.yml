@@ -50,7 +50,15 @@ jobs:
         run: pip install -e "integrations/probityai-observed-effect[test]"
       - name: Integration tests
         run: pytest integrations/probityai-observed-effect/tests -q
+      # The corpus runner requires Python 3.13 or later, so it runs in its own
+      # interpreter and the replay happens on every matrix leg.
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        id: replay-python
+        with:
+          python-version: "3.13"
+          update-environment: false
       - name: Replay the published observed-effect corpus
         run: |
-          pip install "agent-evidence-vectors==0.15.0"
-          agent-evidence-vectors --corpus vectors-observed-effect
+          "${{ steps.replay-python.outputs.python-path }}" -m venv "$RUNNER_TEMP/replay"
+          "$RUNNER_TEMP/replay/bin/pip" install "agent-evidence-vectors==0.15.0"
+          "$RUNNER_TEMP/replay/bin/agent-evidence-vectors" --corpus vectors-observed-effect
