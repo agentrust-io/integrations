@@ -6,6 +6,13 @@ on:
   push:
     tags: ["capture-core-v*"]
   workflow_dispatch:
+    inputs:
+      mode:
+        description: Build-only rehearsal or production publication (matching release tag required)
+        type: choice
+        options: [build-only, publish]
+        default: build-only
+        required: true
 
 permissions:
   contents: read
@@ -24,10 +31,19 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.12"
-      - name: Compare tag to pyproject version
-        if: startsWith(github.ref, 'refs/tags/')
+      - name: Require release tag and matching package version for publication
+        env:
+          RELEASE_MODE: ${{ inputs.mode }}
         run: |
           set -euo pipefail
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ] && [ "$RELEASE_MODE" = "build-only" ]; then
+            echo "Build-only rehearsal; publication is disabled."
+            exit 0
+          fi
+          case "$GITHUB_REF" in
+            refs/tags/capture-core-v*) ;;
+            *) echo "::error::Publication requires a capture-core-v release tag."; exit 1 ;;
+          esac
           tag="${GITHUB_REF#refs/tags/capture-core-v}"
           packaged="$(python -c "
           import tomllib, pathlib
@@ -89,6 +105,7 @@ jobs:
 
   publish:
     name: Publish to PyPI
+    if: startsWith(github.ref, 'refs/tags/capture-core-v') && (github.event_name != 'workflow_dispatch' || inputs.mode == 'publish')
     needs: build
     runs-on: ubuntu-latest
     # Trusted Publishing: PyPI verifies this workflow's OIDC identity, so no API
