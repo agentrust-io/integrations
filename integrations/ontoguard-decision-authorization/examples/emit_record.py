@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -18,6 +19,12 @@ if str(ROOT) not in sys.path:
 from ontoguard_trace import AdapterError, project  # noqa: E402
 
 DEFAULT_FIXTURE = Path(__file__).resolve().parent / "fixtures" / "allow_execution_proven.json"
+
+# The bundled fixture is frozen historical evidence. Verify it at a time when
+# the signed authorization was actually valid instead of against today's wall
+# clock. Production calls that do not pass verification_time_utc continue to
+# use the real current UTC time inside ontoguard_trace.
+HISTORICAL_VERIFICATION_TIME = datetime(2026, 9, 18, 0, 0, tzinfo=timezone.utc)
 
 
 def main() -> int:
@@ -31,6 +38,7 @@ def main() -> int:
     if not fixture.get("execution_receipt"):
         print("ERROR: fixture has no independent execution receipt", file=sys.stderr)
         return 2
+
     try:
         result = project(
             fixture["authorization_result"],
@@ -41,6 +49,7 @@ def main() -> int:
             execution_receipt=fixture["execution_receipt"],
             sign_trace=not args.unsigned,
             allow_test_keys=True,
+            verification_time_utc=HISTORICAL_VERIFICATION_TIME,
         )
     except AdapterError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
@@ -48,12 +57,19 @@ def main() -> int:
 
     if args.unsigned:
         out = Path(args.out)
-        out.write_text(json.dumps(result.get("trace_claim_candidate"), indent=2) + "\n", encoding="utf-8")
+        out.write_text(
+            json.dumps(result.get("trace_claim_candidate"), indent=2) + "\n",
+            encoding="utf-8",
+        )
         print(f"WROTE_CANDIDATE {out}")
         print("TRACE_RECORD_EMITTED=false")
         return 0
+
     if not result.get("trace_record_emitted"):
-        print(f"ERROR: no TRACE record emitted (state={result.get('state')})", file=sys.stderr)
+        print(
+            f"ERROR: no TRACE record emitted (state={result.get('state')})",
+            file=sys.stderr,
+        )
         return 2
 
     out = Path(args.out)

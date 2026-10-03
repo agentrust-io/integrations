@@ -18,12 +18,17 @@ OntoGuard Decision API result.
 
 Order of operations:
 
-1. mint and cryptographically verify the test authorization
-2. derive the $250,000 partner action binding
-3. only then PENDING → RELEASED, commit_count 0 → 1
-4. sign a fresh ephemeral executor receipt
-5. pass the live objects through `ontoguard_trace.project`
-6. separately rerun $260,000, refuse, commit_count stays 0, no TRACE
+1. mint the TEST-ONLY signed authorization
+2. strictly validate the proposed partner action
+3. verify the signed authorization again at the controlled executor's commit boundary
+4. require ALLOW + release authorization + exact validated action binding
+5. only then PENDING → RELEASED, commit_count 0 → 1
+6. sign a fresh ephemeral executor receipt
+7. pass the live objects through `ontoguard_trace.project`
+8. separately rerun $260,000 and digest-only bypass attempts; refuse before commit
+
+A caller-computed action digest is not authority. The controlled executor requires
+the signed authorization and trusted JWKS at its bounded commit boundary.
 
 This is a controlled software-only store. Not a bank transfer, not L5,
 and not OntoGuard core.

@@ -145,6 +145,57 @@ def sha256_digest(data: bytes) -> str:
     return "sha256:" + hashlib.sha256(data).hexdigest()
 
 
+PARTNER_ACTION_FIELDS = (
+    "amount",
+    "consequence_class",
+    "counterparty",
+    "cross_border",
+    "currency",
+    "operation",
+)
+
+
+def validate_partner_action_binding_object(obj: dict[str, Any]) -> dict[str, Any]:
+    """Validate and canonicalize the public partner action before binding/execution."""
+    if not isinstance(obj, dict):
+        raise AdapterError("partner action must be an object")
+
+    missing = [field for field in PARTNER_ACTION_FIELDS if field not in obj]
+    if missing:
+        raise AdapterError("partner action binding missing " + ", ".join(missing))
+
+    unexpected = sorted(set(obj) - set(PARTNER_ACTION_FIELDS))
+    if unexpected:
+        raise AdapterError("partner action binding has unexpected fields: " + ", ".join(unexpected))
+
+    for field in ("consequence_class", "counterparty", "currency", "operation"):
+        value = obj[field]
+        if not isinstance(value, str) or not value:
+            raise AdapterError(f"partner action {field} must be a non-empty string")
+
+    if type(obj["cross_border"]) is not bool:
+        raise AdapterError("partner action cross_border must be a boolean")
+
+    amount = obj["amount"]
+    if isinstance(amount, bool) or not isinstance(amount, (str, int, float)):
+        raise AdapterError("partner action amount must be a string or number")
+    if isinstance(amount, str):
+        if not amount:
+            raise AdapterError("partner action amount must be non-empty")
+        amount_s = amount
+    else:
+        amount_s = f"{float(amount):.2f}"
+
+    return {
+        "amount": amount_s,
+        "consequence_class": obj["consequence_class"],
+        "counterparty": obj["counterparty"],
+        "cross_border": obj["cross_border"],
+        "currency": obj["currency"],
+        "operation": obj["operation"],
+    }
+
+
 def partner_action_binding_object(
     *,
     operation: str,
@@ -154,41 +205,21 @@ def partner_action_binding_object(
     cross_border: bool,
     consequence_class: str,
 ) -> dict[str, Any]:
-    if isinstance(amount, (int, float)):
-        amount_s = f"{float(amount):.2f}"
-    else:
-        amount_s = str(amount)
-    return {
-        "amount": amount_s,
-        "consequence_class": consequence_class,
-        "counterparty": counterparty,
-        "cross_border": bool(cross_border),
-        "currency": currency,
-        "operation": operation,
-    }
+    return validate_partner_action_binding_object(
+        {
+            "amount": amount,
+            "consequence_class": consequence_class,
+            "counterparty": counterparty,
+            "cross_border": cross_border,
+            "currency": currency,
+            "operation": operation,
+        }
+    )
 
 
 def partner_action_binding_bytes(obj: dict[str, Any]) -> bytes:
     """Deterministic partner-safe bytes. Not OntoGuard's internal movement hash."""
-    required = (
-        "amount",
-        "consequence_class",
-        "counterparty",
-        "cross_border",
-        "currency",
-        "operation",
-    )
-    missing = [k for k in required if k not in obj]
-    if missing:
-        raise AdapterError("partner action binding missing " + ", ".join(missing))
-    canonical = {
-        "amount": str(obj["amount"]),
-        "consequence_class": obj["consequence_class"],
-        "counterparty": obj["counterparty"],
-        "cross_border": bool(obj["cross_border"]),
-        "currency": obj["currency"],
-        "operation": obj["operation"],
-    }
+    canonical = validate_partner_action_binding_object(obj)
     return json.dumps(canonical, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
 
 

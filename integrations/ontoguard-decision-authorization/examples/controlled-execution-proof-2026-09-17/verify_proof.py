@@ -8,13 +8,13 @@ Run from the unpacked proof directory.
 
 from __future__ import annotations
 
+import base64
 import hashlib
 import json
 from pathlib import Path
 
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
-import base64
 
 ROOT = Path(__file__).resolve().parent
 POS = ROOT / "positive"

@@ -49,6 +49,7 @@ from ontoguard_trace import (  # noqa: E402
     partner_action_binding_object,
     project,
     sha256_digest,
+    validate_partner_action_binding_object,
 )
 
 AUTHORIZED_ACTION = partner_action_binding_object(
@@ -116,13 +117,27 @@ class ControlledExecutor:
         path.write_text(json.dumps({"keys": [self.public_jwk]}, indent=2) + "\n", encoding="utf-8")
         return path
 
-    def attempt(self, proposed: dict[str, Any], authorized_digest: str) -> dict[str, Any]:
-        executed_digest = partner_action_binding_digest(proposed)
-        if executed_digest != authorized_digest:
-            self.store.history.append("REFUSED_BINDING_MISMATCH")
+    def attempt(
+        self,
+        proposed: dict[str, Any],
+        authorization: Any = None,
+        *,
+        ontoguard_jwks_path: Path | None = None,
+        allow_test_keys: bool | None = None,
+        verification_time_utc: datetime | None = None,
+    ) -> dict[str, Any]:
+        """Verify signed authorization at the bounded commit boundary before mutation."""
+
+        def refuse(
+            reason: str,
+            *,
+            authorized_digest: str | None = None,
+            executed_digest: str | None = None,
+        ) -> dict[str, Any]:
+            self.store.history.append("REFUSED")
             return {
                 "result": "EXECUTION_REFUSED",
-                "reason": "executed_action_binding_digest != authorized_action_binding_digest",
+                "reason": reason,
                 "authorized_action_binding_digest": authorized_digest,
                 "executed_action_binding_digest": executed_digest,
                 "protected_effect_formed": False,
@@ -130,6 +145,50 @@ class ControlledExecutor:
                 "status": self.store.status,
                 "TRACE_RECORD_EMITTED": False,
             }
+
+        try:
+            validated_action = validate_partner_action_binding_object(proposed)
+            executed_digest = partner_action_binding_digest(validated_action)
+        except (AdapterError, TypeError, ValueError) as exc:
+            return refuse(str(exc))
+
+        if not isinstance(authorization, dict):
+            return refuse(
+                "signed OntoGuard authorization is required at commit",
+                executed_digest=executed_digest,
+            )
+        if ontoguard_jwks_path is None:
+            return refuse(
+                "trusted OntoGuard JWKS is required at commit",
+                executed_digest=executed_digest,
+            )
+
+        try:
+            bound = bind_authorization(
+                result_bytes=authorization.get("result_bytes"),
+                signature_b64url=authorization.get("signature"),
+                public_jwk=authorization.get("public_jwk"),
+                ontoguard_jwks_path=ontoguard_jwks_path,
+                allow_test_keys=allow_test_keys,
+                verification_time_utc=verification_time_utc,
+            )
+        except (AdapterError, TypeError, ValueError) as exc:
+            return refuse(str(exc), executed_digest=executed_digest)
+
+        authorized_digest = bound["action_binding_digest"]
+        if bound["action"] != "ALLOW" or bound["release_authorized"] is not True:
+            return refuse(
+                f"{bound['action']} is not a releasable authorization",
+                authorized_digest=authorized_digest,
+                executed_digest=executed_digest,
+            )
+        if executed_digest != authorized_digest:
+            return refuse(
+                "executed_action_binding_digest != authorized_action_binding_digest",
+                authorized_digest=authorized_digest,
+                executed_digest=executed_digest,
+            )
+
         commit_id = "commit-" + secrets.token_hex(8)
         self.store.status = "RELEASED"
         self.store.commit_count += 1
@@ -144,6 +203,7 @@ class ControlledExecutor:
             "protected_effect_formed": True,
             "commit_count": self.store.commit_count,
             "status": self.store.status,
+            "validated_action": validated_action,
         }
 
     def build_receipt(
@@ -299,7 +359,12 @@ def run_live(proof_dir: Path = PROOF_DIR) -> dict[str, Any]:
         # Positive $250k — commit only after verification
         pos_exec = ControlledExecutor()
         pos_before = pos_exec.store.snapshot()
-        pos_attempt = pos_exec.attempt(AUTHORIZED_ACTION, authorized_digest)
+        pos_attempt = pos_exec.attempt(
+            AUTHORIZED_ACTION,
+            minted,
+            ontoguard_jwks_path=og_jwks,
+            allow_test_keys=True,
+        )
         pos_receipt = pos_exec.build_receipt(
             auth=minted["auth"],
             result_digest=minted["result_digest"],
@@ -337,7 +402,12 @@ def run_live(proof_dir: Path = PROOF_DIR) -> dict[str, Any]:
         # Negative $260k — new store, same verified authorization
         neg_exec = ControlledExecutor()
         neg_before = neg_exec.store.snapshot()
-        neg_attempt = neg_exec.attempt(MUTATED_ACTION, authorized_digest)
+        neg_attempt = neg_exec.attempt(
+            MUTATED_ACTION,
+            minted,
+            ontoguard_jwks_path=og_jwks,
+            allow_test_keys=True,
+        )
         forged = dict(neg_attempt)
         forged["execution_event_id"] = "commit-forged-mutation"
         forged["authorized_action_binding_digest"] = authorized_digest
