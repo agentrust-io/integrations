@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/altrudev/Frequency-Agent-Execution-Assurance/main/frequency-agent-execution-assurance-logo.png" alt="Frequency Agent Execution Assurance" width="720" />
+</p>
+
 # Frequency Agent Execution Assurance integration with TRACE
 
 Frequency Agent Execution Assurance consumes standalone TRACE Trust Records as externally supplied evidence. The public TRACE adapter verifies the record with a caller-supplied trusted issuer key, fingerprints the exact record and key files, and projects selected verified fields into a claim-limited Frequency external-evidence record.
