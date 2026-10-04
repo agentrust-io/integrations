@@ -26,6 +26,7 @@ Usage:
     python otel_to_trace.py spans.json \\
         --subject spiffe://example.org/agent/support-bot \\
         --policy-bundle policy.cedar \\
+        --enforcement-mode declared \\
         --workload-digest sha256:<64 hex> \\
         --jwk pubkey.jwk > record.json
 """
