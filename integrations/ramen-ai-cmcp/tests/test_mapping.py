@@ -251,8 +251,17 @@ class TestTraceConformance:
         record = _build(_load("vector1_allowed.json"), iat=int(time.time()))
         results = run_trace_tests(record, "trace", level=0)
         findings = [finding for group in results.values() for finding in group]
-        assert len(findings) == 8
-        assert all(finding.status is Status.PASS for finding in findings)
+        assert len(findings) == 15
+        # agentrust-trace-tests 0.6 adds three checks that do not apply to this
+        # record at Level 0 and report SKIP; everything else passes.
+        assert sorted(
+            finding.code for finding in findings if finding.status is not Status.PASS
+        ) == ["TR-APR-003", "TR-APR-005", "TR-POL-003"]
+        assert all(
+            finding.status is Status.SKIP
+            for finding in findings
+            if finding.status is not Status.PASS
+        )
         assert [
             finding.status for finding in findings if finding.code == "TR-SIG-005"
         ] == [Status.PASS]
@@ -260,10 +269,12 @@ class TestTraceConformance:
     def test_signed_software_record_fails_level_1_runtime_rules(self, trace_key):
         """A software-only record fails Level 1 on runtime rules only.
 
-        Two of them as of agentrust-trace-tests 0.5.1. TR-RTE-001 is the platform
-        rule and has always fired here. TR-RTE-004 was added in 0.5.1 and fires
-        because no verifier nonce is supplied: this harness does not issue one, and
-        the record carries no ``runtime.nonce`` to match it if it did. The assertion
+        Three of them as of agentrust-trace-tests 0.6.1. TR-APR-005 was added in
+        0.6 and fires because the record's appraisal.status is 'none', not
+        'affirming'. TR-RTE-001 is the platform rule and has always fired here.
+        TR-RTE-004 was added in 0.5.1 and fires because no verifier nonce is
+        supplied: this harness does not issue one, and the record carries no
+        ``runtime.nonce`` to match it if it did. The assertion
         stays an exact comparison on purpose, so that a future change to the Level 1
         finding set fails this test rather than passing silently.
         """
@@ -276,6 +287,10 @@ class TestTraceConformance:
             if finding.status is Status.FAIL
         ]
         assert [(finding.code, finding.message) for finding in failures] == [
+            (
+                "TR-APR-005",
+                "TR-APR-005: Level 1 requires appraisal.status 'affirming', got 'none'",
+            ),
             (
                 "TR-RTE-001",
                 "TR-RTE-001: runtime.platform 'software-only' is development-mode "
