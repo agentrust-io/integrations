@@ -3,6 +3,6 @@
 # demos now use. cmcp-runtime needs a floor. Without one, an unsatisfiable constraint elsewhere in
 # this file makes pip backtrack to 0.1.0 rather than report a conflict, and the demo
 # then dies at startup instead of at install time. See PR body.
-cmcp-runtime>=0.5.0
+cmcp-runtime>=0.7.0
 weight-custody-manifest>=0.28.5,<0.29.0
 openai>=2.54.0
