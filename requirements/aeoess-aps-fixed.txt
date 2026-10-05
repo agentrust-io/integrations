@@ -4,9 +4,9 @@ agent-passport-system==4.2.0 \
     --hash=sha256:2596e6ab44c953e36ab33c4f00485051cd3e36223b5e7194fd31a41f8b540f7e \
     --hash=sha256:63924175e96d0aa6713b361f01ec1a66eee839fd7ab9ba6ce682a2f296a5d899
     # via -r requirements/aeoess-aps-fixed.in
-agentrust-trace==0.11.0 \
-    --hash=sha256:7de621eaf795449e365d04967a82a551a18d75c99d248b4a0923f6d593bdb09e \
-    --hash=sha256:8b76de58ec74fad57417093bf7977fe826ce6ade5859b4d5be8ce3938f9fcb35
+agentrust-trace==0.10.0 \
+    --hash=sha256:a82900c426c92f71ec244a13123611953771d232eb02137fec72927225ab472b \
+    --hash=sha256:e3ef4438ecb8eb9cbbf1aed13d2d409673ef46afe424c8dc579b8ecce79f2b46
     # via -r requirements/aeoess-aps-fixed.in
 agentrust-trace-tests==0.5.1 \
     --hash=sha256:5c13421d41357a5b2e096eced457f5dee65d4921b253b25dac53684b3d31eeeb \
