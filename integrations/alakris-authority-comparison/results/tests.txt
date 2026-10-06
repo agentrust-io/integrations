@@ -1,0 +1,32 @@
+test_emergency_bound_retains_blocks (test_runner.BoundaryChecks.test_emergency_bound_retains_blocks) ... ok
+test_forged_dispatch_rejected (test_runner.BoundaryChecks.test_forged_dispatch_rejected) ... ok
+test_late_veto_invalidates_prior_dispatch (test_runner.BoundaryChecks.test_late_veto_invalidates_prior_dispatch) ... ok
+test_manifest_cannot_omit_required_bytes (test_runner.BoundaryChecks.test_manifest_cannot_omit_required_bytes) ... ok
+test_measured_null_rejected (test_runner.BoundaryChecks.test_measured_null_rejected) ... ok
+test_root_age_is_seconds_not_root_identity (test_runner.BoundaryChecks.test_root_age_is_seconds_not_root_identity) ... ok
+test_action_tampering_between_dispatch_commit (test_runner.Checks.test_action_tampering_between_dispatch_commit) ... ok
+test_author_evidence_cannot_be_independent (test_runner.Checks.test_author_evidence_cannot_be_independent) ... ok
+test_escape_rejected (test_runner.Checks.test_escape_rejected) ... ok
+test_late_recovery_does_not_reopen (test_runner.Checks.test_late_recovery_does_not_reopen) ... ok
+test_mintid_outage_keeps_old_revision (test_runner.Checks.test_mintid_outage_keeps_old_revision) ... ok
+test_missing_field_cannot_be_measured_value (test_runner.Checks.test_missing_field_cannot_be_measured_value) ... ok
+test_missing_states_not_collapsed (test_runner.Checks.test_missing_states_not_collapsed) ... ok
+test_post_dispatch_recheck (test_runner.Checks.test_post_dispatch_recheck) ... ok
+test_published_proofable_stays_integrity_failed (test_runner.Checks.test_published_proofable_stays_integrity_failed) ... ok
+test_revoked_no_effect (test_runner.Checks.test_revoked_no_effect) ... ok
+test_tampering_fails (test_runner.Checks.test_tampering_fails) ... ok
+test_unknown_state_rejected (test_runner.Checks.test_unknown_state_rejected) ... ok
+test_unreachable_no_effect (test_runner.Checks.test_unreachable_no_effect) ... ok
+test_valid_control_and_duplicate (test_runner.Checks.test_valid_control_and_duplicate) ... ok
+test_veto_no_effect (test_runner.Checks.test_veto_no_effect) ... ok
+test_duplicate_cases_rejected (test_runner.CompletenessChecks.test_duplicate_cases_rejected) ... ok
+test_four_cases_required (test_runner.CompletenessChecks.test_four_cases_required) ... ok
+test_missing_proofable_row_is_missing_not_na (test_runner.CompletenessChecks.test_missing_proofable_row_is_missing_not_na) ... ok
+test_reference_rejects_empty_username_credentials (test_runner.ReferenceChecks.test_reference_rejects_empty_username_credentials) ... ok
+test_reference_requires_http_uri (test_runner.ReferenceChecks.test_reference_requires_http_uri) ... ok
+test_released_trace_reference_shape (test_runner.ReferenceChecks.test_released_trace_reference_shape) ... ok
+
+----------------------------------------------------------------------
+Ran 27 tests in 0.385s
+
+OK

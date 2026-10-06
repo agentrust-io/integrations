@@ -1,0 +1,158 @@
+[
+  {
+    "file": "proofable/README.md",
+    "reference": {
+      "rel": "behavior-trace",
+      "id": "https://raw.githubusercontent.com/proofable/docs/3a45f026fd0c06b9d1d411c053597584b6b1c3dc/public/evidence/aaif/authority-at-dispatch/2026-10-06/README.md",
+      "resolver": "https://raw.githubusercontent.com/proofable/docs/3a45f026fd0c06b9d1d411c053597584b6b1c3dc/public/evidence/aaif/authority-at-dispatch/2026-10-06/README.md",
+      "digest": "sha256:67dcbff2c2045f421ad8ef8dd1926f0ff967870c66570cd45575d13a127cda4a"
+    },
+    "reference_shape_validated": true,
+    "signature_verification": "not_measured",
+    "assurance": "public_vendor_log",
+    "trace_record_emitted": false
+  },
+  {
+    "file": "proofable/SHA256SUMS",
+    "reference": {
+      "rel": "behavior-trace",
+      "id": "https://raw.githubusercontent.com/proofable/docs/3a45f026fd0c06b9d1d411c053597584b6b1c3dc/public/evidence/aaif/authority-at-dispatch/2026-10-06/SHA256SUMS",
+      "resolver": "https://raw.githubusercontent.com/proofable/docs/3a45f026fd0c06b9d1d411c053597584b6b1c3dc/public/evidence/aaif/authority-at-dispatch/2026-10-06/SHA256SUMS",
+      "digest": "sha256:3ddf1e631c23f5b26442a06b57d153b9976bddbc6721cbef40b296ff81a06c5d"
+    },
+    "reference_shape_validated": true,
+    "signature_verification": "not_measured",
+    "assurance": "public_vendor_log",
+    "trace_record_emitted": false
+  },
+  {
+    "file": "proofable/manifest.json",
+    "reference": {
+      "rel": "behavior-trace",
+      "id": "https://raw.githubusercontent.com/proofable/docs/3a45f026fd0c06b9d1d411c053597584b6b1c3dc/public/evidence/aaif/authority-at-dispatch/2026-10-06/manifest.json",
+      "resolver": "https://raw.githubusercontent.com/proofable/docs/3a45f026fd0c06b9d1d411c053597584b6b1c3dc/public/evidence/aaif/authority-at-dispatch/2026-10-06/manifest.json",
+      "digest": "sha256:f0a6bc2243e753c437215476d466094ca6c7b889701b64edf221f6ddbbc8660d"
+    },
+    "reference_shape_validated": true,
+    "signature_verification": "not_measured",
+    "assurance": "public_vendor_log",
+    "trace_record_emitted": false
+  },
+  {
+    "file": "proofable/trace.jsonl",
+    "reference": {
+      "rel": "behavior-trace",
+      "id": "https://raw.githubusercontent.com/proofable/docs/3a45f026fd0c06b9d1d411c053597584b6b1c3dc/public/evidence/aaif/authority-at-dispatch/2026-10-06/trace.jsonl",
+      "resolver": "https://raw.githubusercontent.com/proofable/docs/3a45f026fd0c06b9d1d411c053597584b6b1c3dc/public/evidence/aaif/authority-at-dispatch/2026-10-06/trace.jsonl",
+      "digest": "sha256:8df7ed9d49d1d6fb696a05661fd11db194db7c808719a66cadbf0f0a562cc1e2"
+    },
+    "reference_shape_validated": true,
+    "signature_verification": "not_measured",
+    "assurance": "public_vendor_log",
+    "trace_record_emitted": false
+  },
+  {
+    "file": "proofable/authority-effect-results.json",
+    "reference": {
+      "rel": "behavior-trace",
+      "id": "https://raw.githubusercontent.com/proofable/docs/3a45f026fd0c06b9d1d411c053597584b6b1c3dc/public/evidence/aaif/authority-at-dispatch/2026-10-06/authority-effect-results.json",
+      "resolver": "https://raw.githubusercontent.com/proofable/docs/3a45f026fd0c06b9d1d411c053597584b6b1c3dc/public/evidence/aaif/authority-at-dispatch/2026-10-06/authority-effect-results.json",
+      "digest": "sha256:c4b35ed7c2f08dc8924979934a137a9bfd673436a4c98f89395d3d6ece7dd92f"
+    },
+    "reference_shape_validated": true,
+    "signature_verification": "not_measured",
+    "assurance": "public_vendor_log",
+    "trace_record_emitted": false
+  },
+  {
+    "file": "proofable/authority-effect-results.md",
+    "reference": {
+      "rel": "behavior-trace",
+      "id": "https://raw.githubusercontent.com/proofable/docs/3a45f026fd0c06b9d1d411c053597584b6b1c3dc/public/evidence/aaif/authority-at-dispatch/2026-10-06/authority-effect-results.md",
+      "resolver": "https://raw.githubusercontent.com/proofable/docs/3a45f026fd0c06b9d1d411c053597584b6b1c3dc/public/evidence/aaif/authority-at-dispatch/2026-10-06/authority-effect-results.md",
+      "digest": "sha256:0338ff2367ef06568301bed497d2f067fd7650499b07fd6f540b69781cef9702"
+    },
+    "reference_shape_validated": true,
+    "signature_verification": "not_measured",
+    "assurance": "public_vendor_log",
+    "trace_record_emitted": false
+  },
+  {
+    "file": "mintid/revocation-trace-testnet-20261006T073712Z.jsonl",
+    "reference": {
+      "rel": "behavior-trace",
+      "id": "https://gitlab.com/mintid/mintid/-/raw/b678e5cd6b5736e1795fd18d497fd8e501272dcd/test-harness/trace/records/revocation-trace-testnet-20261006T073712Z.jsonl",
+      "resolver": "https://gitlab.com/mintid/mintid/-/raw/b678e5cd6b5736e1795fd18d497fd8e501272dcd/test-harness/trace/records/revocation-trace-testnet-20261006T073712Z.jsonl",
+      "digest": "sha256:509a5047f3f52730c340314d82a0f4c3968db7b41c4cdca21f438fe70d1563d7"
+    },
+    "reference_shape_validated": true,
+    "signature_verification": "not_measured",
+    "assurance": "public_vendor_log",
+    "trace_record_emitted": false
+  },
+  {
+    "file": "mintid/revocation-trace-testnet-20261006T073712Z.md",
+    "reference": {
+      "rel": "behavior-trace",
+      "id": "https://gitlab.com/mintid/mintid/-/raw/b678e5cd6b5736e1795fd18d497fd8e501272dcd/test-harness/trace/records/revocation-trace-testnet-20261006T073712Z.md",
+      "resolver": "https://gitlab.com/mintid/mintid/-/raw/b678e5cd6b5736e1795fd18d497fd8e501272dcd/test-harness/trace/records/revocation-trace-testnet-20261006T073712Z.md",
+      "digest": "sha256:e984c1d8b0555298bb18057bfd8e04089eb012e980f842a593eb07be7e4b6852"
+    },
+    "reference_shape_validated": true,
+    "signature_verification": "not_measured",
+    "assurance": "public_vendor_log",
+    "trace_record_emitted": false
+  },
+  {
+    "file": "mintid/revocation-trace-testnet-20261006T073712Z.manifest.json",
+    "reference": {
+      "rel": "behavior-trace",
+      "id": "https://gitlab.com/mintid/mintid/-/raw/b678e5cd6b5736e1795fd18d497fd8e501272dcd/test-harness/trace/records/revocation-trace-testnet-20261006T073712Z.manifest.json",
+      "resolver": "https://gitlab.com/mintid/mintid/-/raw/b678e5cd6b5736e1795fd18d497fd8e501272dcd/test-harness/trace/records/revocation-trace-testnet-20261006T073712Z.manifest.json",
+      "digest": "sha256:a3cdc29b85ddaf7ef5e5166ea007dc04cc34c1660b14fa416cec2eab23d6983f"
+    },
+    "reference_shape_validated": true,
+    "signature_verification": "not_measured",
+    "assurance": "public_vendor_log",
+    "trace_record_emitted": false
+  },
+  {
+    "file": "mintid/revocation-trace-local-20261005T094532Z.jsonl",
+    "reference": {
+      "rel": "behavior-trace",
+      "id": "https://gitlab.com/mintid/mintid/-/raw/b678e5cd6b5736e1795fd18d497fd8e501272dcd/test-harness/trace/records/revocation-trace-local-20261005T094532Z.jsonl",
+      "resolver": "https://gitlab.com/mintid/mintid/-/raw/b678e5cd6b5736e1795fd18d497fd8e501272dcd/test-harness/trace/records/revocation-trace-local-20261005T094532Z.jsonl",
+      "digest": "sha256:06b5f1e88b39890dc62bacb8ce5c1234c69b942a909bdcc4993ba1073789a0b7"
+    },
+    "reference_shape_validated": true,
+    "signature_verification": "not_measured",
+    "assurance": "public_vendor_log",
+    "trace_record_emitted": false
+  },
+  {
+    "file": "mintid/revocation-trace-local-20261005T094532Z.md",
+    "reference": {
+      "rel": "behavior-trace",
+      "id": "https://gitlab.com/mintid/mintid/-/raw/b678e5cd6b5736e1795fd18d497fd8e501272dcd/test-harness/trace/records/revocation-trace-local-20261005T094532Z.md",
+      "resolver": "https://gitlab.com/mintid/mintid/-/raw/b678e5cd6b5736e1795fd18d497fd8e501272dcd/test-harness/trace/records/revocation-trace-local-20261005T094532Z.md",
+      "digest": "sha256:849acd8efa87931f5f68ea5e7e8ed2967acea711d57aff5b9fefaa587bc1e18f"
+    },
+    "reference_shape_validated": true,
+    "signature_verification": "not_measured",
+    "assurance": "public_vendor_log",
+    "trace_record_emitted": false
+  },
+  {
+    "file": "mintid/revocation-trace-local-20261005T094532Z.manifest.json",
+    "reference": {
+      "rel": "behavior-trace",
+      "id": "https://gitlab.com/mintid/mintid/-/raw/b678e5cd6b5736e1795fd18d497fd8e501272dcd/test-harness/trace/records/revocation-trace-local-20261005T094532Z.manifest.json",
+      "resolver": "https://gitlab.com/mintid/mintid/-/raw/b678e5cd6b5736e1795fd18d497fd8e501272dcd/test-harness/trace/records/revocation-trace-local-20261005T094532Z.manifest.json",
+      "digest": "sha256:10e8513dde5931208559b9f35b2f9c675ccf78bd156878fd7d2b59050c5a036b"
+    },
+    "reference_shape_validated": true,
+    "signature_verification": "not_measured",
+    "assurance": "public_vendor_log",
+    "trace_record_emitted": false
+  }
+]

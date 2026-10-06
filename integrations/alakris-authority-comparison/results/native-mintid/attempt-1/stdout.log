@@ -1,0 +1,49 @@
+[     0.0s] source                             revision=b678e5cd6b5736e1795fd18d497fd8e501272dcd tracked_changes=False services_revision_stated=None
+[     0.5s] stack                              chain_id=mintid-testnet-2 issuer_id=3d2a9df3cc5cb853ba6a61bfc475cda119eb215c22aad7b2b4bcebc46399183b verifier_id=6f4c5d1becd3c47e56efcbfc950fc5d845eff
+[     0.7s] build                              
+[     0.7s] policy                             sha256=9f02f1c77044017c9b411a7d069cbc4fd5311087fc09c91e4cfd1ec5e29c3577
+[     0.9s] verifier_status                    when=before observed_unix=1791316775 substrate=ok chain_height=88925 root_epoch=6278 root_height=88920 root_age_seconds=12 fresh=True max_root_age_sec
+[     2.0s] kyc_session                        principal=principal1 driver=sandbox hint=sandbox:approved:g3 outcome=approved grade=3
+[     3.1s] identity_credential                principal=principal1 credential=656dc97cb5e6…
+[    13.2s] kyc_session                        principal=principal2 driver=sandbox hint=sandbox:approved:g3 outcome=approved grade=3
+[    20.2s] agents_minted                      count=5
+[    51.0s] wait                               what=a finalized root committing the agents and their scope seconds=30.5
+[    53.5s] wait                               what=every agent usable seconds=2.5
+[    53.9s] parameters                         A=180 H=30 K=5 G=60 cascade_spread_beats=8
+[    60.6s] decision               issuer      agent=agent_issuer attempt=baseline session_id=ff8fbd9273db2fefdae521934cacfaaa accepted=True reason_code=accepted presented_root=a5a13b59c78a9d8cf08f
+[    61.2s] trigger                issuer      action=POST /v1/agent-credentials/{id}/revoke http=200 status=revoked request_utc=2026-10-06T20:00:35.573Z response_utc=2026-10-06T20:00:35.705Z respo
+[    66.9s] decision               issuer      agent=sibling_control attempt=control_stale session_id=b1e650930fd0cc1acd972234e08c8b0d accepted=True reason_code=accepted presented_root=a5a13b59c78a
+[    67.0s] holder_refresh         issuer      agent=agent_issuer outcome=credential_revoked note=an honest client stops presenting here
+[    72.5s] decision               issuer      agent=agent_issuer attempt=forced session_id=7934b936fc7f97a873b870e17f426cc8 accepted=True reason_code=accepted presented_root=a5a13b59c78a9d8cf08f84
+[    80.0s] decision               issuer      agent=sibling_control attempt=control_stale session_id=8032bbccefa62dbfdb33fc0d9dfbd055 accepted=True reason_code=accepted presented_root=a5a13b59c78a
+[    84.7s] decision               issuer      agent=agent_issuer attempt=forced session_id=eaec17e7251c3c14b759f34a904ae981 accepted=False reason_code=status_root_stale presented_root=a5a13b59c78a
+[    88.8s] decision               issuer      agent=agent_issuer attempt=forced_confirm session_id=ea22df1d436c450a817a9250c90e0d02 accepted=False reason_code=status_root_stale presented_root=a5a1
+[    88.8s] ring_at_denial         issuer      agent=agent_issuer
+[    94.4s] decision               issuer      agent=sibling_control attempt=control_stale session_id=3681d51cda715ecf54111295de017e89 accepted=False reason_code=status_root_stale presented_root=a5
+[    96.3s] holder_refresh         issuer      agent=sibling_control outcome=refreshed
+[   101.7s] decision               issuer      agent=sibling_refreshed attempt=control_refreshed session_id=78139407a22800331d80a22df5e7ca79 accepted=True reason_code=accepted presented_root=3c81ee
+[   102.1s] path_done              issuer      
+[   108.0s] decision               kill_switch agent=agent_kill_switch attempt=baseline session_id=ca06d987069811d1720538326c457af8 accepted=True reason_code=accepted presented_root=3c81eeb69e70210
+[   114.7s] trigger                kill_switch action=self_revoke → privacy relay receipt=pending recorded_height=88977 recorded_utc=2026-10-06T20:01:26.764Z request_utc=2026-10-06T20:01:23.643Z re
+[   120.9s] decision               kill_switch agent=agent_kill_switch attempt=forced session_id=8b4b6f669e3d1f57bc6631b82ce2ecfd accepted=True reason_code=accepted presented_root=c996965d925f032d3
+[   128.7s] decision               kill_switch agent=agent_kill_switch attempt=forced session_id=c2d37ac1a8bf5cc2e80ae06c92eead04 accepted=True reason_code=accepted presented_root=c996965d925f032d3
+[   135.9s] decision               kill_switch agent=agent_kill_switch attempt=forced session_id=c8f625a6beadd1832f6a4dd0c1f9df3c accepted=True reason_code=accepted presented_root=c996965d925f032d3
+Traceback (most recent call last):
+  File "/home/ubuntu/worktrees/aaif-mintid-run-20261006/source/test-harness/trace/revocation_trace.py", line 1783, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/home/ubuntu/worktrees/aaif-mintid-run-20261006/source/test-harness/trace/revocation_trace.py", line 1748, in main
+    r = runners[p](stack, trace, fx)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/worktrees/aaif-mintid-run-20261006/source/test-harness/trace/revocation_trace.py", line 830, in path_kill_switch
+    last_ok, first_no, _ = force_until_refused(
+                           ^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/worktrees/aaif-mintid-run-20261006/source/test-harness/trace/revocation_trace.py", line 698, in force_until_refused
+    ev = attempt(stack, trace, path, adv.label, adv.client, "forced")
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/worktrees/aaif-mintid-run-20261006/source/test-harness/trace/revocation_trace.py", line 627, in attempt
+    c = stack.service.challenge(
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ubuntu/worktrees/aaif-mintid-run-20261006/source/verifier-core/src/verifier_core/x402/service_client.py", line 64, in challenge
+    raise ServiceRefusal(status, payload)
+verifier_core.x402.facilitator.ServiceRefusal: HTTP 503: {'error': 'state_unavailable'}

@@ -1,0 +1,17 @@
+{
+  "original_run_artifact_hashes_all_match": true,
+  "original_run_artifact_checks": {
+    "revocation-trace-testnet-20261006T195934Z.jsonl": true,
+    "stdout.log": true,
+    "preflight.json": true,
+    "postflight.json": true
+  },
+  "files": {
+    "postflight.json": "345878bdbab4c7901c9a00792a9465761914639182f044b42130852f6519f906",
+    "stdout.log": "b7403c28f8a63eb63dbf772eb235049b399b7d7da07427a77efcc7fd31e8e584",
+    "revocation-trace-testnet-20261006T195934Z.jsonl": "4c307495de0697e57a0d48898d9b00d90642f523c80893f2af31b31e20a317f4",
+    "preflight.json": "22caff0f2eb52462e2a0cb542e00c16cff62ac436f975565bab7a48a7ec8f012",
+    "run-result.json": "a64f0b390710562c342c834786ea4502f1363e2ac387f3e3ab13f55b1759447a",
+    "partial-findings.json": "ecf1c653e143067f73f2424c2e6d5fec8b09cbdfdd96265774871efd0a72707e"
+  }
+}

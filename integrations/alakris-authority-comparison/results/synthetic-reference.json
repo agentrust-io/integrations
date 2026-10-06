@@ -1,0 +1,117 @@
+[
+  {
+    "case_id": "binding_veto",
+    "basis": "synthetic_fixture",
+    "decision": {
+      "allowed": false,
+      "utc_seconds": 10,
+      "action_hash": "8685d4aca34c34b81b079c5ba79ab9cea01433582881bdbe2e3c74337e28e0f2"
+    },
+    "dispatch": null,
+    "effect": {
+      "committed": false,
+      "utc_seconds": 11,
+      "total_effects": 0
+    },
+    "after_deadline": {
+      "decision": {
+        "allowed": false,
+        "utc_seconds": 21,
+        "action_hash": "8685d4aca34c34b81b079c5ba79ab9cea01433582881bdbe2e3c74337e28e0f2"
+      },
+      "effect": {
+        "committed": false,
+        "utc_seconds": 21,
+        "total_effects": 0
+      }
+    },
+    "independent_vendor_reproduction": false
+  },
+  {
+    "case_id": "revoked_stale",
+    "basis": "synthetic_fixture",
+    "decision": {
+      "allowed": false,
+      "utc_seconds": 10,
+      "action_hash": "de6f436a46232597a53742eb4b283fb56e3a978acb68d9ed8038290d24390d01"
+    },
+    "dispatch": null,
+    "effect": {
+      "committed": false,
+      "utc_seconds": 11,
+      "total_effects": 0
+    },
+    "after_deadline": {
+      "decision": {
+        "allowed": false,
+        "utc_seconds": 21,
+        "action_hash": "de6f436a46232597a53742eb4b283fb56e3a978acb68d9ed8038290d24390d01"
+      },
+      "effect": {
+        "committed": false,
+        "utc_seconds": 21,
+        "total_effects": 0
+      }
+    },
+    "independent_vendor_reproduction": false
+  },
+  {
+    "case_id": "unreachable",
+    "basis": "synthetic_fixture",
+    "decision": {
+      "allowed": false,
+      "utc_seconds": 10,
+      "action_hash": "63df14e94045070197e7504e0f420dd02c9d84db9d8c4a54d7a69b0adb9ce525"
+    },
+    "dispatch": null,
+    "effect": {
+      "committed": false,
+      "utc_seconds": 11,
+      "total_effects": 0
+    },
+    "after_deadline": {
+      "decision": {
+        "allowed": false,
+        "utc_seconds": 21,
+        "action_hash": "63df14e94045070197e7504e0f420dd02c9d84db9d8c4a54d7a69b0adb9ce525"
+      },
+      "effect": {
+        "committed": false,
+        "utc_seconds": 21,
+        "total_effects": 0
+      }
+    },
+    "independent_vendor_reproduction": false
+  },
+  {
+    "case_id": "post_dispatch_revoke",
+    "basis": "synthetic_fixture",
+    "decision": {
+      "allowed": true,
+      "utc_seconds": 10,
+      "action_hash": "f49193797aea777b5b5b6e9303871e664f502d4d12e13e02d7628a2462eea6b0"
+    },
+    "dispatch": {
+      "token": "post_dispatch_revoke",
+      "action_hash": "f49193797aea777b5b5b6e9303871e664f502d4d12e13e02d7628a2462eea6b0"
+    },
+    "effect": {
+      "committed": false,
+      "utc_seconds": 11,
+      "total_effects": 0
+    },
+    "after_deadline": {
+      "decision": {
+        "allowed": false,
+        "utc_seconds": 21,
+        "action_hash": "f49193797aea777b5b5b6e9303871e664f502d4d12e13e02d7628a2462eea6b0"
+      },
+      "effect": {
+        "committed": false,
+        "utc_seconds": 21,
+        "total_effects": 0
+      }
+    },
+    "independent_vendor_reproduction": false
+  }
+]

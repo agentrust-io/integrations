@@ -1,0 +1,651 @@
+{
+  "implementation": "Proofable",
+  "run_id": "four-case-run-f92faf39a4ba",
+  "evidence_custody": {
+    "producer": "Proofable author/operator",
+    "public_artifact": "sanitized trace",
+    "appraiser": "Alakris evidence runner",
+    "independent_target_observer": false
+  },
+  "deployed_revision_claim": "f92faf39a4bae480cca3e5c07ce2c95d6ab68411",
+  "checks": [
+    {
+      "file": "README.md",
+      "expected": "67dcbff2c2045f421ad8ef8dd1926f0ff967870c66570cd45575d13a127cda4a",
+      "actual": "67dcbff2c2045f421ad8ef8dd1926f0ff967870c66570cd45575d13a127cda4a",
+      "match": true
+    },
+    {
+      "file": "manifest.json",
+      "expected": "f0a6bc2243e753c437215476d466094ca6c7b889701b64edf221f6ddbbc8660d",
+      "actual": "f0a6bc2243e753c437215476d466094ca6c7b889701b64edf221f6ddbbc8660d",
+      "match": true
+    },
+    {
+      "file": "authority-effect-results.md",
+      "expected": "0338ff2367ef06568301bed497d2f067fd7650499b07fd6f540b69781cef9702",
+      "actual": "0338ff2367ef06568301bed497d2f067fd7650499b07fd6f540b69781cef9702",
+      "match": true
+    },
+    {
+      "file": "authority-effect-results.json",
+      "expected": "c4b35ed7c2f08dc8924979934a137a9bfd673436a4c98f89395d3d6ece7dd92f",
+      "actual": "c4b35ed7c2f08dc8924979934a137a9bfd673436a4c98f89395d3d6ece7dd92f",
+      "match": true
+    },
+    {
+      "file": "trace.jsonl",
+      "expected": "d749cf16fe8dd599f528e21e95863b930004a0b3f0a9882695e3d3b03e8c2183",
+      "actual": "8df7ed9d49d1d6fb696a05661fd11db194db7c808719a66cadbf0f0a562cc1e2",
+      "match": false
+    },
+    {
+      "file": "trace.jsonl",
+      "expected": "d749cf16fe8dd599f528e21e95863b930004a0b3f0a9882695e3d3b03e8c2183",
+      "actual": "8df7ed9d49d1d6fb696a05661fd11db194db7c808719a66cadbf0f0a562cc1e2",
+      "match": false
+    }
+  ],
+  "integrity": "FAIL",
+  "record_count_consistent": true,
+  "newline_diagnostic": {
+    "crlf_hash_matches_published": true,
+    "strict_byte_check_unchanged": true
+  },
+  "cases": [
+    {
+      "case_id": "binding_veto",
+      "basis": "author_record",
+      "publisher_claim": "SUPPORTED",
+      "independent_live_reproduction": false,
+      "fields": {
+        "authority": {
+          "state": "measured",
+          "value": [
+            "0xee795f450b6a6433787519aa7a87406df99f6bb27fe21952162825bfb82cafc4"
+          ],
+          "reason": null
+        },
+        "decision": {
+          "state": "measured",
+          "value": [
+            {
+              "status": "failed",
+              "response": null,
+              "executor": null,
+              "error": "JOB_AUTHORITY_DENIED: run_command is required for isolated harness execution."
+            }
+          ],
+          "reason": null
+        },
+        "dispatch": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "explicit dispatch event/time not in public trace"
+        },
+        "platform_observation": {
+          "state": "measured",
+          "value": [
+            {
+              "attempt": "binding_veto",
+              "observation": {
+                "status": "failed",
+                "response": null,
+                "executor": null,
+                "error": "JOB_AUTHORITY_DENIED: run_command is required for isolated harness execution."
+              }
+            }
+          ],
+          "reason": null
+        },
+        "committed_effect": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "public trace has platform outcomes, not target-side committed effects"
+        },
+        "task_outcome": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "platform observations do not establish the target task result"
+        },
+        "receipt": {
+          "state": "measured",
+          "value": [
+            {
+              "attempt": "binding_veto",
+              "receipt": {
+                "state": "measured",
+                "value": {
+                  "qHash": "0x11d0d791fa315322bd8490ac52b65fdf96432e5f5ac7e09f0a5a311c934bbc69",
+                  "status": "verified",
+                  "visibility": "private"
+                },
+                "reason": null
+              }
+            }
+          ],
+          "reason": null
+        },
+        "receipt_signature_material": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "envelope, signature and signer material not in public package"
+        },
+        "receipt_signature_verification": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "no public envelope to verify"
+        },
+        "policy_digest": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "policy version is an identifier, not a canonical digest"
+        },
+        "revocation_latency_seconds": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "measurement/appraisal not performed"
+        },
+        "root_age_seconds": {
+          "state": "not_applicable",
+          "value": null,
+          "reason": "local authority-state path"
+        },
+        "useful_work_lost": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "measurement/appraisal not performed"
+        },
+        "action_digest": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not exposed by this public adapter input"
+        },
+        "target_identity": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not exposed by this public adapter input"
+        },
+        "original_deadline": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not exposed by this public adapter input"
+        },
+        "fallback_scope": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not exposed by this public adapter input"
+        },
+        "independent_effect_witness": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "appraisal not performed"
+        },
+        "retry_count": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "appraisal not performed"
+        },
+        "duplicate_count": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "appraisal not performed"
+        }
+      }
+    },
+    {
+      "case_id": "revoked_stale",
+      "basis": "author_record",
+      "publisher_claim": "SUPPORTED",
+      "independent_live_reproduction": false,
+      "fields": {
+        "authority": {
+          "state": "measured",
+          "value": [
+            "0xbf9c4e1bd4d7173519dada35cd372e3d03619d091f192ddd4346c12ce3b38dd2",
+            "0x077a8e04548556e0adaa5bac771766276edfe30e42075e100b82e39a7d2ecd34",
+            "0x2f741e3111341419ecbf5be90475f5e3e9fa3125542f422f47b395e93365228e",
+            "0x538f77ca833d2ff08571bbc4334de82e8d77969d97f6da701dddadfa0b39ae30"
+          ],
+          "reason": null
+        },
+        "decision": {
+          "state": "measured",
+          "value": [
+            {
+              "status": "completed",
+              "response": "REVIEW_OK",
+              "executor": null,
+              "error": null
+            },
+            {
+              "dispatch_decision": "DENY",
+              "code": "DELEGATION_PROOF_DENIED",
+              "job_created": false
+            },
+            {
+              "dispatch_decision": "DENY",
+              "code": "DELEGATION_PROOF_DENIED",
+              "job_created": false
+            },
+            {
+              "dispatch_decision": "DENY",
+              "code": null,
+              "job_created": false
+            }
+          ],
+          "reason": null
+        },
+        "dispatch": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "explicit dispatch event/time not in public trace"
+        },
+        "platform_observation": {
+          "state": "measured",
+          "value": [
+            {
+              "attempt": "hosted_allow",
+              "observation": {
+                "status": "completed",
+                "response": "REVIEW_OK",
+                "executor": null,
+                "error": null
+              }
+            },
+            {
+              "attempt": "revoke_before_dispatch",
+              "observation": {
+                "dispatch_decision": "DENY",
+                "code": "DELEGATION_PROOF_DENIED",
+                "job_created": false
+              }
+            },
+            {
+              "attempt": "expiry_before_dispatch",
+              "observation": {
+                "dispatch_decision": "DENY",
+                "code": "DELEGATION_PROOF_DENIED",
+                "job_created": false
+              }
+            },
+            {
+              "attempt": "stale_authority",
+              "observation": {
+                "dispatch_decision": "DENY",
+                "code": null,
+                "job_created": false
+              }
+            }
+          ],
+          "reason": null
+        },
+        "committed_effect": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "public trace has platform outcomes, not target-side committed effects"
+        },
+        "task_outcome": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "platform observations do not establish the target task result"
+        },
+        "receipt": {
+          "state": "measured",
+          "value": [
+            {
+              "attempt": "hosted_allow",
+              "receipt": {
+                "state": "measured",
+                "value": {
+                  "qHash": "0x9afe5eb5ffb66b6b254465a47e71128674f83edb6a61e3ae67a5d409dc305dd9",
+                  "status": "verified",
+                  "visibility": "private"
+                },
+                "reason": null
+              }
+            },
+            {
+              "attempt": "revoke_before_dispatch",
+              "receipt": {
+                "state": "not_emitted",
+                "value": null,
+                "reason": "no receipt exposed for this attempt"
+              }
+            },
+            {
+              "attempt": "expiry_before_dispatch",
+              "receipt": {
+                "state": "not_emitted",
+                "value": null,
+                "reason": "no receipt exposed for this attempt"
+              }
+            },
+            {
+              "attempt": "stale_authority",
+              "receipt": {
+                "state": "not_emitted",
+                "value": null,
+                "reason": "no receipt exposed for this attempt"
+              }
+            }
+          ],
+          "reason": null
+        },
+        "receipt_signature_material": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "envelope, signature and signer material not in public package"
+        },
+        "receipt_signature_verification": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "no public envelope to verify"
+        },
+        "policy_digest": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "policy version is an identifier, not a canonical digest"
+        },
+        "revocation_latency_seconds": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "measurement/appraisal not performed"
+        },
+        "root_age_seconds": {
+          "state": "not_applicable",
+          "value": null,
+          "reason": "local authority-state path"
+        },
+        "useful_work_lost": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "measurement/appraisal not performed"
+        },
+        "action_digest": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not exposed by this public adapter input"
+        },
+        "target_identity": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not exposed by this public adapter input"
+        },
+        "original_deadline": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not exposed by this public adapter input"
+        },
+        "fallback_scope": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not exposed by this public adapter input"
+        },
+        "independent_effect_witness": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "appraisal not performed"
+        },
+        "retry_count": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "appraisal not performed"
+        },
+        "duplicate_count": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "appraisal not performed"
+        }
+      }
+    },
+    {
+      "case_id": "unreachable",
+      "basis": "author_record",
+      "publisher_claim": "NOT_APPLICABLE_CURRENT_PATH",
+      "independent_live_reproduction": false,
+      "fields": {
+        "authority": {
+          "state": "not_applicable",
+          "value": null,
+          "reason": "current authority evaluated locally"
+        },
+        "decision": {
+          "state": "not_applicable",
+          "value": null,
+          "reason": "no remote authority dependency on this path"
+        },
+        "dispatch": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "explicit dispatch event/time not in public trace"
+        },
+        "platform_observation": {
+          "state": "not_applicable",
+          "value": null,
+          "reason": "no equivalent on this implementation path"
+        },
+        "committed_effect": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "public trace has platform outcomes, not target-side committed effects"
+        },
+        "task_outcome": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "platform observations do not establish the target task result"
+        },
+        "receipt": {
+          "state": "not_applicable",
+          "value": null,
+          "reason": "no equivalent on this implementation path"
+        },
+        "receipt_signature_material": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "envelope, signature and signer material not in public package"
+        },
+        "receipt_signature_verification": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "no public envelope to verify"
+        },
+        "policy_digest": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "policy version is an identifier, not a canonical digest"
+        },
+        "revocation_latency_seconds": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "measurement/appraisal not performed"
+        },
+        "root_age_seconds": {
+          "state": "not_applicable",
+          "value": null,
+          "reason": "local authority-state path"
+        },
+        "useful_work_lost": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "measurement/appraisal not performed"
+        },
+        "action_digest": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not exposed by this public adapter input"
+        },
+        "target_identity": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not exposed by this public adapter input"
+        },
+        "original_deadline": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not exposed by this public adapter input"
+        },
+        "fallback_scope": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not exposed by this public adapter input"
+        },
+        "independent_effect_witness": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "appraisal not performed"
+        },
+        "retry_count": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "appraisal not performed"
+        },
+        "duplicate_count": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "appraisal not performed"
+        }
+      }
+    },
+    {
+      "case_id": "post_dispatch_revoke",
+      "basis": "author_record",
+      "publisher_claim": "SUPPORTED",
+      "independent_live_reproduction": false,
+      "fields": {
+        "authority": {
+          "state": "measured",
+          "value": [
+            "0x6c0083c87a6460e4bd3ffb81236ce95f7ec17976375388925acafaf794ab8c91"
+          ],
+          "reason": null
+        },
+        "decision": {
+          "state": "measured",
+          "value": [
+            {
+              "status": "completed",
+              "response": "REVIEW_OK",
+              "executor": "harness:opencode:acp:sandbox",
+              "error": null
+            }
+          ],
+          "reason": null
+        },
+        "dispatch": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "explicit dispatch event/time not in public trace"
+        },
+        "platform_observation": {
+          "state": "measured",
+          "value": [
+            {
+              "attempt": "post_dispatch_revoke",
+              "observation": {
+                "status": "completed",
+                "response": "REVIEW_OK",
+                "executor": "harness:opencode:acp:sandbox",
+                "error": null
+              }
+            }
+          ],
+          "reason": null
+        },
+        "committed_effect": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "public trace has platform outcomes, not target-side committed effects"
+        },
+        "task_outcome": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "platform observations do not establish the target task result"
+        },
+        "receipt": {
+          "state": "measured",
+          "value": [
+            {
+              "attempt": "post_dispatch_revoke",
+              "receipt": {
+                "state": "measured",
+                "value": {
+                  "qHash": "0xdfda8a13f557e3575c1e0ec1464632fa685deb57ccc904988bf8eb029b15d042",
+                  "status": "verified",
+                  "visibility": "private"
+                },
+                "reason": null
+              }
+            }
+          ],
+          "reason": null
+        },
+        "receipt_signature_material": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "envelope, signature and signer material not in public package"
+        },
+        "receipt_signature_verification": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "no public envelope to verify"
+        },
+        "policy_digest": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "policy version is an identifier, not a canonical digest"
+        },
+        "revocation_latency_seconds": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "measurement/appraisal not performed"
+        },
+        "root_age_seconds": {
+          "state": "not_applicable",
+          "value": null,
+          "reason": "local authority-state path"
+        },
+        "useful_work_lost": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "measurement/appraisal not performed"
+        },
+        "action_digest": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not exposed by this public adapter input"
+        },
+        "target_identity": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not exposed by this public adapter input"
+        },
+        "original_deadline": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not exposed by this public adapter input"
+        },
+        "fallback_scope": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not exposed by this public adapter input"
+        },
+        "independent_effect_witness": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "appraisal not performed"
+        },
+        "retry_count": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "appraisal not performed"
+        },
+        "duplicate_count": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "appraisal not performed"
+        }
+      }
+    }
+  ]
+}
