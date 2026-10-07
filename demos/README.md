@@ -2,7 +2,7 @@
 
 Community updates and contributor highlights: [AgenTrust on LinkedIn](https://www.linkedin.com/company/agentrust-io/).
 
-Runnable demos for [cMCP](https://github.com/agentrust-io/cmcp), [TRACE](https://github.com/agentrust-io/trace-spec), and [WCM](https://pypi.org/project/weight-custody-manifest/). Ten demos, ~12 minutes total.
+Short demos you can run on your own computer to see [cMCP](https://github.com/agentrust-io/cmcp) check an agent's tool calls against policy, [TRACE](https://github.com/agentrust-io/trace-spec) produce signed receipts you can verify offline, and [WCM](https://pypi.org/project/weight-custody-manifest/) control the release of model-weight keys. Ten demos, about 12 minutes in total.
 
 Project support is recognized in [SPONSORS.md](SPONSORS.md). Sponsorship is
 separate from demo authorship, fixture identities, and project governance.

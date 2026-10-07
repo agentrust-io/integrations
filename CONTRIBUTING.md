@@ -1,6 +1,8 @@
 # Contributing
 
-One directory per integration, one PR per change. Self-serve: you do not need an invitation.
+This page explains how to add an integration, example or demo, and the rules
+every submission has to meet. You do not need an invitation: one directory per
+integration, one pull request per change.
 
 ## Examples and demos
 
@@ -33,7 +35,7 @@ These come from operating large OSS governance projects. PRs that break them are
 1. **Runnable against released packages.** Integrations target published PyPI releases (`cmcp-runtime`, `agentrust-trace`, `agent-manifest`, `weight-custody-manifest`), never forks or unmerged branches.
 2. **Every claim verifiable.** Download counts, user numbers, certifications, "merged into X" - if a reviewer cannot verify it in two minutes, it does not go in. We check. Inflated claims are the fastest way to removal.
 3. **One line of positioning, maximum.** Your README describes what the integration does technically. Marketing copy, comparison tables against competitors, and pricing belong on your site - link it in `integration.yaml`, not here.
-4. **Link only to what an anonymous reader can open.** The WCM source repository is private, so every `github.com/agentrust-io/weight-custody-manifest` URL 404s for anyone outside the org. A WCM integration cites [wcm.agentrust-io.com](https://wcm.agentrust-io.com) and the [PyPI project](https://pypi.org/project/weight-custody-manifest/) instead. Dead links in a README are a review blocker.
+4. **Link only to what an anonymous reader can open.** A link to a private repository, draft or internal page 404s for anyone outside the organization. For WCM, cite [wcm.agentrust-io.com](https://wcm.agentrust-io.com) and the [PyPI project](https://pypi.org/project/weight-custody-manifest/). Dead links in a README are a review blocker.
 5. **TRACE semantics are not negotiable.** If your product emits or consumes TRACE records, it must conform to [trace-spec](https://github.com/agentrust-io/trace-spec) and pass [agentrust-trace-tests](https://pypi.org/project/agentrust-trace-tests/) at the level you claim. A record without a verifiable signature binding is not a TRACE record; calling non-attested output "attested" gets the integration removed.
 6. **You maintain it.** The manifest names a maintainer contact. Integrations that break against a current release and stay broken for 60 days after notice are moved to `attic/`.
 7. **Humans submit, not bots.** Automated submission PRs and issue spam are closed on sight.
@@ -46,8 +48,9 @@ Want the **Verified** tier? Say so in the PR and include exact reproduction step
 
 ## Declaring a WCM integration
 
-WCM is a four-layer protocol, so a single conformance number would say nothing
-useful. Declare instead:
+WCM (Weight Custody Manifest) controls when the key that decrypts a model's
+weights is handed out. It is a four-layer protocol, so a single conformance number
+would say nothing useful. Declare instead:
 
 - `wcm_roles` - what the integration *does*: `manifest-producer`,
   `manifest-verifier`, `key-broker`, `protected-runtime`, `attestation-source`,

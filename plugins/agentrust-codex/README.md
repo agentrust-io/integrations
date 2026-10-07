@@ -1,8 +1,11 @@
 # AgenTrust for Codex
 
-A Codex plugin that fingerprints the agent configuration in each workspace,
-warns when that composition changes, and creates signed Agent Manifest and
-TRACE Level 0 records on request.
+A Codex plugin that tells you, at the start of each session, whether your
+agent's setup in this workspace (its instructions, skills, hooks, plugins and
+tools) has changed since you approved it. It does this by fingerprinting each
+part and comparing it with the approved baseline. On request it also creates a
+signed Agent Manifest (a record of the setup) and a signed TRACE Level 0 record
+for the session.
 
 ## Install
 

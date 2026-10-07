@@ -1,6 +1,6 @@
 # Shadow AI Discovery
 
-Compares enriched tool-call audit records against a separate agent-to-tools registry and reports unregistered agents and undeclared tools. It does not read cMCP output directly; see [Inputs and limitations](#inputs-and-limitations).
+Finds AI agents and tool use that nobody registered. It reads tool-call audit records (with agent IDs added) and compares them with a separate registry that lists each agent and the tools it is allowed to use, then reports agents that are not in the registry and tools an agent was never declared to use. It does not read cMCP output directly; see [Inputs and limitations](#inputs-and-limitations).
 
 This is standalone tooling, outside the integration index and Marketplace. It
 has no working cMCP or Agent Manifest adapter and claims neither integration.

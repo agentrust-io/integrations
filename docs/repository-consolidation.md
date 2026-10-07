@@ -1,5 +1,9 @@
 # Examples and demos consolidation
 
+The separate examples and demos repositories were merged into this one. This page
+records what was copied from where, which licenses still apply, how review works
+now, and the steps for retiring the old repositories.
+
 The canonical working repository is agentrust-io/integrations. Its existing
 adapter and package paths remain supported. First-party scenarios live in
 examples/, short demonstrations in demos/, and vendor submissions in integrations/.

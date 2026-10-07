@@ -1,5 +1,7 @@
 # Maintainers
 
+This page lists who maintains this repository and reviews changes to it.
+
 ## Repository Maintainers
 
 | Name | GitHub | Appointment |

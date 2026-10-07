@@ -1,5 +1,9 @@
 # Ecosystem Evaluation: 2026-08-24
 
+This is a record of a review on 2026-08-24 of four outside projects. For each, it
+says whether the project only belongs on the governance resource list or whether
+AgenTrust should build a real, tested integration, and what has to happen next.
+
 Purpose: distinguish projects that belong in the governance resource list from
 projects for which AgenTrust has built and tested a real integration.
 

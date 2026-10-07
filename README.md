@@ -5,11 +5,11 @@
 
 Community updates and contributor highlights: [AgenTrust on LinkedIn](https://www.linkedin.com/company/agentrust-io/).
 
-One place to try and integrate cMCP, cA2A, TRACE, Agent Manifest, and WCM. Vendors and community projects integrate here, on their own terms, under published rules - while the core repos stay first-party.
+This repository is where you try the AgenTrust projects and connect them to the tools you already use. It holds runnable examples, short demos, and integrations: small pieces of code that link a product or agent framework to cMCP (rule checks on an agent's tool calls), cA2A (checkable handoffs of work between agents), TRACE (signed receipts of what an agent did), Agent Manifest (a signed record of how an agent is set up) and WCM (model-weight keys released only to checked hardware). Vendors and community projects add their own integrations here under published rules, while the core repositories hold only first-party code. New to the terms? See the [plain-terms list](https://agentrust-io.com/#plain-terms).
 
-Project support is recognized in [SPONSORS.md](SPONSORS.md). Sponsorship is
-separate from marketplace listing, verification tier, maintainership, and
-project governance.
+Sponsors are listed in [SPONSORS.md](SPONSORS.md). Sponsorship has no effect on
+marketplace listings, verification tiers, who maintains the repository, or how
+the project is run.
 
 ## Where things live
 
@@ -31,15 +31,17 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the review rules for each directory. 
 
 ## Tiers
 
-**Community** - structure-validated and listed. We check that the directory follows the layout, the manifest validates, the links resolve, and the description makes no claims we can falsify. We do not run your code. The listing says exactly that.
+Every listed integration has a tier that tells you how much we checked it.
 
-**Verified** - everything above, plus we ran the integration end-to-end against released packages and confirmed the documented behavior. Verified integrations get the badge in the index and are eligible for the awesome list. Request verification in your PR; re-verification happens at every release that touches your integration.
+**Community** - we checked the structure and listed it. The directory follows the layout, the manifest is valid, the links work, and the description makes no claim we can show to be false. We do not run your code, and the listing says exactly that.
+
+**Verified** - everything above, plus we ran the integration end to end against released packages and confirmed it does what its README says. Verified integrations get the badge in the index and can be listed on the awesome list. Ask for verification in your PR; we check again at every release that touches your integration.
 
 Tier is recorded in each integration's `integration.yaml` and is set by maintainers, never self-declared.
 
 ## The neutrality rule
 
-TRACE only works as a standard if it is genuinely neutral. Integrations are listed on technical merit under identical rules, including products that compete with anything we build. What gets a submission declined is never *who* you are - it is unverifiable claims, misrepresentation, or marketing dressed as documentation. See [CONTRIBUTING.md](CONTRIBUTING.md) for the precise rules.
+TRACE only works as a standard if it is genuinely neutral. Integrations are listed on technical merit under the same rules for everyone, including products that compete with anything we build. A submission is declined for unverifiable claims, misrepresentation, or marketing written as documentation, and never because of *who* sent it. See [CONTRIBUTING.md](CONTRIBUTING.md) for the precise rules.
 
 ## Index
 
@@ -95,6 +97,10 @@ TRACE only works as a standard if it is genuinely neutral. Integrations are list
 
 ### Framework coverage
 
+For each agent framework, this table shows which adapter covers it, where the
+evidence comes from, which released version CI actually runs, and what the
+adapter can and cannot see.
+
 | Framework | Adapter | Evidence source | Released framework exercised in CI | Evidence boundary |
 |---|---|---|---|---|
 | Google ADK | [Google ADK](integrations/google-adk/) | First-party `BasePlugin` lifecycle | Yes - Google ADK 2.7.1 `InMemoryRunner` | Callback-visible invocation, model, and available tool identity; no payloads, retries, agent graph, function-body execution, or policy enforcement |
@@ -105,8 +111,9 @@ TRACE only works as a standard if it is genuinely neutral. Integrations are list
 | Pydantic AI | [OpenTelemetry GenAI](integrations/otel-genai/) | OpenTelemetry GenAI transcription | Yes - Pydantic AI 2.35.1 `TestModel` with a tool call | Telemetry-reported model and tool identity; no payloads; absent `gen_ai.tool.type` is not inferred |
 
 "Adapter exists" and "released framework exercised" are separate claims here.
-First-party hooks produce self-origin records with no `origin` block. Telemetry
-transcriptions carry their weaker evidence boundary explicitly. Each adapter
+First-party hooks (code that runs inside the framework itself) produce
+self-origin records with no `origin` block. Records copied from telemetry are
+weaker evidence and say so explicitly. Each adapter
 README documents what its observation surface can support; a missing concept is
 not inferred into the TRACE record.
 
@@ -124,13 +131,16 @@ which owns fingerprinting, comparison, baseline sealing and the report honesty r
 
 Adapters that build a Trust Record from evidence **another system produced** share
 [`agentrust-trace-adapters`](packages/agentrust-trace-adapters). Records built through it
-carry `origin.kind: third-party-control-plane`, `runtime.platform: software-only` and
-`appraisal.status: none`, so the assurance downgrade is something a consumer reads from
-the record rather than from a README. None of the three is a parameter.
+are always marked as coming from another system, software-only and unappraised
+(`origin.kind: third-party-control-plane`, `runtime.platform: software-only` and
+`appraisal.status: none`), so a consumer reads the weaker assurance from the record
+itself rather than from a README. None of the three is a parameter you can change.
 
 **Note on the Copilot, Cursor, Windsurf and Gemini CLI entries.** Each is a
-pull-request status check rather than a session hook, because all four agents'
-composition lives in the repository rather than a developer's home directory.
+check that runs on pull requests rather than a hook in a developer's session,
+because all four agents' composition (the instructions, rules, skills and tools
+configured for the agent) lives in the repository rather than a developer's home
+directory.
 Each emits no TRACE record and no Agent Manifest, so each claims neither. None
 currently produces or consumes one of the supported AgenTrust artifacts or
 protocols, and asserting otherwise would be an unverifiable claim.
