@@ -11,7 +11,7 @@ This contribution is an evidence appraiser and synthetic boundary fixture, with 
 - Command: `python check_package.py --fetch` (or without `--fetch` to reuse pinned downloaded bytes).
 - **27 tests passed**, including a positive control that commits once, forged dispatch rejection, action tampering, a late veto invalidating an earlier token, duplicate suppression, expiry closure, manifest coverage, missing-case handling, emergency bound units and credential-bearing URL rejection.
 - **12 TRACE Reference shapes validated** with the released SDK. These are unsigned external evidence pointers, not Trust Records, signature verification or a conformance-level claim.
-- Candidate integration manifest shape passes the upstream JSON Schema. The authenticated human GitHub maintainer identity is still required before `integration.yaml.in` becomes `integration.yaml`, and before generating the integration index/marketplace catalog. Existing repository manifests and compatibility policy pass; the new candidate is not yet listed in those generated catalogs.
+- The integration manifest names the authenticated human GitHub maintainer `wlad232`. Final schema/compatibility and generated integration index/marketplace catalog checks are retained in `results/upstream-manifest-checks.txt`. These local checks do not imply upstream acceptance or a Verified tier.
 
 ## Pinned author evidence
 

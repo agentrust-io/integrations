@@ -3,7 +3,7 @@ vendor: Alakris Research
 integrates_with: [trace]
 description: Appraises pinned public authority/revocation evidence, preserves evidence gaps, and validates TRACE behavior-trace reference shape.
 maintainer:
-  github: OWNER-GITHUB-LOGIN-REQUIRED
+  github: wlad232
   email: v.kostitsyn@alakris.ai
 repository: https://git.elibot.ru/agent-bot/aaif-publication-reference
 license: Apache-2.0
