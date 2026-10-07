@@ -13,9 +13,9 @@ announces itself.
 This plugin fingerprints the things that run **without you watching** and warns
 you the moment any of them drifts from a baseline you approved:
 
-- **routines** — declared scheduled-agent specs: schedule, allowed tools, MCP
+- **routines**: declared scheduled-agent specs: schedule, allowed tools, MCP
   servers, prompt, model.
-- **hooks** — the commands in `~/.claude/settings.json` that auto-run on events
+- **hooks**: the commands in `~/.claude/settings.json` that auto-run on events
   (`SessionStart`, `PreToolUse`, …).
 
 ## Install
@@ -38,10 +38,10 @@ Run /schedule-manifest verify for detail, or /schedule-manifest approve to accep
 
 Then:
 
-- `/schedule-manifest verify` — show exactly what changed, in plain English.
-- `/schedule-manifest approve` — accept the current surface as the new baseline.
-- `/schedule-manifest show` — display the surface without touching the baseline.
-- `/schedule-trace` — write a signed, third-party-verifiable TRACE record.
+- `/schedule-manifest verify`: show exactly what changed, in plain English.
+- `/schedule-manifest approve`: accept the current surface as the new baseline.
+- `/schedule-manifest show`: display the surface without touching the baseline.
+- `/schedule-trace`: write a signed, third-party-verifiable TRACE record.
 
 ## Declaring a routine
 
@@ -68,7 +68,7 @@ approved file is the source of truth, and drift is any later change to it.
 
 ## What it records, and what it does not
 
-It records **names and fingerprints only** — routine, tool, MCP, and hook-command
+It records **names and fingerprints only**: routine, tool, MCP, and hook-command
 names, and SHA-256 hashes of prompts and settings. It never stores secrets, never
 reads your credentials file, and never records a hook command's output.
 
@@ -76,7 +76,7 @@ reads your credentials file, and never records a hook command's output.
 
 - This baselines the **declared** routine specs and the **on-disk** hooks, and
   detects drift in those declarations. It does not introspect a live cloud
-  routine's runtime behaviour — no software running on a normal dev box can prove
+  routine's runtime behaviour; no software running on a normal dev box can prove
   that.
 - On a normal dev box this is **software integrity, Level 0**, never presented as
   hardware-attested. `/schedule-trace` records `runtime.platform: software-only`
