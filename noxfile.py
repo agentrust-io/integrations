@@ -99,6 +99,7 @@ def wcm_integrations(session: nox.Session) -> None:
     Pinned to an exact release rather than a floor. These adapters are sensitive
     to what the published package actually exports, and 0.27.0 is the release
     that first published wcm.artifact_digest, runtime_records and memory_sweep.
+    The pin matches the version wcm-integrations-tests.yml installs (0.28.4).
     A silent upgrade should show up as a failing pin here, where the reason is
     written down, rather than as a behaviour change nobody attributed to a
     dependency.
@@ -109,7 +110,7 @@ def wcm_integrations(session: nox.Session) -> None:
     than a fake.
     """
     session.install(
-        "weight-custody-manifest==0.27.0",
+        "weight-custody-manifest==0.28.4",
         "agent-manifest>=0.11.1",
         "pytest>=8",
         "pyyaml",
