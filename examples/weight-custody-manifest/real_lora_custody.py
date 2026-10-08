@@ -240,29 +240,29 @@ def main() -> int:
     serving = "sha256:" + hashlib.sha256(b"wcm-local-lora-serving-stack-v1").hexdigest()
     manifest_doc = build_manifest(
         weights_hash=envelope["artifact_digest"],
-        license_text="Apache-2.0 + OPAQUE-private-derivative",
+        license_text="Apache-2.0 + private-derivative",
         serving=serving,
-        builder_id="opaque-wcm-builder",
-        custodian_id="opaque-wcm-custodian",
+        builder_id="example-wcm-builder",
+        custodian_id="example-wcm-custodian",
         derivatives="none",
         derived_from=base_digest,
-        rights_holder={"base": model_id, "derivative": "OPAQUE"},
+        rights_holder={"base": model_id, "derivative": "example-derivative-owner"},
     )
     manifest_doc["provenance"] = {
         "model_signing": {
             "method": "openssf-model-signing",
             "signed_digest": provenance_digest,
             "transparency": "local-key; publication pending",
-            "signer": "opaque-wcm-builder",
+            "signer": "example-wcm-builder",
         }
     }
     manifest = WeightCustodyManifest.model_validate(waive_mock_verification(manifest_doc))
     manifest = manifest.with_signatures([
         Ed25519Signer(builder).sign(
-            manifest.unsigned_dict(), role="builder", signer="opaque-wcm-builder"
+            manifest.unsigned_dict(), role="builder", signer="example-wcm-builder"
         ),
         Ed25519Signer(custodian).sign(
-            manifest.unsigned_dict(), role="custodian", signer="opaque-wcm-custodian"
+            manifest.unsigned_dict(), role="custodian", signer="example-wcm-custodian"
         ),
     ])
     context = VerificationContext()
