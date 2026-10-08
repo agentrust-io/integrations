@@ -6,7 +6,7 @@ Conforms to TRACE spec at Level 0 (software-only; no hardware TEE attestation).
 
 Usage:
     python comply54_to_trace.py result.json
-    python comply54_to_trace.py result.json --agent-id payments-agent --model anthropic/claude-sonnet-4-6
+    python comply54_to_trace.py result.json --agent-id payments-agent --model example-provider/example-model
 
 The JWT is written to claim.jwt and printed to stdout.
 Set TRACE_PRIVATE_KEY_PEM to supply a persistent Ed25519 key; otherwise a

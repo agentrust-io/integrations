@@ -58,8 +58,8 @@ evidence = OpenShellEvidence(
 record = build_openshell_record(
     evidence,
     subject="spiffe://example.org/agent/codex",
-    model_provider="openai",
-    model_id="gpt-5",
+    model_provider="example-provider",
+    model_id="example-model",
     data_class="internal",
     workload_digest=image_digest,
     jwk=public_jwk,

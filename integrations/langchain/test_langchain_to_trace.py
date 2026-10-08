@@ -71,9 +71,9 @@ def test_model_is_read_from_invocation_params() -> None:
 def test_caller_can_override_a_guessed_provider() -> None:
     """The class-name mapping is best effort and must never win over a caller."""
     record = _handler_with_two_tools().build_record(
-        **_kwargs(), model_provider="bedrock", model_id="claude-3-5-sonnet"
+        **_kwargs(), model_provider="example-hosting-provider", model_id="example-model"
     )
-    assert record["model"] == {"provider": "bedrock", "model_id": "claude-3-5-sonnet"}
+    assert record["model"] == {"provider": "example-hosting-provider", "model_id": "example-model"}
 
 
 def test_end_without_start_is_recorded_not_dropped() -> None:
@@ -228,7 +228,7 @@ def test_attestation_lifts_the_same_record_to_hardware() -> None:
 def test_no_tools_omits_the_transcript_block() -> None:
     """Absent is not the same as zero calls observed."""
     h = TraceCallbackHandler()
-    record = h.build_record(**_kwargs(), model_provider="openai", model_id="gpt-4")
+    record = h.build_record(**_kwargs(), model_provider="example-provider", model_id="example-model")
     assert "tool_transcript" not in record
 
 
@@ -239,8 +239,8 @@ def test_build_record_is_usable_without_the_handler() -> None:
         enforcement_mode="advisory",
         workload_digest=DIGEST,
         data_class="internal",
-        model_provider="openai",
-        model_id="gpt-4",
+        model_provider="example-provider",
+        model_id="example-model",
         transcript=b"[]",
         tool_count=0,
     )

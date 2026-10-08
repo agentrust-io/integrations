@@ -27,8 +27,8 @@ def _kwargs(**overrides):
     base = dict(
         source=SourceSystem(producer="vendor-gateway/2.1", source_event_id="evt-1"),
         subject="spiffe://example.org/agent/imported",
-        model_provider="anthropic",
-        model_id="claude-sonnet-4-6",
+        model_provider="example-provider",
+        model_id="example-model",
         policy=PolicyEvidence(bundle=b'{"rules": []}', enforcement_mode="declared"),
         data_class="internal",
         jwk=JWK,

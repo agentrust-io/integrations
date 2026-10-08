@@ -51,7 +51,7 @@ Each script is one runnable feature with mock (software) attestation, so they ru
 
 ### Closed-weight vs open-weight
 
-The same machinery, two trust settings. **Closed** weights (a frontier model deployed into someone else's infra) need secrecy. **Open** weights (Llama, Mistral, SmolLM) are already public, so the flow instead does integrity, license, and derivative custody.
+The same machinery, two trust settings. **Closed** weights (a frontier model deployed into someone else's infra) need secrecy. **Open** weights (SmolLM and other public checkpoints) are already public, so the flow instead does integrity, license, and derivative custody.
 
 - **`closed_model_e2e.py`** -- the closed/frontier flow where secrecy is the job (`base_confidentiality: confidential`): sign, attestation-gated release of the real decryption key, wipe-on-lapse custody, and the honest hostile-owner caveat.
 - **`open_model_e2e.py`** -- the full six-step flow on an open model, honest about which steps are real work versus theater for a public base (the base's secrecy is theater; integrity, license, derivative custody, and the kill switch are the point).

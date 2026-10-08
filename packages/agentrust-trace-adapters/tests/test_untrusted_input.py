@@ -95,7 +95,7 @@ def _record(**overrides) -> dict:
     values = dict(
         source=SourceSystem(producer="vendor-gateway/2.1"),
         subject="spiffe://example.org/agent/imported",
-        model_provider="anthropic",
+        model_provider="example-provider",
         model_id="m",
         policy=PolicyEvidence(bundle=b"policy", enforcement_mode="declared"),
         data_class="internal",

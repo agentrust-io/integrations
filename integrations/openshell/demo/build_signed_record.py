@@ -32,8 +32,8 @@ def build_signed_demo_record() -> dict:
     unsigned = build_openshell_record(
         evidence,
         subject="spiffe://demo.agentrust.io/agent/support-bot",
-        model_provider="openai",
-        model_id="gpt-5",
+        model_provider="example-provider",
+        model_id="example-model",
         data_class="internal",
         workload_digest=WORKLOAD_DIGEST,
         jwk=jwk,

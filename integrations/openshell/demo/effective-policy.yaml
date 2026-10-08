@@ -5,5 +5,5 @@ filesystem_policy:
 network_policies:
   default:
     endpoints:
-      - host: api.openai.com
+      - host: api.example-provider.com
         port: 443

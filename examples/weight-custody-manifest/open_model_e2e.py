@@ -12,7 +12,7 @@ base model is public.
 The reframe that drives this demo
 ---------------------------------
 For a closed frontier model the job is secrecy: don't let the weights leak. For
-an OPEN-weight model (Llama, Mistral, SmolLM, ...) the base weights are already
+an OPEN-weight model (SmolLM or any public checkpoint) the base weights are already
 downloadable, so encrypting them and gating decryption behind attestation
 protects nothing - anyone can just download the same checkpoint. Saying that
 plainly matters. What the same six-step machinery still does, and why you'd run
@@ -130,13 +130,13 @@ def main() -> None:
     gov_custodian = generate_ed25519()
 
     rule("Open-weight model: base weights are PUBLIC")
-    # Pretend this blob is a downloaded checkpoint (in reality: your
-    # Llama-3.1 / Mistral / SmolLM safetensors). We hash the real bytes.
+    # Pretend this blob is a downloaded checkpoint (in reality, the
+    # any public safetensors checkpoint). We hash the real bytes.
     checkpoint = b"<the bytes of a public open-weight checkpoint>"
     base_hash = sha256(checkpoint)
     serving = sha256(b"vllm-0.6.3 + policy-bundle-v2 (the certified serving stack)")
     print("base weights_hash :", base_hash)
-    print("license           : Llama-3.1-Community (usage + scale restrictions)")
+    print("license           : example-community-license (usage + scale restrictions)")
     print("NOTE: encrypting a *public* base protects nothing. The mechanism below")
     print("      does INTEGRITY + LICENSE work here, not secrecy.")
 
@@ -144,7 +144,7 @@ def main() -> None:
     rule("Step 0 - Certify the base: manifest (integrity + license), jointly signed")
     base_doc = build_manifest(
         weights_hash=base_hash,
-        license_text="Llama-3.1-Community",
+        license_text="example-community-license",
         serving_measurement=serving,
         builder_id="acme-model-governance",
         custodian_id="acme-model-governance",
@@ -213,7 +213,7 @@ def main() -> None:
     deriv_hash = sha256(derivative_weights)
     deriv_doc = build_manifest(
         weights_hash=deriv_hash,
-        license_text="Llama-3.1-Community + Acme-proprietary-derivative",
+        license_text="example-community-license + Acme-proprietary-derivative",
         serving_measurement=serving,
         builder_id="acme-model-governance",
         custodian_id="acme-model-governance",

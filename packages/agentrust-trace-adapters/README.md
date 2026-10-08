@@ -58,8 +58,8 @@ record = build_record(
         source_event_id="evt-7f3a",
     ),
     subject="spiffe://example.org/agent/support-bot",
-    model_provider="anthropic",
-    model_id="claude-sonnet-4-6",
+    model_provider="example-provider",
+    model_id="example-model",
     # The policy bytes being bound into the evidence. Most control planes do not put
     # the bundle in their telemetry; that is not a reason to hash something else.
     policy=PolicyEvidence(
@@ -106,8 +106,8 @@ evidence = OpenShellEvidence(
 record = build_openshell_record(
     evidence,
     subject="spiffe://example.org/agent/support-bot",
-    model_provider="anthropic",
-    model_id="claude-sonnet-4-6",
+    model_provider="example-provider",
+    model_id="example-model",
     data_class="internal",
     workload_digest="sha256:...",
     jwk=public_jwk,

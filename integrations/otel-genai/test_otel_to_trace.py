@@ -28,8 +28,8 @@ def span(op, **attrs):
 
 def chat_span(**over):
     a = {
-        "gen_ai.provider.name": "anthropic",
-        "gen_ai.request.model": "claude-sonnet-4-6",
+        "gen_ai.provider.name": "example-provider",
+        "gen_ai.request.model": "example-model",
         "gen_ai.conversation.id": "conv-1",
     }
     a.update(over)
@@ -67,8 +67,8 @@ def test_record_validates_against_the_model() -> None:
     TrustRecord = pytest.importorskip("agentrust_trace.models").TrustRecord
     record = build([chat_span(), tool_span("search", "c1"), tool_span("pay", "c2")])
     parsed = TrustRecord.model_validate(record)
-    assert parsed.model.provider == "anthropic"
-    assert parsed.model.model_id == "claude-sonnet-4-6"
+    assert parsed.model.provider == "example-provider"
+    assert parsed.model.model_id == "example-model"
     assert parsed.tool_transcript is not None
     assert parsed.tool_transcript.call_count == 2
 
@@ -93,13 +93,13 @@ def test_otlp_json_attribute_lists_are_accepted() -> None:
         "name": "chat",
         "attributes": [
             {"key": "gen_ai.operation.name", "value": {"stringValue": "chat"}},
-            {"key": "gen_ai.provider.name", "value": {"stringValue": "openai"}},
-            {"key": "gen_ai.request.model", "value": {"stringValue": "gpt-4"}},
+            {"key": "gen_ai.provider.name", "value": {"stringValue": "other-provider"}},
+            {"key": "gen_ai.request.model", "value": {"stringValue": "other-model"}},
             {"key": "gen_ai.conversation.id", "value": {"stringValue": "conv-9"}},
         ],
     }
     record = build([otlp])
-    assert record["model"]["provider"] == "openai"
+    assert record["model"]["provider"] == "other-provider"
     assert record["origin"]["source_event_id"] == "conv-9"
 
 
@@ -146,12 +146,12 @@ def test_no_spans_is_refused() -> None:
 def test_missing_model_is_refused_not_guessed() -> None:
     """gen_ai.request.model is only Conditionally Required upstream."""
     with pytest.raises(MissingEvidence, match="gen_ai.request.model"):
-        build([span("chat", **{"gen_ai.provider.name": "anthropic"})])
+        build([span("chat", **{"gen_ai.provider.name": "example-provider"})])
 
 
 def test_missing_provider_is_refused() -> None:
     with pytest.raises(MissingEvidence, match="gen_ai.provider.name"):
-        build([span("chat", **{"gen_ai.request.model": "gpt-4"})])
+        build([span("chat", **{"gen_ai.request.model": "other-model"})])
 
 
 def test_mixed_conversations_are_refused() -> None:
@@ -173,6 +173,6 @@ def test_policy_bundle_is_still_required() -> None:
 
 def test_conversation_id_may_be_absent() -> None:
     """Conditionally Required upstream, so a record without one is still buildable."""
-    record = build([span("chat", **{"gen_ai.provider.name": "anthropic",
-                                    "gen_ai.request.model": "gpt-4"})])
+    record = build([span("chat", **{"gen_ai.provider.name": "example-provider",
+                                    "gen_ai.request.model": "other-model"})])
     assert "source_event_id" not in record["origin"]

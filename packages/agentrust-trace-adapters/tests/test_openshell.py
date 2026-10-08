@@ -68,8 +68,8 @@ def build(ev: OpenShellEvidence | None = None) -> dict:
     return build_openshell_record(
         ev or evidence(),
         subject="spiffe://example.org/agent/codex",
-        model_provider="openai",
-        model_id="gpt-5",
+        model_provider="example-provider",
+        model_id="example-model",
         data_class="internal",
         workload_digest=WORKLOAD,
         jwk=JWK,

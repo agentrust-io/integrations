@@ -59,7 +59,7 @@ with open("result.json", "w") as f:
 ```bash
 python src/comply54_to_trace.py result.json \
   --agent-id payments-agent \
-  --model anthropic/claude-sonnet-4-6
+  --model example-provider/example-model
 ```
 
 Output: `claim.jwt` (signed JWT, compact format) + printed to stdout.

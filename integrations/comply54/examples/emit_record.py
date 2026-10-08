@@ -46,7 +46,7 @@ def main() -> int:
     parser.add_argument("--out", required=True, help="Path for the trace-tests-gradable record")
     parser.add_argument("--result", default=str(DEFAULT_RESULT), help="comply54 ComplianceResult JSON path")
     parser.add_argument("--agent-id", default="payments-agent", help="Agent SPIFFE identity suffix")
-    parser.add_argument("--model", default="anthropic/claude-sonnet-4-6", help="Model in provider/model-id format")
+    parser.add_argument("--model", default="example-provider/example-model", help="Model in provider/model-id format")
     args = parser.parse_args()
 
     result = json.loads(Path(args.result).read_text(encoding="utf-8"))
