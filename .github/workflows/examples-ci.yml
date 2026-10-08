@@ -196,6 +196,30 @@ jobs:
       - name: Run the delegation demo
         run: python delegation_agent.py
 
+  sovereign-agent-connector:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: examples/sovereign-agent-connector
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.11"
+
+      - name: Install cA2A, cMCP and TRACE verification dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Run usage-control tests
+        run: python -m pytest tests -q
+
+      - name: Regenerate the live bundle and verify it independently
+        run: |
+          python scripts/generate_live_bundle.py /tmp/cmcp-live-bundle.json /tmp/cmcp-live-trust-anchors.json
+          python tools/independent_verify.py /tmp/cmcp-live-bundle.json --trust-anchors /tmp/cmcp-live-trust-anchors.json
+
   weight-custody-manifest:
     runs-on: ubuntu-latest
     defaults:

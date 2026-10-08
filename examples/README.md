@@ -25,9 +25,10 @@ adoption, and project governance.
 | `healthcare/` | Clinical agent on a coherent ICD-10 patient: drug-interaction check feeds EU AI Act Art. 14 HITL and contraindication denies | SEV-SNP / TDX | EU AI Act Art. 14, HIPAA |
 | `industrial-embodied-ai/` | Material-movement agent with cMCP authorization, an independent safety-controller boundary and offline-verifiable closed-session evidence | TEE / software-only development mode | OT security and industrial robot safety references |
 | `multi-tenant-saas/` | HR SaaS with an EU tenant (enforcing GDPR residency/Art. 9) and a US tenant (advisory) on one catalog | TDX | GDPR Art. 6/9/44, customer DPA |
+| `sovereign-agent-connector/` | Usage control across agent delegation: a France-only processing rule still holds at the sub-agent hop, the non-French model route is denied before dispatch, and a clean-room verifier checks the signed bundle | Software-only (offline) | Purpose and processing-location restrictions |
 | `startup-tpm/` | 15-minute quickstart on any cloud VM with Trusted Launch | TPM 2.0 | Development / staging |
 
-Most examples are fully runnable with no external dependencies: they ship a mock upstream MCP server, an agent script, an attested tool catalog, and a Cedar policy bundle, and end by printing the signed TRACE Trust Record for the session. The `trace-output/` files are captured from real runs. The `ca2a-delegation/` and `embodied-action-receipts/` examples are offline verifiers and ship their captured chains instead.
+Most examples are fully runnable with no external dependencies: they ship a mock upstream MCP server, an agent script, an attested tool catalog, and a Cedar policy bundle, and end by printing the signed TRACE Trust Record for the session. The `trace-output/` files are captured from real runs. The `ca2a-delegation/`, `embodied-action-receipts/` and `sovereign-agent-connector/` examples are offline verifiers and ship their captured chains or bundles instead.
 
 ## Quickstart
 
