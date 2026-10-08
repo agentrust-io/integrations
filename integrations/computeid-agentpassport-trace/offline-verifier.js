@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// ComputeID — Standalone Offline Verifier (OPAQUE diligence deliverable)
+// ComputeID — Standalone Offline Verifier
 //
 // Reads a saved evidence bundle (the exact JSON response from
 // GET /v1/agents/:id/verify) and INDEPENDENTLY recomputes every
@@ -7,7 +7,7 @@
 // present in the bundle. Runs with ZERO network calls once the
 // evidence file exists.
 //
-// FIXED (per Imran Siddique / OPAQUE Systems review of PR #176):
+// FIXED (per maintainer review of PR #176):
 // classical_signature_valid and ml_dsa_signature_valid previously read
 // the service's own claimed signature_valid/pq_signature_valid fields
 // rather than independently recomputing the signatures. That meant the

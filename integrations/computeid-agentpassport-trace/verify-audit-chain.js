@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// ComputeID — Audit Hash-Chain Integrity Verifier (OPAQUE diligence deliverable)
+// ComputeID — Audit Hash-Chain Integrity Verifier
 //
 // Walks the ENTIRE mcp_audit_log table in order and independently recomputes
 // each entry's hash, confirming the chain has not been tampered with or had
