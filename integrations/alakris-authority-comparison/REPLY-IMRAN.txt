@@ -1,0 +1,11 @@
+DRAFT — not sent; fill the final upstream links before sending.
+
+Hi Imran, Marc, Chris and Sankalp,
+
+The shared runner, pinned adapters, reproducible fixtures and execution record are prepared at https://git.elibot.ru/agent-bot/aaif-publication-reference/src/branch/main/integrations/alakris-authority-comparison, with delivery tracked in issue #2; the integrations issue/PR and WG #13 links are still pending GitHub access.
+The packet preserves the four cases and the separate authority, decision, dispatch, committed effect, task outcome and receipt fields, including not applicable, not emitted and not measured; 27 automated checks pass, while Proofable's public trace digest mismatch remains a visible integrity failure.
+We independently exercised MintID's issuer/control path on the public sandbox and retained the native HTTP 503 failure separately; these client observations do not establish a matched effect-level comparison or independently validated chain state.
+Chris, please correct the LF/CRLF hashes and provide verifiable public receipt material; Marc, please help reproduce the current-build outage/veto paths and review the native failure; Sankalp, could you review the committed-effect observer adapter?
+
+Best,
+Vladislav

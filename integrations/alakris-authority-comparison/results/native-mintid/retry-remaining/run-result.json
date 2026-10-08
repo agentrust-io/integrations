@@ -1,0 +1,182 @@
+{
+  "source_revision": "b678e5cd6b5736e1795fd18d497fd8e501272dcd",
+  "source_public_release": "public-v2026-10-07",
+  "working_tree_tracked_changes": false,
+  "run_type": "independent_public_testnet_synthetic_bounded_retry_remaining_paths",
+  "command": [
+    "timeout",
+    "--signal=TERM",
+    "--kill-after=30",
+    "1800",
+    "uv",
+    "run",
+    "--locked",
+    "--python",
+    "3.12",
+    "python",
+    "test-harness/trace/revocation_trace.py",
+    "--target",
+    "testnet",
+    "--paths",
+    "kill_switch,cascade",
+    "--out",
+    "/home/ubuntu/worktrees/aaif-mintid-run-20261006/results-retry-remaining"
+  ],
+  "cwd": "/home/ubuntu/worktrees/aaif-mintid-run-20261006/source",
+  "started_utc": "2026-10-06T20:03:20.974025+00:00",
+  "finished_utc": "2026-10-06T20:07:58.236402+00:00",
+  "exit_code": 0,
+  "operator_credentials_used": false,
+  "requested_paths": [
+    "kill_switch",
+    "cascade"
+  ],
+  "emergency": "not_run_operator_access_required",
+  "unreachable": "not_run_public_host_disruption_excluded",
+  "decision_log": "not_recorded_operator_only",
+  "external_protected_side_effects": "not_measured",
+  "versions": {
+    "uv": "uv 0.12.23 (x86_64-unknown-linux-gnu)",
+    "rustc": "rustc 1.97.0 (2d8144b78 2026-07-07)",
+    "python": "Python 3.12.15"
+  },
+  "service_pins_before": {
+    "issuer_build": {
+      "service": "issuer-agent",
+      "source_revision": "497509ebf0c3",
+      "release": "public-v2026-10-06.2",
+      "rail": "classical-seller-v0",
+      "issuer_id": "3d2a9df3cc5cb853ba6a61bfc475cda119eb215c22aad7b2b4bcebc46399183b",
+      "signing_key_id": "9ddd3b08a70e35065788ca08d5f22761df22f77611755ccae13fe8809ac3a6cd",
+      "chain_id": "mintid-testnet-2",
+      "chain_generation": 1,
+      "kyc_provider": "sandbox",
+      "session_ttl_seconds": 86400,
+      "permitted_grades": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "heartbeat_seconds": 30,
+      "validity_window_seconds": 180,
+      "chain_max_root_age_seconds": 180,
+      "status_sign_doc_version": 2,
+      "emergency_sign_doc_version": 2,
+      "status_epoch": 6284,
+      "current_root": "d0e99a9aab1661623e55a493f92ffb15ec274bd2870e00ae536507291ab201bf",
+      "last_heartbeat_unix": 1791316973,
+      "entries": 0,
+      "pending_since_root": true,
+      "linkage": "in_sync",
+      "linkage_detail": "",
+      "chain_finalized_epoch": 6283,
+      "chain_finalized_root": "c2e4e284bfd1e8cbca4cad1415202fa35d8a790e47563a2f4bb939d5075daf7e",
+      "chain_finalized_height": 88989,
+      "chain_checked_unix": 1791316972,
+      "unfinalized_epochs": 1,
+      "discarded_heartbeats": 0,
+      "emergency_key_id": "9df5d5558b50752f46a74368520557905a02a3e5ca255b8aa443c2441519b474",
+      "emergency_roots": 3,
+      "last_emergency": {
+        "status_epoch": 4807,
+        "root": "bb241080642a7f0f7af2927a77618a7254cfc26c69f394c9941cd9cda2d9298a",
+        "previous_root": "40b488a22e1bc5a38b6b2688661b77c37c44b92c7e4a76a68972783bffa58155",
+        "reason_code": 2,
+        "emergency_key_id": "9df5d5558b50752f46a74368520557905a02a3e5ca255b8aa443c2441519b474",
+        "tx_hash": "AF26C1BE51028EA434F4C9F5646374CA3960B24F8A5B1D69006A0F5F6F633A13",
+        "requested_at_unix": 1791272646,
+        "entries": 0,
+        "finalized": true
+      },
+      "credential_rail": {
+        "mounted": true,
+        "core": "proof-core 0.4.0",
+        "accumulator_leaf": "a196a8d189ebfd424c1b56916894dd9c4f46d1dac8a83970f9fcd4d52d65e097",
+        "credentials_issued": 43,
+        "credentials_revoked": 15,
+        "finalized": {
+          "status_epoch": 6283,
+          "height": 88989,
+          "root": "c2e4e284bfd1e8cbca4cad1415202fa35d8a790e47563a2f4bb939d5075daf7e"
+        },
+        "scope_sets": 5,
+        "agent_accumulator_leaf": "be34a3e3ae86399a9a200a0d2c992e5b45596ceb05815657ade7feb69146848b",
+        "agent_minting": "on",
+        "escrow_sealer": "kms",
+        "agent_mint_policy": {
+          "max_active_agents": 10,
+          "max_mints": 5,
+          "window_seconds": 3600,
+          "max_lease_seconds": 7776000,
+          "bundles_only": false
+        },
+        "agent_bundles": {
+          "catalogue_version": "mintid.agent-bundles.v1",
+          "catalogue_digest": "b18bb15862ca89d0c6e7f479276eb0f6aa46e41ffdcce8b699ee8d7206328895",
+          "catalogue_source": "reference",
+          "bundles": [
+            "payments",
+            "procurement",
+            "data-read"
+          ]
+        }
+      },
+      "agent_fee_schedule": {
+        "source": "chain_rpc_unproven",
+        "mint_fee": {
+          "amount": "1000000",
+          "denom": "utestmint"
+        },
+        "lease_fee_per_year": {
+          "amount": "1000000",
+          "denom": "utestmint"
+        },
+        "reference_currency": "USD",
+        "mint_fee_reference_minor": 300,
+        "lease_fee_per_year_reference_minor": 1200,
+        "sybil_floor_reference_minor": 400,
+        "protocol_cut_bps": 1200,
+        "burn_share_bps": 3000,
+        "validator_share_bps": 4500,
+        "foundation_share_bps": 2500
+      },
+      "selfrevoke": {
+        "fold": "on",
+        "acked": 16,
+        "chain_acked": 16,
+        "pending": 0,
+        "last_fold_unix": 1791316913,
+        "blocked_at_version": null,
+        "fold_mode": "external",
+        "waiting_at_version": null,
+        "cascade_spread_beats": 8,
+        "agent_cover_traffic": true
+      }
+    },
+    "verifier_build": {
+      "sdk_version": "0.3.0",
+      "engine_pin": "proof-core 0.4.0",
+      "state_vectors_version": "mintid-proofvector-1/h2",
+      "state_vectors_sha256": "36d36f371b3b4b0a1db995a4a1fb46f352ed5f5aacc28df5ca10c2a31d0ea495",
+      "spec_revision": "SPEC-1 v3.2",
+      "conformance_suite_version": "1.0.0",
+      "source_revision": "497509ebf0c3",
+      "release": "public-v2026-10-06.2",
+      "recognition": {
+        "enabled": true,
+        "retention_days": 90
+      }
+    }
+  },
+  "postflight_error": null,
+  "artifact_hashes": {
+    "preflight-second.json": "4e41ec9699b2a3e30a0fec548347115f1c140e8375f1b9d5e3ad16e55565ae33",
+    "stdout.log": "962a3b45299e2310bdcc77a1ecbe28aeb93f037b9f1c3a90a62eb8288d081c37",
+    "revocation-trace-testnet-20261006T200321Z.manifest.json": "4f5fa6cce83f1122d597523ff91b1f7fa87534c9160c81014c45f915f3316e27",
+    "preflight.json": "f4b764829b14c4b8dace00c175bba0bfd760dd786f1ba865d2c731f2f59535b7",
+    "postflight.json": "86915a475d57a73befa9856d38f6853c87ed2bd5c46c0cea00a3b5a1cdd4070c",
+    "revocation-trace-testnet-20261006T200321Z.jsonl": "e0618e6fca7322f7e8168ce48b6ebbe8fc9a5a7b8dfdf6bc3052544266fc9076",
+    "revocation-trace-testnet-20261006T200321Z.md": "b339a82972c83b2d98dafed6cf0840e8eda115e1780dd921165233c692a89397"
+  }
+}

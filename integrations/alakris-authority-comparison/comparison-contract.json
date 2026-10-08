@@ -1,0 +1,44 @@
+{
+  "schema": "aaif-authority-comparison/v1",
+  "cases": [
+    "binding_veto",
+    "revoked_stale",
+    "unreachable",
+    "post_dispatch_revoke"
+  ],
+  "pins": {
+    "integrations_base": "0966a565e538fdcdd831389b6c843b327b09ab18",
+    "mintid_evidence_public": "b678e5cd6b5736e1795fd18d497fd8e501272dcd",
+    "mintid_deployed_public": "044f6888874ede33186310b9ec86fbcb1ee83ad7",
+    "mintid_deployed_internal": "497509ebf0c3bbc9c1a924996018b67db6ca949f",
+    "proofable_evidence": "3a45f026fd0c06b9d1d411c053597584b6b1c3dc",
+    "proofable_deployed_claim": "f92faf39a4bae480cca3e5c07ce2c95d6ab68411",
+    "sankalp_comparison_contract": "fb8cabc5c9c54459743497f2325bfef49b137a1a",
+    "original_alakris_source": "68054425873b9b373ce07359f8e994b817bee210"
+  },
+  "evidence_states": [
+    "measured",
+    "not_applicable",
+    "not_emitted",
+    "not_measured"
+  ],
+  "required_fields": [
+    "authority",
+    "decision",
+    "dispatch",
+    "committed_effect",
+    "task_outcome",
+    "receipt",
+    "policy_digest",
+    "action_digest",
+    "target_identity",
+    "original_deadline",
+    "fallback_scope",
+    "independent_effect_witness",
+    "retry_count",
+    "duplicate_count"
+  ],
+  "native_provenance": "Recorded separately; an importer flag cannot establish independent execution",
+  "fixture_source_policy": "Fetch immutable vendor URLs, keep original bytes and declared hashes",
+  "record_scope": "Case-level appraisal only; per-attempt native records and the upstream authority/effect/terminal contract remain separate."
+}

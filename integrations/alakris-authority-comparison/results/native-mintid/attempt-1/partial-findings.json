@@ -1,0 +1,66 @@
+{
+  "status": "failed_partial_run",
+  "exit_code": 1,
+  "source": {
+    "utc": "2026-10-06T19:59:34.826Z",
+    "unix": 1791316774.827,
+    "t": 0.0,
+    "kind": "source",
+    "revision": "b678e5cd6b5736e1795fd18d497fd8e501272dcd",
+    "public_tags": [
+      "public-v2026-10-07"
+    ],
+    "tracked_changes": false,
+    "services_revision_stated": null
+  },
+  "services": {
+    "issuer": {
+      "source_revision": "497509ebf0c3",
+      "release": "public-v2026-10-06.2",
+      "signing_key_id": "9ddd3b08a70e35065788ca08d5f22761df22f77611755ccae13fe8809ac3a6cd"
+    },
+    "verifier": {
+      "engine_pin": "proof-core 0.4.0",
+      "sdk_version": "0.3.0",
+      "spec_revision": "SPEC-1 v3.2",
+      "state_vectors_version": "mintid-proofvector-1/h2",
+      "state_vectors_sha256": "36d36f371b3b4b0a1db995a4a1fb46f352ed5f5aacc28df5ca10c2a31d0ea495",
+      "conformance_suite_version": "1.0.0",
+      "source_revision": "497509ebf0c3",
+      "release": "public-v2026-10-06.2"
+    }
+  },
+  "completed_path": "issuer",
+  "issuer_observation": {
+    "trigger_t0_definition": "issuer revoke response",
+    "t0_utc": "2026-10-06T20:00:35.705Z",
+    "baseline_accepted": true,
+    "last_accepted_seconds_after_t0": 11.6,
+    "first_refused_seconds_after_t0": 23.8,
+    "first_refused_utc": "2026-10-06T20:00:59.513Z",
+    "reason_code": "status_root_stale",
+    "declared_bound_seconds": 185,
+    "revoked_refresh": "credential_revoked",
+    "control_first_refused_seconds_after_t0": 33.5,
+    "control_refresh_outcome": "refreshed",
+    "control_after_refresh_accepted": true,
+    "decision_condition": "not_recorded",
+    "authority_root_consulted_at_decision": "not_recorded",
+    "protected_side_effects": "not_measured"
+  },
+  "kill_switch": "triggered, accepted proofs recorded, then challenge HTTP503 state_unavailable; no completed denial observation",
+  "cascade": "not_run_due_to_previous_path_failure",
+  "cause": "upstream native runner raised uncaught ServiceRefusal on hosted challenge HTTP503 state_unavailable",
+  "security_inference": "No deny bound or fail-closed property is inferred from a challenge request error; no controlled authority outage injected. Native run failure is not reported as a security conformance failure.",
+  "sensitive_material_check": {
+    "private_key_or_authorization_pattern_found": false,
+    "raw_trace_retained_unchanged": true
+  },
+  "files": {
+    "postflight.json": "345878bdbab4c7901c9a00792a9465761914639182f044b42130852f6519f906",
+    "stdout.log": "b7403c28f8a63eb63dbf772eb235049b399b7d7da07427a77efcc7fd31e8e584",
+    "revocation-trace-testnet-20261006T195934Z.jsonl": "4c307495de0697e57a0d48898d9b00d90642f523c80893f2af31b31e20a317f4",
+    "preflight.json": "22caff0f2eb52462e2a0cb542e00c16cff62ac436f975565bab7a48a7ec8f012",
+    "run-result.json": "a64f0b390710562c342c834786ea4502f1363e2ac387f3e3ab13f55b1759447a"
+  }
+}
