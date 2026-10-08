@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentrust-io.com/schemas/aucp/semantic-delta-v0.1.json",
+  "status": "experimental-non-normative",
+  "scope": "AUCP-owned semantics in the composition experiment; reused fields and provider evidence formats are excluded",
+  "allowed_classes": [
+    "projection",
+    "binding",
+    "join",
+    "normalized-verdict",
+    "dispatch-state-marker",
+    "completeness-mechanism"
+  ],
+  "entries": [
+    {
+      "id": "agreement-projection",
+      "fields": ["effective_policy.actions", "effective_policy.purposes", "effective_policy.jurisdictions", "effective_policy.destinations", "effective_policy.obligations"],
+      "class": "projection",
+      "reuses": "ODRL agreement constraints",
+      "purpose": "Produce the normalized policy inputs consumed by the enforcement point."
+    },
+    {
+      "id": "appraised-placement-projection",
+      "fields": ["effective_policy.appraised_jurisdiction"],
+      "class": "projection",
+      "reuses": "RATS appraisal result plus separately governed cloud-region mapping",
+      "purpose": "Expose the appraised jurisdiction to the same policy intersection as agreement constraints."
+    },
+    {
+      "id": "source-artifact-bindings",
+      "fields": ["receipts[].agreement_hash", "receipts[].authority_chain_hash", "receipts[].appraisal_hash", "receipts[].effective_policy_hash"],
+      "class": "binding",
+      "reuses": "RFC 8785 canonicalization and SHA-256",
+      "purpose": "Bind each receipt to the exact agreement, delegation chain, appraisal, and derived policy."
+    },
+    {
+      "id": "placement-binding",
+      "fields": ["appraisal.placement_assertion_hash", "placement_assertion.workload_key"],
+      "class": "binding",
+      "reuses": "RATS appraisal result and workload public key",
+      "purpose": "Prevent placement evidence from being substituted across appraised workloads."
+    },
+    {
+      "id": "hardware-nonce-binding",
+      "fields": ["appraisal.attestation.report_data"],
+      "class": "binding",
+      "reuses": "TEE provider nonce/report-data mechanisms",
+      "purpose": "Bind hardware evidence to the workload signing key and initial audit-chain root."
+    },
+    {
+      "id": "workflow-action-join",
+      "fields": ["receipts[].workflow_id", "receipts[].action.action_id"],
+      "class": "join",
+      "reuses": "Existing workflow and action identifiers",
+      "purpose": "Identify the protected action to which all bound artifacts apply."
+    },
+    {
+      "id": "cmcp-evidence-join",
+      "fields": ["adapter_bindings[].usage_control_receipt_hash", "adapter_bindings[].cmcp_audit_entry_hash", "adapter_bindings[].cmcp_trace_hash", "adapter_bindings[].cmcp_policy_bundle_hash"],
+      "class": "join",
+      "reuses": "cMCP audit, Cedar policy bundle, and TRACE claim",
+      "purpose": "Join the AUCP receipt to the live enforcement and evidence records."
+    },
+    {
+      "id": "policy-verdict",
+      "fields": ["receipts[].decision", "adapter_bindings[].decision"],
+      "class": "normalized-verdict",
+      "reuses": "Policy decision from the enforcing cMCP path",
+      "purpose": "Carry a portable allow or deny result without defining a new policy language."
+    },
+    {
+      "id": "appraisal-verdict",
+      "fields": ["appraisal.hardware_attested", "appraisal.placement_evidence_basis"],
+      "class": "normalized-verdict",
+      "reuses": "RATS appraisal and provider-specific verified evidence",
+      "purpose": "State the relying-party interpretation without treating hardware as geography proof."
+    },
+    {
+      "id": "dispatch-observation",
+      "fields": ["receipts[].dispatch_state", "adapter_bindings[].dispatch_state"],
+      "class": "dispatch-state-marker",
+      "reuses": "Observed enforcement-point behavior",
+      "purpose": "Distinguish a pre-dispatch denial from a decision recorded after data moved."
+    },
+    {
+      "id": "boundary-completeness",
+      "fields": ["receipts[].boundaries"],
+      "class": "completeness-mechanism",
+      "reuses": "Names of the required existing evidence boundaries",
+      "purpose": "Make omission of agreement, delegation, appraisal, or enforcement evidence fail closed."
+    },
+    {
+      "id": "trajectory-completeness",
+      "fields": ["registry.proofs[]", "cmcp_trace.gateway.audit_chain"],
+      "class": "completeness-mechanism",
+      "reuses": "TRACE/SCITT-aligned inclusion proof and cMCP audit chain",
+      "purpose": "Detect a missing receipt or a truncated enforcement trajectory."
+    }
+  ]
+}

@@ -1,0 +1,194 @@
+{
+  "agreement": {
+    "agreement_id": "urn:uuid:agreement-fr-health-001",
+    "assignee_key": "4729a4f1a141b5e5129a1dcc480cc87c287f9de94bd0fe00a4083181f62dd9cf",
+    "issuer_key": "e18eb7ce24fb4afb823ecb5218893fd48f6ce388641ae87258a8f9c2a146a98b",
+    "odrl": {
+      "permission": [
+        {
+          "action": "use",
+          "constraints": {
+            "actions": [
+              "summary:create"
+            ],
+            "destinations": [
+              "approved-model-fr"
+            ],
+            "jurisdictions": [
+              "FR"
+            ],
+            "obligations": [
+              "emit:usage-control-receipt"
+            ],
+            "purposes": [
+              "clinical-summarization"
+            ]
+          },
+          "target": "urn:dataset:synthetic-french-health"
+        }
+      ]
+    },
+    "profile": "https://agentrust-io.com/profiles/aucp/v0.1",
+    "signature": "o5SnDC9mhIH0zUhMHbzlq4jZmO-g96Oc5tjh_ov8AUrVHYhlyTqQ3cEDZ_zNyPaTLIEz93XqAEaVAA8k77RfDg",
+    "type": "odrl:Agreement"
+  },
+  "appraisal": {
+    "appraisal": {
+      "ear_hash": "sha256:46f1c4659b64a0887e489c3021cf68d204bb944148ce88854fa5c0f94e16c410",
+      "policy_ref": "urn:agentrust:appraisal-policy:software-mve-v1",
+      "status": "warning",
+      "verifier": "urn:agentrust:verifier:software-mve"
+    },
+    "attestation": {
+      "generated_at": 1791475055,
+      "measurement": "DEVELOPMENT_ONLY_NOT_FOR_PRODUCTION",
+      "measurement_note": "software-only mode: not hardware-backed",
+      "provider": "software-only",
+      "raw_evidence_present": false,
+      "report_data": "2e08406cb97998af6a4d67a40e196568b8186e14abe1345bb7e23e08f1057f520000000000000000000000000000000000000000000000000000000000000000",
+      "valid_until": 1791475355
+    },
+    "evaluated_at": 1791475055,
+    "hardware_attested": false,
+    "issuer_key": "339be60351e3c8eea9b4573c371e1cb587308347b25d7346f3bdcd0889c9d86a",
+    "jurisdiction": "FR",
+    "placement_assertion_hash": "sha256:1ce84247e5fe17154fe3d3ae4dab54fc2d6064bcfc8e8a1c4b9d3efff813f2b8",
+    "placement_evidence_basis": "operator-asserted-placement",
+    "result_id": "urn:sha256:0a5f0a633584099705d7b67afdb394800696e725f2e786763daa1c247737c07b",
+    "signature": "bZIPzSSiSGuPPXHGVsyoOXPG8q7J4i_5eaF0oC4n2RhZPXy535hI0YcEUCl11nNHAUyEDhzxCvgNqfVSg_SGBw",
+    "type": "rats:AttestationResult",
+    "workload_key": "22e74c1024ca269c0f41a8acdbafc6539f4f0386b823d8974b4cb5c989ec50fe"
+  },
+  "bundle_profile": "https://agentrust-io.com/profiles/aucp/v0.1",
+  "delegation_chain": [
+    {
+      "credential_id": "delegation-root-001",
+      "depth": 0,
+      "issuer": "e18eb7ce24fb4afb823ecb5218893fd48f6ce388641ae87258a8f9c2a146a98b",
+      "parent_id": null,
+      "scope": [
+        "summary:create"
+      ],
+      "signature": "7674dc4c723be0b381c21df1945450b0ab4a026424811ab7a8163fe3b5de406fcc3c66c6bb963fbba42e3a59227ba29ee5b41aa7d29ce7a16c5b1568608db50c",
+      "subject": "4729a4f1a141b5e5129a1dcc480cc87c287f9de94bd0fe00a4083181f62dd9cf"
+    },
+    {
+      "credential_id": "delegation-child-001",
+      "depth": 1,
+      "issuer": "4729a4f1a141b5e5129a1dcc480cc87c287f9de94bd0fe00a4083181f62dd9cf",
+      "parent_id": "delegation-root-001",
+      "scope": [
+        "summary:create"
+      ],
+      "signature": "ac6466c2afcf0f8005e7215e6f262d32ea0525422567ca8d52bae2347a0491349ca60b6a1419f0f50b38955e0d99456b652db9b97d10a046d144e34de5f15100",
+      "subject": "22e74c1024ca269c0f41a8acdbafc6539f4f0386b823d8974b4cb5c989ec50fe"
+    }
+  ],
+  "effective_policy": {
+    "actions": [
+      "summary:create"
+    ],
+    "appraised_jurisdiction": "FR",
+    "destinations": [
+      "approved-model-fr"
+    ],
+    "jurisdictions": [
+      "FR"
+    ],
+    "obligations": [
+      "emit:usage-control-receipt"
+    ],
+    "purposes": [
+      "clinical-summarization"
+    ]
+  },
+  "placement_assertion": {
+    "evidence_basis": "operator-asserted-placement",
+    "expires_at": 1791475355,
+    "issued_at": 1791475055,
+    "issuer_key": "feba3ba8f09eb3197472c7d58f9c3e2f4ae1c7e9753fb13383af0feb41192936",
+    "jurisdiction": "FR",
+    "operator": "synthetic-fr-operator",
+    "signature": "4o8eAvhVyb8Dr6_Q6mASZFpXJCvilh7AUWieLmDLXC-uHY2NsAx-M-s-eLqofn5fvexRDAIcgGMF7_oKZiDhBQ",
+    "type": "auc:OperatorPlacementAssertion",
+    "workload_key": "22e74c1024ca269c0f41a8acdbafc6539f4f0386b823d8974b4cb5c989ec50fe"
+  },
+  "receipts": [
+    {
+      "action": {
+        "action_id": "urn:uuid:action-allowed-001",
+        "destination": "approved-model-fr",
+        "jurisdiction": "FR",
+        "operation": "summary:create",
+        "purpose": "clinical-summarization"
+      },
+      "agreement_hash": "sha256:7f7230575a8ed431e9932e60c17ae25f7141069e49b28ff5cae9bf85c8a2ff22",
+      "appraisal_hash": "sha256:6a888dbf35e8d40ea4f8900b6db88532f3368933a402c4f68bfd475b00da92c7",
+      "authority_chain_hash": "sha256:ce82d17fb179abcee127c0a5a5f04a7c9f7d9120891557a8a79b7272ac0b1cda",
+      "boundaries": [
+        "agreement",
+        "delegation",
+        "appraisal",
+        "enforcement"
+      ],
+      "decision": "allow",
+      "dispatch_state": "dispatched",
+      "effective_policy_hash": "sha256:7f2ce8db45c8613677c249d4548ad22e34b82035c00785f3a8be0fc05a95b0e9",
+      "issuer_key": "569de5e0064329b939ed11402677de364c7b65053edc62de2deafc0ace604c8e",
+      "profile": "https://agentrust-io.com/profiles/aucp/v0.1",
+      "signature": "OXzoN_OTadHykJ6NslxE0LS24pLi6R8aXnO0P8Ck1DOhu2W4zBIf-Gm1E19ymrVwT0msnueohFN-0Iyl8ffUCQ",
+      "type": "auc:UsageControlReceipt",
+      "workflow_id": "urn:uuid:workflow-fr-health-001"
+    },
+    {
+      "action": {
+        "action_id": "urn:uuid:action-denied-001",
+        "destination": "eu-branded-us",
+        "jurisdiction": "US",
+        "operation": "summary:create",
+        "purpose": "clinical-summarization"
+      },
+      "agreement_hash": "sha256:7f7230575a8ed431e9932e60c17ae25f7141069e49b28ff5cae9bf85c8a2ff22",
+      "appraisal_hash": "sha256:6a888dbf35e8d40ea4f8900b6db88532f3368933a402c4f68bfd475b00da92c7",
+      "authority_chain_hash": "sha256:ce82d17fb179abcee127c0a5a5f04a7c9f7d9120891557a8a79b7272ac0b1cda",
+      "boundaries": [
+        "agreement",
+        "delegation",
+        "appraisal",
+        "enforcement"
+      ],
+      "decision": "deny",
+      "dispatch_state": "not_dispatched",
+      "effective_policy_hash": "sha256:7f2ce8db45c8613677c249d4548ad22e34b82035c00785f3a8be0fc05a95b0e9",
+      "issuer_key": "569de5e0064329b939ed11402677de364c7b65053edc62de2deafc0ace604c8e",
+      "profile": "https://agentrust-io.com/profiles/aucp/v0.1",
+      "signature": "3B9bUWQFNBrdE9KA78GUDnJ5ptIiYy40-TP1N5-jg7Tj--UhvyF6RI1qK69CHhxm74QkArXGF5a2rCg5ouOcDg",
+      "type": "auc:UsageControlReceipt",
+      "workflow_id": "urn:uuid:workflow-fr-health-001"
+    }
+  ],
+  "registry": {
+    "leaf_count": 2,
+    "proofs": [
+      {
+        "audit_path": [
+          "sha256:ec2198d5bbf131168df3e3422a3bd0d148aee000259f484a5a7cdbe82126856c"
+        ],
+        "leaf_index": 0
+      },
+      {
+        "audit_path": [
+          "sha256:e95d419f66fb97d221e5d6371e065966bcd35d1aa2f52ca4f9e1799ccde9be36"
+        ],
+        "leaf_index": 1
+      }
+    ],
+    "root": "sha256:ef6c6ae3db72405fa555e909c88f7e063d7fb4eb0403545d64832503e8d66eb3"
+  },
+  "trust": {
+    "appraisal_verifier": "339be60351e3c8eea9b4573c371e1cb587308347b25d7346f3bdcd0889c9d86a",
+    "owner": "e18eb7ce24fb4afb823ecb5218893fd48f6ce388641ae87258a8f9c2a146a98b",
+    "pep": "569de5e0064329b939ed11402677de364c7b65053edc62de2deafc0ace604c8e",
+    "placement_operator": "feba3ba8f09eb3197472c7d58f9c3e2f4ae1c7e9753fb13383af0feb41192936"
+  }
+}

@@ -1,0 +1,10 @@
+# Runtime and test dependencies for this example. agentrust_auc is a local
+# module in this folder and is not published as a package.
+ca2a-runtime>=0.4.0,<0.5
+cmcp-runtime>=0.7.0,<0.8
+trace-verify>=0.4,<0.5
+rfc8785>=0.1.2
+cryptography>=50
+cbor2>=6.1.4,<7
+cedarpy>=4.8.7,<5
+pytest>=8
