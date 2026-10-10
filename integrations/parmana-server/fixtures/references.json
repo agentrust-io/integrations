@@ -1,0 +1,36 @@
+{
+  "valid-approval": [
+    {
+      "rel": "authorized-intent",
+      "id": "trust-records/de036280-f36d-47df-a309-e4a0093f3b50",
+      "resolver": "https://parmana.example.org",
+      "digest": "sha256:015e99205fc190b1d27af08c8e89b26bac95ba5190c6502136f8367ec56d5442",
+      "retention": "P1Y"
+    },
+    {
+      "rel": "approval-outcome",
+      "id": "trust-records/de036280-f36d-47df-a309-e4a0093f3b50#/transaction/signals/approvalArtifact",
+      "resolver": "https://parmana.example.org",
+      "digest": "sha256:2f33f0354349f9b44cb0215861b996cb86bf9e68d2acb90ec1612ead525bb781",
+      "retention": "P1Y"
+    }
+  ],
+  "refusal": [
+    {
+      "rel": "authorized-intent",
+      "id": "refusal/459a463f-58a7-41e6-bb2a-264069f005ca",
+      "resolver": "https://parmana.example.org",
+      "digest": "sha256:0e982bdfbcd6dcf3ded382c7ba3b179b44f0a40cdda146dde48db70b21eb3906",
+      "retention": "P1Y"
+    }
+  ],
+  "replay": [
+    {
+      "rel": "authorized-intent",
+      "id": "refusal/cd0e2262-0389-4125-8d97-fd3a67d1f3be",
+      "resolver": "https://parmana.example.org",
+      "digest": "sha256:95a0252ab33f75c8c0bf1fd7b560aef03c988dd6b7df67ea26b395e1fc316355",
+      "retention": "P1Y"
+    }
+  ]
+}

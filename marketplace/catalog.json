@@ -1,6 +1,6 @@
 {
   "catalog_version": 1,
-  "count": 45,
+  "count": 46,
   "integrations": [
     {
       "name": "Claude Code",
@@ -729,6 +729,30 @@
         "agents",
         "tracing",
         "handoff"
+      ]
+    },
+    {
+      "name": "Parmana",
+      "package_name": "Parmana",
+      "vendor": "Parmana Systems",
+      "description": "Maps signed Parmana authorization decisions and human approvals to TRACE authorized-intent and approval-outcome references; checks their signatures offline.",
+      "path": "integrations/parmana-server",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/parmana-server",
+      "homepage": "https://docs.parmanasystems.com",
+      "repository": "https://github.com/pavancharak/parmana",
+      "tier": "community",
+      "stack": [
+        "TRACE"
+      ],
+      "category": "Security & policy",
+      "mark": "PM",
+      "featured": null,
+      "keywords": [
+        "authorization",
+        "approval",
+        "refusal",
+        "policy",
+        "evidence"
       ]
     },
     {

@@ -1,0 +1,11 @@
+{
+  "keyId": "default",
+  "algorithm": "ed25519",
+  "use": "sig",
+  "pem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAl/xcBKrinIKrS+L7gEXvQom5Av+1CMr3BcpykNgqJjE=\n-----END PUBLIC KEY-----\n",
+  "jwk": {
+    "crv": "Ed25519",
+    "x": "l_xcBKrinIKrS-L7gEXvQom5Av-1CMr3BcpykNgqJjE",
+    "kty": "OKP"
+  }
+}

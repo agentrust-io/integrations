@@ -1,0 +1,6 @@
+{
+  "approverId": "manager-eval",
+  "keyId": "manager-eval-key-1",
+  "algorithm": "ed25519",
+  "publicKeyPem": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA2TnAU0l0I5rfRgnJ5UpbQc4TbQrzPjktkxNMT2JPOnw=\n-----END PUBLIC KEY-----\n"
+}
