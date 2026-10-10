@@ -1,0 +1,69 @@
+{
+  "commit": "ac22a7ed594b4a527504ce43841595c1a62f3046",
+  "workingTreeClean": true,
+  "node": "v22.22.0",
+  "ranAt": "2026-10-10T19:13:30.772Z",
+  "scenario": "paytm:refund under customer-refund 1.2.0",
+  "connector": "MockPaytmConnectorServer (hermetic, in process)",
+  "limitation": "refundEligible and fraudCheckPassed are declared by the caller and not checked against any system; they can only refuse. The signed manager approval is what authorizes.",
+  "totalConnectorInvocations": 1,
+  "cases": [
+    {
+      "case": "valid-approval",
+      "approvalAttached": true,
+      "httpStatus": 200,
+      "code": null,
+      "decision": "APPROVED",
+      "connectorInvocations": 1,
+      "connectorResult": "mock connector result (MockPaytmConnectorServer); not a confirmed downstream refund",
+      "reason": null,
+      "record": {
+        "type": "ExecutionTrustRecord",
+        "id": "6a45f4c3-fe7a-4a54-aab7-369d84a02149",
+        "hash": "9f35c8efa1ec6c325cca9b07075ed4c7abef2ddec030c33bbc4d72971a6eb5b4",
+        "signatureAlgorithm": "ed25519",
+        "policyContentHash": "2a3a9534f0fe15d2d8e1a58b80044a09e78925c1849841af4fc2a6cc7ae78495",
+        "matchedRuleId": null,
+        "serverVerified": null
+      }
+    },
+    {
+      "case": "refusal",
+      "approvalAttached": false,
+      "httpStatus": 403,
+      "code": "POLICY_DENIED",
+      "decision": "REFUSED",
+      "connectorInvocations": 0,
+      "connectorResult": "connector not invoked",
+      "reason": "Execution rejected: Rejected: declared signal(s) do not match independently verified state (managerApproved=true != verified managerApproved=false).",
+      "record": {
+        "type": "RefusalRecord",
+        "id": "ba0ae497-3002-4fed-9e6a-38bf915258f8",
+        "hash": "6d0b41c9c5c3ac30f15d898d799e28a1d6ffa60c671db0e6047ecba36d6c4657",
+        "signatureAlgorithm": "ed25519",
+        "policyContentHash": "2a3a9534f0fe15d2d8e1a58b80044a09e78925c1849841af4fc2a6cc7ae78495",
+        "matchedRuleId": "signal-state-verification-violation",
+        "serverVerified": true
+      }
+    },
+    {
+      "case": "replay",
+      "approvalAttached": true,
+      "httpStatus": 403,
+      "code": "POLICY_DENIED",
+      "decision": "REFUSED",
+      "connectorInvocations": 0,
+      "connectorResult": "connector not invoked",
+      "reason": "Execution rejected: Rejected: declared signal(s) do not match independently verified state (managerApproved=true != verified managerApproved=false).",
+      "record": {
+        "type": "RefusalRecord",
+        "id": "adecc3fc-268a-4520-9a90-d5f01c2acd24",
+        "hash": "876dcb2f44e76d77664dcb823b7aa6ca80d542eaee4ac6afd020edfa59fa46c6",
+        "signatureAlgorithm": "ed25519",
+        "policyContentHash": "2a3a9534f0fe15d2d8e1a58b80044a09e78925c1849841af4fc2a6cc7ae78495",
+        "matchedRuleId": "signal-state-verification-violation",
+        "serverVerified": true
+      }
+    }
+  ]
+}

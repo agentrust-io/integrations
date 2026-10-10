@@ -1,0 +1,29 @@
+name: Parmana
+vendor: Parmana Systems
+integrates_with:
+  - trace
+description: >-
+  Maps signed Parmana authorization decisions and human approvals to TRACE
+  authorized-intent and approval-outcome references; checks their signatures offline.
+maintainer:
+  github: pavancharak
+repository: https://github.com/pavancharak/parmana
+homepage: https://docs.parmanasystems.com
+license: Apache-2.0
+tier: community
+marketplace:
+  category: Security & policy
+  mark: PM
+  keywords: [authorization, approval, refusal, policy, evidence]
+# Role. Parmana signs its own records in its own canonical form and issues no
+# TRACE Trust Record. An agent runtime's Trust Record points at them through
+# `references`; the runtime's subject, model, data_class and build_provenance
+# are not Parmana's to state, so this integration fills none of them in.
+# External evidence source, no conformance level (#286).
+trace_roles:
+  - external-evidence-source
+tested_against:
+  agentrust-trace: "0.11.0"
+  # The fixtures are one run of Parmana's refund evaluation at commit
+  # ac22a7ed594b4a527504ce43841595c1a62f3046 (fixtures/report.json). The checks use the
+  # published parmana 1.5.0 SDK (Apache-2.0) for Execution Trust Records.

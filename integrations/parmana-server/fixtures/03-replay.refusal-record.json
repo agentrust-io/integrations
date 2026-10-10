@@ -1,0 +1,68 @@
+{
+  "refusalRecordId": "adecc3fc-268a-4520-9a90-d5f01c2acd24",
+  "businessTransactionId": "cd0e2262-0389-4125-8d97-fd3a67d1f3be",
+  "decision": {
+    "decisionId": "2164c336-403e-4149-861e-d7413983f1cd",
+    "intentId": "34c30cc0-932f-454b-ad6c-d39aef3ea6bd",
+    "policy": {
+      "name": "customer-refund",
+      "version": "1.2.0",
+      "schemaVersion": "1.0.0"
+    },
+    "signals": {
+      "refundEligible": true,
+      "managerApproved": true,
+      "fraudCheckPassed": true,
+      "refundAmount": 500,
+      "approvalArtifact": {
+        "payload": {
+          "version": 1,
+          "approvalId": "f356034c-a000-4094-ae52-29f160901ff7",
+          "issuer": {
+            "approverId": "manager-eval",
+            "keyId": "manager-eval-key-1"
+          },
+          "issuedAt": "2026-10-10T19:13:30.553Z",
+          "expiresAt": "2026-10-10T19:28:30.553Z",
+          "capability": "paytm:refund",
+          "resourceId": "order-eval-1",
+          "scope": {
+            "field": "value",
+            "comparator": "lte",
+            "value": 500
+          },
+          "nonce": "ebebaaf9-0a0c-42d1-837b-1559f27f32c3"
+        },
+        "signature": {
+          "algorithm": "ed25519",
+          "keyId": "manager-eval-key-1",
+          "value": "ZqLf0CrNxnQ8ZsYTRpkt1SpK0DirBbNr+gac3PDTkLqe5/vyg8toccOxcsJfLnr/4yHBbkL1eKuryeMpTVpECw==",
+          "signedAt": "2026-10-10T19:13:30.553Z"
+        }
+      }
+    },
+    "outcome": "REJECTED",
+    "reason": "Rejected: declared signal(s) do not match independently verified state (managerApproved=true != verified managerApproved=false).",
+    "matchedRuleId": "signal-state-verification-violation",
+    "evaluatedRules": 0,
+    "matchedPath": [],
+    "evaluatedAt": "2026-10-10T19:13:30.649Z"
+  },
+  "evaluatedIntent": {
+    "target": "paytm://orders/order-eval-1",
+    "parameters": {
+      "orderId": "order-eval-1",
+      "transactionId": "txn-order-eval-1",
+      "amount": 500
+    }
+  },
+  "policyContentHash": "2a3a9534f0fe15d2d8e1a58b80044a09e78925c1849841af4fc2a6cc7ae78495",
+  "createdAt": "2026-10-10T19:13:30.649Z",
+  "refusalRecordHash": "876dcb2f44e76d77664dcb823b7aa6ca80d542eaee4ac6afd020edfa59fa46c6",
+  "signature": {
+    "algorithm": "ed25519",
+    "keyId": "default",
+    "value": "eUUqBBTajfGBiN8GACL/O05mxdJOmKdaPQWUSmzxa3rzh7VYYcf8tba5xTDFFQSVx2C0cyKLkIX+aGVwgZWoCQ==",
+    "signedAt": "2026-10-10T19:13:30.649Z"
+  }
+}

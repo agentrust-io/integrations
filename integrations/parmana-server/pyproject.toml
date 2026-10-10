@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "parmana-agentrust-integration"
+version = "0.1.0"
+description = "Parmana authorization decisions as TRACE authorized-intent and approval-outcome references"
+requires-python = ">=3.11"
+license = "Apache-2.0"
+dependencies = ["parmana==1.5.0", "rfc8785", "cryptography"]
+
+[project.optional-dependencies]
+test = ["pytest", "agentrust-trace==0.11.0"]
+
+[tool.setuptools]
+py-modules = ["parmana_evidence"]

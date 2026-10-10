@@ -1,0 +1,259 @@
+{
+  "trustRecordId": "6a45f4c3-fe7a-4a54-aab7-369d84a02149",
+  "businessTransactionId": "de036280-f36d-47df-a309-e4a0093f3b50",
+  "transaction": {
+    "businessTransactionId": "de036280-f36d-47df-a309-e4a0093f3b50",
+    "metadata": {
+      "businessTransactionId": "de036280-f36d-47df-a309-e4a0093f3b50",
+      "correlationId": "c2dcc87c-28ec-4e95-a2ba-ef4f61b3198c",
+      "createdBy": "agentrust-evaluation",
+      "createdAt": "2026-10-10T19:13:30.554Z"
+    },
+    "authority": {
+      "authorityId": "65daa3ee-798d-44da-bb5f-beeb1e86bd4c",
+      "authorityType": "USER",
+      "principalId": "agentrust-evaluation",
+      "displayName": "AgenTrust evaluation",
+      "issuedAt": "2026-10-10T19:13:30.554Z"
+    },
+    "authorization": {
+      "authorizationId": "5a2f0aa8-ef21-4b51-8500-28821bbe73d6",
+      "authorityId": "65daa3ee-798d-44da-bb5f-beeb1e86bd4c",
+      "purpose": "AgenTrust evaluation",
+      "authorizedAt": "2026-10-10T19:13:30.554Z"
+    },
+    "intent": {
+      "intentId": "69102182-002f-4c97-a929-237ba88fe4c0",
+      "authorizationId": "5a2f0aa8-ef21-4b51-8500-28821bbe73d6",
+      "action": "paytm:refund",
+      "target": "paytm://orders/order-eval-1",
+      "parameters": {
+        "orderId": "order-eval-1",
+        "transactionId": "txn-order-eval-1",
+        "amount": 500
+      },
+      "createdAt": "2026-10-10T19:13:30.554Z"
+    },
+    "policy": {
+      "name": "customer-refund",
+      "version": "1.2.0",
+      "schemaVersion": "1.0.0",
+      "contentHash": "2a3a9534f0fe15d2d8e1a58b80044a09e78925c1849841af4fc2a6cc7ae78495",
+      "governanceAnchor": {
+        "status": "NO_APPROVAL_RECORD"
+      }
+    },
+    "signals": {
+      "refundEligible": true,
+      "managerApproved": true,
+      "fraudCheckPassed": true,
+      "refundAmount": 500,
+      "approvalArtifact": {
+        "payload": {
+          "version": 1,
+          "approvalId": "f356034c-a000-4094-ae52-29f160901ff7",
+          "issuer": {
+            "approverId": "manager-eval",
+            "keyId": "manager-eval-key-1"
+          },
+          "issuedAt": "2026-10-10T19:13:30.553Z",
+          "expiresAt": "2026-10-10T19:28:30.553Z",
+          "capability": "paytm:refund",
+          "resourceId": "order-eval-1",
+          "scope": {
+            "field": "value",
+            "comparator": "lte",
+            "value": 500
+          },
+          "nonce": "ebebaaf9-0a0c-42d1-837b-1559f27f32c3"
+        },
+        "signature": {
+          "algorithm": "ed25519",
+          "keyId": "manager-eval-key-1",
+          "value": "ZqLf0CrNxnQ8ZsYTRpkt1SpK0DirBbNr+gac3PDTkLqe5/vyg8toccOxcsJfLnr/4yHBbkL1eKuryeMpTVpECw==",
+          "signedAt": "2026-10-10T19:13:30.553Z"
+        }
+      }
+    },
+    "status": "RECEIVED",
+    "createdAt": "2026-10-10T19:13:30.574Z"
+  },
+  "authorization": {
+    "payload": {
+      "version": 1,
+      "authorizationId": "4a929904-74a7-42ce-bc1e-76d6d004e84f",
+      "nonce": "4aa3e1f8-a243-4c42-ac2e-862fea99d4d3",
+      "decisionId": "81652ae9-7325-48b4-ba33-55e06fbaf90c",
+      "businessTransactionId": "de036280-f36d-47df-a309-e4a0093f3b50",
+      "policyName": "customer-refund",
+      "policyVersion": "1.2.0",
+      "policyContentHash": "2a3a9534f0fe15d2d8e1a58b80044a09e78925c1849841af4fc2a6cc7ae78495",
+      "signalsHash": "d00bbbba10aed8ac64e4d6bb84496cf0ce46369db162c3ea1a3b75ffc91bb73c",
+      "authorizedAt": "2026-10-10T19:13:30.582Z",
+      "expiresAt": "2026-10-10T19:15:30.582Z",
+      "businessTransactionHash": "0f6a7ea5fde61612b2301bac3d862cd68bf6d5ee680c2db2a3be77c325aef0a0"
+    },
+    "signature": "y4zx5WQPpx2gFm79UKP0lalv4nsnIkRrgEj7n+MqYT7OBkk3GcNkChrM66mTza/XLXcKKSNfZtcs+NTienzZAw==",
+    "keyId": "default",
+    "algorithm": "ed25519"
+  },
+  "overrides": [],
+  "executions": [
+    {
+      "executionId": "09e2c3d1-8cc0-44c1-a1f2-17c00114120c",
+      "businessTransactionId": "de036280-f36d-47df-a309-e4a0093f3b50",
+      "decision": {
+        "decisionId": "81652ae9-7325-48b4-ba33-55e06fbaf90c",
+        "intentId": "69102182-002f-4c97-a929-237ba88fe4c0",
+        "policy": {
+          "name": "customer-refund",
+          "version": "1.2.0",
+          "schemaVersion": "1.0.0"
+        },
+        "signals": {
+          "refundEligible": true,
+          "managerApproved": true,
+          "fraudCheckPassed": true,
+          "refundAmount": 500,
+          "approvalArtifact": {
+            "payload": {
+              "version": 1,
+              "approvalId": "f356034c-a000-4094-ae52-29f160901ff7",
+              "issuer": {
+                "approverId": "manager-eval",
+                "keyId": "manager-eval-key-1"
+              },
+              "issuedAt": "2026-10-10T19:13:30.553Z",
+              "expiresAt": "2026-10-10T19:28:30.553Z",
+              "capability": "paytm:refund",
+              "resourceId": "order-eval-1",
+              "scope": {
+                "field": "value",
+                "comparator": "lte",
+                "value": 500
+              },
+              "nonce": "ebebaaf9-0a0c-42d1-837b-1559f27f32c3"
+            },
+            "signature": {
+              "algorithm": "ed25519",
+              "keyId": "manager-eval-key-1",
+              "value": "ZqLf0CrNxnQ8ZsYTRpkt1SpK0DirBbNr+gac3PDTkLqe5/vyg8toccOxcsJfLnr/4yHBbkL1eKuryeMpTVpECw==",
+              "signedAt": "2026-10-10T19:13:30.553Z"
+            }
+          }
+        },
+        "outcome": "APPROVED",
+        "reason": "Refund authorized with a verified manager approval for this order and amount.",
+        "matchedRuleId": "approve-refund-with-manager-approval",
+        "evaluatedRules": 5,
+        "matchedPath": [
+          "reject-fraud-check",
+          "reject-not-eligible",
+          "reject-invalid-amount",
+          "reject-above-maximum",
+          "approve-refund-with-manager-approval"
+        ],
+        "evaluatedAt": "2026-10-10T19:13:30.581Z"
+      },
+      "status": "COMPLETED",
+      "mode": "SYNC",
+      "startedAt": "2026-10-10T19:13:30.583Z",
+      "metadata": {
+        "authorizationId": "4a929904-74a7-42ce-bc1e-76d6d004e84f"
+      },
+      "previousChainHash": null,
+      "chainHash": "c483393494a8b5265dc753bb36494d182c7bbaba3330db63190296a0739f0f1e",
+      "chainSignature": {
+        "algorithm": "ed25519",
+        "keyId": "default",
+        "value": "WqsMBBgcvlrKo9Y+r56jkWf5qDGUcoBHxK0IGlZERp/g+y8nPRZ38AwACDrKcxppagNI2D58feGrxVRzUhJEAg==",
+        "signedAt": "2026-10-10T19:13:30.615Z"
+      },
+      "evidence": {
+        "businessTransactionId": "de036280-f36d-47df-a309-e4a0093f3b50",
+        "action": "paytm:refund",
+        "target": "paytm://orders/order-eval-1",
+        "parameters": {
+          "orderId": "order-eval-1",
+          "transactionId": "txn-order-eval-1",
+          "amount": 500
+        },
+        "success": true,
+        "executedAt": "2026-10-10T19:13:30.613Z",
+        "attributes": {
+          "connector": {
+            "connectorId": "paytm",
+            "connectorVersion": "1.0.0",
+            "capability": "paytm:refund",
+            "sanitizedEndpoint": "paytm://orders/order-eval-1",
+            "credentialProviderId": "static",
+            "requestSummary": {
+              "businessTransactionId": "de036280-f36d-47df-a309-e4a0093f3b50",
+              "action": "paytm:refund",
+              "target": "paytm://orders/order-eval-1",
+              "parameters": {
+                "orderId": "order-eval-1",
+                "transactionId": "txn-order-eval-1",
+                "amount": 500
+              }
+            },
+            "responseSummary": {
+              "success": true,
+              "metadata": {
+                "refId": "refid_fa20c63cca33e05a50db4f56",
+                "orderId": "order-eval-1",
+                "txnId": "txn-order-eval-1",
+                "executedAt": "2026-10-10T19:13:30.605Z",
+                "provider": "paytm",
+                "resultStatus": "S",
+                "resultCode": "00",
+                "sharedSecretRedacted": "[REDACTED]"
+              }
+            },
+            "startedAt": "2026-10-10T19:13:30.588Z",
+            "completedAt": "2026-10-10T19:13:30.613Z",
+            "vendorConfirmationVerified": false,
+            "connectorEvidenceHash": "498db693ebcfe64b0cc04050421ffce129c585a4c93582a53ef409eb9ad014a7"
+          }
+        }
+      },
+      "completedAt": "2026-10-10T19:13:30.614Z"
+    }
+  ],
+  "verifications": [
+    {
+      "verificationId": "e59fdda9-77bc-44a9-964a-06e0ef9d75d3",
+      "businessTransactionId": "de036280-f36d-47df-a309-e4a0093f3b50",
+      "status": "VERIFIED",
+      "message": "Execution Trust Record verified successfully.",
+      "verifiedAt": "2026-10-10T19:13:30.618Z",
+      "trustRecordHash": "9f35c8efa1ec6c325cca9b07075ed4c7abef2ddec030c33bbc4d72971a6eb5b4"
+    }
+  ],
+  "receipts": [
+    {
+      "receiptId": "c603b2a7-063c-43c8-9060-0348692f90cc",
+      "businessTransactionId": "de036280-f36d-47df-a309-e4a0093f3b50",
+      "trustRecordHash": "9f35c8efa1ec6c325cca9b07075ed4c7abef2ddec030c33bbc4d72971a6eb5b4",
+      "receiptHash": "0b3b4cdbbce81be58b0570efbe9f8501aaf4dcbeb2d868757eeb913ea83ddad2",
+      "issuedAt": "2026-10-10T19:13:30.618Z",
+      "algorithm": "ed25519",
+      "signature": "GE16mol7Gb7zpqLRQqYZF31OKoFfmvctJogZGRnODb6ZJ0UmdkBDMt+kWzyZOM9hkQ4ubZR+YUwzpLVcXJFoDQ=="
+    }
+  ],
+  "evidenceAnchor": {
+    "policyContentHash": "2a3a9534f0fe15d2d8e1a58b80044a09e78925c1849841af4fc2a6cc7ae78495",
+    "governanceAnchorStatus": "NO_APPROVAL_RECORD",
+    "connectorEvidenceHash": "498db693ebcfe64b0cc04050421ffce129c585a4c93582a53ef409eb9ad014a7",
+    "anchorHash": "33267148141f96c8c6ad5f6bcb1690feaee38df67068271221f78629237e7bc6"
+  },
+  "createdAt": "2026-10-10T19:13:30.615Z",
+  "updatedAt": "2026-10-10T19:13:30.615Z",
+  "trustRecordHash": "9f35c8efa1ec6c325cca9b07075ed4c7abef2ddec030c33bbc4d72971a6eb5b4",
+  "signature": {
+    "algorithm": "ed25519",
+    "keyId": "default",
+    "value": "m8AfZ7yqdhXbwcg9rPzr8yuSZqn9POXHcISq8dksoEt/GJac006fliHlnuYHXXapAvXdgZfnFBazi/Zel2YNBA==",
+    "signedAt": "2026-10-10T19:13:30.616Z"
+  }
+}

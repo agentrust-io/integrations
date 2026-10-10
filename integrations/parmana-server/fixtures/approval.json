@@ -1,0 +1,26 @@
+{
+  "payload": {
+    "version": 1,
+    "approvalId": "f356034c-a000-4094-ae52-29f160901ff7",
+    "issuer": {
+      "approverId": "manager-eval",
+      "keyId": "manager-eval-key-1"
+    },
+    "issuedAt": "2026-10-10T19:13:30.553Z",
+    "expiresAt": "2026-10-10T19:28:30.553Z",
+    "capability": "paytm:refund",
+    "resourceId": "order-eval-1",
+    "scope": {
+      "field": "value",
+      "comparator": "lte",
+      "value": 500
+    },
+    "nonce": "ebebaaf9-0a0c-42d1-837b-1559f27f32c3"
+  },
+  "signature": {
+    "algorithm": "ed25519",
+    "keyId": "manager-eval-key-1",
+    "value": "ZqLf0CrNxnQ8ZsYTRpkt1SpK0DirBbNr+gac3PDTkLqe5/vyg8toccOxcsJfLnr/4yHBbkL1eKuryeMpTVpECw==",
+    "signedAt": "2026-10-10T19:13:30.553Z"
+  }
+}
