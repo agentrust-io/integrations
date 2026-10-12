@@ -7,7 +7,7 @@
 # rfc8785 and pytest are the integration's runtime and test dependencies,
 # which the --no-deps editable install no longer pulls in.
 # The floating job stays unpinned on purpose (drift detection).
-agentrust-trace==0.10.0
+agentrust-trace==0.11.0
 agentrust-trace-tests==0.5.1
 chap-coordinator==0.2.13
 rfc8785
