@@ -52,6 +52,7 @@ TRACE only works as a standard if it is genuinely neutral. Integrations are list
 | [Agent Passport System](integrations/aeoess-aps/) | aeoess | trace | verified |
 | [cA2A Cross-Operator Delegation](integrations/agentrust-ca2a-cross-operator/) | agentrust-io | ca2a | community |
 | [Confidential Workflow Acceptance Harness](integrations/agentrust-confidential-workflow-harness/) | agentrust-io | cmcp, ca2a | community |
+| [AAIF Authority Comparison Runner](integrations/alakris-authority-comparison/) | Alakris Research | trace | community |
 | [Agent Replay](integrations/altrudev-agent-replay/) | Altru.dev | trace | verified |
 | [Frequency Agent Execution Assurance](integrations/altrudev-frequency-agent-execution-assurance/) | Altru.dev | trace | community |
 | [Bernstein MCP verifier](integrations/bernstein-mcp/) | Bernstein | trace | verified |

@@ -137,6 +137,29 @@
       ]
     },
     {
+      "name": "AAIF Authority Comparison Runner",
+      "package_name": "AAIF Authority Comparison Runner",
+      "vendor": "Alakris Research",
+      "description": "Appraises pinned public authority/revocation evidence, preserves evidence gaps, and validates TRACE behavior-trace reference shape.",
+      "path": "integrations/alakris-authority-comparison",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/alakris-authority-comparison",
+      "homepage": null,
+      "repository": "https://git.elibot.ru/agent-bot/aaif-publication-reference",
+      "tier": "community",
+      "stack": [
+        "TRACE"
+      ],
+      "category": "Evidence & receipts",
+      "mark": "AC",
+      "featured": null,
+      "keywords": [
+        "authority",
+        "revocation",
+        "evidence",
+        "reproducibility"
+      ]
+    },
+    {
       "name": "Agent Passport System",
       "package_name": "Agent Passport System",
       "vendor": "aeoess",

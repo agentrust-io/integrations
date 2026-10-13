@@ -1,0 +1,175 @@
+{
+  "checked_utc": "2026-10-06T20:02:17.559910+00:00",
+  "responses": {
+    "issuer_build": {
+      "service": "issuer-agent",
+      "source_revision": "497509ebf0c3",
+      "release": "public-v2026-10-06.2",
+      "rail": "classical-seller-v0",
+      "issuer_id": "3d2a9df3cc5cb853ba6a61bfc475cda119eb215c22aad7b2b4bcebc46399183b",
+      "signing_key_id": "9ddd3b08a70e35065788ca08d5f22761df22f77611755ccae13fe8809ac3a6cd",
+      "chain_id": "mintid-testnet-2",
+      "chain_generation": 1,
+      "kyc_provider": "sandbox",
+      "session_ttl_seconds": 86400,
+      "permitted_grades": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "heartbeat_seconds": 30,
+      "validity_window_seconds": 180,
+      "chain_max_root_age_seconds": 180,
+      "status_sign_doc_version": 2,
+      "emergency_sign_doc_version": 2,
+      "status_epoch": 6282,
+      "current_root": "c996965d925f032d350f88d6a2a7a0319b5e54a05e8cd73cea2dd78a54c77ad4",
+      "last_heartbeat_unix": 1791316882,
+      "entries": 0,
+      "pending_since_root": true,
+      "linkage": "in_sync",
+      "linkage_detail": "",
+      "chain_finalized_epoch": 6282,
+      "chain_finalized_root": "c996965d925f032d350f88d6a2a7a0319b5e54a05e8cd73cea2dd78a54c77ad4",
+      "chain_finalized_height": 88975,
+      "chain_checked_unix": 1791316912,
+      "unfinalized_epochs": 0,
+      "discarded_heartbeats": 0,
+      "emergency_key_id": "9df5d5558b50752f46a74368520557905a02a3e5ca255b8aa443c2441519b474",
+      "emergency_roots": 3,
+      "last_emergency": {
+        "status_epoch": 4807,
+        "root": "bb241080642a7f0f7af2927a77618a7254cfc26c69f394c9941cd9cda2d9298a",
+        "previous_root": "40b488a22e1bc5a38b6b2688661b77c37c44b92c7e4a76a68972783bffa58155",
+        "reason_code": 2,
+        "emergency_key_id": "9df5d5558b50752f46a74368520557905a02a3e5ca255b8aa443c2441519b474",
+        "tx_hash": "AF26C1BE51028EA434F4C9F5646374CA3960B24F8A5B1D69006A0F5F6F633A13",
+        "requested_at_unix": 1791272646,
+        "entries": 0,
+        "finalized": true
+      },
+      "credential_rail": {
+        "mounted": true,
+        "core": "proof-core 0.4.0",
+        "accumulator_leaf": "a196a8d189ebfd424c1b56916894dd9c4f46d1dac8a83970f9fcd4d52d65e097",
+        "credentials_issued": 43,
+        "credentials_revoked": 15,
+        "finalized": {
+          "status_epoch": 6282,
+          "height": 88975,
+          "root": "c996965d925f032d350f88d6a2a7a0319b5e54a05e8cd73cea2dd78a54c77ad4"
+        },
+        "scope_sets": 5,
+        "agent_accumulator_leaf": "e61e9db7a6f5ea1202efeeedc311e2fce732a595dd8d60c141e13933ce59aeb6",
+        "agent_minting": "on",
+        "escrow_sealer": "kms",
+        "agent_mint_policy": {
+          "max_active_agents": 10,
+          "max_mints": 5,
+          "window_seconds": 3600,
+          "max_lease_seconds": 7776000,
+          "bundles_only": false
+        },
+        "agent_bundles": {
+          "catalogue_version": "mintid.agent-bundles.v1",
+          "catalogue_digest": "b18bb15862ca89d0c6e7f479276eb0f6aa46e41ffdcce8b699ee8d7206328895",
+          "catalogue_source": "reference",
+          "bundles": [
+            "payments",
+            "procurement",
+            "data-read"
+          ]
+        }
+      },
+      "agent_fee_schedule": {
+        "source": "chain_rpc_unproven",
+        "mint_fee": {
+          "amount": "1000000",
+          "denom": "utestmint"
+        },
+        "lease_fee_per_year": {
+          "amount": "1000000",
+          "denom": "utestmint"
+        },
+        "reference_currency": "USD",
+        "mint_fee_reference_minor": 300,
+        "lease_fee_per_year_reference_minor": 1200,
+        "sybil_floor_reference_minor": 400,
+        "protocol_cut_bps": 1200,
+        "burn_share_bps": 3000,
+        "validator_share_bps": 4500,
+        "foundation_share_bps": 2500
+      },
+      "selfrevoke": {
+        "fold": "on",
+        "acked": 16,
+        "chain_acked": 15,
+        "pending": 0,
+        "last_fold_unix": 1791316913,
+        "blocked_at_version": null,
+        "fold_mode": "external",
+        "waiting_at_version": null,
+        "cascade_spread_beats": 8,
+        "agent_cover_traffic": true
+      }
+    },
+    "verifier_build": {
+      "sdk_version": "0.3.0",
+      "engine_pin": "proof-core 0.4.0",
+      "state_vectors_version": "mintid-proofvector-1/h2",
+      "state_vectors_sha256": "36d36f371b3b4b0a1db995a4a1fb46f352ed5f5aacc28df5ca10c2a31d0ea495",
+      "spec_revision": "SPEC-1 v3.2",
+      "conformance_suite_version": "1.0.0",
+      "source_revision": "497509ebf0c3",
+      "release": "public-v2026-10-06.2",
+      "recognition": {
+        "enabled": true,
+        "retention_days": 90
+      }
+    },
+    "verifier_status": {
+      "substrate": "ok",
+      "checked_unix": 1791316934,
+      "detail": "",
+      "chain": {
+        "chain_id": "mintid-testnet-2",
+        "latest_height": 88987,
+        "latest_block_time_unix": 1791316910,
+        "block_age_seconds": 24
+      },
+      "issuers": [
+        {
+          "issuer_id": "3d2a9df3cc5cb853ba6a61bfc475cda119eb215c22aad7b2b4bcebc46399183b",
+          "reason": "ok",
+          "root_state": null,
+          "active": true,
+          "bond_ok": true,
+          "root_epoch": 6282,
+          "root_height": 88975,
+          "root_age_seconds": 52,
+          "fresh": true
+        }
+      ],
+      "promise": {
+        "heartbeat_seconds": 30,
+        "max_root_age_seconds": 180,
+        "note": "roots are published every heartbeat_seconds and stay fresh up to max_root_age_seconds; a revocation lands in the next root"
+      },
+      "verifier": {
+        "verifier_id": "6f4c5d1becd3c47e56efcbfc950fc5d845eff13c318a8aed866613e045621661",
+        "origin": "https://verifier.testnet.mintid.net",
+        "max_height_lag": 100,
+        "presentation_rail": "configured",
+        "sdk_version": "0.3.0",
+        "engine_pin": "proof-core 0.4.0",
+        "state_vectors_version": "mintid-proofvector-1/h2",
+        "state_vectors_sha256": "36d36f371b3b4b0a1db995a4a1fb46f352ed5f5aacc28df5ca10c2a31d0ea495",
+        "spec_revision": "SPEC-1 v3.2",
+        "conformance_suite_version": "1.0.0",
+        "source_revision": "497509ebf0c3",
+        "release": "public-v2026-10-06.2"
+      }
+    }
+  }
+}

@@ -1,0 +1,971 @@
+{
+  "implementation": "Proofable",
+  "run_id": "aaif-e1217327a-20261008",
+  "evidence_custody": {
+    "producer": "Proofable author/operator",
+    "public_artifact": "sanitized trace",
+    "appraiser": "Alakris evidence runner",
+    "independent_target_observer": false
+  },
+  "deployed_revision_claim": "e1217327a1568b39d5153686b8085471b5329cde",
+  "checks": [
+    {
+      "file": "README.md",
+      "expected": "e32b2580d2ff33d7379b3fc686855c389bcb113beeaf9c44a8e3e4db48e13271",
+      "actual": "e32b2580d2ff33d7379b3fc686855c389bcb113beeaf9c44a8e3e4db48e13271",
+      "match": true
+    },
+    {
+      "file": "manifest.json",
+      "expected": "90638a7e27b42ab784070ca6cea5dbc6add33671a3277744a9534cb7b51a424c",
+      "actual": "90638a7e27b42ab784070ca6cea5dbc6add33671a3277744a9534cb7b51a424c",
+      "match": true
+    },
+    {
+      "file": "authority-effect-results.md",
+      "expected": "60a6d77a1705c6e0152e0fb72131824715966cd3c2574f5a3b06820ecd8ab47b",
+      "actual": "60a6d77a1705c6e0152e0fb72131824715966cd3c2574f5a3b06820ecd8ab47b",
+      "match": true
+    },
+    {
+      "file": "authority-effect-results.json",
+      "expected": "45c953291efce44499cb995f5c7d271683399a04bc155aea1389b78468cbe7e0",
+      "actual": "45c953291efce44499cb995f5c7d271683399a04bc155aea1389b78468cbe7e0",
+      "match": true
+    },
+    {
+      "file": "trace.jsonl",
+      "expected": "96241d8409c4661f8e60cd0904e7245434f48bf5711d9c377706f29ff721a0c8",
+      "actual": "96241d8409c4661f8e60cd0904e7245434f48bf5711d9c377706f29ff721a0c8",
+      "match": true
+    },
+    {
+      "file": "portable-proofs.json",
+      "expected": "74ef851d4001a572d841bcfa27cfb1216dc2d5be063049196986d00c69b5e7cc",
+      "actual": "74ef851d4001a572d841bcfa27cfb1216dc2d5be063049196986d00c69b5e7cc",
+      "match": true
+    },
+    {
+      "file": "verify-portable-proofs.mjs",
+      "expected": "f7eb8f74885518b3ba0d945f60500e3236a25ad569fdcc6c8e44af462eaa3248",
+      "actual": "f7eb8f74885518b3ba0d945f60500e3236a25ad569fdcc6c8e44af462eaa3248",
+      "match": true
+    },
+    {
+      "file": "trace.jsonl",
+      "expected": "96241d8409c4661f8e60cd0904e7245434f48bf5711d9c377706f29ff721a0c8",
+      "actual": "96241d8409c4661f8e60cd0904e7245434f48bf5711d9c377706f29ff721a0c8",
+      "match": true
+    }
+  ],
+  "integrity": "PASS",
+  "record_count_consistent": true,
+  "envelope_appraisal": {
+    "state": "measured",
+    "valid": true,
+    "qhash_set_bound": true,
+    "verdicts": [
+      {
+        "qHash": "0x714bec9581eba6003ffced14d8ea7bb67349217fb0335584da1b09c50bef086d",
+        "valid": true,
+        "signer": "0xA41494e1E5F9E5Eaf786961e6ef84cd1a3071Eec",
+        "errors": []
+      },
+      {
+        "qHash": "0x64f293e61b826e03bd1de6564fc2db8cec0f50390bafc8bdf162ec9961262fca",
+        "valid": true,
+        "signer": "0xA41494e1E5F9E5Eaf786961e6ef84cd1a3071Eec",
+        "errors": []
+      },
+      {
+        "qHash": "0xffdc0455b72732a8c6a31eb4e2861943b85dbc271fe2dfa8b18d0e85d2b33726",
+        "valid": true,
+        "signer": "0xA41494e1E5F9E5Eaf786961e6ef84cd1a3071Eec",
+        "errors": []
+      },
+      {
+        "qHash": "0x71804bd8ca81e1ccb691ce6bfd8422b884437b4390b9c289f09db19fc2309f3c",
+        "valid": true,
+        "signer": "0xA41494e1E5F9E5Eaf786961e6ef84cd1a3071Eec",
+        "errors": []
+      },
+      {
+        "qHash": "0x8a3e5ff89c8a86423bae61db96c9732f319a6f6cdb34f4bde560c90d25366c95",
+        "valid": true,
+        "signer": "0xA41494e1E5F9E5Eaf786961e6ef84cd1a3071Eec",
+        "errors": []
+      },
+      {
+        "qHash": "0xf1880cba0876acc2364e31892b261a47299c0a70177b61b32d465fcd1b61447a",
+        "valid": true,
+        "signer": "0xA41494e1E5F9E5Eaf786961e6ef84cd1a3071Eec",
+        "errors": []
+      },
+      {
+        "qHash": "0x1d987781eb519337fa9e62043831ee187340f6e589f217b16b99ed98be5acfbc",
+        "valid": true,
+        "signer": "0xA41494e1E5F9E5Eaf786961e6ef84cd1a3071Eec",
+        "errors": []
+      },
+      {
+        "qHash": "0x40b44805057d6ec3708debcb0b490b3087d8e7cb2e853c6a6f434c57ee8a430d",
+        "valid": true,
+        "signer": "0xA41494e1E5F9E5Eaf786961e6ef84cd1a3071Eec",
+        "errors": []
+      },
+      {
+        "qHash": "0xcf365b8ba19fd9fd1d441abb8bbdd640f359e4eaac6b9339b622bef26f05a5de",
+        "valid": true,
+        "signer": "0xA41494e1E5F9E5Eaf786961e6ef84cd1a3071Eec",
+        "errors": []
+      },
+      {
+        "qHash": "0x43a718f6ba869a91f37f685e65f32267192d2eb7b9a4a63c9acc9a41a64e10ab",
+        "valid": true,
+        "signer": "0xA41494e1E5F9E5Eaf786961e6ef84cd1a3071Eec",
+        "errors": []
+      },
+      {
+        "qHash": "0x05ef986ee3817a6fd56b327b1de3523ab7f65c11c4ff386d34c16f93d11c0045",
+        "valid": true,
+        "signer": "0xA41494e1E5F9E5Eaf786961e6ef84cd1a3071Eec",
+        "errors": []
+      }
+    ],
+    "scope": "historical EIP-191 receipt integrity; freshness not appraised"
+  },
+  "newline_diagnostic": {
+    "crlf_hash_matches_published": false,
+    "strict_byte_check_unchanged": true
+  },
+  "cases": [
+    {
+      "case_id": "binding_veto",
+      "basis": "author_record",
+      "publisher_claim": "SUPPORTED",
+      "independent_live_reproduction": false,
+      "fields": {
+        "authority": {
+          "state": "measured",
+          "value": [
+            "0x63f238351564bb5a1072bb7dad2b2fd14ef5eeb15c74f787ea2b785d89ceb233"
+          ],
+          "reason": null
+        },
+        "decision": {
+          "state": "measured",
+          "value": [
+            {
+              "status": "failed",
+              "response": null,
+              "executor": null,
+              "error": "JOB_AUTHORITY_DENIED: run_command is required for isolated harness execution."
+            }
+          ],
+          "reason": null
+        },
+        "dispatch": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "explicit dispatch event/time not in public trace"
+        },
+        "platform_observation": {
+          "state": "measured",
+          "value": [
+            {
+              "attempt": "binding_veto",
+              "observation": {
+                "status": "failed",
+                "response": null,
+                "executor": null,
+                "error": "JOB_AUTHORITY_DENIED: run_command is required for isolated harness execution."
+              }
+            }
+          ],
+          "reason": null
+        },
+        "committed_effect": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "public trace has platform outcomes, not target-side committed effects"
+        },
+        "task_outcome": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "platform observations do not establish the target task result"
+        },
+        "receipt": {
+          "state": "measured",
+          "value": [
+            {
+              "attempt": "binding_veto",
+              "receipt": {
+                "state": "measured",
+                "value": {
+                  "qHash": "0xffdc0455b72732a8c6a31eb4e2861943b85dbc271fe2dfa8b18d0e85d2b33726",
+                  "status": "verified",
+                  "visibility": "unlisted"
+                },
+                "reason": null
+              }
+            }
+          ],
+          "reason": null
+        },
+        "receipt_signature_material": {
+          "state": "measured",
+          "value": {
+            "file": "portable-proofs.json",
+            "sha256": "74ef851d4001a572d841bcfa27cfb1216dc2d5be063049196986d00c69b5e7cc"
+          },
+          "reason": null
+        },
+        "receipt_signature_verification": {
+          "state": "measured",
+          "value": {
+            "state": "measured",
+            "valid": true,
+            "qhash_set_bound": true,
+            "verdicts": [
+              {
+                "qHash": "0x714bec9581eba6003ffced14d8ea7bb67349217fb0335584da1b09c50bef086d",
+                "valid": true,
+                "signer": "0xA41494e1E5F9E5Eaf786961e6ef84cd1a3071Eec",
+                "errors": []
+              },
+              {
+                "qHash": "0x64f293e61b826e03bd1de6564fc2db8cec0f50390bafc8bdf162ec9961262fca",
+                "valid": true,
+                "signer": "0xA41494e1E5F9E5Eaf786961e6ef84cd1a3071Eec",
+                "errors": []
+              },
+              {
+                "qHash": "0xffdc0455b72732a8c6a31eb4e2861943b85dbc271fe2dfa8b18d0e85d2b33726",
+                "valid": true,
+                "signer": "0xA41494e1E5F9E5Eaf786961e6ef84cd1a3071Eec",
+                "errors": []
+              },
+              {
+                "qHash": "0x71804bd8ca81e1ccb691ce6bfd8422b884437b4390b9c289f09db19fc2309f3c",
+                "valid": true,
+                "signer": "0xA41494e1E5F9E5Eaf786961e6ef84cd1a3071Eec",
+                "errors": []
+              },
+              {
+                "qHash": "0x8a3e5ff89c8a86423bae61db96c9732f319a6f6cdb34f4bde560c90d25366c95",
+                "valid": true,
+                "signer": "0xA41494e1E5F9E5Eaf786961e6ef84cd1a3071Eec",
+                "errors": []
+              },
+              {
+                "qHash": "0xf1880cba0876acc2364e31892b261a47299c0a70177b61b32d465fcd1b61447a",
+                "valid": true,
+                "signer": "0xA41494e1E5F9E5Eaf786961e6ef84cd1a3071Eec",
+                "errors": []
+              },
+              {
+                "qHash": "0x1d987781eb519337fa9e62043831ee187340f6e589f217b16b99ed98be5acfbc",
+                "valid": true,
+                "signer": "0xA41494e1E5F9E5Eaf786961e6ef84cd1a3071Eec",
+                "errors": []
+              },
+              {
+                "qHash": "0x40b44805057d6ec3708debcb0b490b3087d8e7cb2e853c6a6f434c57ee8a430d",
+                "valid": true,
+                "signer": "0xA41494e1E5F9E5Eaf786961e6ef84cd1a3071Eec",
+                "errors": []
+              },
+              {
+                "qHash": "0xcf365b8ba19fd9fd1d441abb8bbdd640f359e4eaac6b9339b622bef26f05a5de",
+                "valid": true,
+                "signer": "0xA41494e1E5F9E5Eaf786961e6ef84cd1a3071Eec",
+                "errors": []
+              },
+              {
+                "qHash": "0x43a718f6ba869a91f37f685e65f32267192d2eb7b9a4a63c9acc9a41a64e10ab",
+                "valid": true,
+                "signer": "0xA41494e1E5F9E5Eaf786961e6ef84cd1a3071Eec",
+                "errors": []
+              },
+              {
+                "qHash": "0x05ef986ee3817a6fd56b327b1de3523ab7f65c11c4ff386d34c16f93d11c0045",
+                "valid": true,
+                "signer": "0xA41494e1E5F9E5Eaf786961e6ef84cd1a3071Eec",
+                "errors": []
+              }
+            ],
+            "scope": "historical EIP-191 receipt integrity; freshness not appraised"
+          },
+          "reason": null
+        },
+        "policy_digest": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "policy version is an identifier, not a canonical digest"
+        },
+        "revocation_latency_seconds": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "measurement/appraisal not performed"
+        },
+        "root_age_seconds": {
+          "state": "not_applicable",
+          "value": null,
+          "reason": "local authority-state path"
+        },
+        "useful_work_lost": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "measurement/appraisal not performed"
+        },
+        "action_digest": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not exposed by this public adapter input"
+        },
+        "target_identity": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not exposed by this public adapter input"
+        },
+        "original_deadline": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not exposed by this public adapter input"
+        },
+        "fallback_scope": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not exposed by this public adapter input"
+        },
+        "independent_effect_witness": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "appraisal not performed"
+        },
+        "retry_count": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "appraisal not performed"
+        },
+        "duplicate_count": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "appraisal not performed"
+        }
+      }
+    },
+    {
+      "case_id": "revoked_stale",
+      "basis": "author_record",
+      "publisher_claim": "SUPPORTED",
+      "independent_live_reproduction": false,
+      "fields": {
+        "authority": {
+          "state": "measured",
+          "value": [
+            "0x22c5c4bef227b7ca64514ae74e74bb7f55fa1f15e6aed723c01eb54ac4416d05",
+            "0xe1fd94b1a5bef3e3fb7b9347945859dde01063a7b3af539659d4377d60ca3882",
+            "0xb6eb435737aa4e592195dd7bdcecf17cf43dbb0bd82526bec8209ad27a069a3f",
+            "0x4c0fc41c165ad20067b708e6a8e71bfdf6f8686250eba967a9f69c93cdc593ea"
+          ],
+          "reason": null
+        },
+        "decision": {
+          "state": "measured",
+          "value": [
+            {
+              "status": "completed",
+              "response": "REVIEW_OK",
+              "executor": null,
+              "error": null
+            },
+            {
+              "dispatch_decision": "DENY",
+              "code": "DELEGATION_PROOF_DENIED",
+              "job_created": false
+            },
+            {
+              "dispatch_decision": "DENY",
+              "code": "DELEGATION_PROOF_DENIED",
+              "job_created": false
+            },
+            {
+              "dispatch_decision": "DENY",
+              "code": "DELEGATION_PROOF_DENIED",
+              "job_created": false
+            }
+          ],
+          "reason": null
+        },
+        "dispatch": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "explicit dispatch event/time not in public trace"
+        },
+        "platform_observation": {
+          "state": "measured",
+          "value": [
+            {
+              "attempt": "hosted_allow",
+              "observation": {
+                "status": "completed",
+                "response": "REVIEW_OK",
+                "executor": null,
+                "error": null
+              }
+            },
+            {
+              "attempt": "revoke_before_dispatch",
+              "observation": {
+                "dispatch_decision": "DENY",
+                "code": "DELEGATION_PROOF_DENIED",
+                "job_created": false
+              }
+            },
+            {
+              "attempt": "expiry_before_dispatch",
+              "observation": {
+                "dispatch_decision": "DENY",
+                "code": "DELEGATION_PROOF_DENIED",
+                "job_created": false
+              }
+            },
+            {
+              "attempt": "stale_authority",
+              "observation": {
+                "dispatch_decision": "DENY",
+                "code": "DELEGATION_PROOF_DENIED",
+                "job_created": false
+              }
+            }
+          ],
+          "reason": null
+        },
+        "committed_effect": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "public trace has platform outcomes, not target-side committed effects"
+        },
+        "task_outcome": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "platform observations do not establish the target task result"
+        },
+        "receipt": {
+          "state": "measured",
+          "value": [
+            {
+              "attempt": "hosted_allow",
+              "receipt": {
+                "state": "measured",
+                "value": {
+                  "qHash": "0x714bec9581eba6003ffced14d8ea7bb67349217fb0335584da1b09c50bef086d",
+                  "status": "verified",
+                  "visibility": "unlisted"
+                },
+                "reason": null
+              }
+            },
+            {
+              "attempt": "revoke_before_dispatch",
+              "receipt": {
+                "state": "not_emitted",
+                "value": null,
+                "reason": "no receipt exposed for this attempt"
+              }
+            },
+            {
+              "attempt": "expiry_before_dispatch",
+              "receipt": {
+                "state": "not_emitted",
+                "value": null,
+                "reason": "no receipt exposed for this attempt"
+              }
+            },
+            {
+              "attempt": "stale_authority",
+              "receipt": {
+                "state": "not_emitted",
+                "value": null,
+                "reason": "no receipt exposed for this attempt"
+              }
+            }
+          ],
+          "reason": null
+        },
+        "receipt_signature_material": {
+          "state": "measured",
+          "value": {
+            "file": "portable-proofs.json",
+            "sha256": "74ef851d4001a572d841bcfa27cfb1216dc2d5be063049196986d00c69b5e7cc"
+          },
+          "reason": null
+        },
+        "receipt_signature_verification": {
+          "state": "measured",
+          "value": {
+            "state": "measured",
+            "valid": true,
+            "qhash_set_bound": true,
+            "verdicts": [
+              {
+                "qHash": "0x714bec9581eba6003ffced14d8ea7bb67349217fb0335584da1b09c50bef086d",
+                "valid": true,
+                "signer": "0xA41494e1E5F9E5Eaf786961e6ef84cd1a3071Eec",
+                "errors": []
+              },
+              {
+                "qHash": "0x64f293e61b826e03bd1de6564fc2db8cec0f50390bafc8bdf162ec9961262fca",
+                "valid": true,
+                "signer": "0xA41494e1E5F9E5Eaf786961e6ef84cd1a3071Eec",
+                "errors": []
+              },
+              {
+                "qHash": "0xffdc0455b72732a8c6a31eb4e2861943b85dbc271fe2dfa8b18d0e85d2b33726",
+                "valid": true,
+                "signer": "0xA41494e1E5F9E5Eaf786961e6ef84cd1a3071Eec",
+                "errors": []
+              },
+              {
+                "qHash": "0x71804bd8ca81e1ccb691ce6bfd8422b884437b4390b9c289f09db19fc2309f3c",
+                "valid": true,
+                "signer": "0xA41494e1E5F9E5Eaf786961e6ef84cd1a3071Eec",
+                "errors": []
+              },
+              {
+                "qHash": "0x8a3e5ff89c8a86423bae61db96c9732f319a6f6cdb34f4bde560c90d25366c95",
+                "valid": true,
+                "signer": "0xA41494e1E5F9E5Eaf786961e6ef84cd1a3071Eec",
+                "errors": []
+              },
+              {
+                "qHash": "0xf1880cba0876acc2364e31892b261a47299c0a70177b61b32d465fcd1b61447a",
+                "valid": true,
+                "signer": "0xA41494e1E5F9E5Eaf786961e6ef84cd1a3071Eec",
+                "errors": []
+              },
+              {
+                "qHash": "0x1d987781eb519337fa9e62043831ee187340f6e589f217b16b99ed98be5acfbc",
+                "valid": true,
+                "signer": "0xA41494e1E5F9E5Eaf786961e6ef84cd1a3071Eec",
+                "errors": []
+              },
+              {
+                "qHash": "0x40b44805057d6ec3708debcb0b490b3087d8e7cb2e853c6a6f434c57ee8a430d",
+                "valid": true,
+                "signer": "0xA41494e1E5F9E5Eaf786961e6ef84cd1a3071Eec",
+                "errors": []
+              },
+              {
+                "qHash": "0xcf365b8ba19fd9fd1d441abb8bbdd640f359e4eaac6b9339b622bef26f05a5de",
+                "valid": true,
+                "signer": "0xA41494e1E5F9E5Eaf786961e6ef84cd1a3071Eec",
+                "errors": []
+              },
+              {
+                "qHash": "0x43a718f6ba869a91f37f685e65f32267192d2eb7b9a4a63c9acc9a41a64e10ab",
+                "valid": true,
+                "signer": "0xA41494e1E5F9E5Eaf786961e6ef84cd1a3071Eec",
+                "errors": []
+              },
+              {
+                "qHash": "0x05ef986ee3817a6fd56b327b1de3523ab7f65c11c4ff386d34c16f93d11c0045",
+                "valid": true,
+                "signer": "0xA41494e1E5F9E5Eaf786961e6ef84cd1a3071Eec",
+                "errors": []
+              }
+            ],
+            "scope": "historical EIP-191 receipt integrity; freshness not appraised"
+          },
+          "reason": null
+        },
+        "policy_digest": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "policy version is an identifier, not a canonical digest"
+        },
+        "revocation_latency_seconds": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "measurement/appraisal not performed"
+        },
+        "root_age_seconds": {
+          "state": "not_applicable",
+          "value": null,
+          "reason": "local authority-state path"
+        },
+        "useful_work_lost": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "measurement/appraisal not performed"
+        },
+        "action_digest": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not exposed by this public adapter input"
+        },
+        "target_identity": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not exposed by this public adapter input"
+        },
+        "original_deadline": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not exposed by this public adapter input"
+        },
+        "fallback_scope": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not exposed by this public adapter input"
+        },
+        "independent_effect_witness": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "appraisal not performed"
+        },
+        "retry_count": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "appraisal not performed"
+        },
+        "duplicate_count": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "appraisal not performed"
+        }
+      }
+    },
+    {
+      "case_id": "unreachable",
+      "basis": "author_record",
+      "publisher_claim": "NOT_APPLICABLE_CURRENT_PATH",
+      "independent_live_reproduction": false,
+      "fields": {
+        "authority": {
+          "state": "not_applicable",
+          "value": null,
+          "reason": "current authority evaluated locally"
+        },
+        "decision": {
+          "state": "not_applicable",
+          "value": null,
+          "reason": "no remote authority dependency on this path"
+        },
+        "dispatch": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "explicit dispatch event/time not in public trace"
+        },
+        "platform_observation": {
+          "state": "not_applicable",
+          "value": null,
+          "reason": "no equivalent on this implementation path"
+        },
+        "committed_effect": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "public trace has platform outcomes, not target-side committed effects"
+        },
+        "task_outcome": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "platform observations do not establish the target task result"
+        },
+        "receipt": {
+          "state": "not_applicable",
+          "value": null,
+          "reason": "no equivalent on this implementation path"
+        },
+        "receipt_signature_material": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "no envelope material for this case"
+        },
+        "receipt_signature_verification": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "no envelope verification for this case"
+        },
+        "policy_digest": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "policy version is an identifier, not a canonical digest"
+        },
+        "revocation_latency_seconds": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "measurement/appraisal not performed"
+        },
+        "root_age_seconds": {
+          "state": "not_applicable",
+          "value": null,
+          "reason": "local authority-state path"
+        },
+        "useful_work_lost": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "measurement/appraisal not performed"
+        },
+        "action_digest": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not exposed by this public adapter input"
+        },
+        "target_identity": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not exposed by this public adapter input"
+        },
+        "original_deadline": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not exposed by this public adapter input"
+        },
+        "fallback_scope": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not exposed by this public adapter input"
+        },
+        "independent_effect_witness": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "appraisal not performed"
+        },
+        "retry_count": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "appraisal not performed"
+        },
+        "duplicate_count": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "appraisal not performed"
+        }
+      }
+    },
+    {
+      "case_id": "post_dispatch_revoke",
+      "basis": "author_record",
+      "publisher_claim": "SUPPORTED",
+      "independent_live_reproduction": false,
+      "fields": {
+        "authority": {
+          "state": "measured",
+          "value": [
+            "0xe9f62e1db0e3abd8ff5c569ffca29a929e12ba66a633c8a13ede6ffc59a74870"
+          ],
+          "reason": null
+        },
+        "decision": {
+          "state": "measured",
+          "value": [
+            {
+              "status": "completed",
+              "response": "REVIEW_OK",
+              "executor": "harness:opencode:acp:sandbox",
+              "error": null,
+              "dispatch_decision": "ALLOW",
+              "next_dispatch_decision": "DENY",
+              "code": "DELEGATION_PROOF_DENIED"
+            }
+          ],
+          "reason": null
+        },
+        "dispatch": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "explicit dispatch event/time not in public trace"
+        },
+        "platform_observation": {
+          "state": "measured",
+          "value": [
+            {
+              "attempt": "post_dispatch_revoke",
+              "observation": {
+                "status": "completed",
+                "response": "REVIEW_OK",
+                "executor": "harness:opencode:acp:sandbox",
+                "error": null,
+                "dispatch_decision": "ALLOW",
+                "next_dispatch_decision": "DENY",
+                "code": "DELEGATION_PROOF_DENIED"
+              }
+            }
+          ],
+          "reason": null
+        },
+        "committed_effect": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "public trace has platform outcomes, not target-side committed effects"
+        },
+        "task_outcome": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "platform observations do not establish the target task result"
+        },
+        "receipt": {
+          "state": "measured",
+          "value": [
+            {
+              "attempt": "post_dispatch_revoke",
+              "receipt": {
+                "state": "measured",
+                "value": {
+                  "qHash": "0xcf365b8ba19fd9fd1d441abb8bbdd640f359e4eaac6b9339b622bef26f05a5de",
+                  "status": "verified",
+                  "visibility": "unlisted"
+                },
+                "reason": null
+              }
+            }
+          ],
+          "reason": null
+        },
+        "receipt_signature_material": {
+          "state": "measured",
+          "value": {
+            "file": "portable-proofs.json",
+            "sha256": "74ef851d4001a572d841bcfa27cfb1216dc2d5be063049196986d00c69b5e7cc"
+          },
+          "reason": null
+        },
+        "receipt_signature_verification": {
+          "state": "measured",
+          "value": {
+            "state": "measured",
+            "valid": true,
+            "qhash_set_bound": true,
+            "verdicts": [
+              {
+                "qHash": "0x714bec9581eba6003ffced14d8ea7bb67349217fb0335584da1b09c50bef086d",
+                "valid": true,
+                "signer": "0xA41494e1E5F9E5Eaf786961e6ef84cd1a3071Eec",
+                "errors": []
+              },
+              {
+                "qHash": "0x64f293e61b826e03bd1de6564fc2db8cec0f50390bafc8bdf162ec9961262fca",
+                "valid": true,
+                "signer": "0xA41494e1E5F9E5Eaf786961e6ef84cd1a3071Eec",
+                "errors": []
+              },
+              {
+                "qHash": "0xffdc0455b72732a8c6a31eb4e2861943b85dbc271fe2dfa8b18d0e85d2b33726",
+                "valid": true,
+                "signer": "0xA41494e1E5F9E5Eaf786961e6ef84cd1a3071Eec",
+                "errors": []
+              },
+              {
+                "qHash": "0x71804bd8ca81e1ccb691ce6bfd8422b884437b4390b9c289f09db19fc2309f3c",
+                "valid": true,
+                "signer": "0xA41494e1E5F9E5Eaf786961e6ef84cd1a3071Eec",
+                "errors": []
+              },
+              {
+                "qHash": "0x8a3e5ff89c8a86423bae61db96c9732f319a6f6cdb34f4bde560c90d25366c95",
+                "valid": true,
+                "signer": "0xA41494e1E5F9E5Eaf786961e6ef84cd1a3071Eec",
+                "errors": []
+              },
+              {
+                "qHash": "0xf1880cba0876acc2364e31892b261a47299c0a70177b61b32d465fcd1b61447a",
+                "valid": true,
+                "signer": "0xA41494e1E5F9E5Eaf786961e6ef84cd1a3071Eec",
+                "errors": []
+              },
+              {
+                "qHash": "0x1d987781eb519337fa9e62043831ee187340f6e589f217b16b99ed98be5acfbc",
+                "valid": true,
+                "signer": "0xA41494e1E5F9E5Eaf786961e6ef84cd1a3071Eec",
+                "errors": []
+              },
+              {
+                "qHash": "0x40b44805057d6ec3708debcb0b490b3087d8e7cb2e853c6a6f434c57ee8a430d",
+                "valid": true,
+                "signer": "0xA41494e1E5F9E5Eaf786961e6ef84cd1a3071Eec",
+                "errors": []
+              },
+              {
+                "qHash": "0xcf365b8ba19fd9fd1d441abb8bbdd640f359e4eaac6b9339b622bef26f05a5de",
+                "valid": true,
+                "signer": "0xA41494e1E5F9E5Eaf786961e6ef84cd1a3071Eec",
+                "errors": []
+              },
+              {
+                "qHash": "0x43a718f6ba869a91f37f685e65f32267192d2eb7b9a4a63c9acc9a41a64e10ab",
+                "valid": true,
+                "signer": "0xA41494e1E5F9E5Eaf786961e6ef84cd1a3071Eec",
+                "errors": []
+              },
+              {
+                "qHash": "0x05ef986ee3817a6fd56b327b1de3523ab7f65c11c4ff386d34c16f93d11c0045",
+                "valid": true,
+                "signer": "0xA41494e1E5F9E5Eaf786961e6ef84cd1a3071Eec",
+                "errors": []
+              }
+            ],
+            "scope": "historical EIP-191 receipt integrity; freshness not appraised"
+          },
+          "reason": null
+        },
+        "policy_digest": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "policy version is an identifier, not a canonical digest"
+        },
+        "revocation_latency_seconds": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "measurement/appraisal not performed"
+        },
+        "root_age_seconds": {
+          "state": "not_applicable",
+          "value": null,
+          "reason": "local authority-state path"
+        },
+        "useful_work_lost": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "measurement/appraisal not performed"
+        },
+        "action_digest": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not exposed by this public adapter input"
+        },
+        "target_identity": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not exposed by this public adapter input"
+        },
+        "original_deadline": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not exposed by this public adapter input"
+        },
+        "fallback_scope": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not exposed by this public adapter input"
+        },
+        "independent_effect_witness": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "appraisal not performed"
+        },
+        "retry_count": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "appraisal not performed"
+        },
+        "duplicate_count": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "appraisal not performed"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,112 @@
+{
+  "status": "completed_with_baseline_qualification",
+  "native_record": "revocation-trace-testnet-20261006T200321Z",
+  "schema": "mintid-trace-manifest/2",
+  "native_exit_code": 0,
+  "source": {
+    "revision": "b678e5cd6b5736e1795fd18d497fd8e501272dcd",
+    "public_tags": [
+      "public-v2026-10-07"
+    ],
+    "tracked_changes": false,
+    "services_revision_stated": null
+  },
+  "deployment_services": {
+    "verifier": {
+      "source_revision": "497509ebf0c3",
+      "release": "public-v2026-10-06.2",
+      "basis": "build-info"
+    },
+    "issuer": {
+      "source_revision": "497509ebf0c3",
+      "release": "public-v2026-10-06.2",
+      "basis": "build-info"
+    }
+  },
+  "consistency_and_observation_checks": {
+    "native_exit_code_zero": true,
+    "manifest_rebuild_matches_raw": true,
+    "all_record_file_hashes_match": true,
+    "client_source_pinned_and_clean": true,
+    "only_requested_remaining_paths": true,
+    "three_agent_path_records": true,
+    "first_denial_observed_every_agent_path": true,
+    "revoked_refresh_attribution_every_agent_path": true,
+    "first_denial_within_declared_observation_bound": true,
+    "unread_condition_and_root_not_inferred": true,
+    "policy_digest_matches": true
+  },
+  "all_consistency_and_observation_checks_passed": true,
+  "experimental_preconditions": {
+    "baselines": {
+      "agent_kill_switch": {
+        "accepted": true,
+        "reason_code": "accepted",
+        "utc": "2026-10-06T20:04:17.823Z"
+      },
+      "cascade_agent_1": {
+        "accepted": false,
+        "reason_code": "status_root_stale",
+        "utc": "2026-10-06T20:05:06.820Z"
+      },
+      "cascade_agent_2": {
+        "accepted": true,
+        "reason_code": "accepted",
+        "utc": "2026-10-06T20:05:16.917Z"
+      }
+    },
+    "all_baselines_accepted": false
+  },
+  "observations": [
+    {
+      "path": "kill_switch",
+      "agent": null,
+      "first_refused_seconds_after_t0": 8.4,
+      "last_accepted_seconds_after_t0": null,
+      "bound_seconds": 245,
+      "revoked_refresh_seconds_after_t0": 37.1,
+      "revoked_refresh_outcome": "credential_revoked",
+      "decision_condition": "not_recorded",
+      "authority_root_consulted_at_decision": "not_recorded",
+      "protected_side_effects": "not_measured"
+    },
+    {
+      "path": "cascade",
+      "agent": "cascade_agent_1",
+      "first_refused_seconds_after_t0": 66.8,
+      "last_accepted_seconds_after_t0": 56.6,
+      "bound_seconds": 395,
+      "revoked_refresh_seconds_after_t0": 150.1,
+      "revoked_refresh_outcome": "credential_revoked",
+      "decision_condition": "not_recorded",
+      "authority_root_consulted_at_decision": "not_recorded",
+      "protected_side_effects": "not_measured"
+    },
+    {
+      "path": "cascade",
+      "agent": "cascade_agent_2",
+      "first_refused_seconds_after_t0": 42.7,
+      "last_accepted_seconds_after_t0": 24.3,
+      "bound_seconds": 395,
+      "revoked_refresh_seconds_after_t0": 95.9,
+      "revoked_refresh_outcome": "credential_revoked",
+      "decision_condition": "not_recorded",
+      "authority_root_consulted_at_decision": "not_recorded",
+      "protected_side_effects": "not_measured"
+    }
+  ],
+  "qualification": "cascade_agent_1 baseline was refused status_root_stale before revocation; later forced proof was accepted after trigger. Native harness does not assert/retry its baseline. Do not report a clean full conformance PASS. Root rollover can cause first refusal before revoked witness refresh fails.",
+  "trust_scope": "Independent execution of unchanged upstream client against one-operator hosted testnet/verifier. Public RPC supplies anchor headers; no independent validator/chain anchor. Exact root/condition at hosted verifier decision not recorded, external protected side effects not measured.",
+  "controlled_unreachable_authority_test": "not_run",
+  "sensitive_material_pattern_check_found": false,
+  "files": {
+    "preflight-second.json": "4e41ec9699b2a3e30a0fec548347115f1c140e8375f1b9d5e3ad16e55565ae33",
+    "revocation-trace-testnet-20261006T200321Z.md": "b339a82972c83b2d98dafed6cf0840e8eda115e1780dd921165233c692a89397",
+    "postflight.json": "86915a475d57a73befa9856d38f6853c87ed2bd5c46c0cea00a3b5a1cdd4070c",
+    "revocation-trace-testnet-20261006T200321Z.jsonl": "e0618e6fca7322f7e8168ce48b6ebbe8fc9a5a7b8dfdf6bc3052544266fc9076",
+    "stdout.log": "962a3b45299e2310bdcc77a1ecbe28aeb93f037b9f1c3a90a62eb8288d081c37",
+    "revocation-trace-testnet-20261006T200321Z.manifest.json": "4f5fa6cce83f1122d597523ff91b1f7fa87534c9160c81014c45f915f3316e27",
+    "preflight.json": "f4b764829b14c4b8dace00c175bba0bfd760dd786f1ba865d2c731f2f59535b7",
+    "run-result.json": "8fa328a352eeefd40a127a9f75281b6409874c687654650d34ab7f70aa096329"
+  }
+}

@@ -1,0 +1,42 @@
+[     0.0s] source                             revision=b678e5cd6b5736e1795fd18d497fd8e501272dcd tracked_changes=False services_revision_stated=None
+[     0.5s] stack                              chain_id=mintid-testnet-2 issuer_id=3d2a9df3cc5cb853ba6a61bfc475cda119eb215c22aad7b2b4bcebc46399183b verifier_id=6f4c5d1becd3c47e56efcbfc950fc5d845eff
+[     0.6s] build                              
+[     0.6s] policy                             sha256=9f02f1c77044017c9b411a7d069cbc4fd5311087fc09c91e4cfd1ec5e29c3577
+[     2.2s] verifier_status                    when=before observed_unix=1791317002 substrate=ok chain_height=89004 root_epoch=6284 root_height=88998 root_age_seconds=29 fresh=True max_root_age_sec
+[     3.2s] kyc_session                        principal=principal1 driver=sandbox hint=sandbox:approved:g3 outcome=approved grade=3
+[     4.0s] identity_credential                principal=principal1 credential=6229a024fea3…
+[    18.3s] kyc_session                        principal=principal2 driver=sandbox hint=sandbox:approved:g3 outcome=approved grade=3
+[    27.7s] agents_minted                      count=5
+[    40.0s] wait                               what=a finalized root committing the agents and their scope seconds=12.1
+[    49.3s] wait                               what=every agent usable seconds=9.3
+[    50.1s] parameters                         A=180 H=30 K=5 G=60 cascade_spread_beats=8
+[    56.4s] decision               kill_switch agent=agent_kill_switch attempt=baseline session_id=465fd655589c31952ba125bb8400c74b accepted=True reason_code=accepted presented_root=2d10c58381f9b74
+[    62.3s] trigger                kill_switch action=self_revoke → privacy relay receipt=pending recorded_height=89023 recorded_utc=2026-10-06T20:04:20.518Z request_utc=2026-10-06T20:04:18.786Z re
+[    67.5s] decision               kill_switch agent=agent_kill_switch attempt=forced session_id=3d68c34cadd06ca480c8985553dd7c87 accepted=False reason_code=status_root_stale presented_root=2d10c58
+[    72.8s] decision               kill_switch agent=agent_kill_switch attempt=forced_confirm session_id=9e5c5b46a67c8f6326d9d933957e8e9c accepted=False reason_code=status_root_stale presented_root
+[    72.8s] ring_at_denial         kill_switch agent=agent_kill_switch
+[    96.1s] holder_refresh         kill_switch agent=agent_kill_switch outcome=credential_revoked note=an honest client stops presenting here
+[    97.8s] path_done              kill_switch 
+[   105.4s] decision               cascade     agent=cascade_agent_1 attempt=baseline session_id=c90d37e615ae922ab4b05226478589ab accepted=False reason_code=status_root_stale presented_root=dd141ec
+[   115.5s] decision               cascade     agent=cascade_agent_2 attempt=baseline session_id=fe8a99a259400a8307b84cfec589e2bf accepted=True reason_code=accepted presented_root=9c7f255baa4bf89c9
+[   116.0s] trigger                cascade     action=POST /v1/credentials/{principal}/revoke http=200 status=revoked request_utc=2026-10-06T20:05:17.035Z response_utc=2026-10-06T20:05:17.173Z resp
+[   138.0s] decision               cascade     agent=cascade_agent_1 attempt=forced session_id=70cd3ab0dc6dda2baa198158acd51934 accepted=True reason_code=accepted presented_root=9a20b72edb2104517c5
+[   146.9s] decision               cascade     agent=cascade_agent_2 attempt=forced session_id=78e601d5fabca2396e46c1fae6eb8501 accepted=True reason_code=accepted presented_root=9a20b72edb2104517c5
+[   156.0s] decision               cascade     agent=cascade_agent_1 attempt=forced session_id=d773cb8e6366afbf148355186bbf5f03 accepted=True reason_code=accepted presented_root=9a20b72edb2104517c5
+[   165.2s] decision               cascade     agent=cascade_agent_2 attempt=forced session_id=eab182f0e859c9b9a7f386e6810fadf3 accepted=False reason_code=status_root_stale presented_root=9a20b72ed
+[   169.9s] decision               cascade     agent=cascade_agent_2 attempt=forced_confirm session_id=fe31ae10913db0c0a44490d105aed5eb accepted=False reason_code=status_root_stale presented_root=9
+[   169.9s] ring_at_denial         cascade     agent=cascade_agent_2
+[   179.2s] decision               cascade     agent=cascade_agent_1 attempt=forced session_id=01f51947d4cde3f0832ebf70cbdacf3e accepted=True reason_code=accepted presented_root=b6a163d5e8a0edf501b
+[   189.4s] decision               cascade     agent=cascade_agent_1 attempt=forced session_id=be02017f1cd76cb4172e2fe1a1e5ddd1 accepted=False reason_code=status_root_stale presented_root=b6a163d5e
+[   193.7s] decision               cascade     agent=cascade_agent_1 attempt=forced_confirm session_id=86f53523b2c4d28174fe95bbf7f33dc0 accepted=False reason_code=status_root_stale presented_root=b
+[   193.7s] ring_at_denial         cascade     agent=cascade_agent_1
+[   218.5s] holder_refresh         cascade     agent=cascade_agent_2 outcome=credential_revoked note=an honest client stops presenting here
+[   272.7s] holder_refresh         cascade     agent=cascade_agent_1 outcome=credential_revoked note=an honest client stops presenting here
+[   275.0s] path_done              cascade     
+[   275.1s] verifier_status                    when=after observed_unix=1791317276 substrate=ok chain_height=89098 root_epoch=6293 root_height=89087 root_age_seconds=33 fresh=True max_root_age_seco
+[   275.1s] decision_log                       source=not read (operator only: MINTID_VERIFIER_CONSOLE_PASSWORD) lines_read=0
+[   275.1s] summary                            
+
+trace: /home/ubuntu/worktrees/aaif-mintid-run-20261006/results-retry-remaining/revocation-trace-testnet-20261006T200321Z.jsonl
+summary: /home/ubuntu/worktrees/aaif-mintid-run-20261006/results-retry-remaining/revocation-trace-testnet-20261006T200321Z.md
+manifest: /home/ubuntu/worktrees/aaif-mintid-run-20261006/results-retry-remaining/revocation-trace-testnet-20261006T200321Z.manifest.json

@@ -1,0 +1,1342 @@
+{
+  "implementation": "MintID",
+  "run_id": "revocation-trace-local-20261005T094532Z",
+  "integrity": "PASS",
+  "evidence_custody": {
+    "producer": "MintID author/operator",
+    "public_artifact": "operator trace and summary",
+    "appraiser": "Alakris evidence runner",
+    "independent_target_observer": false
+  },
+  "record_revision": {
+    "revision": "fda00c06c34189637fc1aad5ba5f44bbdb9879c0",
+    "public_tags": [
+      "public-v2026-10-05.5"
+    ],
+    "tracked_changes": false,
+    "services_revision_stated": "fda00c06c341"
+  },
+  "deployment": {
+    "target": "local",
+    "chain_id": "mintid-anchor-local",
+    "issuer_id": "860bc22e30e395a8d212ba40b242977113d4cf9a4466c766d9f8be270a8a606f",
+    "verifier_id": "fe70f0d05c0ca3c586279dcddccfbde1f6c23bc7b3913645802e1271ef759acb",
+    "kyc_provider": "simulated",
+    "endpoints": {
+      "issuer_url": "http://127.0.0.1:8472",
+      "verifier_url": "http://127.0.0.1:8471",
+      "rpc": "http://127.0.0.1:26657",
+      "relay": "http://127.0.0.1:8479"
+    },
+    "build": {
+      "issuer_revision": "bc172b91b6295b73",
+      "verifier": {
+        "engine_pin": "proof-core 0.4.0",
+        "sdk_version": "0.2.0",
+        "spec_revision": "SPEC-1 v3.2",
+        "state_vectors_version": "mintid-proofvector-1/h2",
+        "state_vectors_sha256": "36d36f371b3b4b0a1db995a4a1fb46f352ed5f5aacc28df5ca10c2a31d0ea495",
+        "conformance_suite_version": "1.0.0"
+      }
+    },
+    "parameters": {
+      "A": 180,
+      "H": 30,
+      "K": 5,
+      "G": 60,
+      "cascade_spread_beats": 8
+    },
+    "max_root_age_seconds": 180,
+    "heartbeat_seconds": 30,
+    "max_height_lag": 100
+  },
+  "checks": [
+    {
+      "file": "revocation-trace-local-20261005T094532Z.jsonl",
+      "expected": "06b5f1e88b39890dc62bacb8ce5c1234c69b942a909bdcc4993ba1073789a0b7",
+      "actual": "06b5f1e88b39890dc62bacb8ce5c1234c69b942a909bdcc4993ba1073789a0b7",
+      "match": true
+    },
+    {
+      "file": "revocation-trace-local-20261005T094532Z.md",
+      "expected": "849acd8efa87931f5f68ea5e7e8ed2967acea711d57aff5b9fefaa587bc1e18f",
+      "actual": "849acd8efa87931f5f68ea5e7e8ed2967acea711d57aff5b9fefaa587bc1e18f",
+      "match": true
+    }
+  ],
+  "cases": [
+    {
+      "case_id": "binding_veto",
+      "basis": "author_record",
+      "independent_live_reproduction": false,
+      "fields": {
+        "dispatch": {
+          "state": "not_applicable",
+          "value": null,
+          "reason": "MintID has no executor"
+        },
+        "committed_effect": {
+          "state": "not_applicable",
+          "value": null,
+          "reason": "relying-party boundary"
+        },
+        "task_outcome": {
+          "state": "not_applicable",
+          "value": null,
+          "reason": "relying-party task outcome is outside MintID"
+        },
+        "receipt": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not present in the public adapter input"
+        },
+        "receipt_signature_verification": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "measurement/appraisal not performed"
+        },
+        "policy_digest": {
+          "state": "measured",
+          "value": "bf1b0c281001d1c998d4d54ec33d260f1cb0734b7cd0a99836bd2d42853f9323",
+          "reason": null
+        },
+        "authority": {
+          "state": "measured",
+          "value": [
+            {
+              "claim": "human_backed",
+              "value": true
+            },
+            {
+              "claim": "pairwise_pseudonym",
+              "value": "fe70f0d05c0ca3c586279dcddccfbde1f6c23bc7b3913645802e1271ef759acb"
+            },
+            {
+              "claim": "assurance_grade",
+              "operator": ">=",
+              "value": "A2"
+            },
+            {
+              "claim": "counterparty_includes",
+              "value": "eip155:8453:0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"
+            },
+            {
+              "claim": "delegated_scope_includes",
+              "value": "payments.initiate"
+            },
+            {
+              "claim": "category_in",
+              "value": "mcc:5812"
+            },
+            {
+              "claim": "geo_in",
+              "value": "iso3166-1:ES"
+            },
+            {
+              "claim": "transaction_limit",
+              "operator": ">=",
+              "value": "5000000 USDC"
+            },
+            {
+              "claim": "key_custody_class",
+              "operator": ">=",
+              "value": "tpm"
+            },
+            {
+              "claim": "unexpired",
+              "value": true
+            },
+            {
+              "claim": "credential_active",
+              "value": true
+            }
+          ],
+          "reason": null
+        },
+        "full_delegated_scope": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "privacy-preserving predicate disclosure"
+        },
+        "useful_work_lost": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "measurement/appraisal not performed"
+        },
+        "decision": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "no published observation for this case in this record"
+        },
+        "evidence_identity": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not present in the public adapter input"
+        },
+        "revocation_latency_seconds": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "measurement/appraisal not performed"
+        },
+        "root_age_seconds": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "measurement/appraisal not performed"
+        },
+        "action_digest": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not exposed by this public adapter input"
+        },
+        "target_identity": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not exposed by this public adapter input"
+        },
+        "original_deadline": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not exposed by this public adapter input"
+        },
+        "fallback_scope": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not exposed by this public adapter input"
+        },
+        "independent_effect_witness": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "appraisal not performed"
+        },
+        "retry_count": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "appraisal not performed"
+        },
+        "duplicate_count": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "appraisal not performed"
+        }
+      }
+    },
+    {
+      "case_id": "revoked_stale",
+      "basis": "author_record",
+      "independent_live_reproduction": false,
+      "fields": {
+        "dispatch": {
+          "state": "not_applicable",
+          "value": null,
+          "reason": "MintID has no executor"
+        },
+        "committed_effect": {
+          "state": "not_applicable",
+          "value": null,
+          "reason": "relying-party boundary"
+        },
+        "task_outcome": {
+          "state": "not_applicable",
+          "value": null,
+          "reason": "relying-party task outcome is outside MintID"
+        },
+        "receipt": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not present in the public adapter input"
+        },
+        "receipt_signature_verification": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "measurement/appraisal not performed"
+        },
+        "policy_digest": {
+          "state": "measured",
+          "value": "bf1b0c281001d1c998d4d54ec33d260f1cb0734b7cd0a99836bd2d42853f9323",
+          "reason": null
+        },
+        "authority": {
+          "state": "measured",
+          "value": [
+            {
+              "claim": "human_backed",
+              "value": true
+            },
+            {
+              "claim": "pairwise_pseudonym",
+              "value": "fe70f0d05c0ca3c586279dcddccfbde1f6c23bc7b3913645802e1271ef759acb"
+            },
+            {
+              "claim": "assurance_grade",
+              "operator": ">=",
+              "value": "A2"
+            },
+            {
+              "claim": "counterparty_includes",
+              "value": "eip155:8453:0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"
+            },
+            {
+              "claim": "delegated_scope_includes",
+              "value": "payments.initiate"
+            },
+            {
+              "claim": "category_in",
+              "value": "mcc:5812"
+            },
+            {
+              "claim": "geo_in",
+              "value": "iso3166-1:ES"
+            },
+            {
+              "claim": "transaction_limit",
+              "operator": ">=",
+              "value": "5000000 USDC"
+            },
+            {
+              "claim": "key_custody_class",
+              "operator": ">=",
+              "value": "tpm"
+            },
+            {
+              "claim": "unexpired",
+              "value": true
+            },
+            {
+              "claim": "credential_active",
+              "value": true
+            }
+          ],
+          "reason": null
+        },
+        "full_delegated_scope": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "privacy-preserving predicate disclosure"
+        },
+        "useful_work_lost": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "measurement/appraisal not performed"
+        },
+        "decision": {
+          "state": "measured",
+          "value": [
+            {
+              "path": "issuer",
+              "t0_unix": 1791193554.810805,
+              "t0_definition": "the issuer's removal of the agent (revoke response)",
+              "bound_seconds": 185,
+              "bound_formula": "t0 + A + K",
+              "last_accepted": {
+                "utc": "2026-10-05T09:46:23.179Z",
+                "seconds_after_t0": 28.4,
+                "session_id": "cc21ec5d9e356e42e0b8001a37053733",
+                "accepted": true,
+                "reason_code": "accepted",
+                "chain_height_after": 107561,
+                "decision_log": {
+                  "condition": 9,
+                  "root_epoch": 7233,
+                  "root_height": 107546,
+                  "root_age_seconds": 34
+                }
+              },
+              "first_refused": {
+                "utc": "2026-10-05T09:46:26.309Z",
+                "seconds_after_t0": 31.5,
+                "session_id": "706b1cb30bed3ef32045cefa6c16822d",
+                "accepted": false,
+                "reason_code": "status_root_stale",
+                "chain_height_after": 107563,
+                "decision_log": {
+                  "condition": 5,
+                  "root_epoch": 7234,
+                  "root_height": 107561,
+                  "root_age_seconds": 7
+                }
+              },
+              "root_at_denial": {
+                "status_epoch": 7234,
+                "finalized_height": 107561,
+                "generated_at_unix": 1791193579,
+                "finalized_at_utc": null,
+                "emergency": false
+              },
+              "root_carrying_revocation": {
+                "status_epoch": 7234,
+                "finalized_height": 107561,
+                "generated_at_unix": 1791193579,
+                "finalized_at_utc": "2026-10-05T09:46:19.248Z",
+                "emergency": false
+              },
+              "refresh_refused_seconds_after_t0": 0.9,
+              "control_never_revoked": {
+                "last_accepted": {
+                  "utc": "2026-10-05T09:46:22.289Z",
+                  "seconds_after_t0": 27.5,
+                  "session_id": "d1146c1001b983765f9169359a0611ab",
+                  "accepted": true,
+                  "reason_code": "accepted",
+                  "chain_height_after": 107561,
+                  "decision_log": {
+                    "condition": 9,
+                    "root_epoch": 7233,
+                    "root_height": 107546,
+                    "root_age_seconds": 33
+                  }
+                },
+                "first_refused": {
+                  "utc": "2026-10-05T09:46:25.509Z",
+                  "seconds_after_t0": 30.7,
+                  "session_id": "78dc83f64f81a29d631607aa153be56f",
+                  "accepted": false,
+                  "reason_code": "status_root_stale",
+                  "chain_height_after": 107563,
+                  "decision_log": {
+                    "condition": 5,
+                    "root_epoch": 7234,
+                    "root_height": 107561,
+                    "root_age_seconds": 6
+                  }
+                },
+                "after_refresh": {
+                  "utc": "2026-10-05T09:46:29.557Z",
+                  "seconds_after_t0": 34.7,
+                  "session_id": "7187b00fe04137fc06fa8cd17ca3cca2",
+                  "accepted": true,
+                  "reason_code": "accepted",
+                  "chain_height_after": 107565,
+                  "decision_log": {
+                    "condition": 9,
+                    "root_epoch": 7234,
+                    "root_height": 107561,
+                    "root_age_seconds": 10
+                  }
+                }
+              },
+              "attribution": {
+                "revoked": {
+                  "agent": "agent_issuer",
+                  "refresh": {
+                    "observation": "refused",
+                    "outcome": "credential_revoked",
+                    "utc": "2026-10-05T09:45:55.734Z",
+                    "seconds_after_t0": 0.9
+                  }
+                },
+                "control": {
+                  "agent": "sibling_control",
+                  "refused": {
+                    "utc": "2026-10-05T09:46:25.509Z",
+                    "seconds_after_t0": 30.7,
+                    "session_id": "78dc83f64f81a29d631607aa153be56f",
+                    "accepted": false,
+                    "reason_code": "status_root_stale",
+                    "chain_height_after": 107563,
+                    "decision_log": {
+                      "condition": 5,
+                      "root_epoch": 7234,
+                      "root_height": 107561,
+                      "root_age_seconds": 6
+                    }
+                  },
+                  "refresh": {
+                    "observation": "not_recorded",
+                    "outcome": null,
+                    "utc": null,
+                    "seconds_after_t0": null
+                  },
+                  "after_refresh": {
+                    "utc": "2026-10-05T09:46:29.557Z",
+                    "seconds_after_t0": 34.7,
+                    "session_id": "7187b00fe04137fc06fa8cd17ca3cca2",
+                    "accepted": true,
+                    "reason_code": "accepted",
+                    "chain_height_after": 107565,
+                    "decision_log": {
+                      "condition": 9,
+                      "root_epoch": 7234,
+                      "root_height": 107561,
+                      "root_age_seconds": 10
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "path": "kill_switch",
+              "t0_unix": 1791193595.354082,
+              "t0_definition": "the recording of the nullifier on chain (block time of the relay's tx)",
+              "bound_seconds": 245,
+              "bound_formula": "t0 + G + A + K",
+              "last_accepted": {
+                "utc": "2026-10-05T09:46:51.219Z",
+                "seconds_after_t0": 15.9,
+                "session_id": "6dfdfb8418c7441ed2c5dc4cad119195",
+                "accepted": true,
+                "reason_code": "accepted",
+                "chain_height_after": 107575,
+                "decision_log": {
+                  "condition": 9,
+                  "root_epoch": 7234,
+                  "root_height": 107561,
+                  "root_age_seconds": 32
+                }
+              },
+              "first_refused": {
+                "utc": "2026-10-05T09:46:53.570Z",
+                "seconds_after_t0": 18.2,
+                "session_id": "17eaf301171f7159c8a4c7e91c61be19",
+                "accepted": false,
+                "reason_code": "status_root_stale",
+                "chain_height_after": 107577,
+                "decision_log": {
+                  "condition": 5,
+                  "root_epoch": 7235,
+                  "root_height": 107576,
+                  "root_age_seconds": 4
+                }
+              },
+              "root_at_denial": {
+                "status_epoch": 7235,
+                "finalized_height": 107576,
+                "generated_at_unix": 1791193609,
+                "finalized_at_utc": null,
+                "emergency": false
+              },
+              "root_carrying_revocation": {
+                "status_epoch": 7235,
+                "finalized_height": 107576,
+                "generated_at_unix": 1791193609,
+                "finalized_at_utc": "2026-10-05T09:46:49.477Z",
+                "emergency": false
+              },
+              "refresh_refused_seconds_after_t0": 14.9,
+              "attribution": {
+                "revoked": {
+                  "agent": "agent_kill_switch",
+                  "refresh": {
+                    "observation": "refused",
+                    "outcome": "credential_revoked",
+                    "utc": "2026-10-05T09:46:50.287Z",
+                    "seconds_after_t0": 14.9
+                  }
+                },
+                "control": null
+              }
+            },
+            {
+              "path": "cascade",
+              "agent": "cascade_agent_1",
+              "t0_unix": 1791193639,
+              "t0_definition": "generation of the trigger root (the root carrying the principal's revocation)",
+              "bound_seconds": 395,
+              "bound_formula": "t_T + 7\u00b7H + A + K",
+              "last_accepted": {
+                "utc": "2026-10-05T09:47:48.638Z",
+                "seconds_after_t0": 29.6,
+                "session_id": "0b578e806872637918a3b0f3736de753",
+                "accepted": true,
+                "reason_code": "accepted",
+                "chain_height_after": 107604,
+                "decision_log": {
+                  "condition": 9,
+                  "root_epoch": 7236,
+                  "root_height": 107591,
+                  "root_age_seconds": 29
+                }
+              },
+              "first_refused": {
+                "utc": "2026-10-05T09:47:52.455Z",
+                "seconds_after_t0": 33.5,
+                "session_id": "987db88ae833085635d7c5ceb5db4c95",
+                "accepted": false,
+                "reason_code": "status_root_stale",
+                "chain_height_after": 107606,
+                "decision_log": {
+                  "condition": 5,
+                  "root_epoch": 7237,
+                  "root_height": 107605,
+                  "root_age_seconds": 3
+                }
+              },
+              "root_at_denial": {
+                "status_epoch": 7237,
+                "finalized_height": 107605,
+                "generated_at_unix": 1791193669,
+                "finalized_at_utc": null,
+                "emergency": false
+              },
+              "root_carrying_revocation": {
+                "status_epoch": 7236,
+                "finalized_height": 107591,
+                "generated_at_unix": 1791193639,
+                "finalized_at_utc": "2026-10-05T09:47:19.780Z",
+                "emergency": false
+              },
+              "refresh_refused_seconds_after_t0": null,
+              "attribution": {
+                "revoked": {
+                  "agent": "cascade_agent_1",
+                  "refresh": {
+                    "observation": "not_recorded",
+                    "outcome": null,
+                    "utc": null,
+                    "seconds_after_t0": null
+                  }
+                },
+                "control": null
+              }
+            },
+            {
+              "path": "cascade",
+              "agent": "cascade_agent_2",
+              "t0_unix": 1791193639,
+              "t0_definition": "generation of the trigger root (the root carrying the principal's revocation)",
+              "bound_seconds": 395,
+              "bound_formula": "t_T + 7\u00b7H + A + K",
+              "last_accepted": {
+                "utc": "2026-10-05T09:48:50.423Z",
+                "seconds_after_t0": 91.4,
+                "session_id": "81604606da730913ba0ae43944df4ce2",
+                "accepted": true,
+                "reason_code": "accepted",
+                "chain_height_after": 107634,
+                "decision_log": {
+                  "condition": 9,
+                  "root_epoch": 7238,
+                  "root_height": 107620,
+                  "root_age_seconds": 31
+                }
+              },
+              "first_refused": {
+                "utc": "2026-10-05T09:48:53.297Z",
+                "seconds_after_t0": 94.3,
+                "session_id": "380f75688aa7bc8443eab86ebfbe2dc5",
+                "accepted": false,
+                "reason_code": "status_root_stale",
+                "chain_height_after": 107636,
+                "decision_log": {
+                  "condition": 5,
+                  "root_epoch": 7239,
+                  "root_height": 107635,
+                  "root_age_seconds": 4
+                }
+              },
+              "root_at_denial": {
+                "status_epoch": 7239,
+                "finalized_height": 107635,
+                "generated_at_unix": 1791193729,
+                "finalized_at_utc": null,
+                "emergency": false
+              },
+              "root_carrying_revocation": {
+                "status_epoch": 7236,
+                "finalized_height": 107591,
+                "generated_at_unix": 1791193639,
+                "finalized_at_utc": "2026-10-05T09:47:19.780Z",
+                "emergency": false
+              },
+              "refresh_refused_seconds_after_t0": null,
+              "attribution": {
+                "revoked": {
+                  "agent": "cascade_agent_2",
+                  "refresh": {
+                    "observation": "not_recorded",
+                    "outcome": null,
+                    "utc": null,
+                    "seconds_after_t0": null
+                  }
+                },
+                "control": null
+              }
+            },
+            {
+              "path": "emergency",
+              "t0_unix": 1791193737.107734,
+              "t0_definition": "the emergency root's submission (the issuer's answer; the bound itself is block-based)",
+              "bound_seconds": 0,
+              "bound_formula": "the emergency root's finalisation: measured in blocks below",
+              "last_accepted": {
+                "utc": "2026-10-05T09:48:59.963Z",
+                "seconds_after_t0": 2.9,
+                "session_id": "da1386095fb9832bb15064d149d93225",
+                "accepted": true,
+                "reason_code": "accepted",
+                "chain_height_after": 107639,
+                "decision_log": {
+                  "condition": 9,
+                  "root_epoch": 7239,
+                  "root_height": 107635,
+                  "root_age_seconds": 10
+                }
+              },
+              "first_refused": {
+                "utc": "2026-10-05T09:49:01.816Z",
+                "seconds_after_t0": 4.7,
+                "session_id": "c685de82d2ca6e31ae3e52cd4fc0f17a",
+                "accepted": false,
+                "reason_code": "status_root_stale",
+                "chain_height_after": 107640,
+                "decision_log": {
+                  "condition": 5,
+                  "root_epoch": 7240,
+                  "root_height": 107639,
+                  "root_age_seconds": 4
+                }
+              },
+              "root_at_denial": {
+                "status_epoch": 7240,
+                "finalized_height": 107639,
+                "generated_at_unix": 1791193737,
+                "finalized_at_utc": null,
+                "emergency": true
+              },
+              "root_carrying_revocation": {
+                "status_epoch": 7240,
+                "finalized_height": 107639,
+                "generated_at_unix": 1791193737,
+                "finalized_at_utc": "2026-10-05T09:48:56.560Z",
+                "emergency": true
+              },
+              "refresh_refused_seconds_after_t0": 0.0,
+              "attribution": {
+                "revoked": {
+                  "agent": "agent_emergency",
+                  "refresh": {
+                    "observation": "refused",
+                    "outcome": "credential_revoked",
+                    "utc": "2026-10-05T09:48:57.112Z",
+                    "seconds_after_t0": 0.0
+                  }
+                },
+                "control": null
+              }
+            }
+          ],
+          "reason": null
+        },
+        "first_refusal_observations": {
+          "state": "measured",
+          "value": [
+            {
+              "path": "issuer",
+              "agent": null,
+              "observed_seconds_after_t0": {
+                "state": "measured",
+                "value": 31.5,
+                "reason": null
+              },
+              "seconds_bound": {
+                "state": "measured",
+                "value": 185,
+                "reason": null
+              },
+              "bound_unit": "seconds",
+              "bound_formula": "t0 + A + K",
+              "t0_definition": "the issuer's removal of the agent (revoke response)",
+              "block_observations": {
+                "state": "measured",
+                "value": {
+                  "refusal_chain_height_after": 107563,
+                  "root_carrying_revocation_finalized_height": 107561
+                },
+                "reason": null
+              }
+            },
+            {
+              "path": "kill_switch",
+              "agent": null,
+              "observed_seconds_after_t0": {
+                "state": "measured",
+                "value": 18.2,
+                "reason": null
+              },
+              "seconds_bound": {
+                "state": "measured",
+                "value": 245,
+                "reason": null
+              },
+              "bound_unit": "seconds",
+              "bound_formula": "t0 + G + A + K",
+              "t0_definition": "the recording of the nullifier on chain (block time of the relay's tx)",
+              "block_observations": {
+                "state": "measured",
+                "value": {
+                  "refusal_chain_height_after": 107577,
+                  "root_carrying_revocation_finalized_height": 107576
+                },
+                "reason": null
+              }
+            },
+            {
+              "path": "cascade",
+              "agent": "cascade_agent_1",
+              "observed_seconds_after_t0": {
+                "state": "measured",
+                "value": 33.5,
+                "reason": null
+              },
+              "seconds_bound": {
+                "state": "measured",
+                "value": 395,
+                "reason": null
+              },
+              "bound_unit": "seconds",
+              "bound_formula": "t_T + 7\u00b7H + A + K",
+              "t0_definition": "generation of the trigger root (the root carrying the principal's revocation)",
+              "block_observations": {
+                "state": "measured",
+                "value": {
+                  "refusal_chain_height_after": 107606,
+                  "root_carrying_revocation_finalized_height": 107591
+                },
+                "reason": null
+              }
+            },
+            {
+              "path": "cascade",
+              "agent": "cascade_agent_2",
+              "observed_seconds_after_t0": {
+                "state": "measured",
+                "value": 94.3,
+                "reason": null
+              },
+              "seconds_bound": {
+                "state": "measured",
+                "value": 395,
+                "reason": null
+              },
+              "bound_unit": "seconds",
+              "bound_formula": "t_T + 7\u00b7H + A + K",
+              "t0_definition": "generation of the trigger root (the root carrying the principal's revocation)",
+              "block_observations": {
+                "state": "measured",
+                "value": {
+                  "refusal_chain_height_after": 107636,
+                  "root_carrying_revocation_finalized_height": 107591
+                },
+                "reason": null
+              }
+            },
+            {
+              "path": "emergency",
+              "agent": null,
+              "observed_seconds_after_t0": {
+                "state": "measured",
+                "value": 4.7,
+                "reason": null
+              },
+              "seconds_bound": {
+                "state": "not_applicable",
+                "value": null,
+                "reason": "publisher defines this emergency bound in blocks"
+              },
+              "bound_unit": "blocks",
+              "bound_formula": "the emergency root's finalisation: measured in blocks below",
+              "t0_definition": "the emergency root's submission (the issuer's answer; the bound itself is block-based)",
+              "block_observations": {
+                "state": "measured",
+                "value": {
+                  "refusal_chain_height_after": 107640,
+                  "root_carrying_revocation_finalized_height": 107639
+                },
+                "reason": null
+              }
+            }
+          ],
+          "reason": null
+        },
+        "revocation_latency_seconds": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "first presentation refusal is not an end-to-end revocation latency or general SLA"
+        },
+        "evidence_identity": {
+          "state": "measured",
+          "value": [
+            {
+              "path": "issuer",
+              "epoch": 7234,
+              "height": 107561
+            },
+            {
+              "path": "kill_switch",
+              "epoch": 7235,
+              "height": 107576
+            },
+            {
+              "path": "cascade",
+              "epoch": 7237,
+              "height": 107605
+            },
+            {
+              "path": "cascade",
+              "epoch": 7239,
+              "height": 107635
+            },
+            {
+              "path": "emergency",
+              "epoch": 7240,
+              "height": 107639
+            }
+          ],
+          "reason": null
+        },
+        "root_age_seconds": {
+          "state": "measured",
+          "value": [
+            {
+              "path": "issuer",
+              "seconds": 7
+            },
+            {
+              "path": "kill_switch",
+              "seconds": 4
+            },
+            {
+              "path": "cascade",
+              "seconds": 3
+            },
+            {
+              "path": "cascade",
+              "seconds": 4
+            },
+            {
+              "path": "emergency",
+              "seconds": 4
+            }
+          ],
+          "reason": null
+        },
+        "freshness_limit_seconds": {
+          "state": "measured",
+          "value": 180,
+          "reason": null
+        },
+        "action_digest": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not exposed by this public adapter input"
+        },
+        "target_identity": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not exposed by this public adapter input"
+        },
+        "original_deadline": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not exposed by this public adapter input"
+        },
+        "fallback_scope": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not exposed by this public adapter input"
+        },
+        "independent_effect_witness": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "appraisal not performed"
+        },
+        "retry_count": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "appraisal not performed"
+        },
+        "duplicate_count": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "appraisal not performed"
+        }
+      }
+    },
+    {
+      "case_id": "unreachable",
+      "basis": "author_record",
+      "independent_live_reproduction": false,
+      "fields": {
+        "dispatch": {
+          "state": "not_applicable",
+          "value": null,
+          "reason": "MintID has no executor"
+        },
+        "committed_effect": {
+          "state": "not_applicable",
+          "value": null,
+          "reason": "relying-party boundary"
+        },
+        "task_outcome": {
+          "state": "not_applicable",
+          "value": null,
+          "reason": "relying-party task outcome is outside MintID"
+        },
+        "receipt": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not present in the public adapter input"
+        },
+        "receipt_signature_verification": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "measurement/appraisal not performed"
+        },
+        "policy_digest": {
+          "state": "measured",
+          "value": "bf1b0c281001d1c998d4d54ec33d260f1cb0734b7cd0a99836bd2d42853f9323",
+          "reason": null
+        },
+        "authority": {
+          "state": "measured",
+          "value": [
+            {
+              "claim": "human_backed",
+              "value": true
+            },
+            {
+              "claim": "pairwise_pseudonym",
+              "value": "fe70f0d05c0ca3c586279dcddccfbde1f6c23bc7b3913645802e1271ef759acb"
+            },
+            {
+              "claim": "assurance_grade",
+              "operator": ">=",
+              "value": "A2"
+            },
+            {
+              "claim": "counterparty_includes",
+              "value": "eip155:8453:0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"
+            },
+            {
+              "claim": "delegated_scope_includes",
+              "value": "payments.initiate"
+            },
+            {
+              "claim": "category_in",
+              "value": "mcc:5812"
+            },
+            {
+              "claim": "geo_in",
+              "value": "iso3166-1:ES"
+            },
+            {
+              "claim": "transaction_limit",
+              "operator": ">=",
+              "value": "5000000 USDC"
+            },
+            {
+              "claim": "key_custody_class",
+              "operator": ">=",
+              "value": "tpm"
+            },
+            {
+              "claim": "unexpired",
+              "value": true
+            },
+            {
+              "claim": "credential_active",
+              "value": true
+            }
+          ],
+          "reason": null
+        },
+        "full_delegated_scope": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "privacy-preserving predicate disclosure"
+        },
+        "useful_work_lost": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "measurement/appraisal not performed"
+        },
+        "decision": {
+          "state": "measured",
+          "value": [
+            {
+              "path": "unreachable",
+              "t0_unix": 1791193745.2510989,
+              "t0_definition": "the node paused: the verifier cannot prove chain state",
+              "restored_seconds_after_t0": 40.2,
+              "decided_during_outage": [
+                {
+                  "utc": "2026-10-05T09:49:15.309Z",
+                  "seconds_after_t0": 10.1,
+                  "session_id": "f3e499163e3b385ddb1cffc8d096c9be",
+                  "accepted": false,
+                  "reason_code": "state_unproven",
+                  "chain_height_after": null,
+                  "decision_log": {
+                    "condition": 1,
+                    "root_epoch": null,
+                    "root_height": null,
+                    "root_age_seconds": null
+                  }
+                }
+              ],
+              "challenges_during_outage": [
+                {
+                  "utc": "2026-10-05T09:49:25.329Z",
+                  "seconds_after_t0": 20.1,
+                  "http": 503,
+                  "error": "state_unavailable"
+                },
+                {
+                  "utc": "2026-10-05T09:49:35.354Z",
+                  "seconds_after_t0": 30.1,
+                  "http": 503,
+                  "error": "state_unavailable"
+                },
+                {
+                  "utc": "2026-10-05T09:49:45.379Z",
+                  "seconds_after_t0": 40.1,
+                  "http": 503,
+                  "error": "state_unavailable"
+                }
+              ],
+              "first_accepted_after_restore": {
+                "utc": "2026-10-05T09:49:46.356Z",
+                "seconds_after_t0": 0.9,
+                "session_id": "4a1af395d38e1b1243e994ebb346b48e",
+                "accepted": true,
+                "reason_code": "accepted",
+                "chain_height_after": 107643,
+                "decision_log": {
+                  "condition": 9,
+                  "root_epoch": 7240,
+                  "root_height": 107639,
+                  "root_age_seconds": 49
+                }
+              }
+            }
+          ],
+          "reason": null
+        },
+        "recovery": {
+          "state": "measured",
+          "value": [
+            {
+              "utc": "2026-10-05T09:49:46.356Z",
+              "seconds_after_t0": 0.9,
+              "session_id": "4a1af395d38e1b1243e994ebb346b48e",
+              "accepted": true,
+              "reason_code": "accepted",
+              "chain_height_after": 107643,
+              "decision_log": {
+                "condition": 9,
+                "root_epoch": 7240,
+                "root_height": 107639,
+                "root_age_seconds": 49
+              }
+            }
+          ],
+          "reason": null
+        },
+        "evidence_identity": {
+          "state": "not_applicable",
+          "value": null,
+          "reason": "no root behind unavailable-state refusal"
+        },
+        "revocation_latency_seconds": {
+          "state": "not_applicable",
+          "value": null,
+          "reason": "no equivalent on this implementation path"
+        },
+        "root_age_seconds": {
+          "state": "not_applicable",
+          "value": null,
+          "reason": "no decision root on disconnected path"
+        },
+        "action_digest": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not exposed by this public adapter input"
+        },
+        "target_identity": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not exposed by this public adapter input"
+        },
+        "original_deadline": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not exposed by this public adapter input"
+        },
+        "fallback_scope": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not exposed by this public adapter input"
+        },
+        "independent_effect_witness": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "appraisal not performed"
+        },
+        "retry_count": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "appraisal not performed"
+        },
+        "duplicate_count": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "appraisal not performed"
+        }
+      }
+    },
+    {
+      "case_id": "post_dispatch_revoke",
+      "basis": "author_record",
+      "independent_live_reproduction": false,
+      "fields": {
+        "dispatch": {
+          "state": "not_applicable",
+          "value": null,
+          "reason": "MintID has no executor"
+        },
+        "committed_effect": {
+          "state": "not_applicable",
+          "value": null,
+          "reason": "relying-party boundary"
+        },
+        "task_outcome": {
+          "state": "not_applicable",
+          "value": null,
+          "reason": "relying-party task outcome is outside MintID"
+        },
+        "receipt": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not present in the public adapter input"
+        },
+        "receipt_signature_verification": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "measurement/appraisal not performed"
+        },
+        "policy_digest": {
+          "state": "measured",
+          "value": "bf1b0c281001d1c998d4d54ec33d260f1cb0734b7cd0a99836bd2d42853f9323",
+          "reason": null
+        },
+        "authority": {
+          "state": "measured",
+          "value": [
+            {
+              "claim": "human_backed",
+              "value": true
+            },
+            {
+              "claim": "pairwise_pseudonym",
+              "value": "fe70f0d05c0ca3c586279dcddccfbde1f6c23bc7b3913645802e1271ef759acb"
+            },
+            {
+              "claim": "assurance_grade",
+              "operator": ">=",
+              "value": "A2"
+            },
+            {
+              "claim": "counterparty_includes",
+              "value": "eip155:8453:0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"
+            },
+            {
+              "claim": "delegated_scope_includes",
+              "value": "payments.initiate"
+            },
+            {
+              "claim": "category_in",
+              "value": "mcc:5812"
+            },
+            {
+              "claim": "geo_in",
+              "value": "iso3166-1:ES"
+            },
+            {
+              "claim": "transaction_limit",
+              "operator": ">=",
+              "value": "5000000 USDC"
+            },
+            {
+              "claim": "key_custody_class",
+              "operator": ">=",
+              "value": "tpm"
+            },
+            {
+              "claim": "unexpired",
+              "value": true
+            },
+            {
+              "claim": "credential_active",
+              "value": true
+            }
+          ],
+          "reason": null
+        },
+        "full_delegated_scope": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "privacy-preserving predicate disclosure"
+        },
+        "useful_work_lost": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "measurement/appraisal not performed"
+        },
+        "decision": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "no published observation for this case in this record"
+        },
+        "evidence_identity": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not present in the public adapter input"
+        },
+        "revocation_latency_seconds": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "measurement/appraisal not performed"
+        },
+        "root_age_seconds": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "measurement/appraisal not performed"
+        },
+        "action_digest": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not exposed by this public adapter input"
+        },
+        "target_identity": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not exposed by this public adapter input"
+        },
+        "original_deadline": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not exposed by this public adapter input"
+        },
+        "fallback_scope": {
+          "state": "not_emitted",
+          "value": null,
+          "reason": "not exposed by this public adapter input"
+        },
+        "independent_effect_witness": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "appraisal not performed"
+        },
+        "retry_count": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "appraisal not performed"
+        },
+        "duplicate_count": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "appraisal not performed"
+        }
+      }
+    }
+  ]
+}

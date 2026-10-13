@@ -1,0 +1,1 @@
+portable_envelope.py is vendored unchanged from probityai/agent-evidence-observer PR #88, commit 2b54ee47491f0d1a86c7d9f47d434f8f02622043, interop/authority-unreachable-2026-10-03/portable_envelope.py. Apache-2.0; license retained in PORTABLE_ENVELOPE_LICENSE. Historical EIP-191 receipt integrity only; no current freshness or universal CAIP-380 conformance.
