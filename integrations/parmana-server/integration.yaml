@@ -26,4 +26,4 @@ tested_against:
   agentrust-trace: "0.11.0"
   # The fixtures are one run of Parmana's refund evaluation at commit
   # ac22a7ed594b4a527504ce43841595c1a62f3046 (fixtures/report.json). The checks use the
-  # published parmana 1.5.0 SDK (Apache-2.0) for Execution Trust Records.
+  # published parmana 1.6.0 SDK (Apache-2.0) for Execution Trust Records.

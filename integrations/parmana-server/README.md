@@ -38,11 +38,19 @@ Both keys were generated for the run and do not chain to any trusted issuer.
 
 ## Running it
 
+From this directory, in a clean environment, with released packages only (`parmana` 1.6.0 and `agentrust-trace`
+0.11.0 from PyPI):
+
 ```
+python -m venv .venv && . .venv/bin/activate
 pip install -e ".[test]"
 python examples/emit_references.py
+git diff --exit-code fixtures/references.json
 python -m pytest tests
 ```
+
+Expected: `emit_references.py` prints one line per reference (four in all), `git diff` prints nothing because the
+output matches the committed `references.json` byte for byte, and pytest reports 18 passed.
 
 `emit_references.py` checks every record's signature, then writes `fixtures/references.json`. The tests check every
 signature, that a changed amount, outcome or approval limit no longer verifies, that the approval in 01 is the one the

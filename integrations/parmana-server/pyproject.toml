@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Parmana authorization decisions as TRACE authorized-intent and approval-outcome references"
 requires-python = ">=3.11"
 license = "Apache-2.0"
-dependencies = ["parmana==1.5.0", "rfc8785", "cryptography"]
+dependencies = ["parmana==1.6.0", "rfc8785", "cryptography"]
 
 [project.optional-dependencies]
 test = ["pytest", "agentrust-trace==0.11.0"]
