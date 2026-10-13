@@ -61,6 +61,14 @@ To regenerate the fixtures, run `npm run evaluate:agentrust-refund` in a checkou
 `evaluations/agentrust-refund/fixtures/` and `evaluations/agentrust-refund/report.json` here, then run
 `emit_references.py`. A new run makes new keys and identifiers, so it replaces every file.
 
+## Verified-tier review
+
+Done. A maintainer reproduced the steps above on 2026-10-13 in a clean environment against released
+`parmana==1.6.0` and `agentrust-trace==0.11.0`: `emit_references.py` printed the four references, the regenerated
+`fixtures/references.json` matched the committed file byte for byte, and pytest reported 18 passed. This entry is
+`tier: verified` for the offline fixture path only; the connector results are mocks. Re-verification happens at every
+release that touches this integration.
+
 ## What this does not claim
 
 - **No downstream effect.** The connector in the run is a mock, in process. The Trust Record's execution entry records
