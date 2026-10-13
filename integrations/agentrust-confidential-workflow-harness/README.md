@@ -61,8 +61,11 @@ earlier observation in that lineage. A later observation cannot overwrite an
 earlier boundary outcome. Unsupported mutation names are rejected before the
 adapter runs. Response verification points to the actual
 main-lineage execution observation, including timeout and no-dispatch outcomes.
-Retry observations record authorization from the shared synthetic inputs in
-their own lineage; they do not replace the main path's evidence.
+Retry observations apply authorization, version admission, revocation, replay
+and execution-evidence checks to the shared synthetic inputs in their own
+lineage. Their receipt and admission observations precede execution. A retry
+after a main-lineage timeout models a separately observed synthetic attempt;
+its result does not replace the main path's evidence. No live retry is run.
 
 The public result must never contain protected payloads, secrets, device IDs or
 low-entropy digests of protected material.
