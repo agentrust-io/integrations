@@ -44,6 +44,14 @@ Four cases: binding veto; revoked authority with stale evidence and valid contro
 
 The evidence basis is separate (`author_record`, `synthetic_fixture`; actual native execution provenance is kept separately). A publisher's `SUPPORTED` result is retained as `publisher_claim`; it is not promoted to independent validation. Reference fixtures exercise a synthetic counter, not an Alakris production deployment or a completed matched scientific experiment.
 
+### Independent execution reporting boundary
+
+`independent_live_reproduction` is a reporting assertion supplied by the report producer. `validate_report()` checks required case fields and evidence states and rejects a true flag unless `basis="independent_run"`; it does not authenticate the producer, resolve native execution artifacts, or verify their binding to the reported cases. A report with `basis="independent_run"` and a true flag can therefore pass this validator without supporting execution provenance. Validator acceptance alone does not establish independent execution.
+
+The current MintID and Proofable adapters emit `basis="author_record"` and `independent_live_reproduction=false`. Offline signature appraisal of their published bytes does not change that execution status. Consumers must not infer an independently reproduced run from the flag or from successful case validation alone.
+
+An evidence-backed execution status would require a separately reviewed provenance-appraisal layer that binds operator identity and independence, exact implementation revision, invocation and environment, and retained artifacts to the reported cases, with positive and negative controls. This package does not implement that layer. Its schema and verification policy remain future work for maintainer review; the reporting flag cannot substitute for it.
+
 MintID root epoch/height, root age, freshness limits, t0 definition, observed refusal and bound remain distinct. First-refusal observations are single-run measurements, not an end-to-end revocation SLA. Emergency bounds remain block-based and are never interpreted as a zero-second deadline. Original source revision, published evidence commit and live service build are separate pins. Old `public-v2026-10-05.5` outage evidence is not a result for the current `public-v2026-10-06.2` verifier. Refusal of a presentation does not establish that an external executor suppresses an effect. A post-dispatch accepted decision is not retroactively revoked by MintID; the relying party owns that boundary.
 
 The synthetic executor rechecks expiry and revocation at commit, binds issued dispatch tokens to the action digest, refuses a veto, and deduplicates committed effects. Late recovery cannot reopen the original expired request. Its valid-control test must commit exactly once.

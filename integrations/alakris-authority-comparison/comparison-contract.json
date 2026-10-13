@@ -38,7 +38,7 @@
     "retry_count",
     "duplicate_count"
   ],
-  "native_provenance": "Recorded separately; an importer flag cannot establish independent execution",
+  "native_provenance": "Recorded separately; an importer flag cannot establish independent execution. independent_live_reproduction is a producer-supplied reporting assertion: validate_report checks basis consistency but does not verify execution provenance. Acceptance is not evidence of independent execution; a separately reviewed provenance-appraisal layer is not implemented here.",
   "fixture_source_policy": "Fetch immutable vendor URLs, keep original bytes and declared hashes",
   "record_scope": "Case-level appraisal only; per-attempt native records and the upstream authority/effect/terminal contract remain separate."
 }
