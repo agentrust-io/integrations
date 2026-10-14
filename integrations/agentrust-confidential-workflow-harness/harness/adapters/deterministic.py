@@ -63,17 +63,18 @@ class DeterministicWorkflowAdapter:
                     or _meets_version_floor(i.get("software_version", "1.0.0")))
 
         def execution_outcome(admitted):
-            missing = i.get("missing_execution_evidence", False)
-            if missing:
-                return (Outcome.ESTABLISHED
-                        if scenario.mutation == "assume_missing_execution_success"
-                        else Outcome.UNAVAILABLE)
             revoked = (i.get("revoked_before_use", False)
                        and scenario.mutation != "disable_revocation_gate")
             replayed = (i.get("replay", False)
                         and scenario.mutation != "disable_replay_gate")
-            executed = auth_ok and admitted and not replayed and not revoked
-            return Outcome.ESTABLISHED if executed else Outcome.CONTRADICTED
+            # Known guard refusal takes precedence over missing execution evidence.
+            if not auth_ok or not admitted or replayed or revoked:
+                return Outcome.CONTRADICTED
+            if i.get("missing_execution_evidence", False):
+                return (Outcome.ESTABLISHED
+                        if scenario.mutation == "assume_missing_execution_success"
+                        else Outcome.UNAVAILABLE)
+            return Outcome.ESTABLISHED
 
         if i.get("dispatch", True):
             emit(Boundary.DELIVERY, Outcome.ESTABLISHED, "dispatch", "authorization-check")
@@ -110,6 +111,7 @@ class DeterministicWorkflowAdapter:
                 "authorization-check",
                 lineage="retry-1",
             )
+            # Scripted transport observations do not assert authorized delivery.
             emit(
                 Boundary.DELIVERY,
                 Outcome.ESTABLISHED,

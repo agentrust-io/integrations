@@ -231,6 +231,39 @@ class HarnessTests(unittest.TestCase):
                                  if o.lineage == "retry-1" and o.source == execution.caused_by)
                 self.assertEqual(admission.boundary, Boundary.ADMISSION)
 
+    def test_synthetic_retry_transport_does_not_permit_invalid_authorization(self):
+        for changes in ({"workload": "workload-X"}, {"key_id": "key-X"},
+                        {"policy_version": "p0"}):
+            with self.subTest(inputs=changes):
+                result = self.runner.run(scenario(inputs={
+                    **scenario().inputs, **changes, "retry_lineage": True,
+                }))
+                retry = {o.source: o for o in result.observations if o.lineage == "retry-1"}
+                self.assertEqual(retry["retry-dispatch"].outcome, Outcome.ESTABLISHED)
+                self.assertEqual(retry["retry-receipt"].outcome, Outcome.ESTABLISHED)
+                self.assertEqual(retry["authorization-check"].outcome, Outcome.CONTRADICTED)
+                self.assertEqual(retry["retry-execution"].outcome, Outcome.CONTRADICTED)
+                self.assertEqual(result.status, "refused")
+                self.assertEqual(result.boundary_outcomes["release/disclosure"], "contradicted")
+
+    def test_missing_execution_evidence_cannot_mask_known_guard_refusal(self):
+        cases = ({"workload": "workload-X"}, {"key_id": "key-X"},
+                 {"policy_version": "p0"}, {"software_version": "0.9.0"},
+                 {"revoked_before_use": True}, {"replay": True})
+        for changes in cases:
+            for mutation in (None, "assume_missing_execution_success"):
+                with self.subTest(inputs=changes, mutation=mutation):
+                    result = self.runner.run(scenario(inputs={
+                        **scenario().inputs, **changes, "retry_lineage": True,
+                        "missing_execution_evidence": True,
+                    }, mutation=mutation))
+                    executions = [o for o in result.observations
+                                  if o.boundary == Boundary.EXECUTION]
+                    self.assertEqual({o.lineage for o in executions}, {"main", "retry-1"})
+                    self.assertTrue(all(o.outcome == Outcome.CONTRADICTED for o in executions))
+                    self.assertEqual(result.boundary_outcomes["execution"], "contradicted")
+                    self.assertEqual(result.status, "refused")
+
     def test_response_parent_is_actual_main_execution(self):
         for overrides, expected_source in (
             ({}, "execution-check"),
