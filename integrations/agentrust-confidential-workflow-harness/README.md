@@ -74,6 +74,10 @@ rejection (authorization, version admission, revocation or replay) produces
 `execution=contradicted` even if execution evidence is also missing. Missing
 evidence produces `unavailable` only when these guards allow execution. The
 explicit missing-evidence mutation cannot override a known guard refusal.
+The synthetic execution outcome evaluates the permitted-execution claim;
+`contradicted` does not prove that no physical side effects occurred. Retry
+attempts are independently scripted even when the main input has `dispatch=False`;
+their observations do not establish real-world dispatch.
 
 The public result must never contain protected payloads, secrets, device IDs or
 low-entropy digests of protected material.

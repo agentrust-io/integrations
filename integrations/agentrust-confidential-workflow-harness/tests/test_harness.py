@@ -264,6 +264,30 @@ class HarnessTests(unittest.TestCase):
                     self.assertEqual(result.boundary_outcomes["execution"], "contradicted")
                     self.assertEqual(result.status, "refused")
 
+    def test_retry_rejection_dominates_missing_evidence(self):
+        cases = (
+            ({"workload": "workload-X"}, "disable_authorization_gate"),
+            ({"key_id": "key-X"}, "disable_authorization_gate"),
+            ({"policy_version": "p0"}, "disable_authorization_gate"),
+            ({"software_version": "0.9.0"}, "disable_version_gate"),
+            ({"revoked_before_use": True}, "disable_revocation_gate"),
+            ({"replay": True}, "disable_replay_gate"),
+        )
+        for invalid, mutation in cases:
+            with self.subTest(invalid=invalid):
+                inputs = {**scenario().inputs, **invalid,
+                          "retry_lineage": True, "missing_execution_evidence": True}
+                result = self.runner.run(scenario(inputs=inputs))
+                retry = next(o for o in result.observations
+                             if o.lineage == "retry-1" and o.boundary == Boundary.EXECUTION)
+                self.assertEqual(retry.outcome, Outcome.CONTRADICTED)
+                self.assertEqual(result.status, "refused")
+                weakened = self.runner.run(scenario(inputs=inputs, mutation=mutation))
+                retry_weakened = next(o for o in weakened.observations
+                                      if o.lineage == "retry-1" and o.boundary == Boundary.EXECUTION)
+                self.assertEqual(retry_weakened.outcome, Outcome.UNAVAILABLE)
+                self.assertEqual(weakened.status, "unknown")
+
     def test_response_parent_is_actual_main_execution(self):
         for overrides, expected_source in (
             ({}, "execution-check"),
