@@ -10,6 +10,12 @@ updates:
       - dependency-name: "*"
         update-types:
           - "version-update:semver-major"
+    # One PR per week for minor and patch updates. Majors still arrive
+    # one at a time so a breaking change is reviewed on its own.
+    groups:
+      python:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -17,10 +23,12 @@ updates:
       interval: "weekly"
       day: "monday"
     open-pull-requests-limit: 5
+    # One PR per week for minor and patch updates. Majors still arrive
+    # one at a time so a breaking change is reviewed on its own.
     groups:
-      codeql-action:
-        patterns:
-          - "github/codeql-action*"
+      actions:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
 
   - package-ecosystem: "pip"
     directories:
@@ -34,6 +42,12 @@ updates:
       interval: "weekly"
       day: "monday"
     open-pull-requests-limit: 10
+    # One PR per week for minor and patch updates. Majors still arrive
+    # one at a time so a breaking change is reviewed on its own.
+    groups:
+      python-packages:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
 
   - package-ecosystem: "pip"
     directories:
@@ -47,3 +61,9 @@ updates:
       - dependency-name: "*"
         update-types:
           - "version-update:semver-major"
+    # One PR per week for minor and patch updates. Majors still arrive
+    # one at a time so a breaking change is reviewed on its own.
+    groups:
+      python-examples:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
