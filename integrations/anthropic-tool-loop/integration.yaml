@@ -1,0 +1,22 @@
+name: Anthropic SDK tool loop
+vendor: Disruptive Beverages
+integrates_with:
+  - trace
+description: >-
+  Records a Claude tool loop built on the anthropic Python SDK as AgenTrust
+  Telemetry events, metadata only, and signs one log-import TRACE record per run.
+maintainer:
+  github: cosmo-lgtm
+repository: https://github.com/agentrust-io/integrations
+license: Apache-2.0
+tier: community
+marketplace:
+  category: Frameworks
+  mark: AN
+  keywords: [anthropic, claude, tool-use, telemetry, log-import]
+trace_roles:
+  - record-producer
+trace_conformance_level: 0
+tested_against:
+  agentrust-trace: "0.11.0"
+  agentrust-trace-tests: "0.6.2"
