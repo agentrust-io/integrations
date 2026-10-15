@@ -2,6 +2,8 @@
 
 Thank you for your interest in contributing to AgenTrust examples.
 
+AgenTrust is an independent open-source project. No company funds, owns or directs it; contributions are voluntary.
+
 ## Scope: what belongs here
 
 This directory carries first-party examples and flagship partner examples developed with the maintainers. Every line is reviewed and every claim in a README is verified against a real run before merge.

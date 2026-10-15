@@ -1,18 +1,13 @@
 # Sponsors
 
-AgenTrust Examples is an open-source project. Sponsors provide funding,
-engineering time, infrastructure, or other in-kind support. Sponsorship does
-not confer project ownership, governance authority, or control over technical
-decisions or example results.
+AgenTrust is an independent open-source project. No company funds, owns or directs it; contributions are voluntary.
 
-## Current sponsors
-
-### OPAQUE Systems
-
-Founding engineering and infrastructure sponsor, and contributor to the
-AgenTrust example ecosystem.
+OPAQUE Systems sponsored early development until October 2026.
 
 ## Recognition policy
+
+Sponsorship does not confer project ownership, governance authority, or control over technical
+decisions or example results.
 
 Sponsor recognition is separate from example authorship, partner provenance,
 and adoption. Vendor names and identities inside example manifests, policies,

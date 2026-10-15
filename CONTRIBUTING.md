@@ -4,6 +4,8 @@ This page explains how to add an integration, example or demo, and the rules
 every submission has to meet. You do not need an invitation: one directory per
 integration, one pull request per change.
 
+AgenTrust is an independent open-source project. No company funds, owns or directs it; contributions are voluntary.
+
 ## Examples and demos
 
 `examples/` contains first-party scenarios and invited partner examples. Maintainers review every line and verify each documented claim against a run before merge. See [the example contribution rules](examples/CONTRIBUTING.md). Vendor integrations belong under `integrations/` and retain the tier rules below.
