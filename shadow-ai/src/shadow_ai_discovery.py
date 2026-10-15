@@ -38,8 +38,8 @@ class DiscoveryEvent:
 @dataclass(frozen=True)
 class IdentityUnavailable:
     """
-    A tool-call record that could not be classified because it carries no usable
-    ``agent_id``. The rejected agent_id is not stored as an identity field: there
+    A tool-call record that could not be attributed to a usable ``agent_id``.
+    The rejected identity is not stored as an identity field: there
     is no agent_id or suggested_manifest_id. Other record fields (tool_name,
     timestamp) are copied as-is, without redaction.
     """
@@ -48,8 +48,8 @@ class IdentityUnavailable:
     location: int
     tool_name: str
     timestamp: str  # copied from the record without type validation; "" if absent
-    reason: str  # "missing" | "null" | "blank" | "non_string"
-    observed_type: str | None = None  # JSON type name, set only for "non_string"
+    reason: str  # scanner identity reasons, or the cMCP adapter's session reasons
+    observed_type: str | None = None  # JSON type name for non-string identity/session IDs
 
     def to_dict(self) -> dict[str, Any]:
         return {

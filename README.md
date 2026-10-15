@@ -126,7 +126,8 @@ select an `integrates_with` value from the current schema. See the note below.
 
 [Shadow AI Discovery](shadow-ai/) is also standalone tooling outside the index
 and Marketplace. It scans enriched records against an agent-to-tools registry;
-it has no direct cMCP adapter and does not read or write Agent Manifest records.
+its cMCP audit adapter requires operator-controlled source/session bindings. It
+does not read or write Agent Manifest records.
 
 All seven engines share [`agentrust-capture-core`](packages/agentrust-capture-core),
 which owns fingerprinting, comparison, baseline sealing and the report honesty rules.

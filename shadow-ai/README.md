@@ -1,9 +1,10 @@
 # Shadow AI Discovery
 
-Finds AI agents and tool use that nobody registered. It reads tool-call audit records (with agent IDs added) and compares them with a separate registry that lists each agent and the tools it is allowed to use, then reports agents that are not in the registry and tools an agent was never declared to use. It does not read cMCP output directly; see [Inputs and limitations](#inputs-and-limitations).
+Finds AI agents and tool use that nobody registered. It compares tool-call audit records with a separate registry that lists each agent and the tools it may use, then reports agents that are not in the registry and undeclared tool calls. The base scanner needs enriched records with agent IDs; the [cMCP adapter](#cmcp-adapter) can attribute cMCP audit records using explicit operator-controlled session bindings.
 
 This is standalone tooling, outside the integration index and Marketplace. It
-has no working cMCP or Agent Manifest adapter and claims neither integration.
+includes a cMCP audit adapter tested against the published 0.2.0 and 0.7.0 audit
+APIs. It has no Agent Manifest adapter and makes no gateway/TEE verification claim.
 The source moved from `integrations/shadow-ai/` to `shadow-ai/`; update local
 `PYTHONPATH` settings to `shadow-ai/src`. Run its tests with `nox -s shadow_ai`.
 
@@ -23,7 +24,7 @@ A tool-call record without a usable `agent_id` is never classified. The scanner 
 
 | Stack component | How |
 |---|---|
-| **cMCP** | Intended source of tool-call audit records, once they are enriched with a trustworthy agent identity. Not consumed directly today; see [Inputs and limitations](#inputs-and-limitations). |
+| **cMCP** | `CmcpAuditAdapter` consumes `AuditChain` / `SqliteAuditStore` JSON records using a separate trusted source/session-to-agent mapping. |
 | **Agent Manifest** | `suggested_manifest_id` is a naming hint for registering a discovered agent. The scanner does not read, write or validate Agent Manifest records. |
 
 ## Inputs and limitations
@@ -52,7 +53,7 @@ JSON objects, passed as a list or read from a JSONL file (one object per line):
 | `agent_id` | Required on tool-call records. Usable only if it is a string that is not empty or whitespace-only; used verbatim, never trimmed, lowercased or converted from another type. |
 | `timestamp` | Optional. Copied as-is into results, `""` if absent. Not parsed, validated or normalized, and its type is not checked at runtime: a non-string value is copied unchanged. |
 
-These are enriched records: whatever produces them must supply a trustworthy `agent_id`. cMCP v0.2.0 audit entries carry no `agent_id` and name their timestamp `timestamp_utc`, so they cannot be scanned directly. The scanner does not map `session_id` to an agent, does not read `timestamp_utc`, and does not infer identity from the tool catalog. Direct cMCP compatibility is not claimed until an adapter with a trustworthy session-to-agent mapping exists and is tested ([integrations#215](https://github.com/agentrust-io/integrations/issues/215)).
+These are enriched records: whatever produces them must supply a trustworthy `agent_id`. cMCP audit entries carry `session_id` instead of `agent_id` and name their timestamp `timestamp_utc`. `ShadowAIScanner` still does not map session identity or read `timestamp_utc`; use the separate adapter below for identity attribution. Neither class infers identity from a tool catalog. The adapter addresses the remaining identity-mapping work in [integrations#215](https://github.com/agentrust-io/integrations/issues/215).
 
 JSONL files are read with Python's default text encoding (`Path.read_text()`). Lines are split only on `\n`, `\r\n` and `\r`; blank lines are skipped but still counted, so reported line numbers are physical line numbers. A line that is not valid JSON raises `json.JSONDecodeError`, and a record that is not a JSON object raises `AttributeError`; both stop the scan, from every method.
 
@@ -74,6 +75,75 @@ if not report.complete:
     for item in report.unavailable:
         print(f"unclassified tool call at {item.location_kind} {item.location}: {item.reason}")
 ```
+
+## cMCP adapter
+
+`CmcpAuditAdapter` inherits the same four scan methods and result types. Supply
+bindings from an operator-controlled configuration or an authenticated session
+control plane. For example, after that control plane authenticates the agent and
+records the session ID returned by the selected gateway:
+
+```python
+from cmcp_shadow_ai import CmcpAuditAdapter, SessionAgentBinding
+
+source = "billing-gateway/boot-42"
+bindings = [
+    SessionAgentBinding(source, "session-id-from-that-gateway", "billing-agent"),
+]
+scanner = CmcpAuditAdapter(
+    "agents.json",
+    source_id=source,
+    trusted_bindings=bindings,
+)
+report = scanner.scan_audit_log_report("verified-billing-gateway-audit.jsonl")
+```
+
+The caller must establish that the audit stream belongs to that source and that
+the session belongs to the named agent. A successful constructor does not
+authenticate those assertions. The adapter does not authenticate a caller,
+verify an audit signature/chain, perform attestation or read a manifest. Do not
+build bindings from a tool catalog, an unverified manifest, audit fields, or an
+agent's own identity assertion. Keep the agent registry and bindings outside the
+audited agent's write access.
+
+`source_id` identifies the gateway and its session namespace/epoch. Use a new
+source ID if session IDs can be reused after a restart, reset or import. Keep
+each input stream within its selected source; a `source_id` inside a record
+cannot choose a binding. The adapter matches `(source_id, session_id)` exactly,
+without trimming, case folding or prefix matching. It snapshots the supplied
+bindings at construction and rejects duplicate source/session keys, including
+duplicates with the same agent, so an entry cannot overwrite another identity.
+
+For tool-call records, the adapter reports these additional unavailable reasons:
+
+| Reason | Meaning |
+|---|---|
+| `session_missing` | No `session_id` field |
+| `session_null` | Session ID is `null` |
+| `session_blank` | Session ID is empty or whitespace-only |
+| `session_non_string` | Session ID is not a string; `observed_type` reports its JSON type |
+| `session_unmapped` | No binding for the selected source and exact session ID |
+| `agent_conflict` | An extra `agent_id` in the record disagrees with the trusted binding |
+
+These diagnostics have no agent ID or suggested manifest ID. Reports retain
+valid findings and mark classification incomplete; strict list methods raise
+`IdentityUnavailableError`. A record-supplied agent ID is never a fallback for a
+missing binding. The adapter leaves input records unchanged and rejects a
+non-empty malformed tool name rather than treating it as a clean scan.
+
+Timestamp mapping remains separate from identity attribution: `timestamp` is
+copied with the existing scanner semantics, and `timestamp_utc` is not mapped or
+normalized. Findings from native cMCP records therefore have `timestamp=""`.
+Records with non-empty tool names include denied attempts; a finding does not
+establish that a tool executed or that an effect occurred.
+
+The tested contract is JSON serialization from the **published**
+`cmcp-runtime==0.2.0` and `cmcp-runtime==0.7.0` `AuditChain` and
+`SqliteAuditStore` APIs. Tests install those packages with `--no-deps` because
+these audit modules use the standard library. They exercise neither the full
+gateway dependency stack nor a live gateway, TEE or authenticated identity
+provider. Other releases are not claimed as tested. Genuine catalog/audit
+fixtures and their provenance are under [tests/fixtures](tests/fixtures/README.md).
 
 ## Methods
 
@@ -135,9 +205,16 @@ JSONL lines are now split only on line breaks. Previously a character such as U+
 
 ## Running tests
 
+From the repository root:
+
 ```bash
-python -m pytest tests/ -v
+nox -s shadow_ai shadow_ai_cmcp
 ```
+
+`shadow_ai` tests the dependency-free scanner and adapter; producer tests skip
+when cMCP is not installed. `shadow_ai_cmcp` runs the suite with each pinned
+published cMCP release, requiring the producer tests to run. GitHub Actions runs
+both releases on Python 3.11, 3.12 and 3.13.
 
 ## License
 
