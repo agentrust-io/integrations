@@ -3,3 +3,4 @@ __pycache__/
 .venv/
 audit.db
 trace-output/latest-*.json
+trace-output/presenter-*/
