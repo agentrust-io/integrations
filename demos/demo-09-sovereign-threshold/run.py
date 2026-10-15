@@ -20,6 +20,7 @@ from wcm import (
     manifest_identity,
     Ed25519Signer,
     KeyBrokerService,
+    ReleasePolicy,
     Share,
     SoftwareProvider,
     WeightCustodyManifest,
@@ -29,6 +30,21 @@ from wcm import (
 )
 
 sys.stdout.reconfigure(line_buffering=True)
+
+#: From WCM 0.29.0 the KBS refuses GPU and quote evidence it cannot verify.
+#: The software provider has nothing to verify, so this demo waives both
+#: explicitly, as demo-06 does. On 0.28.4 the field does not exist.
+_REQUIRES_VERIFICATION = "require_evidence_verification" in ReleasePolicy.model_fields
+
+
+def waive_mock_verification(doc: dict) -> dict:
+    if _REQUIRES_VERIFICATION:
+        policy = doc["release_policy"]
+        policy["require_evidence_verification"] = False
+        gpu = policy.get("required_gpu_measurement")
+        if gpu is not None:
+            gpu["require_cc_mode"] = False
+    return doc
 
 
 def rule(title: str) -> None:
@@ -117,7 +133,7 @@ def main() -> None:
     print("-> a lone shareholder, or a single forged attestation, gets nothing usable.")
 
     rule("3. Each shareholder releases its share only against attestation")
-    doc = build_manifest(sha256(b"<the sovereign model weights>"))
+    doc = waive_mock_verification(build_manifest(sha256(b"<the sovereign model weights>")))
     manifest = WeightCustodyManifest.model_validate(doc)
     manifest = manifest.with_signatures([
         Ed25519Signer(builder).sign(manifest.unsigned_dict(), role="builder", signer="frontier-labs"),
