@@ -111,3 +111,23 @@ never promote a lower class because its checks are green.
 | Unknown delivery | Indeterminate execution outcome after lost confirmation |
 | Mutation twin | Positive control paired with one deliberately weakened safety guard |
 | Independent verifier | Separately controlled party reproducing acceptance evidence |
+
+## Private lab live run and evidence export
+
+The operator supplies a local mode-0600 JSON config with SSH key **path**,
+issuer and holder private key **paths**, pinned public keys, permitted repo,
+and SSH hostname (never the private key contents). The following commands
+create a fresh occurrence and an offline packet in an operator-controlled
+private directory:
+
+```sh
+python run_remote_ca2a_live.py --config /private/client.json --evidence-out /private/new-evidence.json
+python run_remote_ca2a_matrix.py --config /private/client.json --output /private/new-matrix.json
+```
+
+The signed, non-sensitive example packet and verification instructions are
+available in [evidence/](evidence/). The public fixture intentionally excludes
+private keys, live SSH credentials, session challenge and raw authorization
+payloads; the reviewer must enroll the public key through a distinct trust
+channel. The exported packet is useful for *historical software signature
+verification*, not live session-MAC replay or hardware assurance.

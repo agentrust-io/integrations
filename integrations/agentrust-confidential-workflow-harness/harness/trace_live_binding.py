@@ -56,7 +56,8 @@ def sign_bundle(*, key, transaction_id: str, nonce: str,
 
 def verify_bundle(bundle: dict, *, public_key, transaction_id: str, nonce: str,
                   request_sha256: str, repo: str, execution: dict,
-                  trusted_issuer: str) -> str:
+                  trusted_issuer: str,
+                  max_age_seconds: int | None = 120) -> str:
     if not isinstance(bundle, dict) or set(bundle) != {"record","manifest","signature"}:
         raise ValueError("trace-bundle-format")
     record, manifest, signature = (
@@ -85,7 +86,7 @@ def verify_bundle(bundle: dict, *, public_key, transaction_id: str, nonce: str,
         raise ValueError("trace-manifest-signature-invalid") from exc
     # Pin the remote signing key: embedded cnf.jwk is NOT a trust root.
     verify_record(record, public_key, expected_nonce=nonce,
-                  max_age_seconds=120)
+                  max_age_seconds=max_age_seconds)
     if record.get("subject") != SUBJECT or record.get("runtime", {}).get("platform") != "software-only":
         raise ValueError("unexpected-trace-claim")
     return digest

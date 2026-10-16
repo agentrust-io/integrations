@@ -6,13 +6,13 @@ by ca2a-runtime 0.4.0. This remains software-only, same-operator evidence.
 """
 import hashlib
 import json
-import os
 import subprocess
 from dataclasses import dataclass
 
 from ca2a_runtime.attestation import VerifiedPeer
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from harness.trace_live_binding import verify_bundle
+from harness.replay_export import make_packet
 from ca2a_runtime.delegation import build_holder_proof
 from ca2a_runtime.delegation.credential import DelegationCredential
 from ca2a_runtime.response import PendingResponse, decode, encode
@@ -62,9 +62,12 @@ def ssh_sender(host: str, key_path: str, *, timeout=20):
 
 def run(*, transaction_id: str, nonce: str, repo: str, issuer_private,
         holder_private, peer_public_key: str, send,
-        permitted: bool = True, trace_public_key: str | None = None) -> LivePeerResult:
+        permitted: bool = True, trace_public_key: str | None = None,
+        evidence_sink=None) -> LivePeerResult:
     if not transaction_id or not nonce or not peer_public_key:
         return LivePeerResult("invalid-context", transaction_id)
+    if not trace_public_key:
+        return LivePeerResult("missing-trace-trust-anchor", transaction_id)
     gateway = MCPGateway(GovernancePolicy(
         allowed_tools=[CAPABILITY] if permitted else [], max_tool_calls=1))
     allowed, _ = gateway.intercept_tool_call("frequency-peer-origin",
@@ -134,6 +137,18 @@ def run(*, transaction_id: str, nonce: str, repo: str, issuer_private,
             except Exception:
                 return LivePeerResult("untrusted-trace-evidence", transaction_id,
                     verified.request_sha256, remote_ca2a_verified=True)
+        if evidence_sink is not None:
+            try:
+                evidence_sink(make_packet(
+                    transaction_id=transaction_id, nonce=nonce,
+                    request_sha256=verified.request_sha256,
+                    repo=repo, peer_public_key=peer_public_key,
+                    trusted_issuer=issuer_pub,
+                    trace_bundle=body["trace_bundle"], execution=execution))
+            except Exception:
+                return LivePeerResult("unavailable-evidence-export", transaction_id,
+                    verified.request_sha256, remote_ca2a_verified=True,
+                    trace_verified=True, trace_record_hash=trace_hash)
         return LivePeerResult("authenticated-remote-ca2a-software", transaction_id,
                               verified.request_sha256,
                               execution["start_receipt_hash"],

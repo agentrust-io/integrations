@@ -1,5 +1,4 @@
 """Adversarial published-cA2A client/server interoperability and replay tests."""
-import hashlib
 import json
 import tempfile
 import unittest
@@ -8,7 +7,6 @@ from pathlib import Path
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from ca2a_runtime.delegation import new_keypair
-from ca2a_runtime.response import encode
 
 from harness.remote_peer_client import run
 from harness.remote_peer_service import serve
@@ -47,7 +45,8 @@ class RemoteCA2ATests(unittest.TestCase):
         args = {"transaction_id": "transaction-1", "nonce": "0123456789abcdef",
                 "repo": "/home/ubuntu/src/integrations",
                 "issuer_private": self.issuer,"holder_private": self.holder,
-                "peer_public_key": self.peer_pub,"send": self.send}
+                "peer_public_key": self.peer_pub,"send": self.send,
+                "trace_public_key": self.trace.public_key().public_bytes_raw().hex()}
         args.update(kw)
         return run(**args)
 
@@ -129,3 +128,8 @@ class RemoteCA2ATests(unittest.TestCase):
         self.assertEqual(result.outcome,"untrusted-trace-evidence")
         self.assertTrue(result.remote_ca2a_verified)
         self.assertFalse(result.trace_verified)
+
+    def test_missing_trusted_trace_key_never_dispatches(self):
+        self.assertEqual(self.invoke(trace_public_key=None).outcome,
+                         "missing-trace-trust-anchor")
+        self.assertEqual(self.dispatch_count,0)

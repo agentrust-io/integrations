@@ -40,14 +40,18 @@ def _digest(value):
 def _consume(path: Path, occurrence: str) -> bool:
     """Atomic persistent replay refusal; failure is denial, not cache reset."""
     path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
-    with sqlite3.connect(path, timeout=5) as db:
+    db = sqlite3.connect(path, timeout=5)
+    try:
         db.execute("CREATE TABLE IF NOT EXISTS spent (id TEXT PRIMARY KEY, seen INTEGER NOT NULL)")
         try:
             db.execute("INSERT INTO spent (id,seen) VALUES (?,?)", (occurrence, int(time.time())))
             db.commit()
             return True
         except sqlite3.IntegrityError:
+            db.rollback()
             return False
+    finally:
+        db.close()
 
 
 def _receipt_ok(receipt, action, session):
