@@ -45,3 +45,20 @@ this remains **not cA2A peer delivery or independently enrolled verification**.
 Neither cryptographic authentication of the remote Conduit job receipt nor a
 TRACE-standard external attestation has been added. Do not mark full Issue #199
 acceptance complete based on these tests.
+
+### Composed software live control (October 16)
+
+The origin verified an ephemeral signed cA2A 0.4.0 delegation and
+holder-possession proof, then the published cMCP 0.7.0 tool gate, then invoked
+the existing VPS Conduit restricted `inspect` job over SSH. Results:
+
+- Origin transaction: `composed-14243eb31122473282b779da9daf0551`
+- Software Conduit start receipt SHA-256: `425dd606ea4a887424d18be6981abd4a72a5aced60d96d1a207b3e8bb845d4d6`
+- Software Conduit final receipt SHA-256: `a37c5933fb472416fa8fb0cd9d5b7d2cafd5ad15ba5733fbe882eec93a8df92b`
+- Result: `observed-live-conduit-inspect`
+- cA2A peer transport: **false**; remote TRACE verification: **false**
+
+The issuer and holder keys were generated and trusted on the origin during this
+experiment. No separate remote peer enrolled or verified them. This is genuine
+remote Conduit software execution after origin-side preflight, not a claim of
+end-to-end remotely enforced cA2A delegation or TRACE acceptance.
