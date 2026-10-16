@@ -14,6 +14,8 @@ import time
 from pathlib import Path
 
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+from harness.trace_live_binding import sign_bundle
 from ca2a_runtime.challenge import issue_challenge
 from ca2a_runtime.delegation.credential import DelegationCredential
 from ca2a_runtime.delegation import HolderProof
@@ -111,7 +113,8 @@ def execute_job(agent: str, repo: str) -> dict:
 
 def serve(request: dict, *, channel_private, challenge_secret: bytes,
           trusted_issuer: str, replay_db: Path,
-          agent: str = "", allowed_repo: str = REPO, dispatch=None) -> dict:
+          agent: str = "", allowed_repo: str = REPO, dispatch=None,
+          trace_private=None) -> dict:
     if not isinstance(request, dict) or request.get("schema") != "frequency-ca2a-peer/1":
         return {"status": 400, "error": "invalid-request"}
     public = channel_private.public_key().public_bytes_raw().hex()
@@ -162,6 +165,12 @@ def serve(request: dict, *, channel_private, challenge_secret: bytes,
                 "nonce": message["nonce"], "repo": allowed_repo,
                 "capability": CAPABILITY, "execution": observed,
                 "assurance": "software-only"}
+        if trace_private is not None:
+            body["trace_bundle"] = sign_bundle(
+                key=trace_private, transaction_id=message["transaction_id"],
+                nonce=message["nonce"], request_sha256=producer.request_sha256,
+                execution=observed, repo=allowed_repo,
+                trusted_issuer=trusted_issuer)
         return {"status": 200, "envelope": producer.finish(200, body)}
     except Exception:
         return {"status": 503, "envelope": producer.finish(503, {
@@ -174,6 +183,8 @@ def main():
     private = X25519PrivateKey.from_private_bytes(
         bytes.fromhex(Path(cfg["private_key_path"]).read_text().strip()))
     secret = bytes.fromhex(Path(cfg["challenge_secret_path"]).read_text().strip())
+    trace_private = Ed25519PrivateKey.from_private_bytes(
+        bytes.fromhex(Path(cfg["trace_private_key_path"]).read_text().strip()))
     raw = sys.stdin.buffer.read(MAX_REQUEST + 1)
     if len(raw) > MAX_REQUEST:
         raise SystemExit(1)
@@ -181,7 +192,7 @@ def main():
                      challenge_secret=secret,
                      trusted_issuer=cfg["trusted_issuer"],
                      replay_db=Path(cfg["replay_db"]), agent=cfg["agent"],
-                     allowed_repo=cfg["allowed_repo"])
+                     allowed_repo=cfg["allowed_repo"], trace_private=trace_private)
     sys.stdout.buffer.write(_canon(response) + b"\n")
 
 

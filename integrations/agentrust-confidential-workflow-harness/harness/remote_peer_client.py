@@ -11,6 +11,8 @@ import subprocess
 from dataclasses import dataclass
 
 from ca2a_runtime.attestation import VerifiedPeer
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+from harness.trace_live_binding import verify_bundle
 from ca2a_runtime.delegation import build_holder_proof
 from ca2a_runtime.delegation.credential import DelegationCredential
 from ca2a_runtime.response import PendingResponse, decode, encode
@@ -31,6 +33,8 @@ class LivePeerResult:
     evidence_class: str = "live-software-two-host-same-operator"
     peer_assurance: str = "none"
     remote_ca2a_verified: bool = False
+    trace_verified: bool = False
+    trace_record_hash: str | None = None
 
 
 def ssh_sender(host: str, key_path: str, *, timeout=20):
@@ -58,7 +62,7 @@ def ssh_sender(host: str, key_path: str, *, timeout=20):
 
 def run(*, transaction_id: str, nonce: str, repo: str, issuer_private,
         holder_private, peer_public_key: str, send,
-        permitted: bool = True) -> LivePeerResult:
+        permitted: bool = True, trace_public_key: str | None = None) -> LivePeerResult:
     if not transaction_id or not nonce or not peer_public_key:
         return LivePeerResult("invalid-context", transaction_id)
     gateway = MCPGateway(GovernancePolicy(
@@ -116,11 +120,27 @@ def run(*, transaction_id: str, nonce: str, repo: str, issuer_private,
                 not isinstance(execution.get("finish_receipt_hash"), str)):
             return LivePeerResult("refused-output-binding", transaction_id,
                                   verified.request_sha256)
+        trace_hash = None
+        if trace_public_key is not None:
+            try:
+                trace_hash = verify_bundle(
+                    body.get("trace_bundle"),
+                    public_key=Ed25519PublicKey.from_public_bytes(
+                        bytes.fromhex(trace_public_key)),
+                    transaction_id=transaction_id, nonce=nonce,
+                    request_sha256=verified.request_sha256,
+                    repo=repo, execution=execution,
+                    trusted_issuer=issuer_pub)
+            except Exception:
+                return LivePeerResult("untrusted-trace-evidence", transaction_id,
+                    verified.request_sha256, remote_ca2a_verified=True)
         return LivePeerResult("authenticated-remote-ca2a-software", transaction_id,
                               verified.request_sha256,
                               execution["start_receipt_hash"],
                               execution["finish_receipt_hash"],
-                              remote_ca2a_verified=True)
+                              remote_ca2a_verified=True,
+                              trace_verified=trace_hash is not None,
+                              trace_record_hash=trace_hash)
     except (CA2AError, ValueError, TypeError, KeyError, OSError, RuntimeError,
             subprocess.TimeoutExpired):
         return LivePeerResult("unknown-or-refused-transport", transaction_id,

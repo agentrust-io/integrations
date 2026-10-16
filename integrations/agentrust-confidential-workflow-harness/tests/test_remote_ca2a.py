@@ -6,6 +6,7 @@ import unittest
 from pathlib import Path
 
 from cryptography.hazmat.primitives.asymmetric.x25519 import X25519PrivateKey
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from ca2a_runtime.delegation import new_keypair
 from ca2a_runtime.response import encode
 
@@ -20,6 +21,7 @@ class RemoteCA2ATests(unittest.TestCase):
         self.db = Path(tmp.name) / "replay.sqlite"
         self.issuer, self.issuer_pub = new_keypair()
         self.holder, self.holder_pub = new_keypair()
+        self.trace = Ed25519PrivateKey.generate()
         self.peer = X25519PrivateKey.generate()
         self.peer_pub = self.peer.public_key().public_bytes_raw().hex()
         self.secret = b"secret-for-test-only-" + bytes(range(32))
@@ -38,7 +40,8 @@ class RemoteCA2ATests(unittest.TestCase):
             self.last_submit = json.loads(json.dumps(request))
         return serve(request, channel_private=self.peer,
                      challenge_secret=self.secret, trusted_issuer=self.issuer_pub,
-                     replay_db=self.db, dispatch=self.dispatch)
+                     replay_db=self.db, dispatch=self.dispatch,
+                     trace_private=self.trace)
 
     def invoke(self, **kw):
         args = {"transaction_id": "transaction-1", "nonce": "0123456789abcdef",
@@ -112,3 +115,17 @@ class RemoteCA2ATests(unittest.TestCase):
             return self.send(request)
         self.assertEqual(self.invoke(send=lose).outcome,"unknown-or-refused-transport")
         self.assertEqual(self.dispatch_count,0)
+
+    def test_real_trace_signed_record(self):
+        pub=self.trace.public_key().public_bytes_raw().hex()
+        result=self.invoke(trace_public_key=pub)
+        self.assertEqual(result.outcome,"authenticated-remote-ca2a-software")
+        self.assertTrue(result.trace_verified)
+        self.assertTrue(result.trace_record_hash.startswith("sha256:"))
+
+    def test_untrusted_trace_issuer_refused(self):
+        wrong=Ed25519PrivateKey.generate().public_key().public_bytes_raw().hex()
+        result=self.invoke(trace_public_key=wrong)
+        self.assertEqual(result.outcome,"untrusted-trace-evidence")
+        self.assertTrue(result.remote_ca2a_verified)
+        self.assertFalse(result.trace_verified)
