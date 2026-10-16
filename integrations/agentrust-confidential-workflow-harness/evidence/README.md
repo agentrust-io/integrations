@@ -42,3 +42,11 @@ external observer independently measured the job or confidential execution.
 The underlying Conduit receipt log remains under the same operator.
 
 See [About, licensing, glossary and assurance boundaries](../REMOTE-CA2A-PEER.md).
+
+The packet's `peer_public_key` is unsigned export metadata. Comparing it to
+`--peer-public` checks metadata consistency; the TRACE/companion signatures
+do not cryptographically bind that channel key. The verifier reports
+`peer_channel_binding: metadata-only-not-signed`. Relabelling that metadata
+and supplying a different expected peer pin does not invalidate the software
+signatures. Authenticate the live cA2A channel separately; offline signature
+verification cannot establish which channel carried the recorded exchange.
