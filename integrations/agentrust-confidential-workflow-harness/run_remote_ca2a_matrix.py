@@ -18,6 +18,20 @@ def private(path):
         bytes.fromhex(Path(path).read_text().strip()))
 
 
+
+def exact_replay_observation(response):
+    """Classify a transport status; consumed client state cannot verify its MAC."""
+    refused = isinstance(response, dict) and response.get("status") == 403
+    return {
+        "case": "one-time-challenge-replay",
+        "expected": "observed-status-403",
+        "observed": "observed-status-403" if refused else "unexpected",
+        "passed": refused,
+        "response_authentication": "not-verified",
+        "evidence_class": "live-software-two-host-same-operator",
+    }
+
+
 def main():
     parser=argparse.ArgumentParser()
     parser.add_argument("--config",type=Path,required=True)
@@ -99,10 +113,7 @@ def main():
         return base_send(request)
     scenario("replay-valid-twin",valid,send=record_submit)
     repeated=base_send(last[0])
-    replay_ok=repeated.get("status")==403
-    rr={"case":"one-time-challenge-replay","expected":"authenticated-peer-denial",
-        "observed":"authenticated-peer-denial" if replay_ok else "unexpected",
-        "passed":replay_ok,"evidence_class":"live-software-two-host-same-operator"}
+    rr=exact_replay_observation(repeated)
     results.append(rr)
     print(json.dumps(rr,sort_keys=True),flush=True)
 
