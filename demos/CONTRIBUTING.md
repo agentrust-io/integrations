@@ -4,6 +4,8 @@ Thanks for looking. This directory holds runnable demos for cMCP, TRACE and the
 agent governance tooling. Everything here is meant to be executed rather than only read,
 which shapes what a good contribution looks like.
 
+AgenTrust is an independent open-source project. No company funds, owns or directs it; contributions are voluntary.
+
 ## Getting the code and running it
 
 ```
