@@ -29,3 +29,19 @@ provide independently operated or hardware-backed evidence. The validated
 hash-chain alone is not a digital signature and is not tamper proof against
 the operator who controls the receipt store. Those distinctions remain release
 gates for upstream Issue #199 and should not be elided.
+
+## Released cA2A holder-bound delegation preflight
+
+The `released_delegation` and `delegated_conduit` modules now verify a
+released `ca2a-runtime==0.4.0` signed delegation against an explicitly supplied
+trusted root, a challenge-bound holder-possession proof, requested capability,
+and local policy **before** the cMCP/Conduit job begins. Negative tests prove
+untrusted roots, holder substitution, and altered scope cannot dispatch. This
+extends the local composition to 55 tests.
+
+The challenge and peer appraisal are process-local to the origin and the test
+keys are ephemeral. The remote VPS has not checked a cA2A credential. Therefore
+this remains **not cA2A peer delivery or independently enrolled verification**.
+Neither cryptographic authentication of the remote Conduit job receipt nor a
+TRACE-standard external attestation has been added. Do not mark full Issue #199
+acceptance complete based on these tests.
