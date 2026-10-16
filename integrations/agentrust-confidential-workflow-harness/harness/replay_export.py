@@ -66,5 +66,6 @@ def verify_packet(packet: dict, *, trace_public_key: str,
         "independent_custody": False,
         "hardware_attested": False,
         "origin_response_authentication": "not-offline-replayable",
+        "peer_channel_binding": "metadata-only-not-signed",
         "freshness": "historical-signature-only-not-current",
     }
