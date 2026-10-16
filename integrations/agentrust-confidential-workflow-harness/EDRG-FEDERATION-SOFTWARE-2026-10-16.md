@@ -86,3 +86,13 @@ For implementation About, licensing boundaries, protocol/version pinning,
 dependency attribution and glossary mapping, see
 [REMOTE-CA2A-PEER.md](REMOTE-CA2A-PEER.md), the reproducible packet in
 [evidence/](evidence/), and the original [README](README.md).
+
+## Replay-observation qualification
+
+The exact old-request replay row observes a returned status 403 only. Its
+original client occurrence has already been consumed, so the matrix does not
+verify a second response MAC for it. The row reports
+`response_authentication: not-verified`; it is not an authenticated cA2A
+refusal claim. A fresh client occurrence reusing the consumed challenge can
+provide a separately authenticated refusal control. The historical packet's
+peer channel key is also unsigned metadata, as reported by the offline verifier.
