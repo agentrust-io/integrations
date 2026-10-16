@@ -55,7 +55,7 @@ JSON objects, passed as a list or read from a JSONL file (one object per line):
 
 These are enriched records: whatever produces them must supply a trustworthy `agent_id`. cMCP audit entries carry `session_id` instead of `agent_id` and name their timestamp `timestamp_utc`. `ShadowAIScanner` still does not map session identity or read `timestamp_utc`; use the separate adapter below for identity attribution. Neither class infers identity from a tool catalog. The adapter addresses the remaining identity-mapping work in [integrations#215](https://github.com/agentrust-io/integrations/issues/215).
 
-JSONL files are read with Python's default text encoding (`Path.read_text()`). Lines are split only on `\n`, `\r\n` and `\r`; blank lines are skipped but still counted, so reported line numbers are physical line numbers. A line that is not valid JSON raises `json.JSONDecodeError`, and a record that is not a JSON object raises `AttributeError`; both stop the scan, from every method.
+Catalogs and JSONL files are read as UTF-8, independently of the platform's default text encoding. Lines are split only on `\n`, `\r\n` and `\r`; blank lines are skipped but still counted, so reported line numbers are physical line numbers. A line that is not valid JSON raises `json.JSONDecodeError`, and a record that is not a JSON object raises `AttributeError`; both stop the scan, from every method.
 
 ## Install
 

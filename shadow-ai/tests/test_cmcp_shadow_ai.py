@@ -177,7 +177,7 @@ def test_non_tool_calls_and_timestamp_contract_are_unchanged(registry):
 
 def test_jsonl_unicode_separator_is_not_a_physical_line_break(registry, tmp_path):
     path = tmp_path / "audit.jsonl"
-    path.write_text(json.dumps(record(note="a\u2028b"), ensure_ascii=False))
+    path.write_text(json.dumps(record(note="a\u2028b"), ensure_ascii=False), encoding="utf-8")
     assert adapter(registry).scan_audit_log_report(path).complete
 
 

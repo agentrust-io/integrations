@@ -145,7 +145,7 @@ class ShadowAIScanner:
         self._load_catalog(Path(catalog_path))
 
     def _load_catalog(self, path: Path) -> None:
-        raw: Any = json.loads(path.read_text())
+        raw: Any = json.loads(path.read_text(encoding="utf-8"))
         # catalog.json: {"agents": [{"id": "...", "tools": ["tool1", ...]}]}
         # also accept flat {"agent-id": ["tool1", ...]} map
         if isinstance(raw, dict) and "agents" in raw:
@@ -201,7 +201,7 @@ class ShadowAIScanner:
         # read_text() applies universal newlines, so "\n" is the only line break
         # left. str.splitlines() would also split on characters such as U+2028
         # that JSON allows raw inside strings, breaking valid records apart.
-        for number, line in enumerate(path.read_text().split("\n"), start=1):
+        for number, line in enumerate(path.read_text(encoding="utf-8").split("\n"), start=1):
             line = line.strip()
             if not line:
                 continue
