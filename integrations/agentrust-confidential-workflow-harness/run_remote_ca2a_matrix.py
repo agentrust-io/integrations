@@ -30,13 +30,15 @@ def main():
     results=[]
 
     def scenario(name, expected, *, send=None, issuer_private=None,
-                 permitted=True, trace_public_key="default"):
+                 permitted=True, trace_public_key="default",
+                 credential_not_after_offset=60):
         key = cfg["trace_public_key"] if trace_public_key=="default" else trace_public_key
         result=run(transaction_id="matrix-"+uuid.uuid4().hex,
                    nonce=uuid.uuid4().hex,
                    repo=cfg["repo"],issuer_private=issuer_private or issuer,
                    holder_private=holder,peer_public_key=cfg["peer_public_key"],
                    trace_public_key=key,permitted=permitted,
+                   credential_not_after_offset=credential_not_after_offset,
                    send=send or base_send)
         observed=result.outcome
         passed=(observed==expected)
@@ -60,6 +62,8 @@ def main():
     scenario("local-cmcp-authorization-refusal","refused-cmcp",permitted=False)
     attacker,_=new_keypair()
     scenario("untrusted-issuer","refused-authenticated-peer",issuer_private=attacker)
+    scenario("expired-signed-delegation","refused-authenticated-peer",
+             credential_not_after_offset=-2)
     scenario("missing-trace-trust-root","missing-trace-trust-anchor",trace_public_key=None)
     other,_=new_keypair()
     scenario("wrong-trace-verifier-root","untrusted-trace-evidence",

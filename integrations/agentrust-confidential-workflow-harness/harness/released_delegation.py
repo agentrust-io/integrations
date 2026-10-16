@@ -25,7 +25,8 @@ def appraise(*, credential: DelegationCredential, holder_private,
              capability: str = "conduit.inspect",
              local_capabilities=frozenset({"conduit.inspect"}),
              challenge_secret=None,
-             holder_proof=None) -> DelegationDecision:
+             holder_proof=None, revocations=None,
+             max_revocation_staleness=None) -> DelegationDecision:
     if not record_id or not trusted_issuer:
         return DelegationDecision(False, "missing-context", record_id)
     # The challenge and audience are bound to a single local verifier occurrence.
@@ -50,7 +51,9 @@ def appraise(*, credential: DelegationCredential, holder_private,
             request, policy=LocalPolicy(frozenset(local_capabilities)),
             trusted_root_issuers={trusted_issuer},
             require_holder_proof=True,
-            challenge_secret=challenge_secret, audience=audience)
+            challenge_secret=challenge_secret, audience=audience,
+            revocations=revocations,
+            max_revocation_staleness=max_revocation_staleness)
         return DelegationDecision(
             result.granted_capability == capability,
             "released-ca2a-holder-and-delegation-verified", record_id)

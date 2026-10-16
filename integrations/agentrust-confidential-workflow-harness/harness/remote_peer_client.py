@@ -6,6 +6,7 @@ by ca2a-runtime 0.4.0. This remains software-only, same-operator evidence.
 """
 import hashlib
 import json
+import time
 import subprocess
 from dataclasses import dataclass
 
@@ -63,7 +64,7 @@ def ssh_sender(host: str, key_path: str, *, timeout=20):
 def run(*, transaction_id: str, nonce: str, repo: str, issuer_private,
         holder_private, peer_public_key: str, send,
         permitted: bool = True, trace_public_key: str | None = None,
-        evidence_sink=None) -> LivePeerResult:
+        evidence_sink=None, credential_not_after_offset: int = 60) -> LivePeerResult:
     if not transaction_id or not nonce or not peer_public_key:
         return LivePeerResult("invalid-context", transaction_id)
     if not trace_public_key:
@@ -90,9 +91,11 @@ def run(*, transaction_id: str, nonce: str, repo: str, issuer_private,
              "capability": CAPABILITY}, timeout=20)
         issuer_pub = issuer_private.public_key().public_bytes_raw().hex()
         holder_pub = holder_private.public_key().public_bytes_raw().hex()
+        now=int(time.time())
         credential = DelegationCredential(
             credential_id="transaction:" + transaction_id, issuer=issuer_pub,
-            subject=holder_pub, scope=frozenset({CAPABILITY}), depth=0).sign(issuer_private)
+            subject=holder_pub, scope=frozenset({CAPABILITY}), depth=0,
+            not_before=now-5, not_after=now+credential_not_after_offset).sign(issuer_private)
         envelope = decode(pending.request_bytes)
         record_id = hashlib.sha256(encode(envelope)).hexdigest()
         proof = build_holder_proof(holder_private, credential,

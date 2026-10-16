@@ -131,3 +131,14 @@ private keys, live SSH credentials, session challenge and raw authorization
 payloads; the reviewer must enroll the public key through a distinct trust
 channel. The exported packet is useful for *historical software signature
 verification*, not live session-MAC replay or hardware assurance.
+
+## Expiry and revocation enforcement boundary
+
+The origin now issues transaction-specific signed cA2A credentials with a
+**60-second default expiry** and a five-second clock-skew allowance. An
+expired credential was refused by the remote VPS in the 11-case live matrix.
+The released SDK unit/mutation suite also proves signed revocation and stale
+revocation-snapshot refusal with valid twins. **No live independently supplied
+revocation snapshot has been enrolled on the VPS**, because a fresh-looking
+operator-authored snapshot must not be treated as independent revocation
+authority. That remains a separate release gate.

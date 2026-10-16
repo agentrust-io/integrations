@@ -133,3 +133,8 @@ class RemoteCA2ATests(unittest.TestCase):
         self.assertEqual(self.invoke(trace_public_key=None).outcome,
                          "missing-trace-trust-anchor")
         self.assertEqual(self.dispatch_count,0)
+
+    def test_expired_signed_credential_remote_refuses(self):
+        result=self.invoke(credential_not_after_offset=-2)
+        self.assertEqual(result.outcome,"refused-authenticated-peer")
+        self.assertEqual(self.dispatch_count,0)

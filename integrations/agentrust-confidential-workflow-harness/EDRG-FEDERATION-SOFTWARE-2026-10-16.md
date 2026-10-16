@@ -37,13 +37,13 @@ and TRACE record hash.
 
 ## Adversarial evidence
 
-The live two-host matrix passed **10/10** scenarios on October 16, including
-valid control, local cMCP denial, remote untrusted issuer, missing TRACE trust,
+The live two-host matrix passed **11/11** scenarios on October 16, including
+valid control, local cMCP denial, remote untrusted issuer, expired signed delegation, missing TRACE trust,
 wrong TRACE public key, mutated credential scope, response MAC alteration,
 post-execution receipt loss reported as unknown, a fresh valid replay twin,
 and a consumed challenge replay refused by the peer.
 
-The repository unit/mutation suite passed **78/78** on Prometheus,
+The repository unit/mutation suite passed **81/81** on Prometheus,
 including signature/refusal controls, offline software TRACE replay and
 historical evidence tampering. Source and dependency versions are pinned in
 the PR and hash-locked requirements, and the captured packet includes only
@@ -59,7 +59,7 @@ a public, non-confidential `inspect` execution.
 | Persistent replay refusal | PASS | SQLite consumed challenge, not hardware anti-replay |
 | cA2A authenticated response | PASS | Live source, ephemeral session MAC |
 | TRACE signature and companion result binding | PASS | Level 0 signed software evidence |
-| Positive / refusal adversarial controls | PASS | Local suite and 10-case live matrix |
+| Positive / refusal adversarial controls | PASS | Local suite and 11-case live matrix |
 | Offline independently runnable signature check | PASS | Public packet; key provenance remains self-asserted |
 | External independently operated peer | OPEN | No second organizational trust domain |
 | Confidential model/tool execution and disclosure | OPEN | Only a read-only `inspect` job was exercised |

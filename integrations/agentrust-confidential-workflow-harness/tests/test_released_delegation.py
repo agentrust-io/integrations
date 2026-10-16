@@ -1,5 +1,7 @@
 import unittest
-from ca2a_runtime.delegation import new_keypair
+import time
+from ca2a_runtime.delegation import (new_keypair, credential_digest,
+    RevocationSnapshot, RevocationStatement)
 from ca2a_runtime.delegation.credential import DelegationCredential
 from harness.released_delegation import appraise
 
@@ -44,3 +46,20 @@ class ReleasedDelegationTests(unittest.TestCase):
             self.credential.subject,frozenset({"conduit.inspect"}),0)
         self.assertFalse(self.check(credential=c).granted)
         self.assertTrue(self.check().granted)
+
+    def test_signed_revocation_refuses_valid_delegation(self):
+        now=int(time.time())
+        statement=RevocationStatement(
+            credential_digest(self.credential),self.root_pub,now).sign(self.root)
+        snapshot=RevocationSnapshot(now,(statement,))
+        self.assertFalse(self.check(revocations=snapshot,
+            max_revocation_staleness=300).granted)
+        self.assertTrue(self.check(revocations=RevocationSnapshot(now),
+            max_revocation_staleness=300).granted)
+
+    def test_stale_revocation_snapshot_fails_closed(self):
+        now=int(time.time())
+        self.assertFalse(self.check(revocations=RevocationSnapshot(now-1000),
+            max_revocation_staleness=300).granted)
+        self.assertTrue(self.check(revocations=RevocationSnapshot(now),
+            max_revocation_staleness=300).granted)
