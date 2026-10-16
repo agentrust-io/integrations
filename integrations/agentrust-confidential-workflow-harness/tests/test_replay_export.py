@@ -67,7 +67,8 @@ class ReplayExportTests(unittest.TestCase):
         self.assertTrue(self.verify()["verified"])
 
     def test_modified_request_identity(self):
-        p=copy.deepcopy(self.packet);p["request_sha256"]="9"*64
+        p=copy.deepcopy(self.packet)
+        p["request_sha256"]="9"*64
         self.assert_refuses_with_twin(p)
 
     def test_modified_trace_record(self):
@@ -81,5 +82,6 @@ class ReplayExportTests(unittest.TestCase):
         self.assert_refuses_with_twin(p)
 
     def test_missing_field(self):
-        p=copy.deepcopy(self.packet);del p["trace_bundle"]
+        p=copy.deepcopy(self.packet)
+        del p["trace_bundle"]
         self.assert_refuses_with_twin(p)
