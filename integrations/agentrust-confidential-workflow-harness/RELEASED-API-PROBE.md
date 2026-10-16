@@ -1,9 +1,33 @@
-# Experimental released-protocol interoperability probe
+# Experimental released-protocol interoperability and authenticated response
 
-This isolated, deterministic probe executes published cmcp-runtime 0.7.0 MCPGateway.intercept_tool_call and ca2a-runtime 0.4.0 emit_dag/trace_record_hash APIs. Synthetic transaction ID and nonce are passed into the call and software-mode record context. The two signing keys are ephemeral test keys.
+This deterministic acceptance milestone executes the published `cmcp-runtime==0.7.0`
+`MCPGateway.intercept_tool_call` and `ca2a-runtime==0.4.0`
+`emit_dag` / `trace_record_hash` APIs, plus
+`PendingResponse` / `ResponseProducer` authenticated response verification.
+Positive and refusal tests are paired. All dependencies are transitively pinned
+by the SHA-256 hash-locked requirements file.
 
-To reproduce, install exactly cmcp-runtime==0.7.0 and ca2a-runtime==0.4.0 in an isolated Python environment, then run unittest discovery in the integration's tests directory with the integration directory on PYTHONPATH.
+A local test-generated X25519 peer key is marked assurance `none`, rather than
+hardware-verified. Signed TRACE DAG records use temporary Ed25519 keys and a
+synthetic source. The actual dispatch count is zero. This is **not** a live
+model, tool or network workflow.
 
-Claim: component API interoperability only. The probe does not execute models or tools; actual_dispatches is zero. It does not prove independent peer receipt, live deployment, hardware TEE, independent key custody or composed confidentiality acceptance. The synthetic trace hashes do not establish external trust.
+Reproduce from the repository root with Python 3.12:
 
-Issue #199 remains open pending real tool and peer transport adapters, independent observation at each boundary, paired refusal and mutation tests for the composed workflow, and externally operated live evidence. Do not reuse component pass results as a composed or hardware assurance verdict.
+```sh
+python -m pip install --require-hashes -r requirements/confidential-workflow-probe.txt
+cd integrations/agentrust-confidential-workflow-harness
+python -m unittest discover -s tests -v
+```
+
+The authenticated-response probe covers permitted execution, unauthorized tool,
+MAC alteration, single-use replay, expiry, signed denial, request/response
+context mismatch, and unobserved receipt remaining unknown. The valid twin is
+executed independently for each adversarial case. It does **not** establish
+independent issuer enrollment, externally operated peer receipt, a real execution
+side effect, secure confinement or hardware-backed runtime measurement.
+
+Issue #199 must remain open until actual mediated tool and peer network transport,
+independent boundary observations, composed mutation testing, and independently
+operated live evidence are produced and externally reproduced. Component
+interoperability may not be substituted for these requirements.
