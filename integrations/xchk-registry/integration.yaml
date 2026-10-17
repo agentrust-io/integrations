@@ -1,0 +1,30 @@
+name: xChk registry
+vendor: xChk
+integrates_with:
+  - trace
+description: >-
+  A Trust Record per run from an agent-licensing registry, each approval-outcome
+  reference resolving to a sealed receipt that verifies offline down to the
+  approver's passkey assertion over the ask.
+maintainer:
+  github: minitru
+  email: sean@maclawran.ca
+repository: https://github.com/agentrust-io/integrations
+homepage: https://in.xchk.io
+license: Apache-2.0
+tier: community
+marketplace:
+  category: Evidence & receipts
+  mark: XC
+  keywords: [approval-outcome, receipts, passkey, human-of-record, offline-verify]
+# Role. The registry mints and signs the Trust Record (record-producer, software-only, Level 0).
+# The receipt a reference resolves to is the registry's own sealed evidence, in its own
+# format, verified by its own standard-library script: external-evidence-source. The code
+# here is the relying party's side: it resolves, recomputes and reports; it issues nothing.
+trace_roles:
+  - record-producer
+  - external-evidence-source
+trace_conformance_level: 0
+tested_against:
+  agentrust-trace: "0.11.0"
+  agentrust-trace-tests: "0.6.2"
