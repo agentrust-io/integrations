@@ -3,4 +3,4 @@
 # pinned like the rest of the harness. Compile with:
 #   uv pip compile requirements/receipts-tests.in --generate-hashes --universal \
 #     --python-version 3.11 -o requirements/receipts-tests.txt
-cryptography>=50.0.1
+cryptography>=50.0.2

@@ -2,8 +2,8 @@
 
 A runnable, offline example connecting an authenticated merchant checkout,
 explicit spending authority, a local policy decision, and independently
-verifiable evidence. This advances [examples #89](https://github.com/agentrust-io/examples/issues/89)
-using released UCP **2026-08-25** artifacts. The existing parent-directory
+verifiable evidence. This replaces the illustrative checkout document with
+released UCP **2026-08-25** artifacts. The existing parent-directory
 illustrative example remains unchanged.
 
 **This is a verification harness, not an interactive broker or payment system.**
