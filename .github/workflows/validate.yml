@@ -43,5 +43,7 @@ jobs:
       - name: Test AGT Marketplace snapshot generation
         run: python -m pytest tests/test_generate_agt_marketplace_catalog.py -q
       - name: Test confidential workflow harness
-        run: python -m unittest discover -s tests -v
+        run: |
+          python -m pip install --require-hashes -r ../../requirements/confidential-workflow-probe.txt
+          python -m unittest discover -s tests -v
         working-directory: integrations/agentrust-confidential-workflow-harness
