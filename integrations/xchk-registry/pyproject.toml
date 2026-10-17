@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "xchk-registry-integration"
+version = "0.1.0"
+description = "Resolve a TRACE approval-outcome reference to an xChk sealed receipt and recompute the relying party's verdict"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "Apache-2.0"
+dependencies = [
+  "agentrust-trace>=0.11.0",
+  "rfc8785",
+]
+
+[project.optional-dependencies]
+test = ["pytest"]
+
+[tool.setuptools]
+py-modules = ["xchk_trace"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

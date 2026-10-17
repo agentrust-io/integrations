@@ -1,0 +1,56 @@
+# xChk registry integration workflow.
+#
+# floating  installs the latest released agentrust-trace, unpinned on purpose, as drift detection.
+# fixed     installs the agentrust-trace version named in integration.yaml tested_against.
+# Both recompute the fixtures' verdicts from the committed bytes with the registry's own offline verifier and run
+# the Level 0 conformance suite on the committed Trust Record. Neither reaches the registry: the live resolution
+# test is opt-in (REGISTRY_LIVE=1) so CI never depends on a third party's uptime.
+name: xchk-registry conformance
+on:
+  push:
+    paths:
+      - "integrations/xchk-registry/**"
+      - ".github/workflows/xchk-registry-conformance.yml"
+  pull_request:
+    paths:
+      - "integrations/xchk-registry/**"
+      - ".github/workflows/xchk-registry-conformance.yml"
+  schedule:
+    - cron: "0 6 * * 1"   # weekly: catch drift against the latest released packages
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: ${{ matrix.mode }} (py${{ matrix.python }})
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12", "3.13"]
+        mode: [floating, fixed]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install agentrust-trace and agentrust-trace-tests (latest release)
+        if: matrix.mode == 'floating'
+        run: pip install agentrust-trace agentrust-trace-tests
+      - name: Install agentrust-trace and agentrust-trace-tests (tested_against)
+        if: matrix.mode == 'fixed'
+        run: |
+          v=$(sed -n 's/^  agentrust-trace: "\(.*\)"$/\1/p' integrations/xchk-registry/integration.yaml)
+          t=$(sed -n 's/^  agentrust-trace-tests: "\(.*\)"$/\1/p' integrations/xchk-registry/integration.yaml)
+          test -n "$v" && test -n "$t"
+          pip install "agentrust-trace==$v" "agentrust-trace-tests==$t"
+      - name: Install this integration
+        run: pip install -e "integrations/xchk-registry[test]"
+      - name: Integration tests (offline)
+        run: pytest integrations/xchk-registry/tests -q
+      - name: Level 0 conformance on the committed Trust Record
+        run: trace-tests verify --record integrations/xchk-registry/examples/01-approval-confirmed.json --level 0 --max-age 315360000

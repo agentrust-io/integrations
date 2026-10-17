@@ -1,6 +1,6 @@
 {
   "catalog_version": 1,
-  "count": 47,
+  "count": 48,
   "integrations": [
     {
       "name": "Claude Code",
@@ -1074,6 +1074,30 @@
         "custody",
         "key-release",
         "evidence"
+      ]
+    },
+    {
+      "name": "xChk registry",
+      "package_name": "xChk registry",
+      "vendor": "xChk",
+      "description": "A Trust Record per run from an agent-licensing registry, each approval-outcome reference resolving to a sealed receipt that verifies offline down to the approver's passkey assertion over the ask.",
+      "path": "integrations/xchk-registry",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/xchk-registry",
+      "homepage": "https://in.xchk.io",
+      "repository": "https://github.com/agentrust-io/integrations",
+      "tier": "community",
+      "stack": [
+        "TRACE"
+      ],
+      "category": "Evidence & receipts",
+      "mark": "XC",
+      "featured": null,
+      "keywords": [
+        "approval-outcome",
+        "receipts",
+        "passkey",
+        "human-of-record",
+        "offline-verify"
       ]
     }
   ]

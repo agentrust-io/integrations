@@ -1,0 +1,8 @@
+xchk-registry integration: Apache-2.0, copyright (c) 2026 Sean MacGuire.
+
+examples/verify_receipt.py: the xChk registry's offline receipt verifier, copyright (c) 2026 Sean MacGuire,
+MIT License (the notice in the file's header), vendored unchanged from https://in.xchk.io/verify/verify_receipt.py.
+
+examples/*.json: records minted and signed by the registry at https://in.xchk.io for plate ENG-WNP3, run 3057
+(18 October 2026); the bundle of case 08 is the registry's own fixture generator's crossing of two of that run's
+approvals. The fixtures carry the plate owner's email and a public approval-photo URL; he chose to publish them.
