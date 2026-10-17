@@ -54,8 +54,13 @@ retain the packet digest, explicit public-key pins and how those pins were
 obtained. Signature validity does not establish external enrollment. A bare
 HTTP refusal status does not establish an authenticated peer response.
 
-This document records a procedure, not a claim that either suite or any live
-workflow was executed for this change.
+This procedure alone establishes no execution result. Contributor-run unit
+checks and live execution, if performed, need separately recorded results.
+
+The [offline synthetic reappraisal utility](README.md#offline-synthetic-evidence-reappraisal)
+implements current-context and evidence-age comparisons for local retained
+deterministic results. It does not implement protocol credential expiry,
+live revocation, authenticated storage or complete dependency discovery.
 
 ## Pair each refusal with a valid control
 
