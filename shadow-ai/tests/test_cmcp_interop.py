@@ -2,6 +2,7 @@
 import hashlib
 import json
 import os
+import sqlite3
 import sys
 from importlib.metadata import version
 from pathlib import Path
@@ -16,6 +17,27 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 from cmcp_producer import write_audit
 from cmcp_shadow_ai import CmcpAuditAdapter, SessionAgentBinding
 from shadow_ai_discovery import IdentityUnavailableError, ShadowAIScanner
+
+
+def test_producer_closes_sqlite_connections_before_return(tmp_path, monkeypatch):
+    connections = []
+    real_connect = sqlite3.connect
+
+    def connect(*args, **kwargs):
+        connection = real_connect(*args, **kwargs)
+        connections.append(connection)
+        return connection
+
+    monkeypatch.setattr(sqlite3, "connect", connect)
+    try:
+        assert len(write_audit(tmp_path / "audit.jsonl")) == 7
+        assert connections
+        for connection in connections:
+            with pytest.raises(sqlite3.ProgrammingError, match="closed"):
+                connection.execute("SELECT 1")
+    finally:
+        for connection in connections:
+            connection.close()
 
 
 @pytest.fixture

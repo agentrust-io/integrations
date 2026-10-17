@@ -5,6 +5,7 @@ import json
 import sqlite3
 import sys
 import tempfile
+from contextlib import closing
 from importlib.metadata import version
 from pathlib import Path
 
@@ -31,7 +32,7 @@ def write_audit(path: Path) -> list[dict]:
                     chain.append("tool_call", call_id=session + "/2", tool_name="delete_all", policy_decision="deny")
         finally:
             store.close()
-        with sqlite3.connect(database) as connection:
+        with closing(sqlite3.connect(database)) as connection:
             payloads = [row[0] for row in connection.execute("SELECT payload FROM audit_entries ORDER BY rowid")]
     path.write_text("\n".join(payloads) + "\n", encoding="utf-8")
     return [json.loads(payload) for payload in payloads]
