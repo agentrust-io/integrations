@@ -21,11 +21,11 @@ recomputes what may be concluded about the approval, offline, with the registry'
 ## What this code does
 
 ```
-python xchk_trace.py record.json                               # resolve each reference at its resolver
+python xchk_trace.py record.json                               # key from the resolver's published keys; references resolved there
 python xchk_trace.py record.json --bundle bundle.json --jwk examples/expected.json   # offline
 ```
 
-1. Verifies the Trust Record with released `agentrust-trace` (the record's own `cnf.jwk`, or a pinned key).
+1. Verifies the Trust Record with released `agentrust-trace` against a key the relying party trusts: one pinned with `--jwk`, or the key the record's resolver publishes at `/.well-known/xchk-keys.json` under the record's `kid`. The record's own `cnf.jwk` is used only with `--allow-embedded-key` and reported as *self-consistent*, never as verified, because a self-signed record always passes against its own key.
 2. For each `approval-outcome` reference, fetches `<resolver>/api/receipt/<id>/bundle`, or uses a saved one.
 3. Canonicalizes `bundle.record` with RFC 8785 and compares the digest with the reference.
 4. Runs `examples/verify_receipt.py` on the bundle as a subprocess: record hash, Merkle path, seal hash, registry

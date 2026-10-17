@@ -26,10 +26,35 @@ def reference() -> dict:
     return refs[0]
 
 
-def test_the_record_verifies_with_the_registry_key_and_with_its_own_cnf():
+def test_the_record_verifies_with_the_pinned_registry_key():
     assert xchk_trace.record_verifies(RECORD, EXPECTED["trace_signer_jwk"])
-    assert xchk_trace.record_verifies(RECORD, None)
     assert RECORD["cnf"]["jwk"]["kid"] == EXPECTED["trace_signer_jwk"]["kid"]
+    tampered = json.loads(json.dumps(RECORD))
+    tampered["iat"] += 1
+    assert not xchk_trace.record_verifies(tampered, EXPECTED["trace_signer_jwk"])
+
+
+def test_the_embedded_key_is_never_reported_as_verified():
+    """A record checked against its own cnf.jwk is self-consistent, not verified: any self-signed record passes that."""
+    no_fetch = lambda resolver, kid: None  # noqa: E731
+    assert xchk_trace.verify_with_key_source(RECORD, None, False, fetch=no_fetch)["status"] == "no-key"
+    got = xchk_trace.verify_with_key_source(RECORD, None, True, fetch=no_fetch)
+    assert got["status"] == "self-consistent" and got["key_source"] == "embedded"
+    pinned = xchk_trace.verify_with_key_source(RECORD, EXPECTED["trace_signer_jwk"], False, fetch=no_fetch)
+    assert pinned["status"] == "verified" and pinned["key_source"] == "pinned"
+
+
+def test_the_published_key_document_converts_to_the_pinned_jwk():
+    import base64
+    jwk = EXPECTED["trace_signer_jwk"]
+    raw = base64.urlsafe_b64decode(jwk["x"] + "=" * (-len(jwk["x"]) % 4))
+    doc = {"keys": [{"keyId": jwk["kid"], "alg": "ed25519", "publicKeyRaw": base64.b64encode(raw).decode("ascii")},
+                    {"keyId": "other", "alg": "ml-dsa-65", "publicKeyRaw": "AAAA"}]}
+    got = xchk_trace.key_from_published(doc, jwk["kid"])
+    assert got == {"kty": "OKP", "crv": "Ed25519", "x": jwk["x"], "kid": jwk["kid"]}
+    assert xchk_trace.key_from_published(doc, "other") is None
+    served = xchk_trace.verify_with_key_source(RECORD, None, False, fetch=lambda resolver, kid: xchk_trace.key_from_published(doc, kid))
+    assert served["status"] == "verified" and served["key_source"] == "published" and served["resolver"] == EXPECTED["resolver"]
 
 
 def test_the_reference_digest_is_the_registry_record_hash():
@@ -67,12 +92,18 @@ def test_the_cli_runs_offline(tmp_path, capsys):
     rc = xchk_trace.main([str(EX / "01-approval-confirmed.json"), "--bundle", str(EX / "01-approval-confirmed.bundle.json"), "--jwk", str(jwk)])
     assert rc == 0
     out = json.loads(capsys.readouterr().out)
+    assert out["trace_record"]["key_source"] == "pinned"
     assert out["references"][0]["verdict"] == "approval-confirmed"
+    rc = xchk_trace.main([str(EX / "01-approval-confirmed.json"), "--bundle", str(EX / "01-approval-confirmed.bundle.json"), "--allow-embedded-key"])
+    out = json.loads(capsys.readouterr().out)
+    assert out["trace_record"]["status"] in ("self-consistent", "verified")  # verified only if the resolver's keys were reachable
+    assert rc == (0 if out["trace_record"]["status"] == "verified" else 1)
 
 
 @pytest.mark.skipif(os.environ.get("REGISTRY_LIVE") != "1", reason="set REGISTRY_LIVE=1 to resolve the reference at the registry")
 def test_live_resolution_matches_the_committed_bundle():
     ref = reference()
+    assert xchk_trace.published_key(ref["resolver"], RECORD["cnf"]["jwk"]["kid"]) == {**EXPECTED["trace_signer_jwk"], "kid": RECORD["cnf"]["jwk"]["kid"]}
     live = xchk_trace.fetch_bundle(ref["resolver"], ref["id"])
     assert live is not None
     assert live["record"] == BUNDLE["record"]
