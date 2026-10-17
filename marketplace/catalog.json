@@ -1,6 +1,6 @@
 {
   "catalog_version": 1,
-  "count": 47,
+  "count": 48,
   "integrations": [
     {
       "name": "Claude Code",
@@ -271,6 +271,30 @@
         "liability",
         "pre-deployment-review",
         "case-law"
+      ]
+    },
+    {
+      "name": "Anthropic SDK tool loop",
+      "package_name": "Anthropic SDK tool loop",
+      "vendor": "Disruptive Beverages",
+      "description": "Records a Claude tool loop built on the anthropic Python SDK as AgenTrust Telemetry events, metadata only, and signs one log-import TRACE record per run.",
+      "path": "integrations/anthropic-tool-loop",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/anthropic-tool-loop",
+      "homepage": null,
+      "repository": "https://github.com/agentrust-io/integrations",
+      "tier": "community",
+      "stack": [
+        "TRACE"
+      ],
+      "category": "Frameworks",
+      "mark": "AN",
+      "featured": null,
+      "keywords": [
+        "anthropic",
+        "claude",
+        "tool-use",
+        "telemetry",
+        "log-import"
       ]
     },
     {

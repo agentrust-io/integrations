@@ -1,0 +1,68 @@
+# agentrust-io conformance workflow for the Anthropic SDK tool-loop integration.
+# Lives in the repository root because GitHub Actions only discovers workflows
+# in the root .github/workflows directory; scoped to this integration via paths.
+name: anthropic-tool-loop conformance
+on:
+  push:
+    paths:
+      - "integrations/anthropic-tool-loop/**"
+      - ".github/workflows/anthropic-tool-loop-conformance.yml"
+  pull_request:
+    paths:
+      - "integrations/anthropic-tool-loop/**"
+      - ".github/workflows/anthropic-tool-loop-conformance.yml"
+  schedule:
+    - cron: "0 6 * * 1"   # weekly: catch drift against the latest released packages
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  writer-py39:
+    # The in-process writer claims standard-library-only and Python 3.9 support.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with:
+          python-version: "3.9"
+      - name: Writer tests with nothing but pytest installed
+        run: |
+          pip install "pytest>=8"
+          pytest integrations/anthropic-tool-loop/tests/test_anthropic_spool.py -q
+
+  conformance:
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12", "3.13"]
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install released agentrust-io packages and this integration
+        run: |
+          pip install agentrust-telemetry==0.1.0a6 agentrust-trace==0.11.0 agentrust-trace-tests==0.6.2
+          pip install -e "integrations/anthropic-tool-loop[recorder,test]"
+      - name: Integration tests
+        run: pytest integrations/anthropic-tool-loop/tests -q
+      - name: Interop tests against the released anthropic SDK
+        run: |
+          pip install anthropic==1.14.0
+          pytest integrations/anthropic-tool-loop/tests/test_anthropic_interop.py -q
+      - name: Offline example, emit a signed TRACE record
+        run: python integrations/anthropic-tool-loop/examples/offline_tool_loop.py --out trust-record.json
+      - name: TRACE conformance
+        run: trace-tests verify --record trust-record.json --level 0
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: conformance-${{ matrix.os }}-py${{ matrix.python }}
+          path: trust-record.json
