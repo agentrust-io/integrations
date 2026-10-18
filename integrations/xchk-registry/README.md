@@ -21,22 +21,25 @@ at `https://in.xchk.io/.well-known/xchk-keys.json`.
 ## What this code does
 
 ```
-python xchk_trace_record.py record.json                     # verifies with the key the subject's registry publishes under the record's kid
-python xchk_trace_record.py record.json --registry https://in.xchk.io   # the same, with the trusted origin said outright
-python xchk_trace_record.py record.json --jwk examples/expected.json   # offline, with a pinned key
+python xchk_trace_record.py record.json --registry https://in.xchk.io   # verifies with the key that registry publishes under the record's kid
+python xchk_trace_record.py record.json --jwk examples/expected.json     # offline, with a pinned key
 ```
 
 It verifies the record with released `agentrust-trace` against a pinned key, or against the key published under the
-record's `kid` at `<origin>/.well-known/xchk-keys.json`, where the origin is one the relying party trusts: the one
-given with `--registry`, else the origin under the record's `did:web` subject. The record's own `resolver` field must
-agree with that origin and is never followed on its own: a record that could name the server its key is fetched
-from would have chosen its own trust root. It never verifies against the key the record itself carries, for the
-same reason. The fetch is https only, follows no redirect, and reads at most 256 KB. It prints the key source and
-the trusted origin, and lists the `approval-outcome` references as they appear; it does not resolve them.
+record's `kid` at `<origin>/.well-known/xchk-keys.json`, where the origin is the registry the relying party trusts,
+given out of band with `--registry`. Nothing in the record supplies the origin: not its `resolver` and not its
+`did:web` subject, because a record signed under a publisher of its own choosing names that publisher in both,
+and agreeing with itself is not a trust anchor. The record's subject and resolver must agree with the origin given.
+Without `--registry` or `--jwk` the answer is `no-key`. It never verifies against the key the record itself carries,
+for the same reason. The fetch is https only, follows no redirect, reads at most 256 KB, and a key document of the
+wrong shape is no key, never a crash. A verified result carries the verified `profile` and the complete
+`accepted_profiles` set (section 3.3), the trusted key's thumbprint, the key source and the trusted origin, and
+lists the `approval-outcome` references as they appear; it does not resolve them.
 
 The record's age is bounded: `iat` may be at most `--max-age` seconds old, default 86400 (24 hours, the library's
 default and section 3.2.2's), and the bound cannot be switched off. A retained record is re-verified at its own time
-with `--now <epoch seconds>` rather than by widening the bound. The output carries `revocation` as the library
+with `--now <epoch seconds>` rather than by widening the bound; every verdict carries `verified_at`, the instant it
+was made against, and `verified_at_overridden`, so a historical verdict is never the same JSON as a current one. The output carries `revocation` as the library
 reported it; this tool passes no revocation bundle or store, so it reports `no_check_performed`, which is not an
 affirming appraisal (section 3.2.3). A stale or tampered record is `invalid`, with the reason.
 

@@ -81,17 +81,49 @@ def published_doc():
                      {"keyId": "other", "alg": "ml-dsa-65", "publicKeyRaw": "AAAA"}]}
 
 
+REGISTRY = EXPECTED["resolver"]
+
+
 def test_the_published_key_document_converts_to_the_pinned_jwk():
     doc = published_doc()
     assert x.key_from_published(doc, JWK["kid"]) == {"kty": "OKP", "crv": "Ed25519", "x": JWK["x"], "kid": JWK["kid"]}
     assert x.key_from_published(doc, "other") is None
-    got = x.verify_with_key_source(RECORD, None, fetch=lambda origin, kid: x.key_from_published(doc, kid), now=AT_ISSUE)
-    assert got["status"] == "verified" and got["key_source"] == "published" and got["trusted_origin"] == EXPECTED["resolver"]
+    got = x.verify_with_key_source(RECORD, None, fetch=lambda origin, kid: x.key_from_published(doc, kid), now=AT_ISSUE, registry=REGISTRY)
+    assert got["status"] == "verified" and got["key_source"] == "published" and got["trusted_origin"] == REGISTRY
 
 
-def test_the_published_key_comes_from_the_subjects_origin_never_from_a_server_the_record_names():
-    """A record that names the server its key is fetched from has chosen its own trust root. The origin is the
-    relying party's (--registry) or the did:web subject's; the record's resolver must agree and is never followed."""
+def test_a_malformed_key_document_is_no_key_never_a_crash():
+    """The fetch may answer anything. Every shape here used to raise out of key_from_published."""
+    kid = JWK["kid"]
+    for doc in (None, [], "keys", 7, {"keys": None}, {"keys": "x"}, {"keys": {}}, {"keys": [None]}, {"keys": ["x"]}, {"keys": [7]},
+                {"keys": [{"keyId": kid, "alg": "ed25519"}]}, {"keys": [{"keyId": kid, "alg": "ed25519", "publicKeyRaw": None}]},
+                {"keys": [{"keyId": kid, "alg": "ed25519", "publicKeyRaw": 12}]}, {"keys": [{"keyId": kid, "alg": "ed25519", "publicKeyRaw": "not base64!"}]},
+                {"keys": [{"keyId": kid, "alg": "ed25519", "publicKeyRaw": "AAAA"}]}, {"keys": [{"keyId": kid, "alg": "ed25519", "publicKeyRaw": ["x"]}]}):
+        assert x.key_from_published(doc, kid) is None, repr(doc)
+    assert x.key_from_published(published_doc(), None) is None
+    got = x.verify_with_key_source(RECORD, None, fetch=lambda origin, kid: x.key_from_published({"keys": [{"keyId": kid, "alg": "ed25519", "publicKeyRaw": 12}]}, kid),
+                                   now=AT_ISSUE, registry=REGISTRY)
+    assert got["status"] == "no-key"
+
+
+def test_a_verified_result_carries_the_profile_fields_and_the_time_it_was_made_at():
+    """Section 3.3: the profile and the complete accepted set; and the as-of instant, so a historical verdict is
+    never the same JSON as a current one."""
+    got = x.verification(RECORD, JWK, now=AT_ISSUE)
+    assert got["profile"] == RECORD["eat_profile"] and got["accepted_profiles"] == [RECORD["eat_profile"]]
+    assert got["trusted_key_thumbprint"]
+    assert got["verified_at"] == AT_ISSUE and got["verified_at_overridden"] is True
+    later = RECORD["iat"] + 30 * 86400
+    stale = x.verification(RECORD, JWK, now=later)
+    assert stale["status"] == "invalid" and stale["verified_at"] == later and stale["verified_at_overridden"] is True
+    assert "profile" not in stale
+    current = x.verification(RECORD, JWK)
+    assert current["verified_at_overridden"] is False and abs(current["verified_at"] - int(x.time.time())) < 5
+
+
+def test_the_trust_origin_is_the_relying_partys_and_nothing_in_the_record_supplies_it():
+    """A record names its subject and its resolver; a record signed under a publisher of its own choosing names that
+    publisher in both. So the origin comes from --registry alone, and the record must agree with it."""
     assert x.origin_of_did_web("did:web:in.xchk.io:plate:ENG-WNP3") == "https://in.xchk.io"
     assert x.origin_of_did_web("did:web:example.com%3A8443:x") == "https://example.com:8443"
     for bad in ("did:key:z6Mk", "did:web:", "did:web:a/b:c", "did:web:..:x", "", None, 7):
@@ -103,23 +135,57 @@ def test_the_published_key_comes_from_the_subjects_origin_never_from_a_server_th
         asked.append(origin)
         return x.key_from_published(doc, kid)
 
+    got = x.verify_with_key_source(RECORD, None, fetch=fetch, now=AT_ISSUE)
+    assert got["status"] == "no-key" and "--registry" in got["reason"] and asked == [], "no --registry: no trust anchor, nothing fetched"
     elsewhere = json.loads(json.dumps(RECORD))
     elsewhere["references"][0]["resolver"] = "https://attacker.example"
-    got = x.verify_with_key_source(elsewhere, None, fetch=fetch, now=AT_ISSUE)
+    got = x.verify_with_key_source(elsewhere, None, fetch=fetch, now=AT_ISSUE, registry=REGISTRY)
     assert got["status"] == "no-key" and "attacker.example" in got["reason"] and asked == [], "nothing fetched from the record's server"
     got = x.verify_with_key_source(RECORD, None, fetch=fetch, now=AT_ISSUE, registry="https://other.example")
-    assert got["status"] == "no-key" and asked == [], "the relying party's origin wins, and the record's resolver disagrees with it"
+    assert got["status"] == "no-key" and asked == [], "the record's subject and resolver disagree with the relying party's origin"
     foreign = json.loads(json.dumps(RECORD))
     foreign["subject"] = "did:web:attacker.example:plate:X"
-    got = x.verify_with_key_source(foreign, None, fetch=fetch, now=AT_ISSUE)
-    assert got["status"] == "no-key" and asked == [], "a subject moved to another host disagrees with the resolver, and the signature would fail anyway"
+    got = x.verify_with_key_source(foreign, None, fetch=fetch, now=AT_ISSUE, registry=REGISTRY)
+    assert got["status"] == "no-key" and "subject" in got["reason"] and asked == []
     got = x.verify_with_key_source(RECORD, None, fetch=fetch, now=AT_ISSUE, registry="http://in.xchk.io")
     assert got["status"] == "no-key" and "https" in got["reason"] and asked == []
     got = x.verify_with_key_source(RECORD, None, fetch=fetch, now=AT_ISSUE, registry="https://in.xchk.io/")
     assert got["status"] == "verified" and asked == ["https://in.xchk.io"]
     nokid = json.loads(json.dumps(RECORD))
     del nokid["cnf"]["jwk"]["kid"]
-    assert x.verify_with_key_source(nokid, None, fetch=fetch, now=AT_ISSUE)["status"] == "no-key"
+    assert x.verify_with_key_source(nokid, None, fetch=fetch, now=AT_ISSUE, registry=REGISTRY)["status"] == "no-key"
+
+
+def test_a_record_signed_under_its_own_chosen_publisher_is_never_verified():
+    """The negative control the review asked for: a record signed, end to end, by a key the attacker made, with a
+    subject and resolver under a host the attacker runs and that host publishing the key. Without --registry
+    there is no anchor; with the relying party's registry the record disagrees with it; and if the attacker's host
+    is named as the registry, that is the relying party's own choice, which no verifier can second-guess."""
+    import agentrust_trace as t
+    key = t.generate_key()
+    unsigned = {k: v for k, v in RECORD.items() if k not in ("signature", "cnf")}
+    unsigned["subject"] = "did:web:attacker.example:plate:EVIL"
+    unsigned["references"] = [{**unsigned["references"][0], "resolver": "https://attacker.example"}]
+    # signed the way the library signs (Ed25519 over the JCS form with `signature` absent), with a kid in cnf.jwk
+    attacker_jwk = {**t.key_to_jwk(key), "kid": "evil-kid"}
+    payload = {**unsigned, "cnf": {"jwk": attacker_jwk}}
+    forged = {**payload, "signature": base64.urlsafe_b64encode(key.sign(t.sign._canonical_bytes(payload))).rstrip(b"=").decode()}
+    assert x.record_verifies(forged, attacker_jwk, now=AT_ISSUE), "the forgery is internally consistent"
+    raw = base64.urlsafe_b64decode(attacker_jwk["x"] + "=" * (-len(attacker_jwk["x"]) % 4))
+    attacker_doc = {"keys": [{"keyId": "evil-kid", "alg": "ed25519", "publicKeyRaw": base64.b64encode(raw).decode("ascii")}]}
+    served = {"https://attacker.example": attacker_doc, REGISTRY: published_doc()}
+    asked = []
+
+    def fetch(origin, kid):
+        asked.append(origin)
+        return x.key_from_published(served.get(origin, {}), kid)
+
+    got = x.verify_with_key_source(forged, None, fetch=fetch, now=AT_ISSUE)
+    assert got["status"] == "no-key" and asked == [], "no anchor, no fetch"
+    got = x.verify_with_key_source(forged, None, fetch=fetch, now=AT_ISSUE, registry=REGISTRY)
+    assert got["status"] == "no-key" and asked == [], "the forgery does not agree with the registry the relying party trusts"
+    got = x.verify_with_key_source(forged, JWK, fetch=fetch, now=AT_ISSUE)
+    assert got["status"] == "invalid", "pinned to the real registry key, the forgery's signature fails"
 
 
 def test_the_key_document_fetch_refuses_http_redirects_and_oversize(monkeypatch):

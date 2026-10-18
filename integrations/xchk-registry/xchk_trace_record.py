@@ -1,16 +1,15 @@
 """Verify a Trust Record minted by an xChk registry against a key the relying party trusts. Apache-2.0.
 
-    python xchk_trace_record.py record.json                      # the key the subject's registry publishes under the record's kid
-    python xchk_trace_record.py record.json --registry https://in.xchk.io   # the same, with the trusted origin said outright
-    python xchk_trace_record.py record.json --jwk expected.json  # offline: a pinned signer key
+    python xchk_trace_record.py record.json --registry https://in.xchk.io   # the key that registry publishes under the record's kid
+    python xchk_trace_record.py record.json --jwk expected.json             # offline: a pinned signer key
 
 The registry signs each record with its seal key. The record's `cnf.jwk` carries that key and its `kid`; the same
-key is published at `<origin>/.well-known/xchk-keys.json`, where `<origin>` is the registry the relying party trusts:
-the one given with --registry, else the origin the record's `did:web` subject lives under. The record's own
-`resolver` field must agree with that origin and is never followed on its own. This tool verifies with the pinned
-key when given one, else with the published key under that `kid`. It never verifies against the key the record
-itself carries, and never fetches a key from a server the record names: either way a self-made record would pass,
-which proves integrity and not origin. The record's age is bounded (default 24 hours, --max-age, never off; --now re-verifies a retained
+key is published at `<origin>/.well-known/xchk-keys.json`, where `<origin>` is the registry the relying party trusts,
+given out of band with --registry; nothing in the record supplies it. The record's `subject` and `resolver` must
+agree with that origin. This tool verifies with the pinned key when given one, else with the published key under
+that `kid`. It never verifies against the key the record itself carries, and never fetches a key from a server the
+record names, in its references or in its subject: either way a self-made record would pass, which proves integrity
+and not origin. Without --registry or --jwk there is no trust anchor and the answer is `no-key`. The record's age is bounded (default 24 hours, --max-age, never off; --now re-verifies a retained
 record at its own time) and the revocation outcome is printed as the library reported it: with no revocation bundle
 or store, `no_check_performed`, which is not an affirming appraisal (section 3.2.3).
 """
@@ -20,6 +19,7 @@ import argparse
 import base64
 import json
 import sys
+import time
 import urllib.request
 from pathlib import Path
 
@@ -39,28 +39,49 @@ def verification(record: dict, jwk: dict, max_age_seconds: int = MAX_AGE_SECONDS
     for a refusal. `max_age_seconds` must be a positive bound."""
     if not isinstance(max_age_seconds, int) or isinstance(max_age_seconds, bool) or max_age_seconds <= 0:
         raise ValueError("max_age_seconds must be a positive number of seconds; the age check cannot be disabled")
+    # the instant every check is made against: the clock, or the one the caller supplied for a historical check.
+    # It is in every verdict so two verdicts at different times are never the same JSON (review of #338, 18 Oct 2026).
+    as_of = int(time.time()) if now is None else int(now)
+    when = {"verified_at": as_of, "verified_at_overridden": now is not None}
     try:
-        result = verify_record(record, jwk, max_age_seconds=max_age_seconds, now=now)
+        result = verify_record(record, jwk, max_age_seconds=max_age_seconds, now=as_of)
     except InvalidSignature:
-        return {"status": "invalid", "reason": "signature does not verify", "revocation": None}
+        return {"status": "invalid", "reason": "signature does not verify", "revocation": None, **when}
     except ValueError as e:
-        return {"status": "invalid", "reason": str(e), "revocation": None}
+        return {"status": "invalid", "reason": str(e), "revocation": None, **when}
     revocation = getattr(result, "revocation", None)
-    return {"status": "verified", "revocation": getattr(revocation, "outcome", None) or "no_check_performed"}
+    # section 3.3: a successful result reports the profile it verified under and the whole set the verifier accepts
+    return {"status": "verified", "revocation": getattr(revocation, "outcome", None) or "no_check_performed",
+            "profile": getattr(result, "profile", None), "accepted_profiles": list(getattr(result, "accepted_profiles", ()) or ()),
+            "trusted_key_thumbprint": getattr(result, "trusted_key_thumbprint", None), **when}
 
 
 def record_verifies(record: dict, jwk: dict, max_age_seconds: int = MAX_AGE_SECONDS, now: int | None = None) -> bool:
     return verification(record, jwk, max_age_seconds, now)["status"] == "verified"
 
 
-def key_from_published(doc: dict, kid: str) -> dict | None:
-    """The Ed25519 key with this id from the registry's key document, as a JWK; None when absent."""
-    for k in doc.get("keys") or []:
-        if k.get("keyId") == kid and k.get("alg") == "ed25519" and k.get("publicKeyRaw"):
-            raw = base64.b64decode(k["publicKeyRaw"])
-            if len(raw) != 32:
-                return None
-            return {"kty": "OKP", "crv": "Ed25519", "x": base64.urlsafe_b64encode(raw).decode("ascii").rstrip("="), "kid": kid}
+def key_from_published(doc, kid: str) -> dict | None:
+    """The Ed25519 key with this id from the registry's key document, as a JWK; None when absent or when the
+    document is not the shape it should be. Nothing in here raises on a bad document: a key server that answers
+    nonsense is no key, not a crash (review of #338, 18 Oct 2026)."""
+    if not isinstance(doc, dict) or not isinstance(kid, str) or not kid:
+        return None
+    keys = doc.get("keys")
+    if not isinstance(keys, list):
+        return None
+    for k in keys:
+        if not isinstance(k, dict) or k.get("keyId") != kid or k.get("alg") != "ed25519":
+            continue
+        material = k.get("publicKeyRaw")
+        if not isinstance(material, str) or not material:
+            return None
+        try:
+            raw = base64.b64decode(material, validate=True)
+        except (ValueError, TypeError):
+            return None
+        if len(raw) != 32:
+            return None
+        return {"kty": "OKP", "crv": "Ed25519", "x": base64.urlsafe_b64encode(raw).decode("ascii").rstrip("="), "kid": kid}
     return None
 
 
@@ -107,7 +128,10 @@ def published_key(origin: str, kid: str, timeout: float = 20.0) -> dict | None:
         doc = json.loads(raw)
     except Exception:  # noqa: BLE001
         return None
-    return key_from_published(doc, kid) if isinstance(doc, dict) else None
+    try:
+        return key_from_published(doc, kid)
+    except Exception:  # noqa: BLE001  a document shape nobody foresaw is still no key, never a crash
+        return None
 
 
 def resolver_of(record: dict) -> str | None:
@@ -116,17 +140,23 @@ def resolver_of(record: dict) -> str | None:
 
 
 def trusted_origin(record: dict, registry: str | None) -> tuple[str | None, str | None]:
-    """(origin, refusal): the origin the published key may come from, or why there is none. The record's `resolver`
-    must agree with it; it is never the source of it."""
-    origin = registry or origin_of_did_web(record.get("subject"))
-    if not origin:
-        return None, "no trusted origin: pass --registry, or a did:web subject"
-    if not origin.lower().startswith("https://"):
+    """(origin, refusal): the origin the published key may come from, or why there is none. The origin is the relying
+    party's, given out of band with --registry; nothing in the record supplies it. (An earlier head derived it from
+    the record's did:web subject, which only shows the record agrees with itself: a record signed under a publisher
+    of its own choosing names that publisher in its subject too. Review of #338, 18 Oct 2026.) The record's `subject`
+    and `resolver` must then agree with the origin, which catches a record that was minted for another registry."""
+    if not registry:
+        return None, "no trust anchor: pass --registry <https origin of the registry you trust>, or --jwk <its pinned key>"
+    if not isinstance(registry, str) or not registry.lower().startswith("https://"):
         return None, "the trusted origin must be https"
+    origin = registry.rstrip("/")
+    subject_origin = origin_of_did_web(record.get("subject"))
+    if subject_origin and not _same_origin(subject_origin, origin):
+        return None, f"the record's subject lives under {subject_origin}, not the trusted origin {origin}"
     resolver = resolver_of(record)
     if resolver and not _same_origin(resolver, origin):
         return None, f"the record's resolver {resolver} is not the trusted origin {origin}"
-    return origin.rstrip("/"), None
+    return origin, None
 
 
 def verify_with_key_source(record: dict, pinned: dict | None, fetch=published_key,
@@ -154,8 +184,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--max-age", type=int, default=MAX_AGE_SECONDS, metavar="SECONDS",
                     help=f"how old the record's iat may be (default {MAX_AGE_SECONDS}, section 3.2.2); must be positive")
     ap.add_argument("--registry", metavar="ORIGIN", default=None,
-                    help="the https origin whose published key is trusted (default: the origin under the record's did:web subject); "
-                         "the record's resolver must agree with it")
+                    help="the https origin of the registry you trust, whose published key verifies the record; required unless "
+                         "--jwk pins the key; the record's subject and resolver must agree with it")
     ap.add_argument("--now", type=int, default=None, metavar="EPOCH_SECONDS",
                     help="verify as of this moment instead of the clock: a retained record re-verified at its own time")
     a = ap.parse_args(argv)
