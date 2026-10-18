@@ -121,6 +121,46 @@ def test_a_verified_result_carries_the_profile_fields_and_the_time_it_was_made_a
     assert current["verified_at_overridden"] is False and abs(current["verified_at"] - int(x.time.time())) < 5
 
 
+def test_one_instant_is_frozen_at_the_boundary_and_is_what_the_library_was_given(monkeypatch):
+    """A clock answering 100 then 101 (the review's two-value control): the library must be given the instant the
+    verdict reports, with no override and with --now, on every path (pinned, published, no-key)."""
+    given = []
+    real = x.verify_record
+
+    def spy(record, jwk, **kw):
+        given.append(kw["now"])
+        return real(record, jwk, **kw)
+
+    monkeypatch.setattr(x, "verify_record", spy)
+    base = RECORD["iat"]
+    ticks = iter([base + 100, base + 101, base + 102, base + 103, base + 104, base + 105])
+    monkeypatch.setattr(x.time, "time", lambda: next(ticks))
+    got = x.verify_with_key_source(RECORD, JWK, fetch=no_fetch)
+    assert given == [base + 100] and got["verified_at"] == base + 100 and got["verified_at_overridden"] is False, "pinned, no override"
+    doc = published_doc()
+    got = x.verify_with_key_source(RECORD, None, fetch=lambda o, k: x.key_from_published(doc, k), registry=REGISTRY)
+    assert given == [base + 100, base + 101] and got["verified_at"] == base + 101 and got["verified_at_overridden"] is False, "published, no override"
+    got = x.verify_with_key_source(RECORD, None, fetch=no_fetch)
+    assert given == [base + 100, base + 101] and got["verified_at"] == base + 102 and got["status"] == "no-key", "no-key: one clock read, no library call"
+    got = x.verify_with_key_source(RECORD, JWK, fetch=no_fetch, now=AT_ISSUE)
+    assert given[-1] == AT_ISSUE and got["verified_at"] == AT_ISSUE and got["verified_at_overridden"] is True, "explicit --now"
+    assert x.verification(RECORD, JWK)["verified_at"] == given[-1] == base + 103, "verification() alone reads the clock once"
+
+
+def test_the_cli_freezes_one_instant_too(monkeypatch, capsys):
+    given = []
+    real = x.verify_record
+    monkeypatch.setattr(x, "verify_record", lambda record, jwk, **kw: (given.append(kw["now"]), real(record, jwk, **kw))[1])
+    ticks = iter([RECORD["iat"] + 7, RECORD["iat"] + 8])
+    monkeypatch.setattr(x.time, "time", lambda: next(ticks))
+    assert x.main([str(EX / "01-trust-record.json"), "--jwk", str(EX / "expected.json")]) == 0
+    out = json.loads(capsys.readouterr().out)
+    assert given == [RECORD["iat"] + 7] and out["verified_at"] == RECORD["iat"] + 7 and out["verified_at_overridden"] is False
+    assert x.main([str(EX / "01-trust-record.json"), "--jwk", str(EX / "expected.json"), "--now", str(AT_ISSUE)]) == 0
+    out = json.loads(capsys.readouterr().out)
+    assert given[-1] == AT_ISSUE and out["verified_at"] == AT_ISSUE and out["verified_at_overridden"] is True
+
+
 def test_the_trust_origin_is_the_relying_partys_and_nothing_in_the_record_supplies_it():
     """A record names its subject and its resolver; a record signed under a publisher of its own choosing names that
     publisher in both. So the origin comes from --registry alone, and the record must agree with it."""

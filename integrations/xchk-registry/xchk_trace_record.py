@@ -36,22 +36,37 @@ from cryptography.exceptions import InvalidSignature
 MAX_AGE_SECONDS = 86400
 
 
-def as_of_fields(now: int | None) -> dict:
-    """The instant a verdict was made against, and whether the caller supplied it: on EVERY verdict, no-key included."""
-    return {"verified_at": int(time.time()) if now is None else int(now), "verified_at_overridden": now is not None}
+class Instant:
+    """ONE effective verification instant, frozen where the caller's request enters and used for everything after:
+    the library call and every emitted verdict, no-key included. The clock is read at most once per verdict, so the
+    instant the library checked against and the instant the verdict reports can never differ (review of #338,
+    18 Oct 2026: with a clock answering 100 then 101, the library had been given 101 while the verdict said 100).
+    `overridden` says whether the caller supplied it (--now, a retained record re-verified at its own time)."""
+
+    __slots__ = ("at", "overridden")
+
+    def __init__(self, now: int | None = None):
+        self.overridden = now is not None
+        self.at = int(now) if self.overridden else int(time.time())
+
+    def fields(self) -> dict:
+        return {"verified_at": self.at, "verified_at_overridden": self.overridden}
 
 
-def verification(record: dict, jwk: dict, max_age_seconds: int = MAX_AGE_SECONDS, now: int | None = None) -> dict:
+def _instant(now) -> Instant:
+    return now if isinstance(now, Instant) else Instant(now)
+
+
+def verification(record: dict, jwk: dict, max_age_seconds: int = MAX_AGE_SECONDS, now: int | Instant | None = None) -> dict:
     """The library's verdict on a record under a trusted key: status, the revocation outcome as the library
     reported it (section 3.2.3: `no_check_performed` when no bundle or store was given, as here), and the reason
-    for a refusal. `max_age_seconds` must be a positive bound."""
+    for a refusal. `max_age_seconds` must be a positive bound. `now` may be an already-frozen Instant."""
     if not isinstance(max_age_seconds, int) or isinstance(max_age_seconds, bool) or max_age_seconds <= 0:
         raise ValueError("max_age_seconds must be a positive number of seconds; the age check cannot be disabled")
-    # the instant every check is made against: the clock, or the one the caller supplied for a historical check.
-    # It is in every verdict so two verdicts at different times are never the same JSON (review of #338, 18 Oct 2026).
-    when = as_of_fields(now)
+    instant = _instant(now)
+    when = instant.fields()
     try:
-        result = verify_record(record, jwk, max_age_seconds=max_age_seconds, now=when["verified_at"])
+        result = verify_record(record, jwk, max_age_seconds=max_age_seconds, now=instant.at)
     except InvalidSignature:
         return {"status": "invalid", "reason": "signature does not verify", "revocation": None, **when}
     except ValueError as e:
@@ -63,7 +78,7 @@ def verification(record: dict, jwk: dict, max_age_seconds: int = MAX_AGE_SECONDS
             "trusted_key_thumbprint": getattr(result, "trusted_key_thumbprint", None), **when}
 
 
-def record_verifies(record: dict, jwk: dict, max_age_seconds: int = MAX_AGE_SECONDS, now: int | None = None) -> bool:
+def record_verifies(record: dict, jwk: dict, max_age_seconds: int = MAX_AGE_SECONDS, now: int | Instant | None = None) -> bool:
     return verification(record, jwk, max_age_seconds, now)["status"] == "verified"
 
 
@@ -167,19 +182,20 @@ def trusted_origin(record: dict, registry: str | None) -> tuple[str | None, str 
 
 
 def verify_with_key_source(record: dict, pinned: dict | None, fetch=published_key,
-                           max_age_seconds: int = MAX_AGE_SECONDS, now: int | None = None, registry: str | None = None) -> dict:
+                           max_age_seconds: int = MAX_AGE_SECONDS, now: int | Instant | None = None, registry: str | None = None) -> dict:
     cnf = (record.get("cnf") or {}).get("jwk") or {}
     kid = cnf.get("kid")
-    bounds = {"max_age_seconds": max_age_seconds, **as_of_fields(now)}
+    instant = _instant(now)   # frozen here, once; the same object reaches verification() and every verdict below
+    bounds = {"max_age_seconds": max_age_seconds, **instant.fields()}
     if pinned:
-        return {**verification(record, pinned, max_age_seconds, now), "key_source": "pinned", "kid": pinned.get("kid") or kid, **bounds}
+        return {**verification(record, pinned, max_age_seconds, instant), "key_source": "pinned", "kid": pinned.get("kid") or kid, **bounds}
     origin, refusal = trusted_origin(record, registry)
     if refusal:
         return {"status": "no-key", "key_source": None, "kid": kid, "revocation": None, **bounds, "reason": refusal}
     if isinstance(kid, str) and kid:
         key = fetch(origin, kid)
         if key:
-            return {**verification(record, key, max_age_seconds, now), "key_source": "published", "kid": kid, "trusted_origin": origin, **bounds}
+            return {**verification(record, key, max_age_seconds, instant), "key_source": "published", "kid": kid, "trusted_origin": origin, **bounds}
     return {"status": "no-key", "key_source": None, "kid": kid, "revocation": None, "trusted_origin": origin, **bounds,
             "reason": f"no Ed25519 key {kid!r} published at {origin}/.well-known/xchk-keys.json (or pass --jwk)"}
 
@@ -203,7 +219,7 @@ def main(argv: list[str] | None = None) -> int:
     if a.jwk:
         j = json.loads(Path(a.jwk).read_text(encoding="utf-8"))
         jwk = j.get("trace_signer_jwk", j)
-    out = verify_with_key_source(record, jwk, max_age_seconds=a.max_age, now=a.now, registry=a.registry)
+    out = verify_with_key_source(record, jwk, max_age_seconds=a.max_age, now=Instant(a.now), registry=a.registry)
     out["approval_outcome_references"] = [
         {"id": r.get("id"), "resolver": r.get("resolver"), "digest": r.get("digest")}
         for r in record.get("references", []) if isinstance(r, dict) and r.get("rel") == "approval-outcome"
