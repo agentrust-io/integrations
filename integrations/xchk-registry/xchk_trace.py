@@ -61,7 +61,7 @@ def published_key(resolver: str, kid: str, timeout: float = 20.0) -> dict | None
     None when the document is unreachable or names no such key."""
     url = f"{resolver.rstrip('/')}/.well-known/xchk-keys.json"
     try:
-        with urllib.request.urlopen(url, timeout=timeout) as r:  # noqa: S310
+        with urllib.request.urlopen(url, timeout=timeout) as r:
             doc = json.load(r)
     except Exception:  # noqa: BLE001
         return None
@@ -100,7 +100,7 @@ def verify_with_key_source(record: dict, pinned: dict | None, allow_embedded: bo
 def fetch_bundle(resolver: str, ref_id: str, timeout: float = 20.0) -> dict | None:
     url = f"{resolver.rstrip('/')}/api/receipt/{ref_id}/bundle"
     try:
-        with urllib.request.urlopen(url, timeout=timeout) as r:  # noqa: S310 (the resolver is the record's own claim)
+        with urllib.request.urlopen(url, timeout=timeout) as r:
             return json.load(r)
     except Exception:  # noqa: BLE001
         return None

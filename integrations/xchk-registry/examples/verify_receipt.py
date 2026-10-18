@@ -36,6 +36,7 @@ import base64
 import hashlib
 import json
 import sys
+from typing import Optional
 
 try:  # optional post-quantum half: https://pypi.org/project/dilithium-py (pure Python)
     from dilithium_py.ml_dsa import ML_DSA_65 as _ML_DSA_65

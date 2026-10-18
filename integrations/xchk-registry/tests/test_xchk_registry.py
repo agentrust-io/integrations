@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-import xchk_trace  # noqa: E402
+import xchk_trace
 
 EX = Path(__file__).resolve().parents[1] / "examples"
 EXPECTED = json.loads((EX / "expected.json").read_text(encoding="utf-8"))
@@ -36,7 +36,8 @@ def test_the_record_verifies_with_the_pinned_registry_key():
 
 def test_the_embedded_key_is_never_reported_as_verified():
     """A record checked against its own cnf.jwk is self-consistent, not verified: any self-signed record passes that."""
-    no_fetch = lambda resolver, kid: None  # noqa: E731
+    def no_fetch(resolver, kid):
+        return None
     assert xchk_trace.verify_with_key_source(RECORD, None, False, fetch=no_fetch)["status"] == "no-key"
     got = xchk_trace.verify_with_key_source(RECORD, None, True, fetch=no_fetch)
     assert got["status"] == "self-consistent" and got["key_source"] == "embedded"
