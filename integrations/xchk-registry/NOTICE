@@ -1,0 +1,6 @@
+xchk-registry integration: Apache-2.0, copyright (c) 2026 Sean MacGuire.
+
+examples/01-trust-record.json: a Trust Record minted and signed by the registry at https://in.xchk.io for plate
+ENG-WNP3, run 3057 (18 October 2026), cut to one approval-outcome reference. examples/expected.json pins the
+registry's seal key, as published at https://in.xchk.io/.well-known/xchk-keys.json, so the test runs offline. The
+record carries the plate owner's identifiers; he chose to publish it.

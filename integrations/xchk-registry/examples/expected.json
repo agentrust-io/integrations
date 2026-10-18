@@ -1,0 +1,13 @@
+{
+  "trace_signer_jwk": {
+    "kty": "OKP",
+    "crv": "Ed25519",
+    "x": "mn02E1XyTkaVN6DEOemU5OADMUAUjPHw67oR5KKIM3k",
+    "kid": "5ecb3da505414c4f"
+  },
+  "resolver": "https://in.xchk.io",
+  "plate": "ENG-WNP3",
+  "runSeq": 3057,
+  "generated_at": "2026-10-17T15:54:52.151Z",
+  "note": "The signer key is the registry's seal key, published at <resolver>/.well-known/xchk-keys.json; pinned here so the test runs offline."
+}
