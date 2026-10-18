@@ -3,6 +3,7 @@ The live key fetch runs only with REGISTRY_LIVE=1, so CI never depends on the re
 from __future__ import annotations
 
 import base64
+import copy
 import json
 import os
 import sys
@@ -73,6 +74,19 @@ def test_the_embedded_key_is_never_used_without_a_pinned_or_published_key():
     assert x.verify_with_key_source(RECORD, None, fetch=no_fetch, now=AT_ISSUE)["status"] == "no-key"
     got = x.verify_with_key_source(RECORD, JWK, fetch=no_fetch, now=AT_ISSUE)
     assert got["status"] == "verified" and got["key_source"] == "pinned"
+
+
+def signed_with(key, record_fields: dict, kid: str) -> dict:
+    """A record signed end to end by `key`, the way the library signs (Ed25519 over the JCS form, `signature` absent)."""
+    import agentrust_trace as t
+    jwk = {**t.key_to_jwk(key), "kid": kid}
+    payload = {**record_fields, "cnf": {"jwk": jwk}}
+    return {**payload, "signature": base64.urlsafe_b64encode(key.sign(t.sign._canonical_bytes(payload))).rstrip(b"=").decode()}
+
+
+def doc_for(jwk: dict, kid: str) -> dict:
+    raw = base64.urlsafe_b64decode(jwk["x"] + "=" * (-len(jwk["x"]) % 4))
+    return {"keys": [{"keyId": kid, "alg": "ed25519", "publicKeyRaw": base64.b64encode(raw).decode("ascii")}]}
 
 
 def published_doc():
@@ -276,7 +290,6 @@ ODD = [None, [], {}, "", "x", 0, 1, -1, True, 1.5, [1], {"a": 1}, "did:web:in.xc
 
 
 def _mutations():
-    import copy
     for k in list(RECORD) + ["cnf.jwk", "cnf.jwk.kid", "references.0", "references.0.resolver", "references.0.rel"]:
         for v in ODD:
             r = copy.deepcopy(RECORD)
@@ -363,3 +376,148 @@ def test_the_verdict_names_the_key_the_record_claims_and_the_key_actually_used()
     got = x.verify_with_key_source(RECORD, unnamed, fetch=no_fetch, now=AT_ISSUE)
     assert got["status"] == "verified" and got["kid"] == RECORD["cnf"]["jwk"]["kid"] and got["pinned_kid"] is None
     assert x.verify_with_key_source(RECORD, {"kty": "RSA"}, fetch=no_fetch, now=AT_ISSUE)["status"] == "no-key"
+
+
+# Review of 2dcb159 (noah-ing, dinakarjs): three bounded cases, each with a freshly signed synthetic record and a valid twin.
+def _fresh_signed(**changes):
+    import agentrust_trace as t
+    key = t.generate_key()
+    fields = {k: v for k, v in RECORD.items() if k not in ("signature", "cnf")}
+    fields.update(changes)
+    return signed_with(key, fields, "fresh-kid"), {**t.key_to_jwk(key), "kid": "fresh-kid"}
+
+
+def test_malformed_registry_origins_are_refusals_with_a_verdict_and_no_fetch(capsys):
+    rec = str(EX / "01-trust-record.json")
+    asked = []
+    for reg in ("https://in.xchk.io:bad", "https://in.xchk.io:65536", "https://in.xchk.io:-1", "https://[broken", "https://[::1", "https://in.xchk.io:", "https://:443", "https://in.xchk.io:80:80"):
+        origin, why = x.https_origin(reg)
+        assert origin is None and why, reg
+        got = x.verify_with_key_source(RECORD, None, fetch=lambda o, k: asked.append(o), now=AT_ISSUE, registry=reg)
+        assert got["status"] == "no-key" and got["reason"] and asked == [], reg
+        try:
+            rc = x.main([rec, "--registry", reg, "--now", str(AT_ISSUE)])
+        except SystemExit as e:
+            rc = e.code
+        out = json.loads(capsys.readouterr().out)
+        assert rc == 1 and out["status"] == "no-key" and out["verified_at"] == AT_ISSUE, reg
+    assert x.https_origin("https://[::1]:8443") == ("https://::1:8443", None)
+    assert x.https_origin("https://in.xchk.io:443") == ("https://in.xchk.io:443", None)
+    # the valid twin: same record, well-formed origin, the key fetched once
+    doc = published_doc()
+    got = x.verify_with_key_source(RECORD, None, fetch=lambda o, k: (asked.append(o), x.key_from_published(doc, k))[1], now=AT_ISSUE, registry=REGISTRY)
+    assert got["status"] == "verified" and asked == [REGISTRY]
+
+
+def test_the_subject_must_be_a_did_web_under_the_trusted_origin():
+    asked = []
+    for subject in ("did:key:z6Mkunbound", "", None, 7, "did:web:", "urn:x", "did:web:other.example:plate:X"):
+        rec, jwk = _fresh_signed(subject=subject)
+        if subject in ("did:key:z6Mkunbound", "did:web:other.example:plate:X"):
+            assert x.record_verifies(rec, jwk, now=AT_ISSUE), "the control is validly signed under its own key (the library's schema rejects the malformed ones on its own)"
+        doc = doc_for(jwk, "fresh-kid")
+        got = x.verify_with_key_source(rec, None, fetch=lambda o, k: (asked.append(o), x.key_from_published(doc, k))[1], now=AT_ISSUE, registry=REGISTRY)
+        assert got["status"] == "no-key" and "subject" in got["reason"] and asked == [], repr(subject)
+    rec, jwk = _fresh_signed(subject="did:web:in.xchk.io:plate:TWIN")
+    doc = doc_for(jwk, "fresh-kid")
+    got = x.verify_with_key_source(rec, None, fetch=lambda o, k: (asked.append(o), x.key_from_published(doc, k))[1], now=AT_ISSUE, registry=REGISTRY)
+    assert got["status"] == "verified" and asked == [REGISTRY], "the twin: a did:web under the origin, verified with the fetched key"
+
+
+def test_every_approval_outcome_reference_must_resolve_at_the_trusted_origin_whatever_its_order():
+    on = RECORD["references"][0]
+    off = {**on, "id": "b" * 64, "digest": "sha256:" + "b" * 64, "resolver": "https://attacker.example"}
+    unnamed = {k: v for k, v in on.items() if k != "resolver"}
+    other_kind = {"rel": "something-else", "id": "c" * 64, "digest": "sha256:" + "c" * 64, "resolver": "https://attacker.example"}
+    asked = []
+    def check(refs, expect, why=None):
+        rec, jwk = _fresh_signed(references=refs)
+        doc = doc_for(jwk, "fresh-kid")
+        got = x.verify_with_key_source(rec, None, fetch=lambda o, k: (asked.append(o), x.key_from_published(doc, k))[1], now=AT_ISSUE, registry=REGISTRY)
+        assert got["status"] == expect, (refs, got.get("reason"))
+        if why:
+            assert why in got["reason"], got["reason"]
+    check([on, off], "no-key", "reference 1")
+    check([off, on], "no-key", "reference 0")
+    check([on, on, off], "no-key", "reference 2")
+    assert asked == [], "nothing fetched for any order"
+    check([on, unnamed], "no-key", "names no resolver")
+    check([unnamed], "no-key", "names no resolver")
+    check([on, other_kind], "verified")
+    check([on, on], "verified")
+    check([], "verified")
+    assert asked == [REGISTRY, REGISTRY, REGISTRY], "the twins fetched the key once each"
+    assert x.approval_resolvers({"references": [on, off]}) == ([on["resolver"], "https://attacker.example"], None)
+
+
+# The sweep that should have come first: many origin strings, subjects and reference orderings, on signed synthetic
+# records, through verify_with_key_source and main(). A verdict every time, and a fetch only for a well-formed origin
+# that the record agrees with.
+ORIGINS = ["https://in.xchk.io", "https://in.xchk.io/", "HTTPS://IN.XCHK.IO", "https://in.xchk.io:443", "https://in.xchk.io:8443", "https://[::1]:8443",
+           "https://in.xchk.io:", "https://in.xchk.io:bad", "https://in.xchk.io:65536", "https://in.xchk.io:-1", "https://in.xchk.io:80:80", "https://[broken", "https://[::1",
+           "https://", "https:///", "https://:443", "https://in.xchk.io/path", "https://in.xchk.io?x=1", "https://in.xchk.io#f", "https://u@in.xchk.io", "https://u:p@in.xchk.io",
+           "http://in.xchk.io", "ftp://in.xchk.io", "in.xchk.io", "//in.xchk.io", "", " ", " https://in.xchk.io", "https://in.xchk.io ", "https://in.xchk.io\n", "https://in.xchk.io.",
+           "https://xn--nxasmq6b.example", "https://ïn.xchk.io", "https://in.xchk.io\x00", "https://in.xchk.io:0", "https://in.xchk.io:00443", "https://127.0.0.1", "https://[::ffff:1.2.3.4]",
+           "https://in.xchk.io%2Fx", "https://in.xchk.io\\x", "https://in.xchk.io;x", "https://in.xchk.io:443/", "https://IN.xchk.IO:443"]
+SUBJECTS = [RECORD["subject"], "did:web:IN.XCHK.IO:plate:X", "did:web:in.xchk.io", "did:web:in.xchk.io%3A443:plate:X", "did:web:in.xchk.io%3A8443:plate:X", "did:key:z6Mk", "did:web:", "did:web:other.example:x",
+            "", None, 7, [], {}, "did:web:in.xchk.io/plate", "did:web:in.xchk.io@x", "did:web:..", "did:web:in.xchk.io.", "DID:WEB:in.xchk.io:plate:X"]
+
+
+def test_sweep_origins_subjects_and_references_on_signed_records(tmp_path, capsys, monkeypatch):
+    import agentrust_trace as t
+    key = t.generate_key()
+    jwk = {**t.key_to_jwk(key), "kid": "fresh-kid"}
+    doc = doc_for(jwk, "fresh-kid")
+    asked = []
+
+    def fetch(o, k):
+        asked.append(o)
+        return x.key_from_published(doc, k)
+
+    base = {k: v for k, v in RECORD.items() if k not in ("signature", "cnf")}
+    on = RECORD["references"][0]
+    off = {**on, "id": "b" * 64, "digest": "sha256:" + "b" * 64, "resolver": "https://attacker.example"}
+    noresolver = {k: v for k, v in on.items() if k != "resolver"}
+    ref_sets = [[on], [on, on], [on, off], [off, on], [on, noresolver], [], [off], [on, {**on, "resolver": "https://IN.xchk.io/"}]]
+    runs = 0
+    for origin in ORIGINS:
+        well_formed, _ = x.https_origin(origin)
+        for subject in SUBJECTS:
+            for refs in ref_sets:
+                rec = signed_with(key, {**base, "subject": subject, "references": refs}, "fresh-kid")
+                before = len(asked)
+                got = x.verify_with_key_source(rec, None, fetch=fetch, now=AT_ISSUE, registry=origin)
+                runs += 1
+                assert got["status"] in ("verified", "invalid", "no-key") and got["verified_at"] == AT_ISSUE, (origin, subject, refs)
+                fetched = len(asked) - before
+                subj_origin = x.origin_of_did_web(subject)
+                agrees = bool(well_formed) and bool(subj_origin) and x._same_origin(subj_origin, well_formed) and all(
+                    isinstance(r.get("resolver"), str) and x._same_origin(r["resolver"], well_formed) for r in refs if r.get("rel") == "approval-outcome")
+                assert fetched == (1 if agrees else 0), (origin, subject, refs, got.get("reason"))
+                if not agrees:
+                    assert got["status"] == "no-key", (origin, subject, refs, got.get("reason"))
+    assert runs == len(ORIGINS) * len(SUBJECTS) * len(ref_sets)
+    # the same origins through the CLI, pinned and published, no crash
+    f = tmp_path / "r.json"
+    f.write_text(json.dumps(RECORD), encoding="utf-8")
+
+    class Resp:
+        status = 200
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+        def read(self, n=-1): return json.dumps(published_doc()).encode()
+
+    class Opener:
+        def open(self, url, timeout=0): return Resp()
+
+    monkeypatch.setattr(x.urllib.request, "build_opener", lambda *h: Opener())
+    for origin in ORIGINS:
+        for extra in (["--registry", origin], ["--registry", origin, "--jwk", str(EX / "expected.json")]):
+            try:
+                rc = x.main([str(f), "--now", str(AT_ISSUE)] + extra)
+            except SystemExit as e:
+                rc = e.code
+            except Exception as e:  # noqa: BLE001
+                raise AssertionError(f"{origin!r} crashed the CLI: {type(e).__name__}: {e}") from e
+            out = json.loads(capsys.readouterr().out)
+            assert rc in (0, 1) and out["status"] in ("verified", "invalid", "no-key"), origin

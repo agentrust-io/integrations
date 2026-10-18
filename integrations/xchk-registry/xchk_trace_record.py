@@ -5,8 +5,8 @@
 
 The registry signs each record with its seal key. The record's `cnf.jwk` carries that key and its `kid`; the same
 key is published at `<origin>/.well-known/xchk-keys.json`, where `<origin>` is the registry the relying party trusts,
-given out of band with --registry; nothing in the record supplies it. The record's `subject` and `resolver` must
-agree with that origin. This tool verifies with the pinned key when given one, else with the published key under
+given out of band with --registry; nothing in the record supplies it. The record's `subject` must be a `did:web`
+under that origin, and every `approval-outcome` reference must resolve there. This tool verifies with the pinned key when given one, else with the published key under
 that `kid`. It never verifies against the key the record itself carries, and never fetches a key from a server the
 record names, in its references or in its subject: either way a self-made record would pass, which proves integrity
 and not origin. Without --registry or --jwk there is no trust anchor and the answer is `no-key`.
@@ -159,14 +159,22 @@ def https_origin(value) -> tuple[str | None, str | None]:
     key document's location is derived from it and anything more is a different document."""
     if not isinstance(value, str) or not value:
         return None, "the trusted origin must be an https origin"
-    u = urllib.parse.urlsplit(value)
+    try:
+        u = urllib.parse.urlsplit(value)
+        host, port = u.hostname, u.port   # both raise ValueError on a malformed netloc (bad bracket, non-numeric or out-of-range port)
+    except ValueError as e:
+        return None, f"the trusted origin could not be parsed: {e}"
     if u.scheme.lower() != "https":
         return None, "the trusted origin must be https"
-    if not u.hostname or u.username is not None or u.password is not None:
+    if not host or u.username is not None or u.password is not None:
         return None, "the trusted origin must be a host, with no credentials"
     if u.path not in ("", "/") or u.query or u.fragment:
         return None, "the trusted origin must be an origin only: no path, query or fragment"
-    return f"https://{u.hostname.lower()}" + (f":{u.port}" if u.port else ""), None
+    origin = f"https://{host.lower()}" + (f":{port}" if port else "")
+    # the netloc must be exactly what the origin says: a trailing colon, an empty port or anything else in it is refused
+    if u.netloc.lower() != origin[len("https://"):] and u.netloc.lower() != f"[{host.lower()}]" + (f":{port}" if port else ""):
+        return None, "the trusted origin must be host or host:port and nothing else"
+    return origin, None
 
 
 def published_key(origin: str, kid: str, timeout: float = 20.0) -> dict | None:
@@ -197,9 +205,27 @@ def references_of(record) -> list:
     return [r for r in refs if isinstance(r, dict)] if isinstance(refs, list) else []
 
 
+def approval_resolvers(record) -> tuple[list, str | None]:
+    """(resolvers, refusal): the resolver of EVERY approval-outcome reference, in order. A reference of that rel with
+    no string resolver is a refusal: the registry is obliged to keep each one resolvable (section 3.1.2), so one that
+    names no resolver is not a reference this tool can check against the origin. References of other kinds are
+    ignored. (Review of #338, 18 Oct 2026: only the first resolver used to be checked, so the verdict depended on
+    the order of the references.)"""
+    out = []
+    for i, r in enumerate(references_of(record)):
+        if r.get("rel") != "approval-outcome":
+            continue
+        resolver = r.get("resolver")
+        if not isinstance(resolver, str) or not resolver:
+            return [], f"approval-outcome reference {i} names no resolver"
+        out.append(resolver)
+    return out, None
+
+
 def resolver_of(record) -> str | None:
-    refs = [r for r in references_of(record) if isinstance(r.get("resolver"), str) and r.get("resolver")]
-    return refs[0]["resolver"] if refs else None
+    """The first approval-outcome resolver, for display; trusted_origin checks all of them."""
+    resolvers, _ = approval_resolvers(record)
+    return resolvers[0] if resolvers else None
 
 
 def record_kid(record) -> str | None:
@@ -220,12 +246,21 @@ def trusted_origin(record: dict, registry: str | None) -> tuple[str | None, str 
     origin, why = https_origin(registry)
     if why:
         return None, why
-    subject_origin = origin_of_did_web(record.get("subject"))
-    if subject_origin and not _same_origin(subject_origin, origin):
+    # the subject must be a did:web under the trusted origin: this registry mints no other kind, and a record whose
+    # subject is absent, unparseable or of another method cannot be bound to the origin at all (review of #338)
+    subject = record.get("subject")
+    subject_origin = origin_of_did_web(subject)
+    if not subject_origin:
+        return None, "the record's subject is not a did:web identifier, so it cannot be bound to the trusted origin"
+    if not _same_origin(subject_origin, origin):
         return None, f"the record's subject lives under {subject_origin}, not the trusted origin {origin}"
-    resolver = resolver_of(record)
-    if resolver and not _same_origin(resolver, origin):
-        return None, f"the record's resolver {resolver} is not the trusted origin {origin}"
+    # every approval-outcome reference must resolve at the trusted origin, whatever its position
+    resolvers, why = approval_resolvers(record)
+    if why:
+        return None, why
+    for i, resolver in enumerate(resolvers):
+        if not _same_origin(resolver, origin):
+            return None, f"approval-outcome reference {i} resolves at {resolver}, not the trusted origin {origin}"
     return origin, None
 
 
