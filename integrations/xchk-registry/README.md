@@ -31,9 +31,12 @@ given out of band with `--registry`. Nothing in the record supplies the origin: 
 `did:web` subject, because a record signed under a publisher of its own choosing names that publisher in both,
 and agreeing with itself is not a trust anchor. The record's subject and resolver must agree with the origin given.
 Without `--registry` or `--jwk` the answer is `no-key`. It never verifies against the key the record itself carries,
-for the same reason. The fetch is https only, follows no redirect, reads at most 256 KB, and a key document of the
-wrong shape is no key, never a crash. A verified result carries the verified `profile` and the complete
-`accepted_profiles` set (section 3.3), the trusted key's thumbprint, the key source and the trusted origin, and
+for the same reason. `--registry` must be an https origin and nothing more (no credentials, path, query or
+fragment). The fetch is https only, follows no redirect, reads at most 256 KB, and a key document of the wrong
+shape is no key, never a crash; the same holds for a record file or pinned-key file of the wrong shape, and for any
+field of the record: every input ends in a JSON verdict and an exit code. A verified result carries the verified
+`profile` and the complete `accepted_profiles` set (section 3.3), the thumbprint of the key actually used, `kid`
+(the key the record names) and `pinned_kid` when a pinned key named one, the key source and the trusted origin, and
 lists the `approval-outcome` references as they appear; it does not resolve them.
 
 The record's age is bounded: `iat` may be at most `--max-age` seconds old, default 86400 (24 hours, the library's

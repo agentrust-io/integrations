@@ -23,6 +23,7 @@ import base64
 import json
 import sys
 import time
+import urllib.parse
 import urllib.request
 from pathlib import Path
 
@@ -65,12 +66,18 @@ def verification(record: dict, jwk: dict, max_age_seconds: int = MAX_AGE_SECONDS
         raise ValueError("max_age_seconds must be a positive number of seconds; the age check cannot be disabled")
     instant = _instant(now)
     when = instant.fields()
+    if not isinstance(record, dict):
+        return {"status": "invalid", "reason": f"record is not a JSON object ({type(record).__name__})", "revocation": None, **when}
+    if not is_ed25519_jwk(jwk):
+        return {"status": "invalid", "reason": "trusted key is not an Ed25519 JWK", "revocation": None, **when}
     try:
         result = verify_record(record, jwk, max_age_seconds=max_age_seconds, now=instant.at)
     except InvalidSignature:
         return {"status": "invalid", "reason": "signature does not verify", "revocation": None, **when}
     except ValueError as e:
         return {"status": "invalid", "reason": str(e), "revocation": None, **when}
+    except Exception as e:  # noqa: BLE001  a record shape the library did not foresee is not verified, and says why
+        return {"status": "invalid", "reason": f"{type(e).__name__}: {e}", "revocation": None, **when}
     revocation = getattr(result, "revocation", None)
     # section 3.3: a successful result reports the profile it verified under and the whole set the verifier accepts
     return {"status": "verified", "revocation": getattr(revocation, "outcome", None) or "no_check_performed",
@@ -80,6 +87,19 @@ def verification(record: dict, jwk: dict, max_age_seconds: int = MAX_AGE_SECONDS
 
 def record_verifies(record: dict, jwk: dict, max_age_seconds: int = MAX_AGE_SECONDS, now: int | Instant | None = None) -> bool:
     return verification(record, jwk, max_age_seconds, now)["status"] == "verified"
+
+
+def is_ed25519_jwk(jwk) -> bool:
+    """An OKP/Ed25519 JWK with base64url key material of 32 bytes; nothing else is a key this tool verifies with."""
+    if not isinstance(jwk, dict) or jwk.get("kty") != "OKP" or jwk.get("crv") != "Ed25519":
+        return False
+    x = jwk.get("x")
+    if not isinstance(x, str) or not x:
+        return False
+    try:
+        return len(base64.urlsafe_b64decode(x + "=" * (-len(x) % 4))) == 32
+    except (ValueError, TypeError):
+        return False
 
 
 def key_from_published(doc, kid: str) -> dict | None:
@@ -130,8 +150,23 @@ def origin_of_did_web(subject: str) -> str | None:
     return f"https://{host.lower()}"
 
 
-def _same_origin(a: str, b: str) -> bool:
-    return a.rstrip("/").lower() == b.rstrip("/").lower()
+def _same_origin(a, b) -> bool:
+    return isinstance(a, str) and isinstance(b, str) and a.rstrip("/").lower() == b.rstrip("/").lower()
+
+
+def https_origin(value) -> tuple[str | None, str | None]:
+    """(origin, refusal): `https://host[:port]` and nothing else: no userinfo, path, query or fragment, because the
+    key document's location is derived from it and anything more is a different document."""
+    if not isinstance(value, str) or not value:
+        return None, "the trusted origin must be an https origin"
+    u = urllib.parse.urlsplit(value)
+    if u.scheme.lower() != "https":
+        return None, "the trusted origin must be https"
+    if not u.hostname or u.username is not None or u.password is not None:
+        return None, "the trusted origin must be a host, with no credentials"
+    if u.path not in ("", "/") or u.query or u.fragment:
+        return None, "the trusted origin must be an origin only: no path, query or fragment"
+    return f"https://{u.hostname.lower()}" + (f":{u.port}" if u.port else ""), None
 
 
 def published_key(origin: str, kid: str, timeout: float = 20.0) -> dict | None:
@@ -156,9 +191,22 @@ def published_key(origin: str, kid: str, timeout: float = 20.0) -> dict | None:
         return None
 
 
-def resolver_of(record: dict) -> str | None:
-    refs = [r for r in record.get("references", []) if isinstance(r, dict) and r.get("resolver")]
+def references_of(record) -> list:
+    """The record's reference objects; anything that is not a list of objects reads as none."""
+    refs = record.get("references") if isinstance(record, dict) else None
+    return [r for r in refs if isinstance(r, dict)] if isinstance(refs, list) else []
+
+
+def resolver_of(record) -> str | None:
+    refs = [r for r in references_of(record) if isinstance(r.get("resolver"), str) and r.get("resolver")]
     return refs[0]["resolver"] if refs else None
+
+
+def record_kid(record) -> str | None:
+    cnf = record.get("cnf") if isinstance(record, dict) else None
+    jwk = cnf.get("jwk") if isinstance(cnf, dict) else None
+    kid = jwk.get("kid") if isinstance(jwk, dict) else None
+    return kid if isinstance(kid, str) and kid else None
 
 
 def trusted_origin(record: dict, registry: str | None) -> tuple[str | None, str | None]:
@@ -169,9 +217,9 @@ def trusted_origin(record: dict, registry: str | None) -> tuple[str | None, str 
     and `resolver` must then agree with the origin, which catches a record that was minted for another registry."""
     if not registry:
         return None, "no trust anchor: pass --registry <https origin of the registry you trust>, or --jwk <its pinned key>"
-    if not isinstance(registry, str) or not registry.lower().startswith("https://"):
-        return None, "the trusted origin must be https"
-    origin = registry.rstrip("/")
+    origin, why = https_origin(registry)
+    if why:
+        return None, why
     subject_origin = origin_of_did_web(record.get("subject"))
     if subject_origin and not _same_origin(subject_origin, origin):
         return None, f"the record's subject lives under {subject_origin}, not the trusted origin {origin}"
@@ -183,16 +231,20 @@ def trusted_origin(record: dict, registry: str | None) -> tuple[str | None, str 
 
 def verify_with_key_source(record: dict, pinned: dict | None, fetch=published_key,
                            max_age_seconds: int = MAX_AGE_SECONDS, now: int | Instant | None = None, registry: str | None = None) -> dict:
-    cnf = (record.get("cnf") or {}).get("jwk") or {}
-    kid = cnf.get("kid")
     instant = _instant(now)   # frozen here, once; the same object reaches verification() and every verdict below
     bounds = {"max_age_seconds": max_age_seconds, **instant.fields()}
-    if pinned:
-        return {**verification(record, pinned, max_age_seconds, instant), "key_source": "pinned", "kid": pinned.get("kid") or kid, **bounds}
+    if not isinstance(record, dict):
+        return {"status": "invalid", "reason": f"record is not a JSON object ({type(record).__name__})", "key_source": None, "kid": None, "revocation": None, **bounds}
+    kid = record_kid(record)   # always the key the RECORD names; the key actually used is trusted_key_thumbprint, and pinned_kid when pinned
+    if pinned is not None:
+        if not is_ed25519_jwk(pinned):
+            return {"status": "no-key", "key_source": None, "kid": kid, "revocation": None, **bounds, "reason": "the pinned key is not an Ed25519 JWK (kty OKP, crv Ed25519, x of 32 bytes)"}
+        pk = pinned.get("kid")
+        return {**verification(record, pinned, max_age_seconds, instant), "key_source": "pinned", "kid": kid, "pinned_kid": pk if isinstance(pk, str) else None, **bounds}
     origin, refusal = trusted_origin(record, registry)
     if refusal:
         return {"status": "no-key", "key_source": None, "kid": kid, "revocation": None, **bounds, "reason": refusal}
-    if isinstance(kid, str) and kid:
+    if kid:
         key = fetch(origin, kid)
         if key:
             return {**verification(record, key, max_age_seconds, instant), "key_source": "published", "kid": kid, "trusted_origin": origin, **bounds}
@@ -214,18 +266,38 @@ def main(argv: list[str] | None = None) -> int:
     a = ap.parse_args(argv)
     if a.max_age <= 0:
         ap.error("--max-age must be positive; the age check cannot be disabled")
-    record = json.loads(Path(a.record).read_text(encoding="utf-8"))
-    jwk = None
-    if a.jwk:
-        j = json.loads(Path(a.jwk).read_text(encoding="utf-8"))
-        jwk = j.get("trace_signer_jwk", j)
-    out = verify_with_key_source(record, jwk, max_age_seconds=a.max_age, now=Instant(a.now), registry=a.registry)
-    out["approval_outcome_references"] = [
-        {"id": r.get("id"), "resolver": r.get("resolver"), "digest": r.get("digest")}
-        for r in record.get("references", []) if isinstance(r, dict) and r.get("rel") == "approval-outcome"
-    ]
+    if a.now is not None and a.now < 0:
+        ap.error("--now must be a Unix time in seconds")
+    instant = Instant(a.now)   # the one instant for everything below
+    record, why = load_json(a.record)
+    if why:
+        out = {"status": "invalid", "reason": f"record file: {why}", "key_source": None, "kid": None, "revocation": None, "max_age_seconds": a.max_age, **instant.fields()}
+    else:
+        jwk = None
+        if a.jwk:
+            j, why = load_json(a.jwk)
+            if why:
+                out = {"status": "no-key", "reason": f"pinned key file: {why}", "key_source": None, "kid": record_kid(record), "revocation": None, "max_age_seconds": a.max_age, **instant.fields()}
+                print(json.dumps(out, indent=2))
+                return 1
+            jwk = j.get("trace_signer_jwk", j) if isinstance(j, dict) else j   # a bare JWK, or {trace_signer_jwk: ...}; the shape is checked next
+            if not is_ed25519_jwk(jwk):
+                jwk = {"not": "a jwk"}   # verify_with_key_source says so, with the reason; never None (that would mean "no pin given")
+        out = verify_with_key_source(record, jwk, max_age_seconds=a.max_age, now=instant, registry=a.registry)
+        out["approval_outcome_references"] = [
+            {"id": r.get("id"), "resolver": r.get("resolver"), "digest": r.get("digest")}
+            for r in references_of(record) if r.get("rel") == "approval-outcome"
+        ]
     print(json.dumps(out, indent=2))
     return 0 if out["status"] == "verified" else 1
+
+
+def load_json(path: str) -> tuple:
+    """(value, None) or (None, why): a local file that is not JSON is reported, not raised."""
+    try:
+        return json.loads(Path(path).read_text(encoding="utf-8")), None
+    except (OSError, ValueError, UnicodeDecodeError) as e:
+        return None, f"{type(e).__name__}: {str(e)[:120]}"
 
 
 if __name__ == "__main__":

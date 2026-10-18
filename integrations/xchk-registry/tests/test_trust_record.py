@@ -268,3 +268,98 @@ def test_the_cli_runs_offline_with_a_pinned_key(capsys):
 @pytest.mark.skipif(os.environ.get("REGISTRY_LIVE") != "1", reason="set REGISTRY_LIVE=1 to fetch the published key")
 def test_the_published_key_at_the_registry_matches_the_pinned_one():
     assert x.published_key(EXPECTED["resolver"], JWK["kid"]) == {**JWK, "kid": JWK["kid"]}
+
+
+# 18 Oct 2026, after four review rounds found input shapes one at a time: every top-level field, the key fields and the
+# reference fields set to each odd value, through main() on all three paths. A verdict and an exit code, or it is a bug.
+ODD = [None, [], {}, "", "x", 0, 1, -1, True, 1.5, [1], {"a": 1}, "did:web:in.xchk.io:plate:ENG-WNP3", "https://in.xchk.io"]
+
+
+def _mutations():
+    import copy
+    for k in list(RECORD) + ["cnf.jwk", "cnf.jwk.kid", "references.0", "references.0.resolver", "references.0.rel"]:
+        for v in ODD:
+            r = copy.deepcopy(RECORD)
+            parts = k.split(".")
+            tgt = r
+            for p in parts[:-1]:
+                tgt = tgt[int(p)] if p.isdigit() else tgt[p]
+            last = parts[-1]
+            if last.isdigit():
+                tgt[int(last)] = v
+            else:
+                tgt[last] = v
+            yield f"{k}={v!r}", r
+    for whole in ODD:
+        yield f"<record>={whole!r}", whole
+
+
+def test_no_mutation_of_the_record_crashes_the_cli_on_any_path(tmp_path, capsys, monkeypatch):
+    doc = published_doc()
+
+    class Resp:
+        status = 200
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+        def read(self, n=-1): return json.dumps(doc).encode()
+
+    class Opener:
+        def open(self, url, timeout=0): return Resp()
+
+    monkeypatch.setattr(x.urllib.request, "build_opener", lambda *h: Opener())
+    paths = (["--jwk", str(EX / "expected.json")], ["--registry", REGISTRY], [])
+    n = 0
+    for label, record in _mutations():
+        f = tmp_path / "r.json"
+        f.write_text(json.dumps(record), encoding="utf-8")
+        for extra in paths:
+            try:
+                rc = x.main([str(f), "--now", str(AT_ISSUE)] + extra)
+            except SystemExit as e:
+                rc = e.code
+            except Exception as e:  # noqa: BLE001
+                raise AssertionError(f"{label} with {extra[:1]} crashed: {type(e).__name__}: {e}") from e
+            out = json.loads(capsys.readouterr().out)
+            assert rc in (0, 1) and out["status"] in ("verified", "invalid", "no-key"), label
+            assert "verified_at" in out and out["verified_at"] == AT_ISSUE, label
+            n += 1
+    assert n > 700
+
+
+def test_local_input_files_and_arguments_fail_closed_with_a_verdict(tmp_path, capsys):
+    rec = str(EX / "01-trust-record.json")
+    def cli(args):
+        try:
+            rc = x.main(args)
+        except SystemExit as e:
+            rc = e.code
+        return rc, json.loads(capsys.readouterr().out or "{}")
+    bad = tmp_path / "bad.json"
+    for body in ("not json", "[]", "null", "7", '"x"'):
+        bad.write_text(body, encoding="utf-8")
+        rc, out = cli([bad.as_posix(), "--jwk", str(EX / "expected.json"), "--now", str(AT_ISSUE)])
+        assert rc == 1 and out["status"] == "invalid" and out["verified_at"] == AT_ISSUE, body
+    rc, out = cli([str(tmp_path / "missing.json"), "--jwk", str(EX / "expected.json")])
+    assert rc == 1 and out["status"] == "invalid" and "record file" in out["reason"]
+    for body in ("not json", "[]", "null", "7", '{"trace_signer_jwk": []}', '{"kty":"RSA"}', '{"trace_signer_jwk": {"kty":"OKP","crv":"Ed25519","x":12}}',
+                 '{"trace_signer_jwk": {"kty":"OKP","crv":"Ed25519","x":"!!"}}', '{"kty":"OKP","crv":"Ed25519","x":"AAAA"}'):
+        bad.write_text(body, encoding="utf-8")
+        rc, out = cli([rec, "--jwk", bad.as_posix(), "--now", str(AT_ISSUE)])
+        assert rc == 1 and out["status"] == "no-key" and out["kid"] == RECORD["cnf"]["jwk"]["kid"], body
+    for reg in ("http://in.xchk.io", "https://user@in.xchk.io", "https://user:pw@in.xchk.io", "https://in.xchk.io/path", "https://in.xchk.io?x=1", "https://in.xchk.io#f", "https://", "in.xchk.io", ""):
+        rc, out = cli([rec, "--registry", reg, "--now", str(AT_ISSUE)])
+        assert rc == 1 and out["status"] == "no-key", reg
+    assert x.https_origin("HTTPS://In.xchk.io/") == ("https://in.xchk.io", None)
+    assert x.https_origin("https://in.xchk.io:8443") == ("https://in.xchk.io:8443", None)
+    with pytest.raises(SystemExit):
+        x.main([rec, "--jwk", str(EX / "expected.json"), "--now", "-5"])
+    capsys.readouterr()
+
+
+def test_the_verdict_names_the_key_the_record_claims_and_the_key_actually_used():
+    got = x.verify_with_key_source(RECORD, JWK, fetch=no_fetch, now=AT_ISSUE)
+    assert got["kid"] == RECORD["cnf"]["jwk"]["kid"] and got["pinned_kid"] == JWK["kid"] and got["trusted_key_thumbprint"]
+    unnamed = {k: v for k, v in JWK.items() if k != "kid"}
+    got = x.verify_with_key_source(RECORD, unnamed, fetch=no_fetch, now=AT_ISSUE)
+    assert got["status"] == "verified" and got["kid"] == RECORD["cnf"]["jwk"]["kid"] and got["pinned_kid"] is None
+    assert x.verify_with_key_source(RECORD, {"kty": "RSA"}, fetch=no_fetch, now=AT_ISSUE)["status"] == "no-key"
