@@ -36,8 +36,8 @@ import hashlib
 
 from wcm import (
     Ed25519Signer,
-    EnclaveSession,
     generate_ed25519,
+    generate_transport_keypair,
     is_root,
     KeyBrokerService,
     KeyWipedError,
@@ -49,7 +49,7 @@ from wcm import (
     WeightCustodyManifest,
 )
 
-from _mock_attestation import waive_mock_verification
+from _mock_attestation import start_custody, waive_mock_verification
 
 
 def rule(title: str) -> None:
@@ -182,10 +182,13 @@ def main() -> None:
         trusted_manifest_identities=[manifest_identity(base)],
     )
     challenge = kbs.issue_challenge()
+    # The enclave's transport key: the broker seals the released key to it.
+    transport_private, transport_public = generate_transport_keypair()
     evidence = SoftwareProvider().produce(  # a REAL enclave would produce a hardware quote
         challenge,
         serving_image_measurement=serving,
         gpu_measurement="nvidia-rim:demo-golden",
+        transport_public_key=transport_public,
     )
     decision = kbs.verify_and_release(base, evidence)
     print("gate released:", decision.released)
@@ -195,7 +198,7 @@ def main() -> None:
 
     # ---- Step 3: runtime custody (the kill switch) --------------------------
     rule("Step 3 - Wipe-on-lapse custody (kill switch: recall / license violation)")
-    session = EnclaveSession.from_release(base, decision)
+    session = start_custody(base, decision, transport_private)
     session.use_key()
     print("serving under a 1h cadence; time_floor =", session.time_floor.value)
     print("kill-switch reason has shifted: not 'theft detected' but a safety recall,")
