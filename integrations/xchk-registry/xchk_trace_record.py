@@ -33,6 +33,11 @@ from cryptography.exceptions import InvalidSignature
 MAX_AGE_SECONDS = 86400
 
 
+def as_of_fields(now: int | None) -> dict:
+    """The instant a verdict was made against, and whether the caller supplied it: on EVERY verdict, no-key included."""
+    return {"verified_at": int(time.time()) if now is None else int(now), "verified_at_overridden": now is not None}
+
+
 def verification(record: dict, jwk: dict, max_age_seconds: int = MAX_AGE_SECONDS, now: int | None = None) -> dict:
     """The library's verdict on a record under a trusted key: status, the revocation outcome as the library
     reported it (section 3.2.3: `no_check_performed` when no bundle or store was given, as here), and the reason
@@ -42,7 +47,7 @@ def verification(record: dict, jwk: dict, max_age_seconds: int = MAX_AGE_SECONDS
     # the instant every check is made against: the clock, or the one the caller supplied for a historical check.
     # It is in every verdict so two verdicts at different times are never the same JSON (review of #338, 18 Oct 2026).
     as_of = int(time.time()) if now is None else int(now)
-    when = {"verified_at": as_of, "verified_at_overridden": now is not None}
+    when = as_of_fields(now)
     try:
         result = verify_record(record, jwk, max_age_seconds=max_age_seconds, now=as_of)
     except InvalidSignature:
@@ -163,7 +168,7 @@ def verify_with_key_source(record: dict, pinned: dict | None, fetch=published_ke
                            max_age_seconds: int = MAX_AGE_SECONDS, now: int | None = None, registry: str | None = None) -> dict:
     cnf = (record.get("cnf") or {}).get("jwk") or {}
     kid = cnf.get("kid")
-    bounds = {"max_age_seconds": max_age_seconds}
+    bounds = {"max_age_seconds": max_age_seconds, **as_of_fields(now)}
     if pinned:
         return {**verification(record, pinned, max_age_seconds, now), "key_source": "pinned", "kid": pinned.get("kid") or kid, **bounds}
     origin, refusal = trusted_origin(record, registry)

@@ -137,6 +137,7 @@ def test_the_trust_origin_is_the_relying_partys_and_nothing_in_the_record_suppli
 
     got = x.verify_with_key_source(RECORD, None, fetch=fetch, now=AT_ISSUE)
     assert got["status"] == "no-key" and "--registry" in got["reason"] and asked == [], "no --registry: no trust anchor, nothing fetched"
+    assert got["verified_at"] == AT_ISSUE and got["verified_at_overridden"] is True, "the as-of time is on every verdict, no-key included"
     elsewhere = json.loads(json.dumps(RECORD))
     elsewhere["references"][0]["resolver"] = "https://attacker.example"
     got = x.verify_with_key_source(elsewhere, None, fetch=fetch, now=AT_ISSUE, registry=REGISTRY)
