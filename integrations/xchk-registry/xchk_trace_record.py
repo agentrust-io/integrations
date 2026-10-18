@@ -9,9 +9,12 @@ given out of band with --registry; nothing in the record supplies it. The record
 agree with that origin. This tool verifies with the pinned key when given one, else with the published key under
 that `kid`. It never verifies against the key the record itself carries, and never fetches a key from a server the
 record names, in its references or in its subject: either way a self-made record would pass, which proves integrity
-and not origin. Without --registry or --jwk there is no trust anchor and the answer is `no-key`. The record's age is bounded (default 24 hours, --max-age, never off; --now re-verifies a retained
-record at its own time) and the revocation outcome is printed as the library reported it: with no revocation bundle
-or store, `no_check_performed`, which is not an affirming appraisal (section 3.2.3).
+and not origin. Without --registry or --jwk there is no trust anchor and the answer is `no-key`.
+
+The record's age is bounded (default 24 hours, --max-age, never off; --now re-verifies a retained record at its own
+time, and every verdict says which instant it was made against). A verified result reports the profile it verified
+under and the whole accepted set (section 3.3), and the revocation outcome as the library reported it: with no
+revocation bundle or store, `no_check_performed`, which is not an affirming appraisal (section 3.2.3).
 """
 from __future__ import annotations
 
@@ -46,10 +49,9 @@ def verification(record: dict, jwk: dict, max_age_seconds: int = MAX_AGE_SECONDS
         raise ValueError("max_age_seconds must be a positive number of seconds; the age check cannot be disabled")
     # the instant every check is made against: the clock, or the one the caller supplied for a historical check.
     # It is in every verdict so two verdicts at different times are never the same JSON (review of #338, 18 Oct 2026).
-    as_of = int(time.time()) if now is None else int(now)
     when = as_of_fields(now)
     try:
-        result = verify_record(record, jwk, max_age_seconds=max_age_seconds, now=as_of)
+        result = verify_record(record, jwk, max_age_seconds=max_age_seconds, now=when["verified_at"])
     except InvalidSignature:
         return {"status": "invalid", "reason": "signature does not verify", "revocation": None, **when}
     except ValueError as e:
@@ -90,11 +92,11 @@ def key_from_published(doc, kid: str) -> dict | None:
     return None
 
 
-# The published-key path, bounded (18 Oct 2026). The key document is fetched from ONE origin the relying party
-# trusts: the one it passed with --registry, else the origin the record's `did:web` subject lives under. The
-# record's own `resolver` field is checked against it and never followed on its own, because a record that names
-# the server its key will be fetched from has chosen its own trust root, which is the embedded-key problem one hop
-# away. Only https; no redirects; the document is read to a bound.
+# The published-key path, bounded (18 Oct 2026). The key document is fetched from ONE origin, the one the relying
+# party passed with --registry; nothing in the record supplies it (see trusted_origin). The record's `subject` and
+# `resolver` are checked against it and never followed, because a record that names the server its key will be
+# fetched from has chosen its own trust root, which is the embedded-key problem one hop away. Only https; no
+# redirects; the document is read to a bound; a document of the wrong shape is no key.
 KEY_DOC_MAX_BYTES = 256 * 1024
 
 
