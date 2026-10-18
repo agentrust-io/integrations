@@ -30,13 +30,22 @@ resolver publishes under the record's `kid`. It never verifies against the key t
 self-signed record always passes that. It prints the key source and lists the `approval-outcome` references as
 they appear; it does not resolve them.
 
+The record's age is bounded: `iat` may be at most `--max-age` seconds old, default 86400 (24 hours, the library's
+default and section 3.2.2's), and the bound cannot be switched off. A retained record is re-verified at its own time
+with `--now <epoch seconds>` rather than by widening the bound. The output carries `revocation` as the library
+reported it; this tool passes no revocation bundle or store, so it reports `no_check_performed`, which is not an
+affirming appraisal (section 3.2.3). A stale or tampered record is `invalid`, with the reason.
+
 ## Run it
 
 ```
 pip install -e "integrations/xchk-registry[test]" agentrust-trace-tests
 pytest integrations/xchk-registry/tests -q                          # offline; REGISTRY_LIVE=1 adds one live key fetch
-trace-tests verify --record integrations/xchk-registry/examples/01-trust-record.json --level 0
+trace-tests verify --record integrations/xchk-registry/examples/01-trust-record.json --level 0 --max-age 315360000
 ```
+
+The example record was minted on 17 Oct 2026, so the conformance command above carries an explicit `--max-age`
+(ten years, the same as the workflow), as a historical fixture must; the verifier's own default stays 24 hours.
 
 ## What it does not claim
 
