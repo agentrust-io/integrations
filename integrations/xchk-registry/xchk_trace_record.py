@@ -161,6 +161,8 @@ def https_origin(value) -> tuple[str | None, str | None]:
     key document's location is derived from it and anything more is a different document."""
     if not isinstance(value, str) or not value:
         return None, "the trusted origin must be an https origin"
+    if value != value.strip() or any(c.isspace() or ord(c) < 32 for c in value):
+        return None, "the trusted origin must not contain whitespace or control characters"   # urlsplit would quietly strip them
     try:
         u = urllib.parse.urlsplit(value)
         host, port = u.hostname, u.port   # both raise ValueError on a malformed netloc (bad bracket, non-numeric or out-of-range port)
@@ -244,8 +246,6 @@ def trusted_origin(record: dict, registry: str | None) -> tuple[str | None, str 
     the record's did:web subject, which only shows the record agrees with itself: a record signed under a publisher
     of its own choosing names that publisher in its subject too. Review of #338, 18 Oct 2026.) The record's `subject`
     and `resolver` must then agree with the origin, which catches a record that was minted for another registry."""
-    if not registry:
-        return None, "no trust anchor: pass --registry <https origin of the registry you trust>, or --jwk <its pinned key>"
     origin, why = https_origin(registry)
     if why:
         return None, why
@@ -255,15 +255,19 @@ def trusted_origin(record: dict, registry: str | None) -> tuple[str | None, str 
     subject_origin = origin_of_did_web(subject)
     if not subject_origin:
         return None, "the record's subject is not a did:web identifier, so it cannot be bound to the trusted origin"
-    if not _same_origin(subject_origin, origin):
+    if subject_origin != origin:
         return None, f"the record's subject lives under {subject_origin}, not the trusted origin {origin}"
-    # every approval-outcome reference must resolve at the trusted origin, whatever its position
+    # every approval-outcome reference must resolve at the trusted origin, whatever its position; compared in canonical
+    # form, so an explicit :443 or a different case is the same origin (RFC 6454) and a resolver with a path is not one
     resolvers, why = approval_resolvers(record)
     if why:
         return None, why
     for i, resolver in enumerate(resolvers):
-        if not _same_origin(resolver, origin):
-            return None, f"approval-outcome reference {i} resolves at {resolver}, not the trusted origin {origin}"
+        canonical, bad = https_origin(resolver)
+        if bad:
+            return None, f"approval-outcome reference {i} resolver {resolver!r} is not an https origin: {bad}"
+        if canonical != origin:
+            return None, f"approval-outcome reference {i} resolves at {canonical}, not the trusted origin {origin}"
     return origin, None
 
 
@@ -274,16 +278,23 @@ def verify_with_key_source(record: dict, pinned: dict | None, fetch=published_ke
     if not isinstance(record, dict):
         return {"status": "invalid", "reason": f"record is not a JSON object ({type(record).__name__})", "key_source": None, "kid": None, "revocation": None, **bounds}
     kid = record_kid(record)   # always the key the RECORD names; the key actually used is trusted_key_thumbprint, and pinned_kid when pinned
-    if registry is not None and https_origin(registry)[1]:
-        return {"status": "no-key", "key_source": None, "kid": kid, "revocation": None, **bounds, "reason": https_origin(registry)[1]}
+    # an origin that is given is enforced, pinned key or not (review of 09c436b, 18 Oct 2026: with --jwk the
+    # registry was only parsed, so a record for another registry verified under the pinned key with --registry
+    # naming a third). The caller said which registry the record must belong to; the record must agree.
+    origin = None
+    if registry is not None:
+        origin, refusal = trusted_origin(record, registry)
+        if refusal:
+            return {"status": "no-key", "key_source": None, "kid": kid, "revocation": None, **bounds, "reason": refusal}
     if pinned is not None:
         if not is_ed25519_jwk(pinned):
             return {"status": "no-key", "key_source": None, "kid": kid, "revocation": None, **bounds, "reason": "the pinned key is not an Ed25519 JWK (kty OKP, crv Ed25519, x of 32 bytes)"}
         pk = pinned.get("kid")
-        return {**verification(record, pinned, max_age_seconds, instant), "key_source": "pinned", "kid": kid, "pinned_kid": pk if isinstance(pk, str) else None, **bounds}
-    origin, refusal = trusted_origin(record, registry)
-    if refusal:
-        return {"status": "no-key", "key_source": None, "kid": kid, "revocation": None, **bounds, "reason": refusal}
+        return {**verification(record, pinned, max_age_seconds, instant), "key_source": "pinned", "kid": kid, "pinned_kid": pk if isinstance(pk, str) else None,
+                **({"trusted_origin": origin} if origin else {}), **bounds}
+    if origin is None:
+        return {"status": "no-key", "key_source": None, "kid": kid, "revocation": None, **bounds,
+                "reason": "no trust anchor: pass --registry <https origin of the registry you trust>, or --jwk <its pinned key>"}
     if kid:
         key = fetch(origin, kid)
         if key:
@@ -300,7 +311,8 @@ def main(argv: list[str] | None = None) -> int:
                     help=f"how old the record's iat may be (default {MAX_AGE_SECONDS}, section 3.2.2); must be positive")
     ap.add_argument("--registry", metavar="ORIGIN", default=None,
                     help="the https origin of the registry you trust, whose published key verifies the record; required unless "
-                         "--jwk pins the key; the record's subject and resolver must agree with it")
+                         "--jwk pins the key; when given, with or without --jwk, the record's subject and every approval-outcome "
+                         "resolver must be under it")
     ap.add_argument("--now", type=int, default=None, metavar="EPOCH_SECONDS",
                     help="verify as of this moment instead of the clock: a retained record re-verified at its own time")
     a = ap.parse_args(argv)

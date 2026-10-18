@@ -469,6 +469,59 @@ SUBJECTS = [RECORD["subject"], "did:web:IN.XCHK.IO:plate:X", "did:web:in.xchk.io
             "", None, 7, [], {}, "did:web:in.xchk.io/plate", "did:web:in.xchk.io@x", "did:web:..", "did:web:in.xchk.io.", "DID:WEB:in.xchk.io:plate:X"]
 
 
+def test_an_origin_given_beside_a_pinned_key_is_enforced_not_just_parsed():
+    """Review of 09c436b: with --jwk the registry was only parsed. The caller named the registry the record must
+    belong to; the record must agree, pinned key or not."""
+    ok = x.verify_with_key_source(RECORD, JWK, fetch=no_fetch, now=AT_ISSUE, registry=REGISTRY)
+    assert ok["status"] == "verified" and ok["key_source"] == "pinned" and ok["trusted_origin"] == REGISTRY
+    ok443 = x.verify_with_key_source(RECORD, JWK, fetch=no_fetch, now=AT_ISSUE, registry="https://in.xchk.io:443")
+    assert ok443["status"] == "verified" and ok443["trusted_origin"] == REGISTRY
+    bad = x.verify_with_key_source(RECORD, JWK, fetch=no_fetch, now=AT_ISSUE, registry="https://other.example")
+    assert bad["status"] == "no-key" and "subject lives under" in bad["reason"]
+    for subject in ("did:key:z6Mkunbound", None, "did:web:other.example:plate:X"):
+        rec, jwk = _fresh_signed(subject=subject)
+        got = x.verify_with_key_source(rec, jwk, fetch=no_fetch, now=AT_ISSUE, registry=REGISTRY)
+        assert got["status"] == "no-key" and "subject" in got["reason"], repr(subject)
+        assert x.verify_with_key_source(rec, jwk, fetch=no_fetch, now=AT_ISSUE)["status"] in ("verified", "invalid"), "pinned alone: the key decides, as before"
+    on = RECORD["references"][0]
+    off = {**on, "id": "b" * 64, "digest": "sha256:" + "b" * 64, "resolver": "https://attacker.example"}
+    rec, jwk = _fresh_signed(references=[on, off])
+    got = x.verify_with_key_source(rec, jwk, fetch=no_fetch, now=AT_ISSUE, registry=REGISTRY)
+    assert got["status"] == "no-key" and "reference 1" in got["reason"]
+    assert x.verify_with_key_source(rec, jwk, fetch=no_fetch, now=AT_ISSUE)["status"] == "verified", "pinned alone verifies it; the origin is what refuses it"
+
+
+def test_resolvers_are_compared_as_origins_so_an_explicit_443_is_the_same_origin():
+    on = RECORD["references"][0]
+    rec, jwk = _fresh_signed(subject="did:web:in.xchk.io%3A443:plate:X", references=[{**on, "resolver": "https://in.xchk.io:443"}])
+    doc = doc_for(jwk, "fresh-kid")
+    asked = []
+    got = x.verify_with_key_source(rec, None, fetch=lambda o, k: (asked.append(o), x.key_from_published(doc, k))[1], now=AT_ISSUE, registry="https://in.xchk.io:443")
+    assert got["status"] == "verified" and asked == [REGISTRY], got.get("reason")
+    rec, jwk = _fresh_signed(references=[{**on, "resolver": "HTTPS://IN.XCHK.IO/"}])
+    doc = doc_for(jwk, "fresh-kid")
+    assert x.verify_with_key_source(rec, None, fetch=lambda o, k: x.key_from_published(doc, k), now=AT_ISSUE, registry=REGISTRY)["status"] == "verified"
+    for resolver in ("https://in.xchk.io/api", "http://in.xchk.io", "https://in.xchk.io:8443", "https://u@in.xchk.io", "in.xchk.io"):
+        rec, jwk = _fresh_signed(references=[{**on, "resolver": resolver}])
+        got = x.verify_with_key_source(rec, None, fetch=no_fetch, now=AT_ISSUE, registry=REGISTRY)
+        assert got["status"] == "no-key" and "reference 0" in got["reason"], resolver
+
+
+def expected_origin(value):
+    """An oracle for the sweep that shares no code with the verifier: what a careful reader expects an https origin
+    string to mean, or None. Written from RFC 6454 and the README, not from https_origin."""
+    import re
+    m = re.fullmatch(r"(?i)https://(\[[0-9a-f:.]+\]|[a-z0-9.-]+)(?::(\d{1,5}))?/?", value or "")
+    if not m or "@" in value or value != value.strip():
+        return None
+    host, port = m.group(1).lower(), m.group(2)
+    if port is not None and (int(port) > 65535 or port != str(int(port))):
+        return None
+    if host.startswith(".") or host.endswith(".") or ".." in host:
+        return None
+    return f"https://{host}" + (f":{int(port)}" if port and int(port) != 443 else "")
+
+
 def test_sweep_origins_subjects_and_references_on_signed_records(tmp_path, capsys, monkeypatch):
     import agentrust_trace as t
     key = t.generate_key()
@@ -485,24 +538,39 @@ def test_sweep_origins_subjects_and_references_on_signed_records(tmp_path, capsy
     off = {**on, "id": "b" * 64, "digest": "sha256:" + "b" * 64, "resolver": "https://attacker.example"}
     noresolver = {k: v for k, v in on.items() if k != "resolver"}
     ref_sets = [[on], [on, on], [on, off], [off, on], [on, noresolver], [], [off], [on, {**on, "resolver": "https://IN.xchk.io/"}]]
+    def expected_subject_origin(subject):
+        import re
+        m = re.fullmatch(r"did:web:([^:/@]+?)(?:%3[aA](\d+))?(?::.*)?", subject or "") if isinstance(subject, str) else None
+        if not m:
+            return None
+        host = m.group(1).lower()
+        if host.startswith(".") or host.endswith(".") or ".." in host:
+            return None
+        return f"https://{host}" + (f":{m.group(2)}" if m.group(2) and m.group(2) != "443" else "")
+
     runs = 0
     for origin in ORIGINS:
-        well_formed, _ = x.https_origin(origin)
+        want = expected_origin(origin)   # the oracle, independent of https_origin
         for subject in SUBJECTS:
             for refs in ref_sets:
                 rec = signed_with(key, {**base, "subject": subject, "references": refs}, "fresh-kid")
-                before = len(asked)
-                got = x.verify_with_key_source(rec, None, fetch=fetch, now=AT_ISSUE, registry=origin)
-                runs += 1
-                assert got["status"] in ("verified", "invalid", "no-key") and got["verified_at"] == AT_ISSUE, (origin, subject, refs)
-                fetched = len(asked) - before
-                subj_origin = x.origin_of_did_web(subject)
-                agrees = bool(well_formed) and bool(subj_origin) and x._same_origin(subj_origin, well_formed) and all(
-                    isinstance(r.get("resolver"), str) and x._same_origin(r["resolver"], well_formed) for r in refs if r.get("rel") == "approval-outcome")
-                assert fetched == (1 if agrees else 0), (origin, subject, refs, got.get("reason"))
-                if not agrees:
-                    assert got["status"] == "no-key", (origin, subject, refs, got.get("reason"))
-    assert runs == len(ORIGINS) * len(SUBJECTS) * len(ref_sets)
+                agrees = bool(want) and expected_subject_origin(subject) == want and all(
+                    expected_origin(r.get("resolver")) == want for r in refs if r.get("rel") == "approval-outcome")
+                for pinned in (None, jwk):
+                    before = len(asked)
+                    got = x.verify_with_key_source(rec, pinned, fetch=fetch, now=AT_ISSUE, registry=origin)
+                    runs += 1
+                    assert got["status"] in ("verified", "invalid", "no-key") and got["verified_at"] == AT_ISSUE, (origin, subject, refs, pinned is not None)
+                    fetched = len(asked) - before
+                    if pinned is None:
+                        assert fetched == (1 if agrees else 0), (origin, subject, refs, got.get("reason"))
+                    else:
+                        assert fetched == 0, "a pinned key never fetches"
+                    if not agrees:
+                        assert got["status"] == "no-key", (origin, subject, refs, pinned is not None, got.get("reason"))
+                    elif pinned is not None:
+                        assert got["status"] in ("verified", "invalid"), "agreeing record, pinned key: the key decides"
+    assert runs == 2 * len(ORIGINS) * len(SUBJECTS) * len(ref_sets)
     # the same origins through the CLI, pinned and published, no crash
     f = tmp_path / "r.json"
     f.write_text(json.dumps(RECORD), encoding="utf-8")
