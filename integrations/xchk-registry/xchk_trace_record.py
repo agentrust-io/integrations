@@ -147,6 +147,8 @@ def origin_of_did_web(subject: str) -> str | None:
     host = subject.split(":", 2)[2].split(":", 1)[0].replace("%3A", ":").replace("%3a", ":")
     if not host or "/" in host or "@" in host or host.startswith(".") or host.endswith(".") or ".." in host:
         return None
+    if host.endswith(":443"):   # the same origin as without the port (RFC 6454), as https_origin also says
+        host = host[: -len(":443")]
     return f"https://{host.lower()}"
 
 
@@ -170,11 +172,12 @@ def https_origin(value) -> tuple[str | None, str | None]:
         return None, "the trusted origin must be a host, with no credentials"
     if u.path not in ("", "/") or u.query or u.fragment:
         return None, "the trusted origin must be an origin only: no path, query or fragment"
-    origin = f"https://{host.lower()}" + (f":{port}" if port else "")
-    # the netloc must be exactly what the origin says: a trailing colon, an empty port or anything else in it is refused
-    if u.netloc.lower() != origin[len("https://"):] and u.netloc.lower() != f"[{host.lower()}]" + (f":{port}" if port else ""):
+    # the netloc must be exactly host or host:port: a trailing colon, an empty port or anything else in it is refused
+    shown = f"[{host.lower()}]" if ":" in host else host.lower()
+    if u.netloc.lower() != shown + (f":{port}" if port else ""):
         return None, "the trusted origin must be host or host:port and nothing else"
-    return origin, None
+    # RFC 6454: https on 443 is the same origin with or without the port written
+    return f"https://{shown}" + (f":{port}" if port and port != 443 else ""), None
 
 
 def published_key(origin: str, kid: str, timeout: float = 20.0) -> dict | None:
@@ -271,6 +274,8 @@ def verify_with_key_source(record: dict, pinned: dict | None, fetch=published_ke
     if not isinstance(record, dict):
         return {"status": "invalid", "reason": f"record is not a JSON object ({type(record).__name__})", "key_source": None, "kid": None, "revocation": None, **bounds}
     kid = record_kid(record)   # always the key the RECORD names; the key actually used is trusted_key_thumbprint, and pinned_kid when pinned
+    if registry is not None and https_origin(registry)[1]:
+        return {"status": "no-key", "key_source": None, "kid": kid, "revocation": None, **bounds, "reason": https_origin(registry)[1]}
     if pinned is not None:
         if not is_ed25519_jwk(pinned):
             return {"status": "no-key", "key_source": None, "kid": kid, "revocation": None, **bounds, "reason": "the pinned key is not an Ed25519 JWK (kty OKP, crv Ed25519, x of 32 bytes)"}

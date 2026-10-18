@@ -401,8 +401,14 @@ def test_malformed_registry_origins_are_refusals_with_a_verdict_and_no_fetch(cap
             rc = e.code
         out = json.loads(capsys.readouterr().out)
         assert rc == 1 and out["status"] == "no-key" and out["verified_at"] == AT_ISSUE, reg
-    assert x.https_origin("https://[::1]:8443") == ("https://::1:8443", None)
-    assert x.https_origin("https://in.xchk.io:443") == ("https://in.xchk.io:443", None)
+    assert x.https_origin("https://[::1]:8443") == ("https://[::1]:8443", None)
+    assert x.https_origin("https://in.xchk.io:443") == ("https://in.xchk.io", None), "443 is the same origin with or without the port (RFC 6454)"
+    assert x.origin_of_did_web("did:web:in.xchk.io%3A443:plate:X") == "https://in.xchk.io"
+    assert x.https_origin("https://in.xchk.io:8443") == ("https://in.xchk.io:8443", None)
+    # a malformed --registry is refused even beside a pinned key: an option that is given is checked
+    got = x.verify_with_key_source(RECORD, JWK, fetch=no_fetch, now=AT_ISSUE, registry="https://in.xchk.io:bad")
+    assert got["status"] == "no-key" and "parsed" in got["reason"]
+    assert x.verify_with_key_source(RECORD, JWK, fetch=no_fetch, now=AT_ISSUE, registry="https://in.xchk.io:443")["status"] == "verified"
     # the valid twin: same record, well-formed origin, the key fetched once
     doc = published_doc()
     got = x.verify_with_key_source(RECORD, None, fetch=lambda o, k: (asked.append(o), x.key_from_published(doc, k))[1], now=AT_ISSUE, registry=REGISTRY)
