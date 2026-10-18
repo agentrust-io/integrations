@@ -32,7 +32,9 @@ given out of band with `--registry`. Nothing in the record supplies the origin: 
 and agreeing with itself is not a trust anchor. The record's subject and resolver must agree with the origin given.
 Without `--registry` or `--jwk` the answer is `no-key`. It never verifies against the key the record itself carries,
 for the same reason. `--registry` must be an https origin and nothing more (no credentials, path, query or
-fragment). The fetch is https only, follows no redirect, reads at most 256 KB, and a key document of the wrong
+fragment; `https://host:443` is `https://host`). When `--registry` is given beside `--jwk`, both are enforced: the
+pinned key verifies the signature, and the record's subject and every `approval-outcome` resolver must be under
+the origin, compared as origins. The fetch is https only, follows no redirect, reads at most 256 KB, and a key document of the wrong
 shape is no key, never a crash; the same holds for a record file or pinned-key file of the wrong shape, and for any
 field of the record: every input ends in a JSON verdict and an exit code. A verified result carries the verified
 `profile` and the complete `accepted_profiles` set (section 3.3), the thumbprint of the key actually used, `kid`
