@@ -75,14 +75,74 @@ def test_the_embedded_key_is_never_used_without_a_pinned_or_published_key():
     assert got["status"] == "verified" and got["key_source"] == "pinned"
 
 
-def test_the_published_key_document_converts_to_the_pinned_jwk():
+def published_doc():
     raw = base64.urlsafe_b64decode(JWK["x"] + "=" * (-len(JWK["x"]) % 4))
-    doc = {"keys": [{"keyId": JWK["kid"], "alg": "ed25519", "publicKeyRaw": base64.b64encode(raw).decode("ascii")},
-                    {"keyId": "other", "alg": "ml-dsa-65", "publicKeyRaw": "AAAA"}]}
+    return {"keys": [{"keyId": JWK["kid"], "alg": "ed25519", "publicKeyRaw": base64.b64encode(raw).decode("ascii")},
+                     {"keyId": "other", "alg": "ml-dsa-65", "publicKeyRaw": "AAAA"}]}
+
+
+def test_the_published_key_document_converts_to_the_pinned_jwk():
+    doc = published_doc()
     assert x.key_from_published(doc, JWK["kid"]) == {"kty": "OKP", "crv": "Ed25519", "x": JWK["x"], "kid": JWK["kid"]}
     assert x.key_from_published(doc, "other") is None
-    got = x.verify_with_key_source(RECORD, None, fetch=lambda resolver, kid: x.key_from_published(doc, kid), now=AT_ISSUE)
-    assert got["status"] == "verified" and got["key_source"] == "published" and got["resolver"] == EXPECTED["resolver"]
+    got = x.verify_with_key_source(RECORD, None, fetch=lambda origin, kid: x.key_from_published(doc, kid), now=AT_ISSUE)
+    assert got["status"] == "verified" and got["key_source"] == "published" and got["trusted_origin"] == EXPECTED["resolver"]
+
+
+def test_the_published_key_comes_from_the_subjects_origin_never_from_a_server_the_record_names():
+    """A record that names the server its key is fetched from has chosen its own trust root. The origin is the
+    relying party's (--registry) or the did:web subject's; the record's resolver must agree and is never followed."""
+    assert x.origin_of_did_web("did:web:in.xchk.io:plate:ENG-WNP3") == "https://in.xchk.io"
+    assert x.origin_of_did_web("did:web:example.com%3A8443:x") == "https://example.com:8443"
+    for bad in ("did:key:z6Mk", "did:web:", "did:web:a/b:c", "did:web:..:x", "", None, 7):
+        assert x.origin_of_did_web(bad) is None, repr(bad)
+    doc = published_doc()
+    asked = []
+
+    def fetch(origin, kid):
+        asked.append(origin)
+        return x.key_from_published(doc, kid)
+
+    elsewhere = json.loads(json.dumps(RECORD))
+    elsewhere["references"][0]["resolver"] = "https://attacker.example"
+    got = x.verify_with_key_source(elsewhere, None, fetch=fetch, now=AT_ISSUE)
+    assert got["status"] == "no-key" and "attacker.example" in got["reason"] and asked == [], "nothing fetched from the record's server"
+    got = x.verify_with_key_source(RECORD, None, fetch=fetch, now=AT_ISSUE, registry="https://other.example")
+    assert got["status"] == "no-key" and asked == [], "the relying party's origin wins, and the record's resolver disagrees with it"
+    foreign = json.loads(json.dumps(RECORD))
+    foreign["subject"] = "did:web:attacker.example:plate:X"
+    got = x.verify_with_key_source(foreign, None, fetch=fetch, now=AT_ISSUE)
+    assert got["status"] == "no-key" and asked == [], "a subject moved to another host disagrees with the resolver, and the signature would fail anyway"
+    got = x.verify_with_key_source(RECORD, None, fetch=fetch, now=AT_ISSUE, registry="http://in.xchk.io")
+    assert got["status"] == "no-key" and "https" in got["reason"] and asked == []
+    got = x.verify_with_key_source(RECORD, None, fetch=fetch, now=AT_ISSUE, registry="https://in.xchk.io/")
+    assert got["status"] == "verified" and asked == ["https://in.xchk.io"]
+    nokid = json.loads(json.dumps(RECORD))
+    del nokid["cnf"]["jwk"]["kid"]
+    assert x.verify_with_key_source(nokid, None, fetch=fetch, now=AT_ISSUE)["status"] == "no-key"
+
+
+def test_the_key_document_fetch_refuses_http_redirects_and_oversize(monkeypatch):
+    assert x.published_key("http://in.xchk.io", JWK["kid"]) is None
+    assert x.published_key("ftp://in.xchk.io", JWK["kid"]) is None
+
+    class Resp:
+        def __init__(self, status, body): self.status, self._b = status, body
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+        def read(self, n=-1): return self._b if n < 0 else self._b[:n]
+
+    class Opener:
+        def __init__(self, resp): self.resp = resp
+        def open(self, url, timeout=0): return self.resp
+
+    monkeypatch.setattr(x.urllib.request, "build_opener", lambda *h: Opener(Resp(200, b"x" * (x.KEY_DOC_MAX_BYTES + 1))))
+    assert x.published_key("https://in.xchk.io", JWK["kid"]) is None, "a document past the bound is not read"
+    monkeypatch.setattr(x.urllib.request, "build_opener", lambda *h: Opener(Resp(302, b"{}")))
+    assert x.published_key("https://in.xchk.io", JWK["kid"]) is None
+    monkeypatch.setattr(x.urllib.request, "build_opener", lambda *h: Opener(Resp(200, json.dumps(published_doc()).encode())))
+    assert x.published_key("https://in.xchk.io", JWK["kid"]) == {"kty": "OKP", "crv": "Ed25519", "x": JWK["x"], "kid": JWK["kid"]}
+    assert x._NoRedirect().redirect_request(None, None, 302, "", {}, "https://elsewhere") is None
 
 
 def test_the_cli_runs_offline_with_a_pinned_key(capsys):

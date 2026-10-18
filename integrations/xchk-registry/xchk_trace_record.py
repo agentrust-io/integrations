@@ -1,13 +1,16 @@
 """Verify a Trust Record minted by an xChk registry against a key the relying party trusts. Apache-2.0.
 
-    python xchk_trace_record.py record.json                      # the key the resolver publishes under the record's kid
+    python xchk_trace_record.py record.json                      # the key the subject's registry publishes under the record's kid
+    python xchk_trace_record.py record.json --registry https://in.xchk.io   # the same, with the trusted origin said outright
     python xchk_trace_record.py record.json --jwk expected.json  # offline: a pinned signer key
 
 The registry signs each record with its seal key. The record's `cnf.jwk` carries that key and its `kid`; the same
-key is published at `<resolver>/.well-known/xchk-keys.json`, where `<resolver>` is the one the record's references
-name. This tool verifies with the pinned key when given one, else with the published key under that `kid`. It never
-verifies against the key the record itself carries: a self-signed record always passes that, which proves integrity
-and not origin. The record's age is bounded (default 24 hours, --max-age, never off; --now re-verifies a retained
+key is published at `<origin>/.well-known/xchk-keys.json`, where `<origin>` is the registry the relying party trusts:
+the one given with --registry, else the origin the record's `did:web` subject lives under. The record's own
+`resolver` field must agree with that origin and is never followed on its own. This tool verifies with the pinned
+key when given one, else with the published key under that `kid`. It never verifies against the key the record
+itself carries, and never fetches a key from a server the record names: either way a self-made record would pass,
+which proves integrity and not origin. The record's age is bounded (default 24 hours, --max-age, never off; --now re-verifies a retained
 record at its own time) and the revocation outcome is printed as the library reported it: with no revocation bundle
 or store, `no_check_performed`, which is not an affirming appraisal (section 3.2.3).
 """
@@ -61,11 +64,47 @@ def key_from_published(doc: dict, kid: str) -> dict | None:
     return None
 
 
-def published_key(resolver: str, kid: str, timeout: float = 20.0) -> dict | None:
-    url = f"{resolver.rstrip('/')}/.well-known/xchk-keys.json"
+# The published-key path, bounded (18 Oct 2026). The key document is fetched from ONE origin the relying party
+# trusts: the one it passed with --registry, else the origin the record's `did:web` subject lives under. The
+# record's own `resolver` field is checked against it and never followed on its own, because a record that names
+# the server its key will be fetched from has chosen its own trust root, which is the embedded-key problem one hop
+# away. Only https; no redirects; the document is read to a bound.
+KEY_DOC_MAX_BYTES = 256 * 1024
+
+
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):  # noqa: D102
+        return None
+
+
+def origin_of_did_web(subject: str) -> str | None:
+    """`did:web:host[:port-encoded][:path...]` -> `https://host[:port]`; None for anything else (did-core, did:web)."""
+    if not isinstance(subject, str) or not subject.startswith("did:web:"):
+        return None
+    host = subject.split(":", 2)[2].split(":", 1)[0].replace("%3A", ":").replace("%3a", ":")
+    if not host or "/" in host or "@" in host or host.startswith(".") or host.endswith(".") or ".." in host:
+        return None
+    return f"https://{host.lower()}"
+
+
+def _same_origin(a: str, b: str) -> bool:
+    return a.rstrip("/").lower() == b.rstrip("/").lower()
+
+
+def published_key(origin: str, kid: str, timeout: float = 20.0) -> dict | None:
+    """The key with this id from `<origin>/.well-known/xchk-keys.json`; None when it cannot be had safely."""
+    if not isinstance(origin, str) or not origin.lower().startswith("https://"):
+        return None
+    url = f"{origin.rstrip('/')}/.well-known/xchk-keys.json"
     try:
-        with urllib.request.urlopen(url, timeout=timeout) as r:
-            doc = json.load(r)
+        opener = urllib.request.build_opener(_NoRedirect())
+        with opener.open(url, timeout=timeout) as r:
+            if r.status != 200:
+                return None
+            raw = r.read(KEY_DOC_MAX_BYTES + 1)
+        if len(raw) > KEY_DOC_MAX_BYTES:
+            return None
+        doc = json.loads(raw)
     except Exception:  # noqa: BLE001
         return None
     return key_from_published(doc, kid) if isinstance(doc, dict) else None
@@ -76,20 +115,36 @@ def resolver_of(record: dict) -> str | None:
     return refs[0]["resolver"] if refs else None
 
 
+def trusted_origin(record: dict, registry: str | None) -> tuple[str | None, str | None]:
+    """(origin, refusal): the origin the published key may come from, or why there is none. The record's `resolver`
+    must agree with it; it is never the source of it."""
+    origin = registry or origin_of_did_web(record.get("subject"))
+    if not origin:
+        return None, "no trusted origin: pass --registry, or a did:web subject"
+    if not origin.lower().startswith("https://"):
+        return None, "the trusted origin must be https"
+    resolver = resolver_of(record)
+    if resolver and not _same_origin(resolver, origin):
+        return None, f"the record's resolver {resolver} is not the trusted origin {origin}"
+    return origin.rstrip("/"), None
+
+
 def verify_with_key_source(record: dict, pinned: dict | None, fetch=published_key,
-                           max_age_seconds: int = MAX_AGE_SECONDS, now: int | None = None) -> dict:
+                           max_age_seconds: int = MAX_AGE_SECONDS, now: int | None = None, registry: str | None = None) -> dict:
     cnf = (record.get("cnf") or {}).get("jwk") or {}
     kid = cnf.get("kid")
     bounds = {"max_age_seconds": max_age_seconds}
     if pinned:
         return {**verification(record, pinned, max_age_seconds, now), "key_source": "pinned", "kid": pinned.get("kid") or kid, **bounds}
-    resolver = resolver_of(record)
-    if resolver and kid:
-        key = fetch(resolver, kid)
+    origin, refusal = trusted_origin(record, registry)
+    if refusal:
+        return {"status": "no-key", "key_source": None, "kid": kid, "revocation": None, **bounds, "reason": refusal}
+    if isinstance(kid, str) and kid:
+        key = fetch(origin, kid)
         if key:
-            return {**verification(record, key, max_age_seconds, now), "key_source": "published", "kid": kid, "resolver": resolver, **bounds}
-    return {"status": "no-key", "key_source": None, "kid": kid, "revocation": None, **bounds,
-            "note": "pass --jwk, or let the record's resolver publish the key"}
+            return {**verification(record, key, max_age_seconds, now), "key_source": "published", "kid": kid, "trusted_origin": origin, **bounds}
+    return {"status": "no-key", "key_source": None, "kid": kid, "revocation": None, "trusted_origin": origin, **bounds,
+            "reason": f"no Ed25519 key {kid!r} published at {origin}/.well-known/xchk-keys.json (or pass --jwk)"}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -98,6 +153,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--jwk", help="a JSON file with trace_signer_jwk (or a bare JWK): the pinned key to verify with")
     ap.add_argument("--max-age", type=int, default=MAX_AGE_SECONDS, metavar="SECONDS",
                     help=f"how old the record's iat may be (default {MAX_AGE_SECONDS}, section 3.2.2); must be positive")
+    ap.add_argument("--registry", metavar="ORIGIN", default=None,
+                    help="the https origin whose published key is trusted (default: the origin under the record's did:web subject); "
+                         "the record's resolver must agree with it")
     ap.add_argument("--now", type=int, default=None, metavar="EPOCH_SECONDS",
                     help="verify as of this moment instead of the clock: a retained record re-verified at its own time")
     a = ap.parse_args(argv)
@@ -108,7 +166,7 @@ def main(argv: list[str] | None = None) -> int:
     if a.jwk:
         j = json.loads(Path(a.jwk).read_text(encoding="utf-8"))
         jwk = j.get("trace_signer_jwk", j)
-    out = verify_with_key_source(record, jwk, max_age_seconds=a.max_age, now=a.now)
+    out = verify_with_key_source(record, jwk, max_age_seconds=a.max_age, now=a.now, registry=a.registry)
     out["approval_outcome_references"] = [
         {"id": r.get("id"), "resolver": r.get("resolver"), "digest": r.get("digest")}
         for r in record.get("references", []) if isinstance(r, dict) and r.get("rel") == "approval-outcome"

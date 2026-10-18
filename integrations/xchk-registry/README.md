@@ -21,14 +21,18 @@ at `https://in.xchk.io/.well-known/xchk-keys.json`.
 ## What this code does
 
 ```
-python xchk_trace_record.py record.json                     # verifies with the key the resolver publishes under the record's kid
+python xchk_trace_record.py record.json                     # verifies with the key the subject's registry publishes under the record's kid
+python xchk_trace_record.py record.json --registry https://in.xchk.io   # the same, with the trusted origin said outright
 python xchk_trace_record.py record.json --jwk examples/expected.json   # offline, with a pinned key
 ```
 
-It verifies the record with released `agentrust-trace` against a pinned key, or against the key the record's
-resolver publishes under the record's `kid`. It never verifies against the key the record itself carries, because a
-self-signed record always passes that. It prints the key source and lists the `approval-outcome` references as
-they appear; it does not resolve them.
+It verifies the record with released `agentrust-trace` against a pinned key, or against the key published under the
+record's `kid` at `<origin>/.well-known/xchk-keys.json`, where the origin is one the relying party trusts: the one
+given with `--registry`, else the origin under the record's `did:web` subject. The record's own `resolver` field must
+agree with that origin and is never followed on its own: a record that could name the server its key is fetched
+from would have chosen its own trust root. It never verifies against the key the record itself carries, for the
+same reason. The fetch is https only, follows no redirect, and reads at most 256 KB. It prints the key source and
+the trusted origin, and lists the `approval-outcome` references as they appear; it does not resolve them.
 
 The record's age is bounded: `iat` may be at most `--max-age` seconds old, default 86400 (24 hours, the library's
 default and section 3.2.2's), and the bound cannot be switched off. A retained record is re-verified at its own time
