@@ -4,4 +4,4 @@
 # .clusterfuzzlite/build.sh. Compile with:
 #   uv pip compile requirements/fuzz.in --generate-hashes --universal \
 #     --python-version 3.11 -o requirements/fuzz.txt
-starlette>=1.6.0
+starlette>=1.8.0
