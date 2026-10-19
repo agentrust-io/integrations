@@ -46,8 +46,8 @@ Given a Trust Record and access to the registry named in `resolver`:
 2. Resolve `id` at `<resolver>/api/receipt/<id>/bundle`. If there is no such receipt, report the approval as unconfirmed.
 3. Recompute `sha256` over the RFC 8785 form of `bundle.record` and compare it with `digest`. A mismatch means the registry no longer serves the record the Trust Record pointed at.
 4. Run the bundle's offline checks: the record hash; the Merkle path to the seal root; the seal hash; the registry's signatures over it; the approver's assertion (ECDSA P-256 over `authenticatorData || sha256(clientDataJSON)`, a `webauthn.get` ceremony, the user-verified flag set); the registry's binding, and that the binding names this record hash, this credential, and **this public key** (the bundle's own `howToVerify` and `approver.rules` state the same); when `approver.challenge` is present, that `clientDataJSON.challenge` equals `sha256` over the canonical `challenge.fields` and that those fields are this ceremony's id, `decision.prompt` and `decision.actionParamsHash`, recomputed and never read from the bundle's `expected`; the anchor when present. Any failure contradicts the approval. Two honest limits of the offline run: the registry keys the script checks against are the ones the bundle carries, pinned to `/.well-known/xchk-keys.json` only when online (the bundle's SLH-DSA root statement lists them and needs a FIPS 205 implementation the script does not ship); and the ML-DSA-65 half of each hybrid signature needs `dilithium-py`, without which the script reports that half as pending, never as passed. In this repository's test only the Ed25519 half is verified.
-5. Read `record.disposition`. `approved` is an approval. `denied` and `expired` (asked, no answer within the ask's life) are not, and both are on the record. When `decision.amendment` is present, require that `record.paramsHash` equals `sha256` over the canonical action binding `{tool, command, path, summary, amount, artifactHash}` the registry hashed for the amended act, and that the binding's `command` is the amended command (its first 2000 UTF-16 code units). The registry serves that binding as `amendment.boundAs`, because the record's own `tool` and `summary` are capped, trimmed copies; a bundle without it is checked with the record's `tool` and `summary`, which is exact only while the summary is under the record's 400-character cap. When `decision.actionParamsHash` is present, also require `amendment.originalParamsHash` to equal it: the amendment cites the digest the person signed over. The verifier does all three (`--json` reports `amendment.committed`). Only then is the act the amended command. An amendment that fails a check contradicts the approval. A ceremony record sealed before 19 September 2026 carries no `paramsHash`, so its seal commits to no command; there the amendment is reported as not checkable (a pending step, never confirmed), and the receipt is not failed for it.
-6. Where the relying party holds the executed call, compare it with `record.paramsHash` (the digest the gate took over the tool and its parameters; for an approval with changes, the digest over the amended command as in step 5).
+5. Read `record.disposition`. `approved` is an approval. `denied` and `expired` (asked, no answer within the ask's life) are not, and both are on the record. `decision.amendment`, when present, is informational: the registry's record that the person approved with changes, carried for the reader. This verifier does not authenticate the amendment's scope against a signed statement, and a relying party must not let it widen or narrow what it treats as approved (see the boundary). The approval a relying party may rely on is of the ask as proposed.
+6. Where the relying party holds the executed call, compare it with `record.paramsHash` (the digest the gate took over the tool and its parameters).
 7. Apply your own floor to `approver.authLevel`: it names the identity proofing the registry did for that credential, and the relying party trusts the registry for it as it trusts any issuer.
 
 Every step from 2 to 5 has a fixture that fails at that step; step 4 has two (the key, and the challenge).
@@ -67,12 +67,13 @@ Two rules the verifier enforces that a relying party must not relax (19 October 
   FAIL, the count of steps that could not run, the approval evidence still missing, and `boundIdentity`, the person
   and proofing level taken only from the registry-signed binding, never from the readable `approver.email` or
   `authLevel` beside it; a caller acts on that, not on the exit code alone.
-- **An amendment is what the seal commits to, not what the bundle says.** `decision.amendment` is readable text.
-  The approval is "as amended" only when the sealed `record.paramsHash` recomputes over the amended command and the
-  amendment cites the ask the person signed (`originalParamsHash` = `decision.actionParamsHash`, where the ask
-  carries one). A served `boundAs` is unsigned too and counts only when it hashes to the sealed digest. An amendment
-  typed into a bundle after issue, or an amended command edited after issue, fails and contradicts the approval;
-  the fixture test carries both mutations.
+- **An amendment the sealed record does not commit to is refused.** `decision.amendment` is readable text. The
+  verifier checks that the sealed `record.paramsHash` recomputes over the amended command (the served
+  `amendment.boundAs`, itself unsigned, counts only when it hashes to the sealed digest) and, where the ask carries a
+  digest, that `originalParamsHash` equals `decision.actionParamsHash`; an amendment typed into a bundle after issue,
+  or edited after issue, contradicts the approval, and the fixture test carries both mutations. This is a refusal
+  only: a committed amendment does not authenticate its scope, and `decision.amendment` stays informational (see
+  the boundary).
 
 ## Boundary
 
@@ -81,19 +82,20 @@ Composed this way, a Trust Record and an xChk receipt establish that the record 
 - **That the approval was checked before the act ran.** A Trust Record is issued per execution, so it cannot carry a commitment someone needs to check beforehand. In xChk the gate holds the act until the ask is answered and the receipt is the gate's own record of that order, but the Trust Record does not carry the gate's ordering claim; `authorized-intent`, through the PIC/TRACE bridge, is the relation for a pre-execution authorization, and is the natural next profile for these receipts.
 - **That the executed act is the approved one.** `record.paramsHash` binds the ask to the parameters the gate saw; binding that to what the runtime executed is the runtime's job, by comparing the call it made with that digest.
 - **Which ask the assertion answered, for a ceremony before 18 October 2026.** In those bundles the passkey challenge was a nonce, so the assertion proves a user-verified ceremony by that credential at that origin and the registry's `binding` is the only thing that pairs it with the record: a reader who does not take the registry's word on the pairing has the Merkle chain and the anchor for the record, not for the pairing. From that date the challenge is derived from the ask and the assertion names it (fixture `08`).
-- **That the person signed the amended text.** For an approval with changes the passkey assertion covers the ask
-  as proposed (the ask-v1 challenge carries the proposed action's digest); the amended command is committed by the
-  registry's seal over the record, not by a signature of the person's. A relying party may take the amendment on the
-  registry's word, as it takes the binding; one that needs the person's own signature over the amended text does not
-  have it in this bundle. Two consequences: an amendment removed from a bundle after issue leaves a plain approval
-  that verifies (the record still commits to the amended digest, but nothing left in the bundle says what it is a
-  digest of); and the unamended `record.paramsHash` and the signed `actionParamsHash` are different digests of the
-  same act that this verifier does not relate.
+- **That an amendment is the person's.** `decision.amendment.command` is what the registry records the person
+  approved with changes. It is informational: this verifier does not authenticate the amendment's scope against a
+  signed statement (the passkey assertion covers the ask as proposed; the amended command is committed by the
+  registry's seal over the record, not by a signature of the person's), and a relying party must not let an unsigned
+  amendment widen or narrow what it treats as approved. Further limits: an amendment removed from a bundle after
+  issue leaves a plain approval that verifies; the unamended `record.paramsHash` and the signed `actionParamsHash`
+  are different digests of the same act that this verifier does not relate; a ceremony record sealed before
+  19 September 2026 carries no `paramsHash` at all, so its amendment is reported as not checkable. This is under
+  separate assessment and is the one open item of this crosswalk.
 - **That the policy was right or the person was the right person.** `basis` says which rule asked and `authLevel` says how the person was proofed; whether either suffices is the relying party's policy.
 
 ## Conformance fixtures
 
-Eight records and seven bundles in [`examples/approval-outcome/`](examples/approval-outcome/), minted by the registry at `in.xchk.io` for one run of one plate: approval confirmed; the bundle altered after issue; a declined ask; an ask nobody answered; a reference to no receipt; an impersonated approver, whose assertion verifies with the key the bundle offers while the registry's binding names another; and an approval with changes, where the sealed record commits to the amended command; and the approver's own assertion from another approval in the run, which passes every check but the one on the challenge the device signed. [`tests/test_approval_outcome_fixtures.py`](tests/test_approval_outcome_fixtures.py) recomputes every verdict from the committed bytes.
+Eight records and seven bundles in [`examples/approval-outcome/`](examples/approval-outcome/), minted by the registry at `in.xchk.io` for one run of one plate: approval confirmed; the bundle altered after issue; a declined ask; an ask nobody answered; a reference to no receipt; an impersonated approver, whose assertion verifies with the key the bundle offers while the registry's binding names another; and an approval with changes, a worked example under the boundary's limitations (`decision.amendment` is informational and its scope is not yet authenticated); and the approver's own assertion from another approval in the run, which passes every check but the one on the challenge the device signed. [`tests/test_approval_outcome_fixtures.py`](tests/test_approval_outcome_fixtures.py) recomputes every verdict from the committed bytes.
 
 ## References
 

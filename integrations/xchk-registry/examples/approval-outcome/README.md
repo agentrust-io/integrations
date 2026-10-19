@@ -39,7 +39,7 @@ bundle it resolves to still verifies.
 | `04-no-answer.json` | an ask nobody answered | resolves | matches | yes | `expired` | not an approval |
 | `05-reference-unresolvable.json` | none | **no such receipt** | n/a | n/a | n/a | approval unconfirmed |
 | `06-assertion-from-another-credential.json` | the approver's key and assertion replaced by another key's | resolves | matches | **no** (binding names a different key) | `approved` | approval contradicted |
-| `07-amended.json` | its own; the sealed record commits to `decision.amendment.command` | resolves | matches | yes | `approved` | approval confirmed, as amended |
+| `07-amended.json` | its own; `decision.amendment` present (informational) | resolves | matches | yes | `approved` | approval confirmed, as amended (a worked example, see below) |
 | `08-assertion-over-another-ask.json` | the approver's assertion from another approval in the run | resolves | matches | **no** (the challenge the device signed names another ask) | `approved` | approval contradicted |
 
 `02`, `06` and `08` are the same approval as `01` with the served bundle changed afterwards; the
@@ -64,19 +64,15 @@ because a reference cannot be resolved. The record verifies, and the approval it
 is reported as unconfirmed, which is a different answer from "no approval".
 
 `03` is a declined ask and `04` an ask nobody answered within its life: both verify, both
-are on the record, neither is an approval. `07` was approved with changes. What makes it
-so is not the readable `decision.amendment` block, which is unsigned text: the sealed
-record's `paramsHash` is the registry's action-binding digest over the *amended* command
-(here with the record's own tool and summary, which a short summary keeps exactly; the
-registry now serves the binding itself as `amendment.boundAs`), so the Merkle chain
-commits to it, and the
-amendment's `originalParamsHash` is the digest the person's passkey signed over in the
-ask-v1 challenge. The verifier checks both and the test recomputes the digest with
-`rfc8785`. An amendment typed into `01` after issue, or `07`'s amended command edited
-after issue, fails those checks and the approval is contradicted, never "as amended". The
-person's signature covers the ask as proposed; the amendment's scope rests on the
-registry's seal, and a relying party that needs the person's own signature over the
-amended text does not have it in this bundle (see the cross-walk's boundary).
+are on the record, neither is an approval. `07` was approved with changes. Its label, "approval confirmed, as
+amended", is a worked example under the cross-walk's boundary, not an acceptance rule:
+`decision.amendment` is informational, and its scope is not yet authenticated against a
+signed statement, so a relying party must not let it change what it treats as approved.
+What the verifier does check is a refusal: the sealed record's `paramsHash` must recompute
+over the amended command (the test recomputes it with `rfc8785`), so an amendment typed
+into `01` after issue, or `07`'s amended command edited after issue, is contradicted,
+never "as amended". Until the private assessment settles the relying-party contract, the
+approval to rely on is of the ask as proposed.
 
 ## Running the checks
 
