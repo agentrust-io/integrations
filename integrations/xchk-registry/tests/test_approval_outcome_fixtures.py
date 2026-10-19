@@ -100,9 +100,11 @@ def _assess(record: dict, bundle_name: str | None, bundle_override: dict | None 
         verdict = "approval-contradicted"
     elif disposition != "approved":
         verdict = "not-an-approval"
-    elif _verify(bundle_path, require_approval=True)["exit"] != 0:
-        # approved on the record, but the evidence that would confirm it is absent: not contradicted, not confirmed
-        verdict = "approval-unverified"
+    elif (strict := _verify(bundle_path, require_approval=True))["exit"] != 0:
+        # approved on the record, but the evidence that would confirm it is absent: not contradicted, not confirmed.
+        # Approval evidence present with the seal chain incomplete is its own verdict (review of #350, 20 Oct 2026):
+        # the person's answer checks out, the receipt's place in the sealed chain does not.
+        verdict = "approval-unverified" if strict["approvalEvidenceMissing"] else "approval-unsealed"
     elif amended:
         verdict = "approval-confirmed-as-amended"
     else:
@@ -293,3 +295,20 @@ def test_relabelled_identity_is_reported_from_the_binding(tmp_path: Path) -> Non
     assert report["exit"] == 0
     assert report["boundIdentity"]["email"] == bound["approverEmail"]
     assert report["boundIdentity"]["authLevel"] == bound["authLevel"]
+
+
+@pytest.mark.parametrize("strip", ["seal", "merkle", "seal+merkle", "seal-signature"])
+def test_an_approval_without_its_seal_chain_is_not_confirmed(strip: str, tmp_path: Path) -> None:
+    """Review of #350 (noah-ing, 20 Oct 2026): the approval evidence intact, the seal, the Merkle path or the registry's
+    signature over the seal removed. Strict mode refuses, and the verdict is approval-unsealed, never confirmed."""
+    record, bundle = _load("01-approval-confirmed.json"), _load("01-approval-confirmed.bundle.json")
+    if strip in ("seal", "seal+merkle"):
+        bundle.pop("seal")
+    if strip in ("merkle", "seal+merkle"):
+        bundle.pop("merkle")
+    if strip == "seal-signature":
+        bundle["registrySignature"].pop("signature", None)
+        bundle["registrySignature"].pop("signatures", None)
+    got = _assess(record, "01-approval-confirmed.bundle.json", bundle_override=bundle, tmp_dir=tmp_path)
+    assert got["digest_matches"] and got["bundle_verifies"]
+    assert got["verdict"] == "approval-unsealed"

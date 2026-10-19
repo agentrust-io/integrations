@@ -63,7 +63,10 @@ Two rules the verifier enforces that a relying party must not relax (19 October 
   are listed as pending, not passed. An approval verdict needs the approval evidence to have been present and
   checked: run the verifier with `--require-approval` (exit 3 names what is missing), as the fixture test does.
   A bundle stripped of its approver still has an intact record and seal; it is an unverified approval, never a
-  confirmed one. The verifier's `--json` output is the structured form of this: the checks that ran, with OK or
+  confirmed one. The reverse holds too: approval evidence intact with the seal, the Merkle path to it or the
+  registry's signature over it missing is an approval whose place in the sealed chain is unchecked. Strict mode
+  refuses it (`seal-chain-incomplete`, with `sealChainMissing` naming the part), and the fixture verdict reports it as
+  `approval-unsealed`, distinct from a sealed confirmation. The verifier's `--json` output is the structured form of this: the checks that ran, with OK or
   FAIL, the count of steps that could not run, the approval evidence still missing, and `boundIdentity`, the person
   and proofing level taken only from the registry-signed binding, never from the readable `approver.email` or
   `authLevel` beside it; a caller acts on that, not on the exit code alone.

@@ -302,3 +302,35 @@ def test_an_amendment_on_a_record_that_seals_no_digest_is_pending_not_failed(tmp
     assert rep["amendment"] == {"command": b["decision"]["amendment"]["command"], "checkable": False, "committed": False}
     assert "seals no action digest" in text and "FAIL the sealed record commits" not in text
     assert "FAIL record hash recomputed" in text and code == 1
+
+
+def test_approval_evidence_without_the_seal_chain_is_not_a_sealed_approval(tmp_path):
+    """Review of #350 (noah-ing, 20 Oct 2026): from the valid 01 receipt, deleting only the seal, only the Merkle path,
+    both, or only the registry's signature over the seal left the approval evidence intact and strict mode passed.
+    Strict mode now also requires the seal chain and says which part is missing; the default run still exits 0 with
+    the steps pending, as before."""
+    good = load("01-approval-confirmed.bundle.json")
+    cases = {
+        "seal": (lambda b: b.pop("seal"), "the seal over the record's window"),
+        "merkle": (lambda b: b.pop("merkle"), "the Merkle path from the record to the seal"),
+        "seal+merkle": (lambda b: (b.pop("seal"), b.pop("merkle")), "the seal over the record's window"),
+        "seal signature": (lambda b: [b["registrySignature"].pop(k, None) for k in ("signature", "signatures")], "the registry's signature over the seal"),
+    }
+    for name, (mutate, missing) in cases.items():
+        b = copy.deepcopy(good)
+        mutate(b)
+        p = tmp_path / "s.json"
+        p.write_text(json.dumps(b), encoding="utf-8")
+        with redirect_stdout(io.StringIO()) as out:
+            code, rep = v.verify(str(p), require_approval=True)
+        assert code == 3 and rep["result"] == "seal-chain-incomplete", (name, out.getvalue()[-400:])
+        assert missing in rep["sealChainMissing"] and rep["approvalEvidenceMissing"] == [], name
+        assert "does NOT verify AS A SEALED APPROVAL" in out.getvalue(), name
+        with redirect_stdout(io.StringIO()):
+            code, rep = v.verify(str(p))
+        assert code == 0 and rep["result"] == "verifies" and missing in rep["sealChainMissing"], name
+    p = tmp_path / "g.json"
+    p.write_text(json.dumps(good), encoding="utf-8")
+    with redirect_stdout(io.StringIO()):
+        code, rep = v.verify(str(p), require_approval=True)
+    assert code == 0 and rep["sealChainMissing"] == [], "the sealed control still passes strict mode"

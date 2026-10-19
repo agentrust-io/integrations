@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Verify an xChk receipt bundle with no network. Standard library only (post-quantum half optional, see below).
-Flags: --require-approval (exit 3 unless the approval evidence is present and checked), --json (a structured
+Flags: --require-approval (exit 3 unless the approval evidence AND the seal chain — seal, Merkle path, registry
+signature over the seal — are present and checked), --json (a structured
 report on stdout instead of the human lines; see verify()).
 
 MIT License. Copyright (c) 2026 Sean MacGuire. Permission is hereby granted, free of charge, to any person
@@ -516,7 +517,7 @@ def verify(path: str, artifact_path: Optional[str] = None, require_approval: boo
     belongs, a float in a sealed body, a lone surrogate, bad base64) ends in a failed check and exit 1, never a
     traceback and never a pass (19 Oct 2026: a type-mutation sweep over every field found 35 crashing lines; the
     field-removal sweep had covered only absence). `pending` is null when the run stopped on such a bundle."""
-    report = {"result": None, "exit": None, "failed": 0, "pending": 0, "approvalEvidenceMissing": [],
+    report = {"result": None, "exit": None, "failed": 0, "pending": 0, "approvalEvidenceMissing": [], "sealChainMissing": [],
               "boundIdentity": None, "amendment": None, "checks": []}
     try:
         return _verify(path, artifact_path, require_approval, report)
@@ -533,7 +534,9 @@ def verify(path: str, artifact_path: Optional[str] = None, require_approval: boo
 def _verify(path, artifact_path, require_approval, report):
     """Returns (exit code, report). The report is what a caller may act on (19 Oct 2026, GHSA-w2fx-3qmx-rx85, finding
     2): `checks` lists every check that RAN with OK or FAIL; `pending` counts steps that could not run here; a step
-    that did not run is in neither. `approvalEvidenceMissing` names what an approval verdict still needs.
+    that did not run is in neither. `approvalEvidenceMissing` names what an approval verdict still needs;
+    `sealChainMissing` names what is missing of the seal, the Merkle path to it and the registry's signature over it
+    (20 Oct 2026: approval evidence present does not make the receipt sealed; strict mode requires both).
     require_approval: exit 3 unless the APPROVAL evidence is present and checked — an approver block, a passkey
     assertion with a key, a registry-signed binding, and an ask-v1 challenge. Without it, a bundle stripped of its
     approver still exits 0 (nothing FAILED, the steps were only WAIT), and a caller that reads 0 as "approval
@@ -549,6 +552,10 @@ def _verify(path, artifact_path, require_approval, report):
 
     failed = 0
     pending = 0
+    # 20 Oct 2026 (review of #350, noah-ing): the approval evidence being present does not make the receipt sealed. The
+    # seal, the Merkle path to it and the registry's signature over it are a second, separate requirement of strict mode,
+    # reported apart so "approved, and sealed" is never read off "approved" alone.
+    seal_chain_missing = report["sealChainMissing"]
     approval_evidence_missing = report["approvalEvidenceMissing"]   # what an approval verdict still needs (strict mode refuses on any)
     try:
         with open(path, "r", encoding="utf-8") as f:
@@ -609,7 +616,9 @@ def _verify(path, artifact_path, require_approval, report):
                 ok(False, f"Merkle proof is malformed ({exc!r}); the path to the seal cannot be walked")
     else:
         pending += 1
-        print("  WAIT not sealed when the bundle was made — download it again later")
+        seal_chain_missing.append("the seal over the record's window" if not seal else "the Merkle path from the record to the seal")
+        print("  WAIT not sealed when the bundle was made — download it again later" if not seal
+              else "  WAIT no Merkle path from the record to the seal in this bundle — the record's place under the seal cannot be checked")
 
     # 3. seal hash
     if seal:
@@ -652,6 +661,7 @@ def _verify(path, artifact_path, require_approval, report):
         print(f"  ..   keys pinned in the bundle: {pinned}; confirm at {rs.get('wellKnown')} when online")
     elif seal:
         pending += 1
+        seal_chain_missing.append("the registry's signature over the seal")
         print(f"  WAIT no registry signature in this bundle ({rs.get('note') or 'unsigned'})")
 
     # 4b. root key statement (SLH-DSA-SHA2-128s)
@@ -841,9 +851,15 @@ def _verify(path, artifact_path, require_approval, report):
     if failed:
         print(f"\nRESULT: does NOT verify ({failed} check(s) failed)")
         return done(1, "fails")
-    if require_approval and approval_evidence_missing:
-        print("\nRESULT: does NOT verify AS AN APPROVAL — evidence missing: " + "; ".join(approval_evidence_missing) + " (nothing failed; the steps were never run)")
-        return done(3, "approval-evidence-missing")
+    if require_approval and (approval_evidence_missing or seal_chain_missing):
+        if approval_evidence_missing:   # the wording of 19 Oct 2026, unchanged: callers match on it
+            print("\nRESULT: does NOT verify AS AN APPROVAL — evidence missing: " + "; ".join(approval_evidence_missing)
+                  + ("; seal chain incomplete: " + "; ".join(seal_chain_missing) if seal_chain_missing else "")
+                  + " (nothing failed; the steps were never run)")
+        else:
+            print("\nRESULT: does NOT verify AS A SEALED APPROVAL — seal chain incomplete: " + "; ".join(seal_chain_missing)
+                  + " (the approval evidence checks out; nothing failed; the seal steps were never run)")
+        return done(3, "approval-evidence-missing" if approval_evidence_missing else "seal-chain-incomplete")
     print("\nRESULT: verifies offline" + (f" — {pending} step(s) pending (see WAIT)" if pending else "") + "; only the block's presence on the chain is left to you")
     return done(0, "verifies")
 
