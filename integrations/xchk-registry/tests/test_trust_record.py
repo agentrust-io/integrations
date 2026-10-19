@@ -595,3 +595,37 @@ def test_sweep_origins_subjects_and_references_on_signed_records(tmp_path, capsy
                 raise AssertionError(f"{origin!r} crashed the CLI: {type(e).__name__}: {e}") from e
             out = json.loads(capsys.readouterr().out)
             assert rc in (0, 1) and out["status"] in ("verified", "invalid", "no-key"), origin
+
+
+def test_the_thumbprint_is_the_rfc7638_digest_of_the_public_key_the_library_verified_with():
+    """The reported trusted_key_thumbprint is the library's own RFC 7638 function over the public key, and equals the
+    thumbprint on the library's verification result (19 Oct 2026: computed rather than read off the result)."""
+    from agentrust_trace import verify_record
+    got = x.verification(RECORD, JWK, now=AT_ISSUE)
+    lib = verify_record(RECORD, JWK, max_age_seconds=x.MAX_AGE_SECONDS, now=AT_ISSUE)
+    assert got["trusted_key_thumbprint"] == lib.trusted_key_thumbprint
+    assert got["trusted_key_thumbprint"] == x.verification(RECORD, {k: v for k, v in JWK.items() if k != "kid"}, now=AT_ISSUE)["trusted_key_thumbprint"]
+
+
+def test_a_pinned_private_key_is_refused_and_not_echoed(tmp_path, capsys):
+    """A trust anchor is a public key. A key file that carries the private member d is refused with fixed text,
+    through the function and through the command line, and no part of the file reaches the output."""
+    synthetic_d = "c3ludGhldGljLXByaXZhdGUtbWVtYmVyLW5vdC1hLWtleQ"
+    private = dict(JWK, d=synthetic_d)
+    got = x.verify_with_key_source(RECORD, private, fetch=no_fetch, now=AT_ISSUE)
+    assert got["status"] == "no-key" and "private key" in got["reason"]
+    assert synthetic_d not in json.dumps(got)
+    for doc in (private, {"trace_signer_jwk": private}):
+        p = tmp_path / "pinned.json"
+        p.write_text(json.dumps(doc), encoding="utf-8")
+        assert x.main([str(EX / "01-trust-record.json"), "--jwk", str(p), "--now", str(AT_ISSUE)]) == 1
+        out = capsys.readouterr().out
+        assert '"no-key"' in out and "private key" in out and synthetic_d not in out
+
+
+def test_a_key_file_that_does_not_decode_is_reported_by_error_class_only(tmp_path, capsys):
+    p = tmp_path / "pinned.json"
+    p.write_bytes(b'{"kty": "OKP", "x": "\xff\xfe-synthetic-bytes"}')
+    assert x.main([str(EX / "01-trust-record.json"), "--jwk", str(p), "--now", str(AT_ISSUE)]) == 1
+    out = json.loads(capsys.readouterr().out)
+    assert out["status"] == "no-key" and out["reason"] == "pinned key file: UnicodeDecodeError"

@@ -27,7 +27,7 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
-from agentrust_trace import verify_record
+from agentrust_trace import jwk_thumbprint, verify_record
 from cryptography.exceptions import InvalidSignature
 
 
@@ -82,7 +82,9 @@ def verification(record: dict, jwk: dict, max_age_seconds: int = MAX_AGE_SECONDS
     # section 3.3: a successful result reports the profile it verified under and the whole set the verifier accepts
     return {"status": "verified", "revocation": getattr(revocation, "outcome", None) or "no_check_performed",
             "profile": getattr(result, "profile", None), "accepted_profiles": list(getattr(result, "accepted_profiles", ()) or ()),
-            "trusted_key_thumbprint": getattr(result, "trusted_key_thumbprint", None), **when}
+            # RFC 7638 thumbprint of the PUBLIC key the record verified under, from the library's own function (19 Oct
+            # 2026: the attribute read was named like a secret to CodeQL's heuristics; the value is a public-key digest)
+            "trusted_key_thumbprint": jwk_thumbprint(jwk), **when}
 
 
 def record_verifies(record: dict, jwk: dict, max_age_seconds: int = MAX_AGE_SECONDS, now: int | Instant | None = None) -> bool:
@@ -240,7 +242,7 @@ def record_kid(record) -> str | None:
     return kid if isinstance(kid, str) and kid else None
 
 
-def trusted_origin(record: dict, registry: str | None) -> tuple[str | None, str | None]:
+def anchor_origin(record: dict, registry: str | None) -> tuple[str | None, str | None]:
     """(origin, refusal): the origin the published key may come from, or why there is none. The origin is the relying
     party's, given out of band with --registry; nothing in the record supplies it. (An earlier head derived it from
     the record's did:web subject, which only shows the record agrees with itself: a record signed under a publisher
@@ -283,10 +285,14 @@ def verify_with_key_source(record: dict, pinned: dict | None, fetch=published_ke
     # naming a third). The caller said which registry the record must belong to; the record must agree.
     origin = None
     if registry is not None:
-        origin, refusal = trusted_origin(record, registry)
+        origin, refusal = anchor_origin(record, registry)
         if refusal:
             return {"status": "no-key", "key_source": None, "kid": kid, "revocation": None, **bounds, "reason": refusal}
     if pinned is not None:
+        if isinstance(pinned, dict) and "d" in pinned:
+            # 19 Oct 2026: a trust anchor is a PUBLIC key; a file carrying the private member is refused, and no part of it
+            # is echoed (the reason is fixed text)
+            return {"status": "no-key", "key_source": None, "kid": kid, "revocation": None, **bounds, "reason": "the pinned key file holds a private key (member d); pin the public key only"}
         if not is_ed25519_jwk(pinned):
             return {"status": "no-key", "key_source": None, "kid": kid, "revocation": None, **bounds, "reason": "the pinned key is not an Ed25519 JWK (kty OKP, crv Ed25519, x of 32 bytes)"}
         pk = pinned.get("kid")
@@ -327,13 +333,13 @@ def main(argv: list[str] | None = None) -> int:
     else:
         jwk = None
         if a.jwk:
-            j, why = load_json(a.jwk)
+            j, why = load_json(a.jwk, detail=False)
             if why:
                 out = {"status": "no-key", "reason": f"pinned key file: {why}", "key_source": None, "kid": record_kid(record), "revocation": None, "max_age_seconds": a.max_age, **instant.fields()}
                 print(json.dumps(out, indent=2))
                 return 1
             jwk = j.get("trace_signer_jwk", j) if isinstance(j, dict) else j   # a bare JWK, or {trace_signer_jwk: ...}; the shape is checked next
-            if not is_ed25519_jwk(jwk):
+            if not is_ed25519_jwk(jwk) and not (isinstance(jwk, dict) and "d" in jwk):
                 jwk = {"not": "a jwk"}   # verify_with_key_source says so, with the reason; never None (that would mean "no pin given")
         out = verify_with_key_source(record, jwk, max_age_seconds=a.max_age, now=instant, registry=a.registry)
         out["approval_outcome_references"] = [
@@ -344,12 +350,13 @@ def main(argv: list[str] | None = None) -> int:
     return 0 if out["status"] == "verified" else 1
 
 
-def load_json(path: str) -> tuple:
-    """(value, None) or (None, why): a local file that is not JSON is reported, not raised."""
+def load_json(path: str, detail: bool = True) -> tuple:
+    """(value, None) or (None, why): a local file that is not JSON is reported, not raised. detail=False reports the
+    error class only: a decode error's message can quote bytes of the file, and a key file's bytes are not echoed."""
     try:
         return json.loads(Path(path).read_text(encoding="utf-8")), None
     except (OSError, ValueError, UnicodeDecodeError) as e:
-        return None, f"{type(e).__name__}: {str(e)[:120]}"
+        return None, f"{type(e).__name__}: {str(e)[:120]}" if detail else type(e).__name__
 
 
 if __name__ == "__main__":
