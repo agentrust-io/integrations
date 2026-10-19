@@ -14,7 +14,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-test = ["pytest"]
+test = ["pytest", "rfc8785", "cryptography"]
 
 [tool.setuptools]
 py-modules = ["xchk_trace_record"]
