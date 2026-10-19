@@ -1,0 +1,40 @@
+name: PIC Standard MCP Guard
+vendor: PIC Standard
+integrates_with:
+  - trace
+description: >-
+  Uses a PIC Standard MCP pre-execution allow decision and a caller-verified
+  post-dispatch observation to emit a signed TRACE Level 0 Trust Record linked
+  through a detached bridge.
+maintainer:
+  github: madeinplutofabio
+repository: https://github.com/agentrust-io/integrations
+homepage: https://github.com/pic-standard/pic-standard
+license: Apache-2.0
+tier: community
+marketplace:
+  display_name: PIC Standard MCP Guard
+  category: Security & policy
+  mark: PIC
+  keywords: [pic, mcp, intent, policy, provenance, trace]
+
+# The adapter is a record producer. Its outer coordinator requires a PIC
+# proposal and the reserved __pic_request_id. The on_allow hook builds and
+# verifies a detached bridge before dispatch. After dispatch, a caller-supplied
+# observation verifier must pass before the adapter signs a Level 0 Trust
+# Record referencing that bridge.
+#
+# The record's model, runtime, data_class, and build_provenance describe the
+# governed run, not PIC. examples/emit_record.py uses fixed TEST values and
+# labels them accordingly. Level 0 is software-only signing, with no hardware
+# attestation.
+trace_roles:
+  - record-producer
+trace_conformance_level: 0
+tested_against:
+  agentrust-trace: "0.11.0"
+  agentrust-trace-tests: "0.6.2"
+
+  # The schema accepts agentrust-io package keys only. The fixed CI job also
+  # pins pic-standard[crypto] 0.9.1 and agentrust-trace-adapters 0.2.0, which
+  # are the released packages exercised by the adapter, tests, and example.
