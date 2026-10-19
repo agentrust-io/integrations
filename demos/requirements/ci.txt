@@ -882,7 +882,7 @@ uvicorn==0.54.0 \
     --hash=sha256:505bdb0f318731d45f1f712071fc781a8981f6847a31c902c9f5e652d4f67faf \
     --hash=sha256:a2e33cbfaa0306f8e6b0c13e0cb89d7d7a2da3e62b90c66e18c33d9807b28620
     # via cmcp-runtime
-weight-custody-manifest==0.30.0 \
-    --hash=sha256:7aca15fbea19753d47d0fac43bfcb43ac3f46f85e4ba8413a13aba99d37da202 \
-    --hash=sha256:d895396be2badc211e44dd755ffd8873d6aafa0ed09da9c78316024b244a5c35
+weight-custody-manifest==0.32.0 \
+    --hash=sha256:79c8765372a7b85f7d3eb75ae5e9545e0c7c3c83cd346db25d1f8d678008a242 \
+    --hash=sha256:f25f1e8ce5f2da22f56256b7a4cefef2cb09060d5dfbc4da01337b5a2ab40864
     # via -r requirements/../requirements.txt
