@@ -35,8 +35,8 @@ from wcm import (
     artifact_files,
     combine_shares,  # noqa: F401 - kept importable for the curious
     Ed25519Signer,
-    EnclaveSession,
     generate_ed25519,
+    generate_transport_keypair,
     is_root,
     KeyBrokerService,
     manifest_identity,
@@ -48,6 +48,7 @@ from wcm import (
 )
 
 from _mock_attestation import waive_mock_verification
+from _sealed_release import start_custody
 
 
 def rule(title: str) -> None:
@@ -240,6 +241,7 @@ def main() -> int:
     rule("Step 2 - Attestation gate (load only the certified serving stack)")
     kbs = KeyBrokerService(
         {base.weights_hash: b"loading-key-not-a-secret-for-open-weights"},
+        require_channel_binding=True,
         # weight-custody-manifest 0.27.0 refuses to release unless the manifest's
         # identity is pinned out of band. Without it, a caller could present an
         # attacker-authored policy that reused a weights hash the broker already
@@ -247,15 +249,17 @@ def main() -> int:
         trusted_manifest_identities=[manifest_identity(base)],
     )
     challenge = kbs.issue_challenge()
+    transport_private, transport_public = generate_transport_keypair()
     evidence = SoftwareProvider().produce(
-        challenge, serving_image_measurement=serving, gpu_measurement="nvidia-rim:demo-golden")
+        challenge, serving_image_measurement=serving, gpu_measurement="nvidia-rim:demo-golden",
+        transport_public_key=transport_public)
     decision = kbs.verify_and_release(base, evidence)
     print("gate released     :", decision.released)
     print("a silently modified fork of these public weights would NOT load here.")
 
     # ---- Step 3: wipe-on-lapse custody (kill switch) ------------------------
     rule("Step 3 - Wipe-on-lapse custody (kill switch: recall / license breach)")
-    session = EnclaveSession.from_release(base, decision)
+    session = start_custody(base, decision, transport_private)
     session.use_key()
     print("serving under a 1h cadence; time_floor =", session.time_floor.value)
 

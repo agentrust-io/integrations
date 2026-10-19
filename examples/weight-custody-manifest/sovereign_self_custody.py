@@ -36,6 +36,7 @@ from wcm import (
     combine_shares,
     Ed25519Signer,
     generate_ed25519,
+    generate_transport_keypair,
     KeyBrokerService,
     manifest_identity,
     memory_sweep_public_key,
@@ -156,6 +157,7 @@ def main() -> int:
 
     kbs = KeyBrokerService(
         {weights_hash: b""},
+        require_channel_binding=True,
         # 0.27.0 also refuses to release unless the manifest's identity is pinned
         # out of band. Without it, a caller could present an attacker-authored
         # policy that reused a weights hash the broker already held and be
@@ -164,10 +166,12 @@ def main() -> int:
         memory_fingerprint_public_key_b64url=memory_sweep_public_key(sweep_key),
     )
     challenge = kbs.issue_challenge()
+    _, transport_public = generate_transport_keypair()
     evidence = SoftwareProvider().produce(
         challenge,
         serving_image_measurement=serving,
         gpu_measurement="nvidia-rim:demo-golden",
+        transport_public_key=transport_public,
     )
     evidence = evidence.model_copy(
         update={

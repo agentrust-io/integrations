@@ -21,8 +21,8 @@ from datetime import datetime, timedelta, timezone
 
 from wcm import (
     Ed25519Signer,
-    EnclaveSession,
     generate_ed25519,
+    generate_transport_keypair,
     KeyBrokerService,
     KeyWipedError,
     manifest_identity,
@@ -31,6 +31,7 @@ from wcm import (
 )
 
 from _mock_attestation import waive_mock_verification
+from _sealed_release import start_custody
 
 NOW = datetime(2026, 1, 1, tzinfo=timezone.utc)
 LIVE_KEY_ID = "vcek:live-0001"
@@ -83,11 +84,12 @@ def build_manifest(weights_hash: str, serving: str):
     ])
 
 
-def _release(kbs, manifest, serving):
+def _release(kbs, manifest, serving, transport_public):
     ch = kbs.issue_challenge()
     ev = SoftwareProvider().produce(
         ch, serving_image_measurement=serving, gpu_measurement="nvidia-rim:golden",
         attestation_key_id=LIVE_KEY_ID,
+        transport_public_key=transport_public,
     )
     return kbs.verify_and_release(manifest, ev)
 
@@ -101,6 +103,7 @@ def main() -> int:
     rule("Step 1 - The model is attested, released, and serving")
     kbs = KeyBrokerService(
         {weights_hash: key},
+        require_channel_binding=True,
         now=lambda: NOW,
         # weight-custody-manifest 0.27.0 refuses to release unless the manifest's
         # identity is pinned out of band. Without it, a caller could present an
@@ -108,18 +111,21 @@ def main() -> int:
         # held and be released against terms nobody agreed.
         trusted_manifest_identities=[manifest_identity(manifest)],
     )
-    decision = _release(kbs, manifest, serving)
+    transport_private, transport_public = generate_transport_keypair()
+    decision = _release(kbs, manifest, serving, transport_public)
     print("released              :", decision.released)
-    session = EnclaveSession.from_release(manifest, decision, now=lambda: NOW)
+    session = start_custody(manifest, decision, transport_private, now=lambda: NOW)
     session.use_key(now=NOW)
     print("serving under a", "30m", "cadence")
 
     rule("Step 2 - A recall revokes the attestation key. New releases are refused.")
     # The revocation authority marks the key revoked; the KBS enforces it live.
     revoked_kbs = KeyBrokerService(
-        {weights_hash: key}, now=lambda: NOW, revoked_attestation_keys={LIVE_KEY_ID}
+        {weights_hash: key}, now=lambda: NOW, revoked_attestation_keys={LIVE_KEY_ID},
+        require_channel_binding=True,
+        trusted_manifest_identities=[manifest_identity(manifest)],
     )
-    denied = _release(revoked_kbs, manifest, serving)
+    denied = _release(revoked_kbs, manifest, serving, transport_public)
     print("new release after recall:", denied.released, " (refused)")
     reason = next((c.detail for c in denied.failures if c.name == "attestation_revocation"), None)
     print("why                     :", reason)

@@ -21,8 +21,8 @@ from datetime import datetime, timedelta, timezone
 
 from wcm import (
     Ed25519Signer,
-    EnclaveSession,
     generate_ed25519,
+    generate_transport_keypair,
     KeyBrokerService,
     KeyWipedError,
     manifest_identity,
@@ -31,6 +31,7 @@ from wcm import (
 )
 
 from _mock_attestation import waive_mock_verification
+from _sealed_release import start_custody
 
 
 def sha256(data: bytes) -> str:
@@ -93,6 +94,7 @@ def main() -> None:
 
     kbs = KeyBrokerService(
         {weights_hash: b"the-weight-decryption-key"},
+        require_channel_binding=True,
         # weight-custody-manifest 0.27.0 refuses to release unless the manifest's
         # identity is pinned out of band. Without it, a caller could present an
         # attacker-authored policy that reused a weights hash the broker already
@@ -104,10 +106,12 @@ def main() -> None:
     banner("1. A tampered enclave asks for the key. It gets nothing.")
     tampered = sha256(b"vllm-0.6.3 + a BACKDOORED policy bundle")
     challenge = kbs.issue_challenge()
+    transport_private, transport_public = generate_transport_keypair()
     bad_evidence = SoftwareProvider().produce(
         challenge,
         serving_image_measurement=tampered,  # not what the builder signed
         gpu_measurement="nvidia-rim:golden",
+        transport_public_key=transport_public,
     )
     decision = kbs.verify_and_release(manifest, bad_evidence)
     print("serving stack     : UNAPPROVED (a modified fork)")
@@ -122,6 +126,7 @@ def main() -> None:
         challenge,
         serving_image_measurement=approved,
         gpu_measurement="nvidia-rim:golden",
+        transport_public_key=transport_public,
     )
     decision = kbs.verify_and_release(manifest, good_evidence)
     print("serving stack     : builder-signed and attested")
@@ -130,7 +135,7 @@ def main() -> None:
     # -- Moment 2: WIPE-ON-LAPSE -----------------------------------------------
     banner("3. Miss the re-attestation. The enclave zeroizes the key.")
     t0 = datetime(2026, 1, 1, tzinfo=timezone.utc)
-    session = EnclaveSession.from_release(manifest, decision, now=lambda: t0)
+    session = start_custody(manifest, decision, transport_private, now=lambda: t0)
     print("cadence           :", doc["custody"]["attestation_cadence"],
           " time_floor:", session.time_floor.value)
     session.use_key(now=t0)

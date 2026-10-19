@@ -15,10 +15,16 @@ For a public open-weight model, base-weight confidentiality is theater (anyone c
 ```bash
 git clone https://github.com/agentrust-io/integrations.git
 cd integrations/examples/weight-custody-manifest
-pip install -r requirements.txt      # weight-custody-manifest>=0.21.0, Python 3.11+
+pip install -r requirements.txt      # weight-custody-manifest>=0.30.0, Python 3.11+
 ```
 
 The offline demos need nothing else. `real_open_model.py` needs run-local extras (below).
+
+Key-release demos explicitly enable channel binding, present a transport public key,
+and open the sealed release with the matching private key inside the mock enclave.
+`_sealed_release.py` uses the public sealing API before starting custody, so the
+examples also support SDK releases predating the `from_release` transport-key argument.
+This exercises the software release shape; it does not establish hardware attestation.
 
 ---
 

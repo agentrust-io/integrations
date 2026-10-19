@@ -24,8 +24,8 @@ import hashlib
 
 from wcm import (
     Ed25519Signer,
-    EnclaveSession,
     generate_ed25519,
+    generate_transport_keypair,
     KeyBrokerService,
     manifest_identity,
     SoftwareProvider,
@@ -35,6 +35,7 @@ from wcm import (
 )
 
 from _mock_attestation import waive_mock_verification
+from _sealed_release import start_custody
 
 
 def rule(title: str) -> None:
@@ -112,6 +113,7 @@ def main() -> int:
     rule("Step 2 - Attestation gate: the decryption key releases only into the approved enclave")
     kbs = KeyBrokerService(
         {weights_hash: b"the-secret-weight-decryption-key"},
+        require_channel_binding=True,
         # weight-custody-manifest 0.27.0 refuses to release unless the manifest's
         # identity is pinned out of band. Without it, a caller could present an
         # attacker-authored policy that reused a weights hash the broker already
@@ -119,8 +121,10 @@ def main() -> int:
         trusted_manifest_identities=[manifest_identity(manifest)],
     )
     challenge = kbs.issue_challenge()
+    transport_private, transport_public = generate_transport_keypair()
     evidence = SoftwareProvider().produce(
-        challenge, serving_image_measurement=serving, gpu_measurement="nvidia-rim:golden"
+        challenge, serving_image_measurement=serving, gpu_measurement="nvidia-rim:golden",
+        transport_public_key=transport_public,
     )
     decision = kbs.verify_and_release(manifest, evidence)
     print("key released         :", decision.released)
@@ -128,7 +132,7 @@ def main() -> int:
     print("serving stack. A different or tampered stack gets nothing (see refuse_and_wipe.py).")
 
     rule("Step 3 - Wipe-on-lapse custody (bounded exposure of the secret)")
-    session = EnclaveSession.from_release(manifest, decision)
+    session = start_custody(manifest, decision, transport_private)
     session.use_key()
     print("serving under a", doc["custody"]["attestation_cadence"], "cadence, time_floor =", session.time_floor.value)
     print("miss the re-attestation and the key is zeroized, so worst-case exposure of")
