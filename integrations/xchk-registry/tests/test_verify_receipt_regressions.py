@@ -284,3 +284,21 @@ def test_identity_is_reported_from_the_signed_binding_only(tmp_path):
     with redirect_stdout(io.StringIO()) as quiet:
         code, rep = v.verify(str(p))
     assert code == 0 and "labels differ" not in quiet.getvalue()
+
+
+def test_an_amendment_on_a_record_that_seals_no_digest_is_pending_not_failed(tmp_path):
+    """Ceremony records sealed before 19 Sep 2026 carry no paramsHash, so the seal commits to no command. The amendment
+    is then not checkable: a WAIT, committed false, and never the 'sealed record commits' FAIL (that falsely failed
+    four genuine September receipts). Built from 07 with paramsHash removed: the record hash then fails, as it must,
+    and the amendment line is still the WAIT."""
+    b = copy.deepcopy(load("07-amended.bundle.json"))
+    del b["record"]["paramsHash"]
+    p = tmp_path / "nd.json"
+    p.write_text(json.dumps(b), encoding="utf-8")
+    out = io.StringIO()
+    with redirect_stdout(out):
+        code, rep = v.verify(str(p))
+    text = out.getvalue()
+    assert rep["amendment"] == {"command": b["decision"]["amendment"]["command"], "checkable": False, "committed": False}
+    assert "seals no action digest" in text and "FAIL the sealed record commits" not in text
+    assert "FAIL record hash recomputed" in text and code == 1

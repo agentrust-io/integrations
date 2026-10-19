@@ -756,7 +756,15 @@ def _verify(path, artifact_path, require_approval, report):
     # that needs the person's own signature over the amended text does not have it in this bundle.
     dec = b.get("decision") if isinstance(b.get("decision"), dict) else {}
     am = dec.get("amendment")
-    if isinstance(am, dict) and am.get("command"):
+    if isinstance(am, dict) and am.get("command") and rec.get("paramsHash") is None:
+        # 19 Oct 2026: a ceremony record sealed before 19 Sep 2026 carries no action digest (DM-3 added it), so the seal
+        # commits to no command at all. The amendment is then unchecked readable text: pending, never confirmed, and
+        # not a failure of a receipt that is otherwise intact (four genuine September receipts failed on this).
+        pending += 1
+        print("  WAIT approved WITH CHANGES, but this record seals no action digest (ceremonies before 19 Sep 2026): the seal does not"
+              " commit to the amended command, so the amendment is readable text only and is not checkable here")
+        report["amendment"] = {"command": str(am["command"]), "checkable": False, "committed": False}
+    elif isinstance(am, dict) and am.get("command"):
         binding, served = amended_binding(rec, am)
         try:
             sealed = rec.get("paramsHash") == sha256_hex(canonical(binding))
@@ -777,7 +785,7 @@ def _verify(path, artifact_path, require_approval, report):
             print("  ..   the ask carries no action digest (an escalated approver's ask): the amendment's citation of it is not checkable")
         print("  ..   approved WITH CHANGES: the passkey signed the ask as proposed; the registry sealed the amended command as the act."
               " The amendment's scope rests on the registry's seal, not on a signature by the person.")
-        report["amendment"] = {"command": str(am["command"]), "committed": bool(sealed and same_command and cites)}
+        report["amendment"] = {"command": str(am["command"]), "checkable": True, "committed": bool(sealed and same_command and cites)}
 
     # 6. anchor
     anchor = b.get("anchor") or {}
