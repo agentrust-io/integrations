@@ -2,7 +2,7 @@
 
 xChk is a registry that licenses AI agents under a verified person and seals a record of each gated act, with the person's own passkey assertion on the acts they answered. This page shows how a TRACE record points at one of those receipts, so a reader can find the approval, check who gave it and against what, and do so offline. It is for teams whose runtime emits Trust Records and whose approvals go through an xChk registry.
 
-> **Non-normative.** This document is informative only. Nothing here changes TRACE v0.2 schema fields, wire formats, required claims, or conformance requirements. "TRACE" means the Trust Record defined in [`spec/trace-v0.2.md`](../../spec/trace-v0.2.md).
+> **Non-normative.** This document is informative only. Nothing here changes TRACE v0.2 schema fields, wire formats, required claims, or conformance requirements. "TRACE" means the Trust Record defined in [`spec/trace-v0.2.md`](https://github.com/agentrust-io/trace-spec/blob/main/spec/trace-v0.2.md).
 
 ---
 
