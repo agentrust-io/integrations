@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 """Verify an xChk receipt bundle with no network. Standard library only (post-quantum half optional, see below).
+Flags: --require-approval (exit 3 unless the approval evidence is present and checked), --json (a structured
+report on stdout instead of the human lines; see verify()).
 
 MIT License. Copyright (c) 2026 Sean MacGuire. Permission is hereby granted, free of charge, to any person
 obtaining a copy of this file, to deal in it without restriction, subject to this notice being included.
@@ -34,8 +36,10 @@ Checks (each reproduces the rule the registry used to write the bytes; bundle fo
 """
 import base64
 import hashlib
+import io
 import json
 import sys
+from contextlib import redirect_stdout
 from typing import Optional
 
 try:  # optional post-quantum half: https://pypi.org/project/dilithium-py (pure Python)
@@ -61,6 +65,26 @@ def canonical(value):
         return "{" + ",".join(json.dumps(k, ensure_ascii=False, separators=(",", ":")) + ":" + canonical(value[k])
                               for k in sorted(value.keys())) + "}"
     raise ValueError(f"unsupported value type {type(value).__name__}")
+
+
+def js_slice(s: str, n: int) -> str:
+    """String(s).slice(0, n) as the registry (JavaScript) computes it: n UTF-16 code units, not n code points."""
+    return s.encode("utf-16-le", "surrogatepass")[:2 * n].decode("utf-16-le", "surrogatepass")
+
+
+def amended_binding(rec: dict, am: dict):
+    """19 Oct 2026 (GHSA-w2fx-3qmx-rx85, finding 3). For an act approved WITH CHANGES the registry seals, as
+    record.paramsHash, sha256 over the canonical action binding {tool, command, path, summary, amount, artifactHash}
+    with the AMENDED command (its ceremonyParamsHash). The digest is inside the sealed record, so the Merkle chain
+    commits to the amended command; decision.amendment is readable text and an unsigned edit of it cannot change what
+    was sealed. Returns (binding, served): the bundle serves the exact preimage as amendment.boundAs, because the
+    record's tool and summary are capped, trimmed copies (80 and 400 chars); a bundle served before that carries none,
+    and the binding is rebuilt from the record, exact only for a summary under the cap."""
+    if isinstance(am.get("boundAs"), dict):
+        return am["boundAs"], True
+    summ = rec.get("summary")
+    return ({"tool": rec.get("tool"), "command": js_slice(str(am["command"]), 2000), "path": None,
+             "summary": (js_slice(str(summ), 2000) if summ else None), "amount": None, "artifactHash": None}, False)
 
 
 def sha256_hex(s: str) -> str:
@@ -482,27 +506,64 @@ def ots_attestations(proof: bytes, digest: bytes) -> list:
 
 
 def main(path: str, artifact_path: Optional[str] = None, require_approval: bool = False) -> int:
-    """require_approval (19 Oct 2026): exit 3 unless the APPROVAL evidence is present and checked — an approver block,
-    a passkey assertion with a key, a registry-signed binding, and an ask-v1 challenge. Without it, a bundle stripped
-    of its approver still exits 0 (nothing FAILED, the steps were only WAIT), and a caller that reads 0 as "approval
-    verified" is wrong (GHSA-w2fx-3qmx-rx85, finding 2). Absence of failure is not verification."""
+    """Human-readable run; the exit code is the verdict (0 verifies, 1 a check failed, 2 unreadable, 3 strict mode and
+    the approval evidence is missing). verify() returns the same code with a structured report (--json)."""
+    return verify(path, artifact_path, require_approval)[0]
+
+
+def verify(path: str, artifact_path: Optional[str] = None, require_approval: bool = False):
+    """(exit code, report) for one bundle file. A bundle whose fields have the wrong TYPES (a string where an object
+    belongs, a float in a sealed body, a lone surrogate, bad base64) ends in a failed check and exit 1, never a
+    traceback and never a pass (19 Oct 2026: a type-mutation sweep over every field found 35 crashing lines; the
+    field-removal sweep had covered only absence). `pending` is null when the run stopped on such a bundle."""
+    report = {"result": None, "exit": None, "failed": 0, "pending": 0, "approvalEvidenceMissing": [],
+              "boundIdentity": None, "amendment": None, "checks": []}
+    try:
+        return _verify(path, artifact_path, require_approval, report)
+    except (KeyError, TypeError, AttributeError, ValueError, IndexError, OverflowError) as exc:
+        text = f"the bundle is malformed ({type(exc).__name__}: {str(exc)[:160]}); it cannot be what the registry issued"
+        print("  FAIL " + text)
+        report["checks"].append({"status": "FAIL", "text": text})
+        failed = sum(1 for c in report["checks"] if c["status"] == "FAIL")
+        print(f"\nRESULT: does NOT verify ({failed} check(s) failed)")
+        report.update(exit=1, result="fails", failed=failed, pending=None)
+        return 1, report
+
+
+def _verify(path, artifact_path, require_approval, report):
+    """Returns (exit code, report). The report is what a caller may act on (19 Oct 2026, GHSA-w2fx-3qmx-rx85, finding
+    2): `checks` lists every check that RAN with OK or FAIL; `pending` counts steps that could not run here; a step
+    that did not run is in neither. `approvalEvidenceMissing` names what an approval verdict still needs.
+    require_approval: exit 3 unless the APPROVAL evidence is present and checked — an approver block, a passkey
+    assertion with a key, a registry-signed binding, and an ask-v1 challenge. Without it, a bundle stripped of its
+    approver still exits 0 (nothing FAILED, the steps were only WAIT), and a caller that reads 0 as "approval
+    verified" is wrong. Absence of failure is not verification. `boundIdentity` is the email, proofing level and method
+    from the registry-signed binding, never the readable labels beside it (null without a binding). `amendment` is null when the decision carries none,
+    else {command, committed}: committed only when the sealed record's paramsHash recomputes over that command AND
+    the amendment cites the ask the person signed (finding 3)."""
+    checks = report["checks"]
+
+    def done(code, result):
+        report.update(exit=code, result=result, failed=failed, pending=pending)
+        return code, report
+
+    failed = 0
+    pending = 0
+    approval_evidence_missing = report["approvalEvidenceMissing"]   # what an approval verdict still needs (strict mode refuses on any)
     try:
         with open(path, "r", encoding="utf-8") as f:
             b = json.load(f)
     except Exception as exc:  # noqa: BLE001
         print(f"could not read bundle: {exc}")
-        return 2
+        return done(2, "unreadable")
     if b.get("format") not in ("xchk-receipt-bundle/1", "xchk-receipt-bundle/2"):
         print(f"not an xChk receipt bundle (format={b.get('format')!r})")
-        return 2
-
-    failed = 0
-    pending = 0
-    approval_evidence_missing = []   # what an approval verdict would still need (strict mode refuses on any of these)
+        return done(2, "unreadable")
 
     def ok(cond, text):
         nonlocal failed
         print(("  OK   " if cond else "  FAIL ") + text)
+        checks.append({"status": "OK" if cond else "FAIL", "text": text})
         if not cond:
             failed += 1
 
@@ -636,6 +697,13 @@ def main(path: str, artifact_path: Optional[str] = None, require_approval: bool 
             # or an attacker who swaps both the key and the assertion for their own passes check 5 with every registry
             # signature intact (TRACE fixture 06-assertion-from-another-credential).
             ok(f.get("publicKey") == pk.get("raw"), "binding names the public key the assertion was checked with")
+            # 19 Oct 2026 (GHSA-w2fx-3qmx-rx85, finding 3): the person the registry bound to this record (who answered, or for an
+            # expired ask who was asked) and their proofing are reported ONLY from the registry-signed binding; the readable approver.email/authLevel/authMethod beside it are not evidence.
+            report["boundIdentity"] = {"email": f.get("approverEmail"), "authLevel": f.get("authLevel"),
+                                  "authMethod": f.get("authMethod"), "source": "approver.binding.fields (registry-signed)"}
+            outer = (ap.get("email"), ap.get("authLevel"), ap.get("authMethod"))
+            if outer != (f.get("approverEmail"), f.get("authLevel"), f.get("authMethod")):
+                print("  ..   the bundle's readable approver labels differ from the signed binding; the binding is what the registry signed and what is reported")
             # 18 Oct 2026: the identity provider that vouched for the approver (Entra tenant + subject) rides INSIDE the
             # signed binding; the readable copy at approver.identity must agree with what the registry signed.
             if f.get("identityProvider"):
@@ -655,7 +723,7 @@ def main(path: str, artifact_path: Optional[str] = None, require_approval: bool 
         ch = ap.get("challenge") or {}
         if ch.get("rule") == "ask-v1" and isinstance(ch.get("fields"), dict) and a.get("clientDataJSON"):
             f = ch["fields"]
-            dec = b.get("decision") or {}
+            dec = b.get("decision") if isinstance(b.get("decision"), dict) else {}  # 19 Oct 2026: a non-object decision is a failed check, never a crash
             try:
                 cd = json.loads(b64d(a["clientDataJSON"]).decode("utf-8"))
             except Exception:  # noqa: BLE001
@@ -678,6 +746,38 @@ def main(path: str, artifact_path: Optional[str] = None, require_approval: bool 
             pending += 1
             approval_evidence_missing.append("ask-v1 challenge (the device signed over this ask)")
             print("  WAIT challenge not derived from the ask (ceremony before 18 Oct 2026): the binding alone pairs this assertion with the record")
+
+    # 5c. approved WITH CHANGES (19 Oct 2026, GHSA-w2fx-3qmx-rx85, finding 3). decision.amendment is readable, unsigned
+    # text. What makes an amendment the approved act is the SEALED record: the registry hashes the amended command into
+    # record.paramsHash, so the Merkle chain commits to it, and amendment.originalParamsHash names the ask the person's
+    # passkey signed over. Without both, an amendment is a claim and is refused: an amendment typed into a bundle after
+    # issue fails here, and so does an amended command edited after issue. The person's signature covers the ask AS
+    # PROPOSED; the amendment's scope rests on the registry's seal, not on a signature by the person, and a relying party
+    # that needs the person's own signature over the amended text does not have it in this bundle.
+    dec = b.get("decision") if isinstance(b.get("decision"), dict) else {}
+    am = dec.get("amendment")
+    if isinstance(am, dict) and am.get("command"):
+        binding, served = amended_binding(rec, am)
+        try:
+            sealed = rec.get("paramsHash") == sha256_hex(canonical(binding))
+        except (ValueError, UnicodeError):
+            sealed = False      # a binding outside the sealed value profile cannot be what was sealed
+        ok(sealed, "the sealed record commits to the amended action binding (record.paramsHash = sha256 over "
+           + ("amendment.boundAs)" if served else "it, rebuilt from the record: a bundle served before 19 Oct 2026; if this fails, download it again)"))
+        try:
+            same_command = isinstance(binding.get("command"), str) and binding["command"] == js_slice(str(am["command"]), 2000)
+        except UnicodeError:
+            same_command = False
+        ok(same_command, "the bound command is the amended command")
+        cites = True
+        if dec.get("actionParamsHash") is not None:
+            cites = am.get("originalParamsHash") == dec.get("actionParamsHash")
+            ok(cites, "the amendment cites the ask the person answered (originalParamsHash = the signed ask's actionParamsHash)")
+        else:
+            print("  ..   the ask carries no action digest (an escalated approver's ask): the amendment's citation of it is not checkable")
+        print("  ..   approved WITH CHANGES: the passkey signed the ask as proposed; the registry sealed the amended command as the act."
+              " The amendment's scope rests on the registry's seal, not on a signature by the person.")
+        report["amendment"] = {"command": str(am["command"]), "committed": bool(sealed and same_command and cites)}
 
     # 6. anchor
     anchor = b.get("anchor") or {}
@@ -732,17 +832,27 @@ def main(path: str, artifact_path: Optional[str] = None, require_approval: bool 
 
     if failed:
         print(f"\nRESULT: does NOT verify ({failed} check(s) failed)")
-        return 1
+        return done(1, "fails")
     if require_approval and approval_evidence_missing:
         print("\nRESULT: does NOT verify AS AN APPROVAL — evidence missing: " + "; ".join(approval_evidence_missing) + " (nothing failed; the steps were never run)")
-        return 3
+        return done(3, "approval-evidence-missing")
     print("\nRESULT: verifies offline" + (f" — {pending} step(s) pending (see WAIT)" if pending else "") + "; only the block's presence on the chain is left to you")
-    return 0
+    return done(0, "verifies")
 
 
 if __name__ == "__main__":
-    argv = [x for x in sys.argv[1:] if x != "--require-approval"]
+    flags = {"--require-approval", "--json"}
+    argv = [x for x in sys.argv[1:] if x not in flags]
     if len(argv) not in (1, 2):
         print(__doc__)
         sys.exit(2)
+    if "--json" in sys.argv:
+        # 19 Oct 2026: one JSON object on stdout for a caller that acts on the result — the checks that ran, what is
+        # pending, what an approval verdict still needs, the amendment's standing — and the human lines as `transcript`.
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            code, report = verify(*argv, require_approval=("--require-approval" in sys.argv))
+        report["transcript"] = buf.getvalue().rstrip("\n").split("\n")
+        print(json.dumps(report, ensure_ascii=False, indent=2))
+        sys.exit(code)
     sys.exit(main(*argv, require_approval=("--require-approval" in sys.argv)))

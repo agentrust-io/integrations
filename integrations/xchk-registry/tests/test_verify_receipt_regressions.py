@@ -115,3 +115,172 @@ def test_strict_flag_on_the_command_line(tmp_path):
     assert r.returncode == 3, r.stdout
     r = subprocess.run([sys.executable, "-I", str(HERE.parent / "verify_receipt.py"), str(p)], capture_output=True, text=True)
     assert r.returncode == 0, r.stdout
+
+
+def test_amendment_is_what_the_sealed_record_commits_to(tmp_path):
+    """Finding 3: decision.amendment is unsigned text. 07 is a genuine approval with changes: the sealed record's
+    paramsHash recomputes over the amended action binding and the amendment cites the signed ask. An amendment typed
+    into the plain approval after issue, an amended command edited after issue, or an amendment citing another ask
+    all fail."""
+    amended = load("07-amended.bundle.json")
+    code, out = run(amended, tmp_path, require_approval=True)
+    assert code == 0, out
+    assert "OK   the sealed record commits to the amended action binding" in out
+    assert "OK   the bound command is the amended command" in out
+    assert "OK   the amendment cites the ask the person answered" in out
+    assert "approved WITH CHANGES" in out
+    good = load("01-approval-confirmed.bundle.json")
+    b = copy.deepcopy(good)
+    b["decision"]["amendment"] = {"command": "synthetic alternate command", "byEmail": good["decision"]["by"],
+                                  "at": good["decision"]["respondedAt"], "originalParamsHash": good["decision"]["actionParamsHash"]}
+    code, out = run(b, tmp_path)
+    assert code == 1 and "FAIL the sealed record commits to the amended action binding" in out, out
+    b = copy.deepcopy(amended)
+    b["decision"]["amendment"]["command"] += " ; synthetic extra"
+    code, out = run(b, tmp_path)
+    assert code == 1 and "FAIL the sealed record commits to the amended action binding" in out, out
+    b = copy.deepcopy(amended)
+    b["decision"]["amendment"]["originalParamsHash"] = "0" * 64
+    code, out = run(b, tmp_path)
+    assert code == 1 and "FAIL the amendment cites the ask the person answered" in out, out
+
+
+def _boundas(bundle):
+    """The exact preimage the registry hashed for 07, as a bundle served from 19 Oct 2026 carries it."""
+    rec, am = bundle["record"], bundle["decision"]["amendment"]
+    return {"tool": rec["tool"], "command": am["command"], "path": None, "summary": rec["summary"], "amount": None, "artifactHash": None}
+
+
+def test_the_served_preimage_is_checked_against_the_seal_and_the_amendment(tmp_path):
+    """amendment.boundAs is unsigned too: it counts only when it hashes to the SEALED paramsHash and its command is the
+    amended command. A preimage of another act, or a true preimage beside an edited amendment text, fails."""
+    amended = load("07-amended.bundle.json")
+    b = copy.deepcopy(amended)
+    b["decision"]["amendment"]["boundAs"] = _boundas(amended)
+    code, out = run(b, tmp_path, require_approval=True)
+    assert code == 0 and "sha256 over amendment.boundAs" in out, out
+    b2 = copy.deepcopy(b)
+    b2["decision"]["amendment"]["boundAs"]["summary"] = "synthetic other summary"
+    code, out = run(b2, tmp_path)
+    assert code == 1 and "FAIL the sealed record commits to the amended action binding" in out, out
+    b3 = copy.deepcopy(b)
+    b3["decision"]["amendment"]["command"] = "synthetic alternate command"
+    code, out = run(b3, tmp_path)
+    assert code == 1 and "FAIL the bound command is the amended command" in out, out
+    for shape in (None, [], "x", {"command": 7}, {"tool": 1.5}):
+        b4 = copy.deepcopy(amended)
+        b4["decision"]["amendment"]["boundAs"] = shape
+        code, out = run(b4, tmp_path)
+        assert code in (0, 1) and "Traceback" not in out, (shape, out)
+
+
+def test_a_long_summary_needs_the_served_preimage():
+    """The record keeps the summary capped at 400 chars and trimmed; the registry hashed the full one (up to 2000).
+    Rebuilt from the record the binding cannot match; the served preimage does. JS slicing counts UTF-16 units."""
+    full = "  " + "\U0001F600" * 300 + "y" * 1600 + "  "
+    rec = {"tool": "terminal", "summary": full[:400].strip()}
+    am = {"command": "rm -rf build/tmp"}
+    served = {"tool": "terminal", "command": "rm -rf build/tmp", "path": None, "summary": v.js_slice(full, 2000), "amount": None, "artifactHash": None}
+    rec["paramsHash"] = v.sha256_hex(v.canonical(served))
+    rebuilt, was_served = v.amended_binding(rec, am)
+    assert not was_served and v.sha256_hex(v.canonical(rebuilt)) != rec["paramsHash"]
+    got, was_served = v.amended_binding(rec, dict(am, boundAs=served))
+    assert was_served and v.sha256_hex(v.canonical(got)) == rec["paramsHash"]
+    assert len(v.js_slice(full, 2000).encode("utf-16-le")) == 4000 and len(v.js_slice(full, 2000)) < 2000
+
+
+def test_an_escalated_ask_without_a_digest_skips_only_the_citation(tmp_path):
+    """A second approver's ask carries no action digest (decision.actionParamsHash null): the citation is reported as
+    not checkable, the seal commitment is still required."""
+    b = copy.deepcopy(load("07-amended.bundle.json"))
+    b.pop("approver")
+    b["decision"]["actionParamsHash"] = None
+    code, out = run(b, tmp_path)
+    assert code == 0 and "citation of it is not checkable" in out and "OK   the sealed record commits" in out, out
+    b["decision"]["amendment"]["command"] += " ; synthetic extra"
+    code, out = run(b, tmp_path)
+    assert code == 1, out
+
+
+def test_json_report_names_what_ran(tmp_path):
+    """Finding 2: a caller acts on the structured report, not on exit 0. `checks` lists only what RAN; a stripped
+    bundle has fewer checks, the missing evidence named and exit 3 in strict mode; the amendment's standing is explicit
+    (null when none; committed only when the sealed record commits to it)."""
+    import subprocess
+    good = load("01-approval-confirmed.bundle.json")
+    p = tmp_path / "g.json"
+    p.write_text(json.dumps(good), encoding="utf-8")
+    out = io.StringIO()
+    with redirect_stdout(out):
+        code, rep = v.verify(str(p))
+    assert code == 0 and rep["result"] == "verifies" and rep["exit"] == 0 and rep["amendment"] is None
+    assert rep["checks"] and all(c["status"] == "OK" for c in rep["checks"]) and rep["approvalEvidenceMissing"] == []
+    full = len(rep["checks"])
+    stripped = {k: good[k] for k in ("format", "record", "recordHash")}
+    p.write_text(json.dumps(stripped), encoding="utf-8")
+    with redirect_stdout(out):
+        code, rep = v.verify(str(p), require_approval=True)
+    assert code == 3 and rep["result"] == "approval-evidence-missing"
+    assert "approver block" in rep["approvalEvidenceMissing"] and len(rep["checks"]) < full
+    amended = load("07-amended.bundle.json")
+    p.write_text(json.dumps(amended), encoding="utf-8")
+    r = subprocess.run([sys.executable, "-I", str(HERE.parent / "verify_receipt.py"), str(p), "--json", "--require-approval"], capture_output=True, text=True, check=False)
+    rep = json.loads(r.stdout)
+    assert r.returncode == 0 and rep["exit"] == 0 and rep["amendment"]["committed"] is True
+    assert rep["amendment"]["command"] == amended["decision"]["amendment"]["command"]
+    assert any("approved WITH CHANGES" in line for line in rep["transcript"])
+
+
+def test_a_decision_that_is_not_an_object_is_a_verdict_not_a_crash(tmp_path):
+    good = load("01-approval-confirmed.bundle.json")
+    b = copy.deepcopy(good)
+    b["decision"] = "string"
+    code, out = run(b, tmp_path)
+    assert code == 1, out
+
+
+def test_wrong_types_end_in_a_verdict_never_a_traceback(tmp_path):
+    """A type-mutation sweep over every field (19 Oct 2026) found 35 lines that raised on a string where an object
+    belongs, a float in a sealed body, a lone surrogate, bad base64. Each now ends in exit 1 and a JSON report."""
+    good = load("01-approval-confirmed.bundle.json")
+    cases = [(("issuer",), None), (("record",), "x"), (("record", "seq"), 1.5), (("record", "summary"), "\ud83d"),
+             (("registrySignature",), "x"), (("registrySignature", "signatures"), [None]), (("seal",), -1),
+             (("approver", "binding", "fields"), "x"), (("approver", "challenge"), "x"), (("anchor",), "x"),
+             (("legalHolds",), "x")]
+    for path, val in cases:
+        b = copy.deepcopy(good)
+        node = b
+        for k in path[:-1]:
+            node = node[k]
+        node[path[-1]] = val
+        p = tmp_path / "m.json"
+        p.write_text(json.dumps(b), encoding="utf-8")
+        out = io.StringIO()
+        with redirect_stdout(out):
+            code, rep = v.verify(str(p), require_approval=True)
+        assert code == 1 and rep["exit"] == 1 and rep["result"] == "fails", (path, val, out.getvalue()[-300:])
+        json.dumps(rep)
+
+
+def test_identity_is_reported_from_the_signed_binding_only(tmp_path):
+    """Finding 3, the matrix row 'change only outer approver.email and authLevel': the structured report's identity
+    comes from approver.binding.fields; the relabelled bundle reports the bound person, and the transcript says the
+    readable labels differ."""
+    good = load("01-approval-confirmed.bundle.json")
+    bound = good["approver"]["binding"]["fields"]
+    b = copy.deepcopy(good)
+    b["approver"]["email"] = "synthetic-other-person@example.invalid"
+    b["approver"]["authLevel"] = "synthetic-elevated-assurance"
+    p = tmp_path / "r.json"
+    p.write_text(json.dumps(b), encoding="utf-8")
+    out = io.StringIO()
+    with redirect_stdout(out):
+        code, rep = v.verify(str(p), require_approval=True)
+    assert code == 0, out.getvalue()
+    assert rep["boundIdentity"]["email"] == bound["approverEmail"] and rep["boundIdentity"]["authLevel"] == bound["authLevel"]
+    assert "synthetic" not in json.dumps(rep["boundIdentity"])
+    assert "readable approver labels differ from the signed binding" in out.getvalue()
+    p.write_text(json.dumps(good), encoding="utf-8")
+    with redirect_stdout(io.StringIO()) as quiet:
+        code, rep = v.verify(str(p))
+    assert code == 0 and "labels differ" not in quiet.getvalue()

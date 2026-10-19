@@ -43,13 +43,17 @@ def _jcs_sha256(obj: object) -> str:
     return "sha256:" + hashlib.sha256(rfc8785.dumps(obj)).hexdigest()
 
 
-def _bundle_verifies(bundle_path: Path, require_approval: bool = False) -> bool:
-    """The registry's offline verifier, run as it ships. Exit 0 means no check FAILED (pending steps are listed,
-    not failed); with --require-approval it also means the approval evidence was present and checked. Absence of
-    failure is not verification of an approval, so the approval verdict below asks for both."""
-    args = [sys.executable, "-I", str(VERIFIER), str(bundle_path)] + (["--require-approval"] if require_approval else [])
+def _verify(bundle_path: Path, require_approval: bool = False) -> dict:
+    """The registry's offline verifier, run as it ships, with --json: the structured report (exit, result, the checks
+    that ran, the pending count, the approval evidence still missing, the amendment's standing). Exit 0 means no check
+    FAILED (pending steps are listed, not failed); with --require-approval it also means the approval evidence was
+    present and checked. Absence of failure is not verification of an approval, so the verdict below asks for both,
+    and it reads the amendment from the report, never from the bundle's unsigned text."""
+    args = [sys.executable, "-I", str(VERIFIER), str(bundle_path), "--json"] + (["--require-approval"] if require_approval else [])
     proc = subprocess.run(args, capture_output=True, text=True, check=False, timeout=60)
-    return proc.returncode == 0
+    report = json.loads(proc.stdout)
+    assert report["exit"] == proc.returncode
+    return report
 
 
 def _approval_reference(record: dict) -> dict:
@@ -86,14 +90,17 @@ def _assess(record: dict, bundle_name: str | None, bundle_override: dict | None 
         bundle = _load(bundle_name)
         bundle_path = XCHK_DIR / bundle_name
     digest_matches = _jcs_sha256(bundle["record"]) == reference["digest"]
-    bundle_ok = _bundle_verifies(bundle_path)
+    report = _verify(bundle_path)
+    bundle_ok = report["exit"] == 0
     disposition = bundle["record"].get("disposition")
-    amended = bool(((bundle.get("decision") or {}).get("amendment") or {}).get("command"))
+    # an approval is "as amended" only when the verifier found the SEALED record committing to the amended command and
+    # the amendment citing the signed ask; the bundle's decision.amendment text selects nothing on its own
+    amended = bool(report["amendment"] and report["amendment"]["committed"])
     if not (digest_matches and bundle_ok):
         verdict = "approval-contradicted"
     elif disposition != "approved":
         verdict = "not-an-approval"
-    elif not _bundle_verifies(bundle_path, require_approval=True):
+    elif _verify(bundle_path, require_approval=True)["exit"] != 0:
         # approved on the record, but the evidence that would confirm it is absent: not contradicted, not confirmed
         verdict = "approval-unverified"
     elif amended:
@@ -227,3 +234,62 @@ def test_the_crossed_assertion_is_the_same_persons_answer_to_another_ask() -> No
     assert a_after["assertion"] != a_before["assertion"]
     a_after["assertion"] = a_before["assertion"]
     assert after == before
+
+
+def test_an_amendment_typed_into_the_bundle_is_not_an_approval_with_changes(tmp_path: Path) -> None:
+    """decision.amendment is unsigned text. Added to the plain approval after issue, with every signature intact, it
+    selects nothing: the sealed record's paramsHash does not recompute over it, the verifier fails, and the verdict
+    is contradicted, never 'as amended'."""
+    record, bundle = _load("01-approval-confirmed.json"), _load("01-approval-confirmed.bundle.json")
+    bundle["decision"]["amendment"] = {"command": "synthetic alternate command", "byEmail": bundle["decision"]["by"],
+                                       "at": bundle["decision"]["respondedAt"],
+                                       "originalParamsHash": bundle["decision"]["actionParamsHash"]}
+    got = _assess(record, "01-approval-confirmed.bundle.json", bundle_override=bundle, tmp_dir=tmp_path)
+    assert got["digest_matches"] and not got["bundle_verifies"]
+    assert got["verdict"] == "approval-contradicted"
+
+
+def test_the_amended_command_is_the_one_the_sealed_record_commits_to(tmp_path: Path) -> None:
+    """07 as committed: record.paramsHash is the registry's action-binding digest over the AMENDED command with the
+    record's own tool and summary (recomputed here with rfc8785, not with the verifier), and the amendment cites the
+    ask the person signed. Edit either and the approval is contradicted."""
+    record, bundle = _load("07-amended.json"), _load("07-amended.bundle.json")
+    am = bundle["decision"]["amendment"]
+    binding = {"tool": bundle["record"]["tool"], "command": am["command"][:2000], "path": None,
+               "summary": bundle["record"]["summary"][:2000], "amount": None, "artifactHash": None}
+    assert bundle["record"]["paramsHash"] == hashlib.sha256(rfc8785.dumps(binding)).hexdigest()
+    assert am["originalParamsHash"] == bundle["decision"]["actionParamsHash"] == bundle["approver"]["challenge"]["fields"]["actionParamsHash"]
+    assert bundle["record"]["paramsHash"] != am["originalParamsHash"], "the sealed act is not the ask as proposed"
+    assert _assess(record, "07-amended.bundle.json")["verdict"] == "approval-confirmed-as-amended"
+    for mutate in (lambda b: b["decision"]["amendment"].__setitem__("command", am["command"] + " ; synthetic extra"),
+                   lambda b: b["decision"]["amendment"].__setitem__("originalParamsHash", "0" * 64),
+                   lambda b: b["decision"]["amendment"].pop("originalParamsHash")):
+        b = copy.deepcopy(bundle)
+        mutate(b)
+        got = _assess(record, "07-amended.bundle.json", bundle_override=b, tmp_dir=tmp_path)
+        assert got["digest_matches"] and not got["bundle_verifies"]
+        assert got["verdict"] == "approval-contradicted"
+
+
+def test_the_crossed_ask_stripped_of_its_challenge_is_never_confirmed(tmp_path: Path) -> None:
+    """08 with approver.challenge removed. The bundle cannot tell an ask-v1 ceremony whose challenge was deleted from a
+    ceremony before ask-v1, so the verdict falls from contradicted to unverified: weaker evidence, never a
+    confirmation. Pinned here so a change that lets it reach 'approval-confirmed' fails."""
+    record, bundle = _load("08-assertion-over-another-ask.json"), _load("08-assertion-over-another-ask.bundle.json")
+    bundle["approver"].pop("challenge")
+    got = _assess(record, "08-assertion-over-another-ask.bundle.json", bundle_override=bundle, tmp_dir=tmp_path)
+    assert got["verdict"] == "approval-unverified"
+
+
+def test_relabelled_identity_is_reported_from_the_binding(tmp_path: Path) -> None:
+    """The verifier's structured report names the person from the registry-signed binding, not the readable labels."""
+    bundle = _load("01-approval-confirmed.bundle.json")
+    bound = bundle["approver"]["binding"]["fields"]
+    bundle["approver"]["email"] = "synthetic-other-person@example.invalid"
+    bundle["approver"]["authLevel"] = "synthetic-elevated-assurance"
+    p = tmp_path / "relabelled.bundle.json"
+    p.write_text(json.dumps(bundle), encoding="utf-8")
+    report = _verify(p, require_approval=True)
+    assert report["exit"] == 0
+    assert report["boundIdentity"]["email"] == bound["approverEmail"]
+    assert report["boundIdentity"]["authLevel"] == bound["authLevel"]
