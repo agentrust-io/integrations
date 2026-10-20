@@ -55,6 +55,7 @@ TRACE only works as a standard if it is genuinely neutral. Integrations are list
 | [AAIF Authority Comparison Runner](integrations/alakris-authority-comparison/) | Alakris Research | trace | community |
 | [Agent Replay](integrations/altrudev-agent-replay/) | Altru.dev | trace | verified |
 | [Frequency Agent Execution Assurance](integrations/altrudev-frequency-agent-execution-assurance/) | Altru.dev | trace | community |
+| [Anthropic SDK tool loop](integrations/anthropic-tool-loop/) | Disruptive Beverages | trace | community |
 | [Bernstein MCP verifier](integrations/bernstein-mcp/) | Bernstein | trace | verified |
 | [CHAP](integrations/chap/) | agentrust-io | trace | verified |
 | [AI Agent Incident Register](integrations/companyscope-incident-register/) | CompanyScope | agent-manifest | verified |
@@ -106,6 +107,7 @@ adapter can and cannot see.
 
 | Framework | Adapter | Evidence source | Released framework exercised in CI | Evidence boundary |
 |---|---|---|---|---|
+| Anthropic SDK (Messages API tool loop) | [Anthropic SDK tool loop](integrations/anthropic-tool-loop/) | Explicit calls in the application's own loop, read from a spool file (`log-import`) | Yes - anthropic 1.14.0 client with a mocked HTTP transport | Tool, model round, gate decision and input digest; caller-classified data flows; no prompts, arguments or results; no policy evaluation of its own |
 | Google ADK | [Google ADK](integrations/google-adk/) | First-party `BasePlugin` lifecycle | Yes - Google ADK 2.7.1 `InMemoryRunner` | Callback-visible invocation, model, and available tool identity; no payloads, retries, agent graph, function-body execution, or policy enforcement |
 | LangChain | [LangChain](integrations/langchain/) | First-party `BaseCallbackHandler` callbacks | Yes - LangChain Core 1.6.0 callback contract | Tool identity and outcome plus model identity; no chain topology or runnable state |
 | LangGraph | [LangChain](integrations/langchain/) | First-party LangChain callbacks propagated by the graph | Yes - LangGraph 1.2.11 `StateGraph` with a nested tool call | Propagated tool callbacks; no nodes, edges, state transitions, checkpoints, or rollback decisions |
