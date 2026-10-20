@@ -210,6 +210,20 @@
         "required": ["wcm_roles"]
       },
       "then": { "required": ["wcm_conformance_levels"] }
+    },
+    {
+      "$comment": "Evidence-only WCM roles do not verify a manifest and must not claim a conformance level, matching CONTRIBUTING.md and the integration template.",
+      "if": {
+        "required": ["wcm_roles"],
+        "not": {
+          "properties": {
+            "wcm_roles": {
+              "contains": { "enum": ["manifest-producer", "manifest-verifier", "key-broker", "protected-runtime"] }
+            }
+          }
+        }
+      },
+      "then": { "not": { "required": ["wcm_conformance_levels"] } }
     }
   ]
 }

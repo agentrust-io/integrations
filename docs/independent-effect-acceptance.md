@@ -13,12 +13,12 @@ executor's authority decision, dispatch, target ingress, durable commit, readbac
 and client response as distinct observations. A caller's job ID is correlation
 data until authenticated evidence establishes its relation to the executor run.
 
-The existing discussion identifies Proofable as a dispatch-only candidate.
-Its first already-dispatched write can commit after revocation while its next
-dispatch is refused. That behavior differs from a final-commit recheck. This
-procedure tests the selected profile rather than labeling that difference a
-defect. Supported outbound target operations and authenticated job/authority
-binding remain unresolved prerequisites in #333.
+The [#333 discussion](https://github.com/agentrust-io/integrations/issues/333)
+identifies Proofable as a dispatch-only candidate. This is a reported candidate
+profile, not measured commit-after-revocation behavior. The proposed target run
+would distinguish dispatch authorization from a final-commit recheck. Supported
+outbound target operations and authenticated job/authority binding remain
+unresolved prerequisites in #333.
 
 ## Before a live run
 
