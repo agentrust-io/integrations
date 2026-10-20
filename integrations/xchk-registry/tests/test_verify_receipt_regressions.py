@@ -334,3 +334,19 @@ def test_approval_evidence_without_the_seal_chain_is_not_a_sealed_approval(tmp_p
     with redirect_stdout(io.StringIO()):
         code, rep = v.verify(str(p), require_approval=True)
     assert code == 0 and rep["sealChainMissing"] == [], "the sealed control still passes strict mode"
+
+
+def test_a_decision_citing_another_record_is_refused(tmp_path):
+    """Section 5b (20 Oct 2026): the decision block must cite the sealed record's attestationHash. The browser verifier
+    has checked this since 19 Sep; the Python verifier did not, until a written contract of what each piece of evidence
+    must do found the gap. The mutation uses another real ceremony's value, from the denial bundle."""
+    good, denied = load("01-approval-confirmed.bundle.json"), load("03-decision-is-a-denial.bundle.json")
+    assert good["decision"]["attestationHash"] == good["record"]["attestationHash"]
+    b = copy.deepcopy(good)
+    b["decision"]["attestationHash"] = denied["decision"]["attestationHash"]
+    assert b["decision"]["attestationHash"] != good["record"]["attestationHash"]
+    code, out = run(b, tmp_path)
+    assert code == 1, out
+    assert "the decision block does NOT cite this record's attestation hash" in out
+    code, out = run(good, tmp_path)
+    assert code == 0 and "the decision block cites this record's attestation hash" in out, out

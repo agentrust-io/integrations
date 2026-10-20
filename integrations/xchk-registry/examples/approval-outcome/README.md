@@ -29,7 +29,8 @@ check failed and the Ed25519 signatures passed.
 
 Expected results are machine-readable in [`expected.json`](expected.json). Every record
 verifies as a TRACE record; what differs is what the reference resolves to and whether the
-bundle it resolves to still verifies.
+bundle it resolves to still verifies. A record that does not verify is `record-invalid` before
+any of that is read; the test carries `01` with one signed field changed for that case.
 
 | Record | Bundle | Reference | Digest | Bundle verifies | Disposition | Verdict |
 |---|---|---|---|---|---|---|

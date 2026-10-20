@@ -74,6 +74,14 @@ def _assess(record: dict, bundle_name: str | None, bundle_override: dict | None 
     """What a relying party concludes about the approval a record points at. `bundle_override` lets a test present
     a mutated bundle for the same record; it is written to `tmp_dir` for the verifier."""
     verifies = _record_verifies(record)
+    if not verifies:
+        # A Trust Record that does not verify is not evidence of anything, including the reference it carries: no
+        # verdict about the approval is drawn from it, with or without a bundle (review of #350, 20 Oct 2026). Before
+        # this, the record check ran and was reported but did not decide the verdict, so a record with one signed field
+        # changed still reached approval-confirmed through its intact bundle.
+        return {"trace_record_verifies": False, "reference_resolves": None,
+                "digest_matches": None, "bundle_verifies": None, "disposition": None,
+                "verdict": "record-invalid"}
     reference = _approval_reference(record)
     assert reference["resolver"] == EXPECTED["resolver"]
     assert len(reference["id"]) == 64
@@ -312,3 +320,22 @@ def test_an_approval_without_its_seal_chain_is_not_confirmed(strip: str, tmp_pat
     got = _assess(record, "01-approval-confirmed.bundle.json", bundle_override=bundle, tmp_dir=tmp_path)
     assert got["digest_matches"] and got["bundle_verifies"]
     assert got["verdict"] == "approval-unsealed"
+
+
+@pytest.mark.parametrize("field,value", [("data_class", "public")])
+def test_a_tampered_trust_record_is_never_a_confirmed_approval(field: str, value: str) -> None:
+    """The intact record confirms; the same record with one signed field changed and the bundle and reference untouched
+    is record-invalid, not approval-confirmed (review of #350, 20 Oct 2026)."""
+    record = _load("01-approval-confirmed.json")
+    bundle = EXPECTED["cases"]["01-approval-confirmed.json"]["bundle"]
+    control = _assess(record, bundle)
+    assert control["trace_record_verifies"] is True
+    assert control["verdict"] == "approval-confirmed"
+    altered = copy.deepcopy(record)
+    assert altered[field] != value
+    altered[field] = value
+    result = _assess(altered, bundle)
+    assert result["trace_record_verifies"] is False
+    assert result["verdict"] == "record-invalid"
+    # the same holds with no bundle to read: an invalid record is not even an unconfirmed approval
+    assert _assess(altered, None)["verdict"] == "record-invalid"

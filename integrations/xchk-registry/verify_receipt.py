@@ -9,7 +9,10 @@ obtaining a copy of this file, to deal in it without restriction, subject to thi
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
 
 Usage:  python3 verify_receipt.py xchk-receipt-<hash>.json [file]
-Exit:   0 = every offline check passed; 1 = a check failed; 2 = could not read the bundle.
+Exit:   0 = every offline check passed; 1 = a check failed; 2 = could not read the bundle;
+        3 = --require-approval and the approval evidence or the seal chain is missing.
+Changes: verify/CHANGELOG.md (https://in.xchk.io/verify/CHANGELOG.md). A copy saved before 20 Oct 2026 can accept
+evidence it should refuse: download it again.
 
 With a second argument (5 Oct 2026), also checks that FILE is the one this receipt's action wrote: sha256 of its
 bytes equals the record's artifactHash, which check 1 has already tied to the record hash. That proves which plate
@@ -756,6 +759,15 @@ def _verify(path, artifact_path, require_approval, report):
             pending += 1
             approval_evidence_missing.append("ask-v1 challenge (the device signed over this ask)")
             print("  WAIT challenge not derived from the ask (ceremony before 18 Oct 2026): the binding alone pairs this assertion with the record")
+
+    # 5b. the decision block cites this record (20 Oct 2026; the browser verifier has checked it since 19 Sep, this one
+    # never did — found by the verdict contract): decision.attestationHash must be the sealed record's attestationHash,
+    # or a decision from another ceremony could ride beside this record.
+    dec_b = b.get("decision") if isinstance(b.get("decision"), dict) else {}
+    if dec_b.get("attestationHash"):
+        ok(dec_b.get("attestationHash") == rec.get("attestationHash"),
+           "the decision block cites this record's attestation hash" if dec_b.get("attestationHash") == rec.get("attestationHash")
+           else f"the decision block does NOT cite this record's attestation hash ({str(dec_b.get('attestationHash'))[:12]}…, record says {str(rec.get('attestationHash'))[:12]}…)")
 
     # 5c. approved WITH CHANGES (19 Oct 2026, GHSA-w2fx-3qmx-rx85, finding 3). decision.amendment is readable, unsigned
     # text. What makes an amendment the approved act is the SEALED record: the registry hashes the amended command into
