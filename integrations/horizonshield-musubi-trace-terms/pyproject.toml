@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "horizonshield-musubi-trace-terms-integration"
+version = "0.1.0"
+description = "Runs musubi-trace-terms-v0 against released agentrust-trace"
+requires-python = ">=3.11"
+license = "MIT"
+dependencies = [
+  # Exact pin. The evaluator calls TRACE's own verify_bridge, so the
+  # agentrust-trace release is part of every verdict; the vectors were built
+  # and are checked against 0.11.0.
+  "agentrust-trace==0.11.0",
+  # contract_v0.py, agreement_verify.py and nenrin_verify.trace, shipped byte
+  # for byte from horizon-shield.
+  "nenrin-verify==0.5.6",
+]
+
+[project.optional-dependencies]
+test = [
+  "pytest>=8",
+  "agentrust-trace-tests==0.6.2",
+]
+
+[tool.setuptools]
+py-modules = []
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
