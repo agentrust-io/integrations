@@ -21,8 +21,8 @@ from datetime import datetime, timedelta, timezone
 
 from wcm import (
     Ed25519Signer,
-    EnclaveSession,
     generate_ed25519,
+    generate_transport_keypair,
     KeyBrokerService,
     KeyWipedError,
     manifest_identity,
@@ -30,7 +30,7 @@ from wcm import (
     WeightCustodyManifest,
 )
 
-from _mock_attestation import waive_mock_verification
+from _mock_attestation import start_custody, waive_mock_verification
 
 NOW = datetime(2026, 1, 1, tzinfo=timezone.utc)
 LIVE_KEY_ID = "vcek:live-0001"
@@ -83,11 +83,15 @@ def build_manifest(weights_hash: str, serving: str):
     ])
 
 
+#: The enclave's transport key: the broker seals the released key to it.
+TRANSPORT_PRIVATE, TRANSPORT_PUBLIC = generate_transport_keypair()
+
+
 def _release(kbs, manifest, serving):
     ch = kbs.issue_challenge()
     ev = SoftwareProvider().produce(
         ch, serving_image_measurement=serving, gpu_measurement="nvidia-rim:golden",
-        attestation_key_id=LIVE_KEY_ID,
+        attestation_key_id=LIVE_KEY_ID, transport_public_key=TRANSPORT_PUBLIC,
     )
     return kbs.verify_and_release(manifest, ev)
 
@@ -110,7 +114,7 @@ def main() -> int:
     )
     decision = _release(kbs, manifest, serving)
     print("released              :", decision.released)
-    session = EnclaveSession.from_release(manifest, decision, now=lambda: NOW)
+    session = start_custody(manifest, decision, TRANSPORT_PRIVATE, now=lambda: NOW)
     session.use_key(now=NOW)
     print("serving under a", "30m", "cadence")
 

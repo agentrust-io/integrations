@@ -94,6 +94,7 @@ TRACE only works as a standard if it is genuinely neutral. Integrations are list
 | [WCM Key Release to TRACE](integrations/wcm-trace/) | agentrust-io | wcm, trace | community |
 | [WCM Triton Repository Staging](integrations/wcm-triton/) | agentrust-io | wcm | verified |
 | [WCM Serving Guard for vLLM](integrations/wcm-vllm/) | agentrust-io | wcm | verified |
+| [xChk registry](integrations/xchk-registry/) | xChk | trace | community |
 | [agentrust-codex](plugins/agentrust-codex/) | agentrust-io | agent-manifest, trace | community |
 | [scheduled-agents](scheduled-agents/) | agentrust-io | trace | community |
 <!-- integration-index:end -->
@@ -127,7 +128,8 @@ select an `integrates_with` value from the current schema. See the note below.
 
 [Shadow AI Discovery](shadow-ai/) is also standalone tooling outside the index
 and Marketplace. It scans enriched records against an agent-to-tools registry;
-it has no direct cMCP adapter and does not read or write Agent Manifest records.
+its cMCP audit adapter requires operator-controlled source/session bindings. It
+does not read or write Agent Manifest records.
 
 All seven engines share [`agentrust-capture-core`](packages/agentrust-capture-core),
 which owns fingerprinting, comparison, baseline sealing and the report honesty rules.

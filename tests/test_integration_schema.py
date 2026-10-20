@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 import jsonschema
+import pytest
 
 
 SCHEMA = json.loads(
@@ -92,6 +93,35 @@ def test_wcm_attestation_source_does_not_claim_manifest_conformance() -> None:
     passed the manifest suite itself.
     """
     validate(manifest(integrates_with=["wcm"], wcm_roles=["attestation-source"]))
+
+
+@pytest.mark.parametrize(
+    "roles",
+    [
+        ["attestation-source"],
+        ["evidence-consumer"],
+        ["attestation-source", "evidence-consumer"],
+    ],
+)
+def test_wcm_evidence_only_roles_cannot_claim_conformance_level(
+    roles: list[str],
+) -> None:
+    without_level = manifest(integrates_with=["wcm"], wcm_roles=roles)
+    validate(without_level)
+
+    with pytest.raises(jsonschema.ValidationError) as exc:
+        validate({**without_level, "wcm_conformance_levels": ["L1"]})
+    assert exc.value.validator == "not"
+
+
+def test_wcm_evidence_role_with_manifest_role_can_claim_conformance_level() -> None:
+    validate(
+        manifest(
+            integrates_with=["wcm"],
+            wcm_roles=["attestation-source", "manifest-verifier"],
+            wcm_conformance_levels=["L1"],
+        )
+    )
 
 
 def test_wcm_conformance_levels_are_per_layer_identifiers() -> None:

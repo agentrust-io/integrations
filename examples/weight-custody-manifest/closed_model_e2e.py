@@ -24,8 +24,8 @@ import hashlib
 
 from wcm import (
     Ed25519Signer,
-    EnclaveSession,
     generate_ed25519,
+    generate_transport_keypair,
     KeyBrokerService,
     manifest_identity,
     SoftwareProvider,
@@ -34,7 +34,7 @@ from wcm import (
     WeightCustodyManifest,
 )
 
-from _mock_attestation import waive_mock_verification
+from _mock_attestation import start_custody, waive_mock_verification
 
 
 def rule(title: str) -> None:
@@ -119,8 +119,11 @@ def main() -> int:
         trusted_manifest_identities=[manifest_identity(manifest)],
     )
     challenge = kbs.issue_challenge()
+    # The enclave's transport key: the broker seals the released key to it.
+    transport_private, transport_public = generate_transport_keypair()
     evidence = SoftwareProvider().produce(
-        challenge, serving_image_measurement=serving, gpu_measurement="nvidia-rim:golden"
+        challenge, serving_image_measurement=serving, gpu_measurement="nvidia-rim:golden",
+        transport_public_key=transport_public,
     )
     decision = kbs.verify_and_release(manifest, evidence)
     print("key released         :", decision.released)
@@ -128,7 +131,7 @@ def main() -> int:
     print("serving stack. A different or tampered stack gets nothing (see refuse_and_wipe.py).")
 
     rule("Step 3 - Wipe-on-lapse custody (bounded exposure of the secret)")
-    session = EnclaveSession.from_release(manifest, decision)
+    session = start_custody(manifest, decision, transport_private)
     session.use_key()
     print("serving under a", doc["custody"]["attestation_cadence"], "cadence, time_floor =", session.time_floor.value)
     print("miss the re-attestation and the key is zeroized, so worst-case exposure of")

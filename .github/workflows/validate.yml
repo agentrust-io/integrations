@@ -27,6 +27,8 @@ jobs:
           python -m pytest tests/test_validate_integrations.py -q
       - name: Test composite action dependency paths
         run: python -m pytest tests/test_composite_action_paths.py -q
+      - name: Check workflow OIDC permission baseline
+        run: python -m pytest tests/test_workflow_oidc_permissions.py -q
       - name: Test conditional schema rules
         run: |
           python -m pytest tests/test_integration_schema.py -q

@@ -36,6 +36,7 @@ from wcm import (
     combine_shares,
     Ed25519Signer,
     generate_ed25519,
+    generate_transport_keypair,
     KeyBrokerService,
     manifest_identity,
     memory_sweep_public_key,
@@ -168,6 +169,8 @@ def main() -> int:
         challenge,
         serving_image_measurement=serving,
         gpu_measurement="nvidia-rim:demo-golden",
+        # The enclave's transport key: the broker seals any released key to it.
+        transport_public_key=generate_transport_keypair()[1],
     )
     evidence = evidence.model_copy(
         update={

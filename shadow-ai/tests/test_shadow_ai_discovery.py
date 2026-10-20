@@ -407,6 +407,28 @@ def test_u2028_inside_json_string_does_not_split_line(scanner, tmp_path, monkeyp
 
 # ── 14. JSON serialization ────────────────────────────────────────────────────
 
+def test_utf8_catalog_and_jsonl_ignore_cp1252_default(tmp_path, monkeypatch):
+    catalog = tmp_path / "agents.json"
+    log = tmp_path / "audit.jsonl"
+    agent = "caf\u00e9-agent"
+    catalog.write_bytes(json.dumps({agent: ["read"]}, ensure_ascii=False).encode("utf-8"))
+    log.write_bytes((json.dumps({
+        "agent_id": agent, "tool_name": "delete", "note": "a\u2028b",
+    }, ensure_ascii=False) + "\n").encode("utf-8"))
+    real_open = Path.open
+
+    def cp1252_open(self, mode="r", buffering=-1, encoding=None, errors=None, newline=None):
+        if "b" not in mode and encoding in (None, "locale"):
+            encoding = "cp1252"
+        return real_open(self, mode, buffering, encoding, errors, newline)
+
+    monkeypatch.setattr(Path, "open", cp1252_open)
+    report = ShadowAIScanner(catalog).scan_audit_log_report(log)
+    assert report.complete
+    assert [(event.agent_id, event.reason) for event in report.findings] == [
+        (agent, "undeclared_tool"),
+    ]
+
 def test_discovery_event_to_dict_exact():
     e = DiscoveryEvent("My Agent/v2 (prod)", "bad_tool", "2026-06-25T00:00:00Z", "unregistered_agent")
     assert e.to_dict() == {

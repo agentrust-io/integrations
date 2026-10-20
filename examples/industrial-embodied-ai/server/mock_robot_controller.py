@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import argparse
 import json
 import sys
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -21,6 +22,8 @@ controller = IndependentSafetyController(
     token_key=b"development-only-mock-controller-key"
 )
 completed_motions = 0
+motion_requests = 0
+run_id = "manual"
 
 
 def _read_safety_state(arguments: dict[str, Any]) -> dict[str, Any]:
@@ -36,7 +39,8 @@ def _read_safety_state(arguments: dict[str, Any]) -> dict[str, Any]:
 
 
 def _request_motion(arguments: dict[str, Any]) -> dict[str, Any]:
-    global completed_motions
+    global completed_motions, motion_requests
+    motion_requests += 1
     try:
         result = controller.request_motion(arguments)
         completed_motions += 1
@@ -71,7 +75,24 @@ TOOLS = {
 }
 
 
+class LocalHTTPServer(HTTPServer):
+    allow_reuse_address = True
+
+
 class Handler(BaseHTTPRequestHandler):
+    def do_GET(self) -> None:  # noqa: N802
+        if self.path != "/health":
+            self._reply(404, {"error": "not found"})
+            return
+        self._reply(
+            200,
+            {
+                "status": "ready",
+                "run_id": run_id,
+                "motion_requests": motion_requests,
+            },
+        )
+
     def do_POST(self) -> None:  # noqa: N802
         if self.path != "/mcp":
             self._reply(404, {"error": "not found"})
@@ -133,8 +154,9 @@ class Handler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    print(
-        "Mock Robot Cell MCP Server listening on :8080 "
-        f"(tools: {', '.join(TOOLS)})"
-    )
-    HTTPServer(("127.0.0.1", PORT), Handler).serve_forever()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--run-id", default="manual")
+    args = parser.parse_args()
+    run_id = args.run_id
+    print(f"Mock Robot Cell MCP Server listening on :8080 (tools: {', '.join(TOOLS)})")
+    LocalHTTPServer(("127.0.0.1", PORT), Handler).serve_forever()

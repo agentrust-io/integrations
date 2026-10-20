@@ -1,0 +1,38 @@
+name: Shadow AI tests
+
+on:
+  pull_request:
+    paths: ['shadow-ai/**', 'noxfile.py', 'requirements/validate.txt', '.github/workflows/shadow-ai-tests.yml']
+  push:
+    branches: [main]
+    paths: ['shadow-ai/**', 'noxfile.py', 'requirements/validate.txt', '.github/workflows/shadow-ai-tests.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.11', '3.12', '3.13']
+        cmcp-version: ['0.2.0', '0.7.0']
+    env:
+      PYTHONPATH: shadow-ai/src
+      SHADOW_AI_REQUIRE_CMCP: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install tests
+        run: pip install --require-hashes -r requirements/validate.txt
+      - name: Install released cMCP audit API
+        # AuditChain and SqliteAuditStore use only the standard library. This
+        # exercises their wire format, not a gateway/TEE or its dependencies.
+        run: pip install --no-deps "cmcp-runtime==${{ matrix.cmcp-version }}"
+      - name: Test scanner and cMCP adapter
+        run: python -m pytest shadow-ai/tests -q
