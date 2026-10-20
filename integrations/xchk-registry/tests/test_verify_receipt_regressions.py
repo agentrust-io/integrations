@@ -191,12 +191,13 @@ def test_a_long_summary_needs_the_served_preimage():
 
 def test_an_escalated_ask_without_a_digest_skips_only_the_citation(tmp_path):
     """A second approver's ask carries no action digest (decision.actionParamsHash null): the citation is reported as
-    not checkable, the seal commitment is still required."""
+    not checkable, the seal commitment is still required. Later on 20 Oct 2026: not checkable means pending and NOT
+    committed (it was reported committed before), and strict mode refuses."""
     b = copy.deepcopy(load("07-amended.bundle.json"))
     b.pop("approver")
     b["decision"]["actionParamsHash"] = None
     code, out = run(b, tmp_path)
-    assert code == 0 and "citation of it is not checkable" in out and "OK   the sealed record commits" in out, out
+    assert code == 0 and "the amendment's citation of it cannot be checked" in out and "OK   the sealed record commits" in out, out
     b["decision"]["amendment"]["command"] += " ; synthetic extra"
     code, out = run(b, tmp_path)
     assert code == 1, out
@@ -350,3 +351,58 @@ def test_a_decision_citing_another_record_is_refused(tmp_path):
     assert "the decision block does NOT cite this record's attestation hash" in out
     code, out = run(good, tmp_path)
     assert code == 0 and "the decision block cites this record's attestation hash" in out, out
+
+
+def test_a_decision_without_the_citation_is_refused(tmp_path):
+    """Section 5b, later on 20 Oct 2026 (review of #350, private): the check above ran only when the citation was present,
+    so a decision block with `attestationHash` removed (or null) skipped it and the verdict stayed approval-confirmed.
+    Every ceremony record the registry has written since the ledger began (7 Aug 2026) carries the attestation hash, sealed
+    before the record is appended, and every decision block it issues cites it: a decision block with no citation was never
+    issued. Its absence is a failed check in the default run and in strict mode, never a pending step."""
+    good = load("01-approval-confirmed.bundle.json")
+    assert good["decision"]["attestationHash"]
+    for mutate in (lambda d: d.pop("attestationHash"), lambda d: d.__setitem__("attestationHash", None), lambda d: d.__setitem__("attestationHash", "")):
+        b = copy.deepcopy(good)
+        mutate(b["decision"])
+        code, out = run(b, tmp_path)
+        assert code == 1, out
+        assert "the decision block carries NO attestation-hash citation" in out
+        code, out = run(b, tmp_path, require_approval=True)
+        assert code == 1, out
+    code, out = run(good, tmp_path, require_approval=True)
+    assert code == 0, out
+
+
+def test_an_amendment_without_the_asks_digest_is_never_committed(tmp_path):
+    """Later on 20 Oct 2026 (review of #350, the class of 5b): without decision.actionParamsHash the citation leg of 5c
+    defaulted to 'cites', so a bundle with the digest removed reported the amendment COMMITTED on a check that never ran.
+    With the challenge present the removal fails in 5a; without one (a bundle issued before 18 Oct 2026) nothing failed.
+    Now: citation pending, never committed, strict mode refuses, and the control still commits."""
+    import io as _io
+    from contextlib import redirect_stdout as _rs
+    good = load("07-amended.bundle.json")
+    assert good["decision"]["actionParamsHash"] and good["approver"].get("challenge")
+
+    def rep_of(b, strict=False):
+        p = tmp_path / "amend.json"
+        p.write_text(json.dumps(b), encoding="utf-8")
+        out = _io.StringIO()
+        with _rs(out):
+            code, rep = v.verify(str(p), require_approval=strict)
+        return code, rep, out.getvalue()
+
+    code, rep, _ = rep_of(copy.deepcopy(good))
+    assert code == 0 and rep["amendment"]["committed"] is True and rep["amendment"]["citesAsk"] is True
+    b = copy.deepcopy(good)
+    b["decision"].pop("actionParamsHash")
+    b["approver"].pop("challenge")                       # the shape of a bundle issued before 18 Oct 2026
+    code, rep, out = rep_of(b)
+    assert code == 0, out                                # nothing FAILED: the steps that could not run are pending
+    assert rep["amendment"]["committed"] is False and rep["amendment"]["citesAsk"] is None, rep["amendment"]
+    assert "the amendment's citation of it cannot be checked" in out
+    code, rep, _ = rep_of(b, strict=True)
+    assert code == 3 and "the ask's action digest (decision.actionParamsHash), which the amendment must cite" in rep["approvalEvidenceMissing"]
+    b = copy.deepcopy(good)
+    b["decision"].pop("actionParamsHash")                # challenge kept: the signed ask no longer matches
+    code, rep, _ = rep_of(b)
+    assert code == 1 and rep["amendment"]["committed"] is False

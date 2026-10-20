@@ -763,11 +763,19 @@ def _verify(path, artifact_path, require_approval, report):
     # 5b. the decision block cites this record (20 Oct 2026; the browser verifier has checked it since 19 Sep, this one
     # never did — found by the verdict contract): decision.attestationHash must be the sealed record's attestationHash,
     # or a decision from another ceremony could ride beside this record.
+    # The citation is required, not optional (later on 20 Oct 2026, review of #350: with the citation REMOVED the
+    # check did not run and the verdict stayed confirmed). Every ceremony record the registry has written since the
+    # ledger began (7 Aug 2026) carries the attestation hash — it is sealed before the record is appended — and every
+    # decision block the issuer emits cites it. A decision block with no citation is not one the registry issued.
     dec_b = b.get("decision") if isinstance(b.get("decision"), dict) else {}
-    if dec_b.get("attestationHash"):
-        ok(dec_b.get("attestationHash") == rec.get("attestationHash"),
-           "the decision block cites this record's attestation hash" if dec_b.get("attestationHash") == rec.get("attestationHash")
-           else f"the decision block does NOT cite this record's attestation hash ({str(dec_b.get('attestationHash'))[:12]}…, record says {str(rec.get('attestationHash'))[:12]}…)")
+    if dec_b:
+        cited = dec_b.get("attestationHash")
+        if not cited:
+            ok(False, "the decision block carries NO attestation-hash citation: every decision block the registry issues cites the sealed record")
+        else:
+            ok(cited == rec.get("attestationHash"),
+               "the decision block cites this record's attestation hash" if cited == rec.get("attestationHash")
+               else f"the decision block does NOT cite this record's attestation hash ({str(cited)[:12]}…, record says {str(rec.get('attestationHash'))[:12]}…)")
 
     # 5c. approved WITH CHANGES (19 Oct 2026, GHSA-w2fx-3qmx-rx85, finding 3). decision.amendment is readable, unsigned
     # text. What makes an amendment the approved act is the SEALED record: the registry hashes the amended command into
@@ -799,15 +807,23 @@ def _verify(path, artifact_path, require_approval, report):
         except UnicodeError:
             same_command = False
         ok(same_command, "the bound command is the amended command")
-        cites = True
+        # Later on 20 Oct 2026 (review of #350, same class as 5b): without the ask's action digest the citation leg
+        # defaulted to "cites", so a bundle with decision.actionParamsHash removed reported the amendment COMMITTED on
+        # the strength of a check that never ran (the challenge, when present, catches the removal first; a bundle
+        # without one did not). Every amended receipt in the corpus carries the digest. Without it the citation is
+        # pending, the amendment is never committed, and strict mode refuses.
         if dec.get("actionParamsHash") is not None:
             cites = am.get("originalParamsHash") == dec.get("actionParamsHash")
             ok(cites, "the amendment cites the ask the person answered (originalParamsHash = the signed ask's actionParamsHash)")
         else:
-            print("  ..   the ask carries no action digest (an escalated approver's ask): the amendment's citation of it is not checkable")
+            cites = None
+            pending += 1
+            approval_evidence_missing.append("the ask's action digest (decision.actionParamsHash), which the amendment must cite")
+            print("  WAIT the ask carries no action digest: the amendment's citation of it cannot be checked, so the amendment is not committed")
         print("  ..   approved WITH CHANGES: the passkey signed the ask as proposed; the registry sealed the amended command as the act."
               " The amendment's scope rests on the registry's seal, not on a signature by the person.")
-        report["amendment"] = {"command": str(am["command"]), "checkable": True, "committed": bool(sealed and same_command and cites)}
+        report["amendment"] = {"command": str(am["command"]), "checkable": True, "citesAsk": cites,
+                               "committed": bool(sealed and same_command and cites)}
 
     # 6. anchor
     anchor = b.get("anchor") or {}
