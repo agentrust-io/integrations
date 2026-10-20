@@ -1,6 +1,6 @@
 {
   "catalog_version": 1,
-  "count": 49,
+  "count": 50,
   "integrations": [
     {
       "name": "Claude Code",
@@ -662,6 +662,31 @@
         "single-use",
         "commit-reveal",
         "ca2a"
+      ]
+    },
+    {
+      "name": "MUSUBI trace terms",
+      "package_name": "MUSUBI trace terms",
+      "vendor": "The HORIZONs Co., Ltd.",
+      "description": "Judges PIC/TRACE authorizations and Trust Records, read unchanged, against a contract and terms two parties signed, per call and overall: within, outside, undetermined or refused.",
+      "path": "integrations/horizonshield-musubi-trace-terms",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/horizonshield-musubi-trace-terms",
+      "homepage": null,
+      "repository": "https://github.com/ogasurfproject-jpg/horizon-shield",
+      "tier": "community",
+      "stack": [
+        "TRACE"
+      ],
+      "category": "Evidence & receipts",
+      "mark": "MT",
+      "featured": null,
+      "keywords": [
+        "contract",
+        "authorization",
+        "pic-trace-bridge",
+        "trust-record",
+        "terms",
+        "counts"
       ]
     },
     {
