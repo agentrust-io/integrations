@@ -1,0 +1,29 @@
+name: MUSUBI companion for cA2A
+vendor: The HORIZONs Co., Ltd.
+integrates_with:
+  - ca2a
+description: >-
+  Offline verifier for a signed, Bitcoin-anchored log of cA2A revocations, use limits,
+  execution receipts and commit-reveal items, judged with ca2a-runtime's own verify_chain.
+maintainer:
+  github: ogasurfproject-jpg
+repository: https://github.com/ogasurfproject-jpg/horizon-shield
+license: MIT
+tier: community
+marketplace:
+  category: Evidence & receipts
+  mark: MU
+  keywords: [delegation, revocation, receipts, single-use, commit-reveal, ca2a]
+# Released packages this entry was tested against. The schema's tested_against
+# block has no ca2a-runtime or nenrin-verify key, so the exact run is recorded
+# here and pinned in pyproject.toml and in
+# .github/workflows/horizonshield-ca2a-companion-conformance.yml:
+#   ca2a-runtime 0.4.0   pinned on purpose: the at-execution revocation verdict
+#                        calls the private ca2a_runtime.delegation.credential.
+#                        _check_revocation (agentrust-io/ca2a#263). The pin is
+#                        dropped once a public call for a chain evaluated
+#                        against a caller-supplied set of revocations taken as
+#                        in force ships.
+#   nenrin-verify 0.5.6  supplies settle_v1_1.py (Bitcoin header view and
+#                        anchor proof) byte for byte from horizon-shield.
+# Run on Python 3.11, 3.12 and 3.13.

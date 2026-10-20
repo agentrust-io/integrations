@@ -1,6 +1,6 @@
 {
   "catalog_version": 1,
-  "count": 48,
+  "count": 49,
   "integrations": [
     {
       "name": "Claude Code",
@@ -637,6 +637,31 @@
         "registry",
         "integrity",
         "download"
+      ]
+    },
+    {
+      "name": "MUSUBI companion for cA2A",
+      "package_name": "MUSUBI companion for cA2A",
+      "vendor": "The HORIZONs Co., Ltd.",
+      "description": "Offline verifier for a signed, Bitcoin-anchored log of cA2A revocations, use limits, execution receipts and commit-reveal items, judged with ca2a-runtime's own verify_chain.",
+      "path": "integrations/horizonshield-ca2a-companion",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/horizonshield-ca2a-companion",
+      "homepage": null,
+      "repository": "https://github.com/ogasurfproject-jpg/horizon-shield",
+      "tier": "community",
+      "stack": [
+        "cA2A"
+      ],
+      "category": "Evidence & receipts",
+      "mark": "MU",
+      "featured": null,
+      "keywords": [
+        "delegation",
+        "revocation",
+        "receipts",
+        "single-use",
+        "commit-reveal",
+        "ca2a"
       ]
     },
     {
