@@ -4,4 +4,5 @@ transformers==5.19.0
 peft==0.21.2
 accelerate==1.15.0
 torch==2.14.1
+-r requirements-model-signing.txt
 model-signing==1.1.1

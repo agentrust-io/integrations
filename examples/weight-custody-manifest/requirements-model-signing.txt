@@ -1,0 +1,4 @@
+-r requirements.txt
+weight-custody-manifest[model-signing]>=0.32.0
+# model-signing 1.1.1 imports OpenSSL directly; sigstore no longer supplies it.
+pyOpenSSL>=26.4.0
