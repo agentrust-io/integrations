@@ -1,98 +1,74 @@
-# Independent effect observation: proposed acceptance procedure
+# Independent effect observation: #333 scenario checklist
 
-Status: informative design contribution within [#333](https://github.com/agentrust-io/integrations/issues/333)
-and [#199](https://github.com/agentrust-io/integrations/issues/199).
-This is not an adapter, target deployment, new roadmap or completed live test.
-Existing owners retain implementation and runtime/profile placement.
+Status: informative, unexecuted checklist for
+[#333](https://github.com/agentrust-io/integrations/issues/333).
+The reusable acceptance procedure remains in
+[#199](https://github.com/agentrust-io/integrations/issues/199).
+This draft retains its current path pending final placement confirmation; it
+does not propose a second reusable procedure. Rajnish recommends extending
+`integrations/alakris-authority-comparison/` and reusing its contract and CI.
+Existing owners retain implementation and runtime/profile decisions.
 
-## Bounded claim
+## Prerequisites and scope
 
-Use one disposable marker namespace with synthetic random data. Enroll a target
-observer independently of the executor's administrative custody. Record the
-executor's authority decision, dispatch, target ingress, durable commit, readback
-and client response as distinct observations. A caller's job ID is correlation
-data until authenticated evidence establishes its relation to the executor run.
+Use one disposable marker namespace with synthetic data and an independently
+enrolled target observer. Before execution, identify the released runtime/API,
+target operator, exact package/source/build and policy pins, invocation, trust
+inputs, authenticated job/attempt/payload/authority binding, observation window,
+cleanup policy and retained evidence. Different keys or hostnames alone do not
+establish independent operation. No host, account or paid service is committed.
 
-The [#333 discussion](https://github.com/agentrust-io/integrations/issues/333)
-identifies Proofable as a dispatch-only candidate. This is a reported candidate
-profile, not measured commit-after-revocation behavior. The proposed target run
-would distinguish dispatch authorization from a final-commit recheck. Supported
-outbound target operations and authenticated job/authority binding remain
-unresolved prerequisites in #333.
+Proofable is a recommended dispatch-only candidate for the revocation case,
+not a selected runtime or measured commit-after-revocation result. Label that
+profile in the result fields themselves. Chris's released outbound invocation
+and authenticated binding to target readback remain prerequisites. The
+non-operational cMCP ExecutionRegistry is not an implemented alternative.
 
-## Before a live run
+The current synthetic fixture disables the executor; it does not independently
+model authority unavailability. Proofable's current unreachable case is
+not_applicable because that path evaluates authority locally. EO01 therefore
+requires a separate scope decision: acceptance of bounded MintID author-record
+evidence, a synthetic extension separating authority and executor availability,
+or another released runtime. Synthetic evidence and published author records
+do not satisfy independently operated live acceptance.
 
-The owners select a released runtime/API, target operator, bounded operation,
-credentials/capabilities, cleanup policy, trusted observer enrollment, workload
-and evidence-retention contract. No account or paid service is activated by
-this proposal. The target operation is a synthetic marker, not sensitive data.
+## EO01–EO08 acceptance matrix
 
-Freeze exact software versions, commands, policy/trust inputs and scenario IDs.
-Record whether the two systems actually have different operators and control
-roots; different hostnames or keys alone do not establish independence.
-
-## Acceptance matrix
-
-All rows below are proposed, not executed measurements.
+All rows are proposed and unexecuted. Apply the reusable procedure in #199.
 
 | ID | Paired case | Observation needed |
 | --- | --- | --- |
-| EO01 | Valid authority / unreachable authority without authorized fallback | Commit / refusal before effect; incomplete target visibility stays unknown |
-| EO02 | Recovery before / after original deadline | Eligible continuation / expired attempt not revived |
-| EO03 | Post-dispatch revocation with dispatch-only / final-commit profile | First may commit; second requires refusal if revocation is causally visible before final authorization |
-| EO04 | Bound target, marker and job / substituted relation | Correct readback / specific binding refusal or unestablished relation |
-| EO05 | Single / duplicate dispatch | Separate ingress and durable-effect counts; deduplication can hide repeated ingress |
-| EO06 | Commit and response / commit with lost response | Known target effect in both; response delivery unknown in the second |
-| EO07 | Complete bounded observation / unavailable observer or log loss | Supported result / unknown, not inferred zero effects |
+| EO01 | Fresh valid authority / unreachable authority without authorized fallback | Same hosted target and observer pipeline: exactly one independently observed durable effect / zero protected effects with complete bounded observation; authority availability varies independently of executor availability |
+| EO02 | Recovery before / after original deadline | Eligible continuation / expired original attempt not revived; a fresh authorization is a distinct request |
+| EO03 | Post-dispatch revocation with dispatch-only / final-commit profile | Declare profile in fields; measure whether the first commits; the second requires refusal when revocation is causally visible before final authorization |
+| EO04 | Bound target, marker and job / substituted relation | Authenticated readback / specific binding refusal or unestablished relation |
+| EO05 | Single / duplicate dispatch | Separate ingress and durable-effect counts; deduplication may hide repeated ingress; any exactly-once result is bounded to the tested operation |
+| EO06 | Commit and response / commit with lost response | Independently observed target effect in both; response delivery unknown in the second |
+| EO07 | Complete bounded observation / unavailable observer or log loss | Supported result / unknown, never inferred zero effects |
 | EO08 | Enrolled observation / substituted signer or prior-run receipt | Accepted observation / trust or run-binding refusal |
 
-Use causal barriers for dispatch, revocation observation and final authorization.
-Wall-clock ordering alone does not prove that an executor observed revocation.
-Record time uncertainty; do not infer a general propagation SLA from one run.
-Target readback needs an authenticated relation to the intended operation, not
-merely a marker with matching text. An empty log proves no global absence.
+Each negative case needs a fresh valid positive control through the same hosted
+target and observer pipeline, not the synthetic Executor's in-process counter.
+Capture ingress observations, durable-effect count and authenticated readback
+separately for both controls. Missing completion reports or empty incomplete
+logs do not establish zero protected effects. Preserve unknown outcomes.
 
-## Evaluation protocol and evidence manifest
+For revocation retain causal ordering of dispatch, revocation visibility and
+any final authorization check. Wall-clock order alone does not establish
+visibility. A single run does not establish a propagation or availability SLA.
 
-Before implementing a checker, freeze expected outcomes and the target's known
-state. For each row retain a manifest with case/version, runtime and checker
-commits, package locks, invocation, run/attempt IDs, synthetic payload identity,
-namespace, trust enrollment, observation window, causal events, raw evidence
-locations/digests, expected distinctions, evidence class and private exclusions.
-Public evidence uses only non-confidential authorized material.
+## Review handoff
 
-Compare the executor completion report with the independent target result;
-neither silently replaces the other. Give a strong stateful comparator the
-same observations, time and policy inputs. Keep faults written independently
-of checker outputs and hold out mechanisms rather than just random instances.
-Report disagreements by authorization, dispatch, commitment and response axis,
-legitimate success preserved, unknown outcomes, coverage and operational cost.
+Vlad retains the adapter and evidence-packet implementation. Retain exact tested
+source and dependency pins, commands, raw observations and digests. Regenerate
+`results/tests.txt` from that revision with both fixture sets present and record
+the actual collected, passed and skipped counts; do not copy a reported count
+without executing it. Rajnish reported 34 tests with zero skips at c5a0b8c,
+while the retained transcript said 27; this checklist is not a fresh rerun.
 
-Planned mutations disable signer enrollment, run/payload binding, deadline and
-observation-completeness checks individually. Each negative has a valid twin
-and fails a behavioral assertion when its guard is removed. Reject-all also
-fails the positive controls. No mutation trial is claimed executed here.
-
-Local synthetic tests can evaluate the checker contract after scope agreement.
-They cannot close independently operated live acceptance, production revocation,
-hardware custody or confidential release criteria in #199.
-
-## Literature and contribution boundary
-
-- [Park and Sandhu, UCONABC, 2004](https://profsandhu.com/cs5323_s17/UCON-2004.pdf):
-  ongoing controls motivate naming the decision boundary. This procedure adds
-  no general continuous-authorization implementation.
-- [Herlihy and Wing, Linearizability, 1990](https://cs.brown.edu/people/mph/HerlihyW90/p463-herlihy.pdf):
-  histories describe particular operations and objects; admission ordering is
-  not automatically target-effect ordering.
-- [Lee et al., RIFL, SOSP 2015](https://web.stanford.edu/~ouster/cgi-bin/papers/rifl.pdf):
-  durable completion and managed effects need atomic coupling. An unrelated
-  external target is not made exactly once by an executor replay ledger.
-- [RFC 9334, RATS Architecture, 2023](https://www.rfc-editor.org/rfc/rfc9334.html):
-  authenticated claims and relying-party trust are separate roles.
-- [Zabolotnii, Runtime Assurance Contracts, v2, 16 October 2026](https://arxiv.org/html/2609.39717v2):
-  detector coverage and a strong stateful baseline matter more than gate count.
-
-The literature supplies design antecedents. The intended contribution is an
-evaluated evidence contract for this bounded workflow, not a new general
-authorization architecture. No upstream issue is closed by this document.
+Our independent evidence review starts after the released-runtime connection,
+target operator and pinned packet are available. Disclose any shared
+implementation work. Keep downloaded-packet integrity, offline appraisal,
+author-record reports and separately operated live observations distinct.
+No live run, hardware assurance, production guarantee or issue closure is
+established by this checklist.
