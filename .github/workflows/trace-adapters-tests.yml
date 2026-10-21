@@ -178,7 +178,6 @@ jobs:
             -- python -m pytest integrations/langchain/test_langgraph_interop.py -q
       - name: Report declaration and execution consistency
         if: always()
-        continue-on-error: true
         run: python scripts/test_evidence.py check "$RUNNER_TEMP/langchain-evidence"
       - name: Retain LangChain execution receipt and log
         if: always()
