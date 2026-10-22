@@ -69,7 +69,6 @@ TRACE only works as a standard if it is genuinely neutral. Integrations are list
 | [LangChain](integrations/langchain/) | agentrust-io | trace | verified |
 | [SOVP](integrations/litzki-systems-sovp/) | Litzki Systems | trace | verified |
 | [LlamaIndex](integrations/llamaindex/) | agentrust-io | trace | verified |
-| [Nobulex](integrations/nobulex/) | Nobulex | trace | verified |
 | [OntoGuard Decision Authorization](integrations/ontoguard-decision-authorization/) | OntoGuard AI | trace | verified |
 | [OpenAI Agents SDK](integrations/openai-agents/) | agentrust-io | trace | verified |
 | [OpenShell TRACE Adapter](integrations/openshell/) | agentrust-io | trace | community |
