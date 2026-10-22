@@ -1,0 +1,119 @@
+# PIC Standard MCP Guard conformance workflow.
+#
+# Two jobs:
+#   floating  installs the integration against its declared lower bounds, so it
+#             resolves the latest compatible releases, as drift detection.
+#   fixed     installs the exact hash-locked package set that reproduces the
+#             tested_against result, then asserts the four load-bearing versions
+#             and installs the integration with --no-deps.
+# Both run the integration tests, emit a Level 0 Trust Record from a live PIC
+# allow decision, and verify it with trace-tests. The emitted record is JSON.
+# Lives at repo root because GitHub Actions only discovers workflows there.
+name: pic-standard-mcp-guard conformance
+on:
+  push:
+    paths:
+      - "integrations/pic-standard-mcp-guard/**"
+      - "requirements/pic-standard-mcp-guard-fixed.*"
+      - ".github/workflows/pic-standard-mcp-guard-conformance.yml"
+  pull_request:
+    paths:
+      - "integrations/pic-standard-mcp-guard/**"
+      - "requirements/pic-standard-mcp-guard-fixed.*"
+      - ".github/workflows/pic-standard-mcp-guard-conformance.yml"
+  schedule:
+    - cron: "0 6 * * 1"   # weekly: catch drift against the latest released packages
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  floating:
+    name: floating (latest releases, drift detection)
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12", "3.13"]
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install this integration (declared lower bounds)
+        run: pip install -e "integrations/pic-standard-mcp-guard[test]"
+      - name: Check dependency consistency
+        run: python -m pip check
+      - name: Integration tests
+        run: pytest integrations/pic-standard-mcp-guard/tests -q
+      - name: Emit a record citing a live PIC allow decision
+        run: python integrations/pic-standard-mcp-guard/examples/emit_record.py --out trust-record.json
+      - name: TRACE conformance
+        run: trace-tests verify --record trust-record.json --level 0
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        with:
+          name: floating-${{ matrix.os }}-py${{ matrix.python }}
+          path: trust-record.json
+
+  fixed:
+    name: fixed (tested_against versions)
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12", "3.13"]
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install the package set that reproduces the tested_against result
+        run: pip install --require-hashes -r requirements/pic-standard-mcp-guard-fixed.txt
+      - name: Pinned versions match the four anchors and integration.yaml
+        run: |
+          python - <<'PY'
+          import re, sys
+          from importlib.metadata import version
+          want = {
+              "pic-standard": "0.9.1",
+              "agentrust-trace": "0.11.0",
+              "agentrust-trace-adapters": "0.2.0",
+              "agentrust-trace-tests": "0.6.2",
+          }
+          y = open("integrations/pic-standard-mcp-guard/integration.yaml").read()
+          declared = dict(re.findall(r'^  (agentrust-trace|agentrust-trace-tests): "([^"]+)"', y, re.M))
+          have = {k: version(k) for k in want}
+          print("want", want)
+          print("have", have)
+          print("integration.yaml", declared)
+          ok = (
+              have == want
+              and declared.get("agentrust-trace") == want["agentrust-trace"]
+              and declared.get("agentrust-trace-tests") == want["agentrust-trace-tests"]
+          )
+          sys.exit(0 if ok else 1)
+          PY
+      - name: Install this integration
+        # --no-deps: every runtime and test dependency came from the lock above.
+        run: pip install --no-deps -e integrations/pic-standard-mcp-guard
+      - name: Check dependency consistency
+        run: python -m pip check
+      - name: Integration tests
+        run: pytest integrations/pic-standard-mcp-guard/tests -q
+      - name: Emit a record citing a live PIC allow decision
+        run: python integrations/pic-standard-mcp-guard/examples/emit_record.py --out trust-record.json
+      - name: TRACE conformance
+        run: trace-tests verify --record trust-record.json --level 0
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        with:
+          name: fixed-${{ matrix.os }}-py${{ matrix.python }}
+          path: trust-record.json

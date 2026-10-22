@@ -804,6 +804,31 @@
       ]
     },
     {
+      "name": "PIC Standard MCP Guard",
+      "package_name": "PIC Standard MCP Guard",
+      "vendor": "PIC Standard",
+      "description": "Uses a PIC Standard MCP pre-execution allow decision and a caller-verified post-dispatch observation to emit a signed TRACE Level 0 Trust Record linked through a detached bridge.",
+      "path": "integrations/pic-standard-mcp-guard",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/pic-standard-mcp-guard",
+      "homepage": "https://github.com/pic-standard/pic-standard",
+      "repository": "https://github.com/agentrust-io/integrations",
+      "tier": "community",
+      "stack": [
+        "TRACE"
+      ],
+      "category": "Security & policy",
+      "mark": "PIC",
+      "featured": null,
+      "keywords": [
+        "pic",
+        "mcp",
+        "intent",
+        "policy",
+        "provenance",
+        "trace"
+      ]
+    },
+    {
       "name": "ramen-ai cMCP Adapter",
       "package_name": "ramen-ai cMCP Adapter",
       "vendor": "ramen-ai",
