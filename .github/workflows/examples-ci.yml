@@ -249,7 +249,9 @@ jobs:
         # from PyPI, which is what makes them a check on the release.
         run: |
           python -m pip install --require-hashes -r ../requirements/wcm-harness.txt
-          python -m pip install "weight-custody-manifest[model-signing]>=0.27.0"
+          # model-signing 1.1.1 imports OpenSSL without declaring pyOpenSSL, which
+          # sigstore 4.5.1 stopped pulling in (sigstore/model-transparency#685).
+          python -m pip install "weight-custody-manifest[model-signing]>=0.27.0" pyOpenSSL
 
       - name: Run every offline demo and the unit tests
         run: python run_demos.py
