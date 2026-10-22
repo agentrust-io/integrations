@@ -65,6 +65,7 @@ TRACE only works as a standard if it is genuinely neutral. Integrations are list
 | [EPI Recorder](integrations/epilabs-epi-recorder/) | EPI Labs | trace, wcm | verified |
 | [EvidenceBound Core](integrations/evidencebound-core/) | EvidenceBound | trace | community |
 | [Google ADK](integrations/google-adk/) | agentrust-io | trace | verified |
+| [MUSUBI companion for cA2A](integrations/horizonshield-ca2a-companion/) | The HORIZONs Co., Ltd. | ca2a | community |
 | [LangChain](integrations/langchain/) | agentrust-io | trace | verified |
 | [SOVP](integrations/litzki-systems-sovp/) | Litzki Systems | trace | verified |
 | [LlamaIndex](integrations/llamaindex/) | agentrust-io | trace | verified |
