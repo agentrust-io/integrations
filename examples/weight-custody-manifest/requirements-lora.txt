@@ -1,3 +1,5 @@
+# Include WCM and the model-signing dependency setup used by the offline demo.
+-r requirements-model-signing.txt
 huggingface_hub==1.33.0
 safetensors==0.8.0
 transformers==5.19.0

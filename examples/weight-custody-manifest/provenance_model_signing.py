@@ -1,6 +1,6 @@
 """Provenance interop: WCM custody on top of an OpenSSF model-signing signature.
 
-    pip install "weight-custody-manifest[model-signing]"
+    pip install -r requirements-model-signing.txt
     python provenance_model_signing.py
 
 Real WCM code, no hardware. OpenSSF model-signing (Sigstore) answers "who signed
