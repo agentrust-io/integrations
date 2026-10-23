@@ -113,6 +113,21 @@ class ReceiptFixtureTests(unittest.TestCase):
             {"result": "invalid", "receipt_state": "signature_format"},
         )
 
+    def test_boolean_sequence_and_duplicate_json_keys_rejected(self) -> None:
+        from verify_receipts import verify_text
+
+        self.assertEqual(
+            self.verify_mutated(lambda f: f["receipts"][0].__setitem__("sequence", True)),
+            {"result": "invalid", "receipt_state": "malformed"},
+        )
+        raw = (ROOT / "fixtures" / "valid-chain.json").read_text(encoding="utf-8")
+        dup = raw[:-1] + ', "extra": 1, "extra": 2}'
+        self.assertEqual(
+            verify_text(dup, load_trusted_keys()),
+            {"result": "invalid", "receipt_state": "malformed"},
+        )
+
+
 
 if __name__ == "__main__":
     unittest.main()
