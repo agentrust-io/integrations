@@ -77,4 +77,6 @@ def check_seal(snapshot: dict | None) -> str:
     seal = snapshot.get(SEAL_FIELD)
     if not isinstance(seal, dict) or not isinstance(seal.get("digest"), str):
         return INTEGRITY_UNSEALED
+    if "alg" in seal and seal.get("alg") != "SHA-256":
+        return INTEGRITY_BROKEN
     return INTEGRITY_OK if seal["digest"] == state_digest(snapshot) else INTEGRITY_BROKEN
