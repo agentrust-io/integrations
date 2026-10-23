@@ -70,6 +70,19 @@ def save_baseline(path: Path, snapshot: dict) -> dict:
     return sealed
 
 
+def _unique_object(pairs: list[tuple[str, object]]) -> dict:
+    out: dict = {}
+    for k, v in pairs:
+        if k in out:
+            raise ValueError(f"duplicate JSON object key: {k!r}")
+        out[k] = v
+    return out
+
+
+def _no_nonfinite_constant(token: str) -> object:
+    raise ValueError(f"non-finite JSON constant is not allowed: {token}")
+
+
 def load_state(path: Path) -> dict | None:
     """Load a state file, or None if it is absent, unreadable, or corrupt.
 
@@ -80,7 +93,11 @@ def load_state(path: Path) -> dict | None:
     if not path.is_file():
         return None
     try:
-        data = json.loads(path.read_text(encoding="utf-8"))
+        data = json.loads(
+            path.read_text(encoding="utf-8"),
+            object_pairs_hook=_unique_object,
+            parse_constant=_no_nonfinite_constant,
+        )
     except (ValueError, RecursionError, OSError):
         # ValueError, not only JSONDecodeError: invalid UTF-8 and an integer past
         # the digit limit raise plain ValueError, and deep nesting raises

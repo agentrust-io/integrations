@@ -318,6 +318,19 @@ class TestState:
         core.save_state(p, {"a": 1})
         assert [f.name for f in tmp_path.iterdir()] == ["baseline.json"]
 
+    def test_duplicate_keys_nan_and_wrong_seal_alg_rejected(self, tmp_path):
+        p = tmp_path / "baseline.json"
+        p.write_text('{"a": 1, "a": 2}', encoding="utf-8")
+        assert core.load_state(p) is None
+        p.write_text('{"a": NaN}', encoding="utf-8")
+        assert core.load_state(p) is None
+        with pytest.raises(ValueError):
+            core.sha_mapping({"a": float("nan")})
+        sealed = core.attach_seal({"skills": {"a": "1"}})
+        sealed["integrity"]["alg"] = "MD5"
+        assert core.check_seal(sealed) == core.INTEGRITY_BROKEN
+
+
     def test_atomic_write_replaces_rather_than_truncating(self, tmp_path):
         p = tmp_path / "baseline.json"
         core.save_state(p, {"generation": 1})
