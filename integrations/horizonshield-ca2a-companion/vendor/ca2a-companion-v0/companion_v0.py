@@ -566,7 +566,10 @@ def settle(bundle):
     # by log order, computed once
     rank = {}
     for u in uses:
-        pair = (u["item"]["request_sha256"], u["item"]["responder"])
+        u_req_sha = u["item"].get("request_sha256")
+        if not _is(HEX32, u_req_sha):
+            continue
+        pair = (u_req_sha, u["item"]["responder"])
         for d in set(u["lineage"]):
             book = rank.setdefault(d, {})
             if pair not in book:
@@ -578,10 +581,12 @@ def settle(bundle):
             continue
         it, seq, t = x["item"], x["seq"], x["t"]
         lineage = it["lineage"]
-        r = {"seq": seq, "request_sha256": it["request_sha256"], "outcome": it["outcome"]["kind"],
+        req_sha = it.get("request_sha256")
+        r = {"seq": seq, "request_sha256": req_sha, "outcome": it["outcome"]["kind"],
              "stage": it["outcome"]["stage"], "responder": it["responder"], "capability": it["capability"]}
         own = next((u for u in uses if u["seq"] < seq and u["lineage"] == lineage
-                    and u["item"]["request_sha256"] == it["request_sha256"]
+                    and _is(HEX32, req_sha)
+                    and u["item"].get("request_sha256") == req_sha
                     and u["item"]["responder"] == it["responder"]), None)
         chain = own["chain_obj"] if own else supplied.get(tuple(lineage))
         sb = it["seen_block"]
@@ -601,7 +606,11 @@ def settle(bundle):
             reasons.append("caller_not_leaf_subject")
         if it["capability"] not in leaf.scope:
             reasons.append("capability_not_in_scope")
-        req = requests.get(it["request_sha256"])
+        if not _is(HEX32, req_sha):
+            reasons.append("bad_request_sha256")
+            req = None
+        else:
+            req = requests.get(req_sha)
         r["request_known"] = req is not None
         if req is not None and (req["caller"], req["responder"], req["lineage"], req["capability"]) != \
                 (it["caller"], it["responder"], lineage, it["capability"]):
@@ -630,14 +639,14 @@ def settle(bundle):
                 reasons.append("use_not_logged_before_execution")
                 limits.append({"hop": i, "limit": limit, "rank": None})
                 continue
-            k = rank[d][(it["request_sha256"], it["responder"])]
+            k = rank[d][(req_sha, it["responder"])]
             limits.append({"hop": i, "limit": limit, "rank": k})
             if k > limit:
                 reasons.append("use_limit_exceeded")
         if limits:
             r["use_limits"] = limits
-        key = (it["responder"], it["request_sha256"])
-        if it["outcome"]["kind"] == "result":
+        if it["outcome"]["kind"] == "result" and _is(HEX32, req_sha):
+            key = (it["responder"], req_sha)
             if key in executed:
                 reasons.append("duplicate_execution")
                 r["first_execution_seq"] = executed[key]
