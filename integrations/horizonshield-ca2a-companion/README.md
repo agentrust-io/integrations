@@ -58,7 +58,7 @@ pip install -e "integrations/horizonshield-ca2a-companion[test]"
 pytest integrations/horizonshield-ca2a-companion/tests -q
 ```
 
-Expected: `83 passed`. Python 3.11 or later. No network access is
+Expected: `86 passed`. Python 3.11 or later. No network access is
 needed after installation; the Bitcoin headers in the vectors are a regtest
 difficulty test chain built by the generator, not mainnet.
 
@@ -74,18 +74,22 @@ PYTHONPATH="$MUSUBI_DIR" python integrations/horizonshield-ca2a-companion/vendor
 
 | Path | What it is |
 |---|---|
-| `vendor/ca2a-companion-v0/companion_v0.py` | the reference verifier, unchanged |
+| `vendor/ca2a-companion-v0/companion_v0.py` | the reference verifier derived from horizon-shield `05b4924` (`a6e2b2c9...`) with a local defense-in-depth `request_sha256` type/hex validation guard |
 | `vendor/ca2a-companion-v0/gen_vectors.py` | the vector generator, unchanged; it builds and signs every credential and revocation with ca2a-runtime |
 | `vendor/ca2a-companion-v0/vectors/vectors.json` | 45 settlement vectors and 12 evidence vectors, unchanged |
 | `tests/test_ca2a_companion_gaps.py` | all 57 vectors grouped by the gap they exercise, named cases per gap, and the check on the private call |
-| `tests/test_ca2a_companion_vendored.py` | the vendored files' SHA-256 against the source commit, the CLI self-test, and a byte for byte rebuild of the vectors with ca2a-runtime |
+| `tests/test_ca2a_companion_vendored.py` | the vendored files' SHA-256 provenance check, the CLI self-test, and a byte for byte rebuild of the vectors with ca2a-runtime |
 
-The three vendored files are byte for byte the files at horizon-shield commit
-`05b4924254ebf3c7a5c4523bb2f2fd74ff22b61a`:
+`gen_vectors.py` and `vectors/vectors.json` are byte for byte the files at
+horizon-shield commit `05b4924254ebf3c7a5c4523bb2f2fd74ff22b61a`;
+`companion_v0.py` is derived from that commit (upstream SHA-256
+`a6e2b2c9d920eda65723e1d863e8e108df642c6b3ece8b40499726bfc425a781`) with a
+local defense-in-depth `request_sha256` type/hex validation guard added in
+`settle`:
 
 | File | SHA-256 |
 |---|---|
-| `companion_v0.py` | `a6e2b2c9d920eda65723e1d863e8e108df642c6b3ece8b40499726bfc425a781` |
+| `companion_v0.py` | `fc53665ce6dfd7f763299ff0c2ab3e8f91cc8698ce7e7a327021f93dc77c9627` |
 | `gen_vectors.py` | `2904a9310bb8f32d9efd808e1fea0a9cb38d7145c54002b684ebd7946adac005` |
 | `vectors/vectors.json` | `4b4e2362ab6dda3743e5ba1cd76285a0872344f40086bc95b18b3bd34490d2a2` |
 
