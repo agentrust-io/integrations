@@ -246,3 +246,30 @@ def test_the_private_ca2a_call_this_entry_is_pinned_for():
     params = inspect.signature(private).parameters
     assert list(params) == ["chain", "revocations", "at_time", "now", "max_staleness"]
     assert all(params[name].kind is inspect.Parameter.KEYWORD_ONLY for name in ("at_time", "now", "max_staleness"))
+
+
+@pytest.mark.parametrize("unhashable_req_sha", [["not", "hashable"], {"unhashable": 1}])
+def test_settle_guards_unhashable_request_sha256_without_type_error(
+    monkeypatch: pytest.MonkeyPatch, unhashable_req_sha: object
+) -> None:
+    real_parse_item = companion.parse_item
+
+    def parse_with_mutated_request_sha(item, extensions=None):
+        kind, parsed = real_parse_item(item, extensions=extensions)
+        if kind == "receipt":
+            parsed = dict(parsed, request_sha256=unhashable_req_sha)
+        return kind, parsed
+
+    monkeypatch.setattr(companion, "parse_item", parse_with_mutated_request_sha)
+    out = companion.settle(SETTLEMENT_VECTORS["CA11_use_not_logged"]["bundle"])
+    assert len(out["receipts"]) == 1
+    receipt = out["receipts"][0]
+    assert receipt["disposition"] == "outside"
+    assert "bad_request_sha256" in receipt["reasons"]
+    assert receipt["request_known"] is False
+
+
+def test_load_strict_rejects_duplicate_json_keys() -> None:
+    with pytest.raises(companion.Bad) as exc_info:
+        companion.load_strict(b'{"profile": "a", "profile": "b"}')
+    assert exc_info.value.code == "duplicate_key"
