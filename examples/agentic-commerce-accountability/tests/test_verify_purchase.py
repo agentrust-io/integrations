@@ -59,8 +59,7 @@ class PurchaseVerificationTests(unittest.TestCase):
                 )
 
     def test_ceiling_must_be_an_integer(self) -> None:
-        # json.loads accepts NaN, and every integer compares false against it.
-        for ceiling in (float("nan"), float("inf"), 20_000.0, None):
+        for ceiling in (20_000.0, None, True, 0, -1):
             with self.subTest(ceiling=ceiling):
                 bundle = build()
                 grant = bundle["authority_grant"]
@@ -70,6 +69,95 @@ class PurchaseVerificationTests(unittest.TestCase):
                 self.assertEqual(
                     verify(bundle), ["authority grant ceiling is not an integer"]
                 )
+        for ceiling in (float("nan"), float("inf"), float("-inf")):
+            with self.subTest(ceiling=ceiling):
+                bundle = build()
+                bundle["authority_grant"]["max_amount_minor"] = ceiling
+                errors = verify(bundle)
+                self.assertIn("authority grant ceiling is not an integer", errors)
+                self.assertIn(
+                    "policy decision is not bound to the authority grant", errors
+                )
+
+    def test_digest_rejects_nonfinite_values(self) -> None:
+        for bad in (float("nan"), float("inf"), float("-inf")):
+            with self.subTest(bad=bad):
+                with self.assertRaises(ValueError):
+                    digest({"x": bad})
+
+    def test_malformed_sections_are_rejected(self) -> None:
+        for non_obj in ([], None, "not-an-object", 42):
+            with self.subTest(bundle=non_obj):
+                self.assertEqual(verify(non_obj), ["bundle must be a JSON object"])  # type: ignore[arg-type]
+        for section in (
+            "authority_grant",
+            "purchase_request",
+            "policy_decision",
+            "runtime_evidence",
+            "purchase_receipt",
+        ):
+            for bad_section in (None, [], "string", 123):
+                with self.subTest(section=section, value=bad_section):
+                    bundle = build()
+                    bundle[section] = bad_section
+                    self.assertEqual(
+                        verify(bundle), [f"{section} must be a JSON object"]
+                    )
+
+    def test_safe_integer_boundaries(self) -> None:
+        max_safe = 9_007_199_254_740_991
+        above_safe = 9_007_199_254_740_992
+
+        # Valid boundary twins (accepted)
+        bundle = build()
+        bundle["authority_grant"]["max_amount_minor"] = max_safe
+        bundle["policy_decision"]["authority_digest"] = digest(bundle["authority_grant"])
+        rebind_request(bundle, amount_minor=max_safe)
+        self.assertEqual(verify(bundle), [])
+
+        bundle_min = build()
+        rebind_request(bundle_min, amount_minor=1)
+        self.assertEqual(verify(bundle_min), [])
+
+        # Above safe-integer boundary on amount_minor (rejected)
+        bundle_bad_amount = build()
+        bundle_bad_amount["authority_grant"]["max_amount_minor"] = max_safe
+        bundle_bad_amount["policy_decision"]["authority_digest"] = digest(
+            bundle_bad_amount["authority_grant"]
+        )
+        rebind_request(bundle_bad_amount, amount_minor=above_safe)
+        self.assertEqual(
+            verify(bundle_bad_amount),
+            ["amount is not a positive integer in minor units"],
+        )
+
+        # Above safe-integer boundary on max_amount_minor (rejected)
+        bundle_bad_ceiling = build()
+        bundle_bad_ceiling["authority_grant"]["max_amount_minor"] = above_safe
+        bundle_bad_ceiling["policy_decision"]["authority_digest"] = digest(
+            bundle_bad_ceiling["authority_grant"]
+        )
+        rebind_request(bundle_bad_ceiling, amount_minor=18_000)
+        self.assertEqual(
+            verify(bundle_bad_ceiling),
+            ["authority grant ceiling is not an integer"],
+        )
+
+    def test_parser_rejects_duplicate_keys_and_nonfinite_json(self) -> None:
+        from verify_purchase import _loads_strict
+
+        raw = (EXAMPLE / "fixtures" / "valid-purchase.json").read_text(encoding="utf-8")
+        dup = raw.rstrip()[:-1] + ', "extra": 1, "extra": 2}'
+        self.assertEqual(verify(json.loads(dup)), [])
+        with self.assertRaises(ValueError):
+            _loads_strict(dup)
+
+        for token in ("NaN", "Infinity", "-Infinity", "1e309"):
+            with self.subTest(token=token):
+                crafted = raw.rstrip()[:-1] + f', "extra": {token}}}'
+                self.assertIsInstance(json.loads(crafted), dict)
+                with self.assertRaises(ValueError):
+                    _loads_strict(crafted)
 
     def test_allow_list_must_be_a_list(self) -> None:
         # "merchant:hotel-example" in "merchant:hotel-example-annex" is True.
