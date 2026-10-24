@@ -1,5 +1,32 @@
 # Confidential Workflow Acceptance Harness
 
+The [informative acceptance profile](ACCEPTANCE-PROFILE.md) describes the
+paired controls and evidence boundaries for issue #199.
+
+## Offline synthetic evidence reappraisal
+
+`harness.reappraisal` retains an immutable copy of a deterministic run result
+and compares it with explicit current verifier inputs: scenario, policy/trust
+digests, a named dependency inventory, evaluation time and freshness budget.
+Changed inputs or expired evidence return `reassessment_required` with reasons;
+the historical result is retained. A changed dependency calls for reassessment,
+not automatic refusal of the new workload. Refused, unknown and incomplete
+historical results cannot become applicable without a fresh passing run.
+
+Use `EvidenceSnapshot.capture(scenario, result, context, captured_at=...)`, then
+`appraise(snapshot, scenario, current_context, evaluated_at=...,
+max_age_seconds=...)`. Times are explicit UTC Unix integer seconds. Evidence
+expires exactly at the verifier-selected age limit. This is evidence freshness,
+not the credential-expiry verification exercised by protocol-specific adapters.
+The existing unittest discovery command runs the paired reappraisal controls.
+
+This utility accepts caller-trusted local synthetic fixtures only. It does not
+authenticate a snapshot, verify completeness of caller-supplied dependencies,
+provide persistent revocation, execute an adapter, or authorize a new action.
+Its hashes identify bytes; replacing both content and hashes is outside this
+local trust boundary. `applicable` is limited to the selected synthetic claim
+and explicit inputs, not protocol acceptance or permission to execute.
+
 A deterministic software harness for issue #199. It keeps authorization, delivery,
 receipt, admission, execution, response verification and release outcomes separate
 and preserves unavailable evidence instead of inferring success from dispatch.
