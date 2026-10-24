@@ -26,7 +26,8 @@ class ConduitLiveTests(unittest.TestCase):
         if action=="job_start":
             return {"ok":True, "receipt":self.started,
                     "result":{"session_id":self.session,"intent":"inspect",
-                              "commit_sha":"abc","network":False}}
+                              "commit_sha":"abc","network":False,
+                              "repo":"/home/ubuntu/src/integrations"}}
         return {"ok":True,"receipt":self.finished,
                 "result":{"session_id":self.session,"running":False,"exit_code":0,
                           "commit_sha":"abc","commit_sha_end":"abc",
@@ -63,3 +64,30 @@ class ConduitLiveTests(unittest.TestCase):
             return result
         self.transport=transport
         self.assertEqual(self.invoke().outcome,"untrusted-or-unsuccessful-result")
+
+    def test_wrong_repository_is_rejected(self):
+        original = self.transport
+        def transport(cli, action, params):
+            response = original(cli, action, params)
+            if action == "job_start":
+                response["result"]["repo"] = "/other/repository"
+            return response
+        self.transport = transport
+        self.assertEqual(self.invoke().outcome, "untrusted-start")
+
+    def test_missing_repository_is_rejected(self):
+        original = self.transport
+        def transport(cli, action, params):
+            response = original(cli, action, params)
+            if action == "job_start":
+                del response["result"]["repo"]
+            return response
+        self.transport = transport
+        self.assertEqual(self.invoke().outcome, "untrusted-start")
+
+    def test_rehashed_failed_finish_is_rejected(self):
+        self.finished["status"] = "FAIL"
+        payload = {k: v for k, v in self.finished.items() if k != "hash"}
+        self.finished["hash"] = hashlib.sha256(json.dumps(
+            payload, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+        self.assertEqual(self.invoke().outcome, "untrusted-or-unsuccessful-result")

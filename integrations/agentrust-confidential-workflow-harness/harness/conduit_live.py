@@ -67,6 +67,7 @@ def run(*, transaction_id: str, repo: str, cli: str,
         if (not _receipt_hash(sr) or sr["status"] != "PASS"
             or sr["action"] != "job_start" or sr["node"] != "vps-377a113a"
             or sr.get("detail", {}).get("session_id") != session
+            or job.get("repo") != repo
             or job.get("intent") != "inspect"
             or job.get("network") is not False):
             return LiveResult("untrusted-start", transaction_id)
@@ -76,6 +77,7 @@ def run(*, transaction_id: str, repo: str, cli: str,
         fr = poll["receipt"]
         finished = poll["result"]
         if (not _receipt_hash(fr) or fr.get("action") != "job_poll"
+            or fr.get("status") != "PASS"
             or fr.get("node") != sr["node"]
             or fr.get("detail", {}).get("session_id") != session
             or fr.get("prev_hash") != sr["hash"]

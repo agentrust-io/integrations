@@ -28,7 +28,8 @@ class DelegatedConduitTests(unittest.TestCase):
         if action == "job_start":
             return {"ok": True, "receipt": self.start,
                     "result": {"session_id": "session", "intent": "inspect",
-                               "network": False, "commit_sha": "abc"}}
+                               "network": False, "commit_sha": "abc",
+                               "repo": "/home/ubuntu/src/integrations"}}
         return {"ok": True, "receipt": self.finish,
                 "result": {"session_id": "session", "running": False,
                            "exit_code": 0, "commit_sha": "abc",
