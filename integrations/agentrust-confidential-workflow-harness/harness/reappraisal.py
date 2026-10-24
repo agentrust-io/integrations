@@ -91,7 +91,9 @@ class EvidenceSnapshot:
         if (result.boundary_outcomes != boundaries or result.blocked != blocked
                 or result.status != status(boundaries, blocked)):
             raise ValueError("result conflicts with retained observations")
+        # Local retention is deliberately separate from public serialization.
         data = result.to_dict()
+        data.update(scenario_digest=result.scenario_digest, observed_at=result.observed_at)
         encoded = json.dumps(data, sort_keys=True, separators=(",", ":"), allow_nan=False)
         return cls(result.scenario_digest, encoded, _digest(data), context, captured_at)
 

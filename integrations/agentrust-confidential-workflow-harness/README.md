@@ -13,13 +13,17 @@ the historical result is retained. A changed dependency calls for reassessment,
 not automatic refusal of the new workload. Refused, unknown and incomplete
 historical results cannot become applicable without a fresh passing run.
 
-Run with `HarnessRunner().run(scenario, observed_at=...)` to stamp the full
-scenario digest and original observation time. Omit `observed_at` to use the
-runner entry time. Capture rejects mismatched scenarios and missing or future
-observation times. Later capture never resets evidence age. Legacy serialized results may omit both fields; the result schema requires
-them together when either is supplied. Null values and partial metadata are
-invalid. Legacy results without both fields remain readable but cannot be
-retained for reappraisal: they require a fresh run.
+Run with `HarnessRunner().run(scenario, observed_at=...)` to retain the full
+scenario digest and original observation time in memory. These fields are
+private local reuse metadata and are always excluded from public `to_dict()`
+output. Both the result and each observation use explicit public-field lists;
+new internal dataclass fields are excluded by default, and emitted mutable
+values are copied. The public result schema rejects the private metadata. `EvidenceSnapshot.capture`
+retains them separately inside its local `result_json`; the snapshot, its
+content digests and dataclass representations are private and must not be
+published. Capture rejects mismatched scenarios and missing or future
+observation times. Later capture never resets evidence age. Legacy run objects
+without both fields require a fresh run before retention for reappraisal.
 
 Use `EvidenceSnapshot.capture(scenario, result, context, captured_at=...)`, then
 `appraise(snapshot, scenario, current_context, evaluated_at=...,

@@ -1,5 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass, field, asdict
+from copy import deepcopy
 import hashlib
 import json
 from enum import Enum
@@ -74,18 +75,28 @@ class RunResult:
     observed_at: int | None = None
 
     def to_dict(self) -> dict[str, Any]:
-        d = asdict(self)
-        # Preserve serialization of legacy results without observation metadata.
-        for key in ("scenario_digest", "observed_at"):
-            if d[key] is None:
-                del d[key]
-        d["observations"] = [
-            {
-                **asdict(o),
-                "boundary": o.boundary.value,
-                "outcome": o.outcome.value,
-                "evidence_class": o.evidence_class.value,
-            }
-            for o in self.observations
-        ]
-        return d
+        # Explicit public projection: new internal fields are private by default.
+        # Values in declared public fields still require caller-side classification.
+        return deepcopy({
+            "scenario_id": self.scenario_id,
+            "transaction_id": self.transaction_id,
+            "claim": self.claim,
+            "status": self.status,
+            "observations": [
+                {
+                    "boundary": o.boundary.value,
+                    "outcome": o.outcome.value,
+                    "source": o.source,
+                    "evidence_class": o.evidence_class.value,
+                    "lineage": o.lineage,
+                    "caused_by": o.caused_by,
+                    "detail": o.detail,
+                }
+                for o in self.observations
+            ],
+            "boundary_outcomes": self.boundary_outcomes,
+            "mutation_proof": self.mutation_proof,
+            "blocked": self.blocked,
+            "limitations": self.limitations,
+            "package_versions": self.package_versions,
+        })
