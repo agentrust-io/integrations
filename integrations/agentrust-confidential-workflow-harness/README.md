@@ -13,9 +13,16 @@ the historical result is retained. A changed dependency calls for reassessment,
 not automatic refusal of the new workload. Refused, unknown and incomplete
 historical results cannot become applicable without a fresh passing run.
 
+Run with `HarnessRunner().run(scenario, observed_at=...)` to stamp the full
+scenario digest and original observation time. Omit `observed_at` to use the
+runner entry time. Capture rejects mismatched scenarios and missing or future
+observation times. Later capture never resets evidence age. Legacy results
+without these fields require a fresh run.
+
 Use `EvidenceSnapshot.capture(scenario, result, context, captured_at=...)`, then
 `appraise(snapshot, scenario, current_context, evaluated_at=...,
-max_age_seconds=...)`. Times are explicit UTC Unix integer seconds. Evidence
+max_age_seconds=...)`. Times are UTC Unix integer seconds. The optional run timestamp is caller-trusted
+fixture input, not authenticated time. Evidence
 expires exactly at the verifier-selected age limit. This is evidence freshness,
 not the credential-expiry verification exercised by protocol-specific adapters.
 The existing unittest discovery command runs the paired reappraisal controls.

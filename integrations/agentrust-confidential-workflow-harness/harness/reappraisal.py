@@ -74,6 +74,11 @@ class EvidenceSnapshot:
         if (scenario.scenario_id, scenario.transaction_id, scenario.claim) != (
                 result.scenario_id, result.transaction_id, result.claim):
             raise ValueError("result does not match scenario identity")
+        if result.scenario_digest != scenario.digest():
+            raise ValueError("result does not match full scenario digest")
+        _check_time(result.observed_at)
+        if result.observed_at > captured_at:
+            raise ValueError("capture precedes observation")
         if scenario.mutation is not None or result.mutation_proof != {
                 "mutation": None, "gate_weakened": False}:
             raise ValueError("weakened-gate evidence cannot be retained for reuse")
@@ -88,7 +93,7 @@ class EvidenceSnapshot:
             raise ValueError("result conflicts with retained observations")
         data = result.to_dict()
         encoded = json.dumps(data, sort_keys=True, separators=(",", ":"), allow_nan=False)
-        return cls(_digest(asdict(scenario)), encoded, _digest(data), context, captured_at)
+        return cls(result.scenario_digest, encoded, _digest(data), context, captured_at)
 
 
 @dataclass(frozen=True)
@@ -118,6 +123,11 @@ def appraise(snapshot: EvidenceSnapshot, scenario: Scenario,
     data = json.loads(snapshot.result_json)
     if _digest(data) != snapshot.result_digest:
         raise ValueError("snapshot content identity mismatch")
+    _check_time(data["observed_at"])
+    if data["observed_at"] > snapshot.captured_at:
+        raise ValueError("capture precedes observation")
+    if data["scenario_digest"] != snapshot.scenario_digest:
+        raise ValueError("snapshot scenario identity mismatch")
     reasons = []
     if snapshot.scenario_digest != _digest(asdict(scenario)):
         reasons.append("scenario_changed")
@@ -129,7 +139,7 @@ def appraise(snapshot: EvidenceSnapshot, scenario: Scenario,
         reasons.append("dependencies_changed")
     if evaluated_at < snapshot.captured_at:
         reasons.append("evaluation_precedes_capture")
-    elif evaluated_at - snapshot.captured_at >= max_age_seconds:
+    elif evaluated_at - data["observed_at"] >= max_age_seconds:
         reasons.append("evidence_expired")
     if data["status"] != "passed":
         reasons.append("historical_result_not_passed")

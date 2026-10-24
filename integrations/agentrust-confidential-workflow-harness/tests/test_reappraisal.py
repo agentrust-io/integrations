@@ -18,7 +18,7 @@ class ReappraisalTests(unittest.TestCase):
     def setUp(self):
         self.scenario = scenario()
         self.context = EvaluationContext(A, B, (("lockfile", C), ("checker", A)))
-        self.result = HarnessRunner().run(self.scenario)
+        self.result = HarnessRunner().run(self.scenario, observed_at=100)
         self.snapshot = EvidenceSnapshot.capture(
             self.scenario, self.result, self.context, captured_at=100)
 
@@ -69,6 +69,35 @@ class ReappraisalTests(unittest.TestCase):
             with self.subTest(changed=changed):
                 self.assertEqual(self.evaluate(scenario=changed).reasons, ("scenario_changed",))
 
+    def test_capture_rejects_same_identity_changed_scenario(self):
+        changed = replace(self.scenario, inputs={**self.scenario.inputs, "workload": "X"})
+        self.assertNotEqual(HarnessRunner().run(changed, observed_at=100).status, "passed")
+        with self.assertRaisesRegex(ValueError, "full scenario"):
+            EvidenceSnapshot.capture(changed, self.result, self.context, captured_at=100)
+        self.scenario.inputs["workload"] = "X"
+        with self.assertRaisesRegex(ValueError, "full scenario"):
+            EvidenceSnapshot.capture(self.scenario, self.result, self.context, captured_at=100)
+
+    def test_delayed_capture_does_not_refresh_old_observation(self):
+        delayed = EvidenceSnapshot.capture(
+            self.scenario, self.result, self.context, captured_at=1000)
+        self.assertEqual(self.evaluate(snapshot=delayed, evaluated_at=1001).reasons,
+                         ("evidence_expired",))
+        fresh_result = HarnessRunner().run(self.scenario, observed_at=1000)
+        fresh = EvidenceSnapshot.capture(
+            self.scenario, fresh_result, self.context, captured_at=1000)
+        self.assertEqual(self.evaluate(snapshot=fresh, evaluated_at=1001).applicability,
+                         "applicable")
+
+    def test_missing_invalid_or_future_observation_is_rejected(self):
+        for value in (None, True, -1, 1.5, 101):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                EvidenceSnapshot.capture(self.scenario, replace(self.result, observed_at=value),
+                                         self.context, captured_at=100)
+        with self.assertRaisesRegex(ValueError, "full scenario"):
+            EvidenceSnapshot.capture(self.scenario, replace(self.result, scenario_digest=None),
+                                     self.context, captured_at=100)
+
     def test_compound_changes_do_not_mask_each_other(self):
         current = EvaluationContext(C, A, (("other", B),))
         self.scenario.inputs["workload"] = "changed"
@@ -83,7 +112,7 @@ class ReappraisalTests(unittest.TestCase):
         changed = replace(self.context, dependencies=(("lockfile", A),))
         self.assertEqual(self.evaluate(current=changed).applicability, "reassessment_required")
         fresh = EvidenceSnapshot.capture(
-            self.scenario, HarnessRunner().run(self.scenario), changed, captured_at=110)
+            self.scenario, HarnessRunner().run(self.scenario, observed_at=110), changed, captured_at=110)
         self.assertEqual(self.evaluate(snapshot=fresh, current=changed,
                                        evaluated_at=110).applicability, "applicable")
         self.assertEqual(asdict(self.snapshot), before)
@@ -93,7 +122,7 @@ class ReappraisalTests(unittest.TestCase):
                           {"inputs": {**self.scenario.inputs, "revoked_before_use": True}},
                           {"waiting_on_release": "missing API"}):
             s = scenario(**overrides)
-            r = HarnessRunner().run(s)
+            r = HarnessRunner().run(s, observed_at=100)
             snap = EvidenceSnapshot.capture(s, r, self.context, captured_at=100)
             result = self.evaluate(snapshot=snap, scenario=s)
             self.assertEqual(result.historical_status, r.status)
@@ -114,14 +143,14 @@ class ReappraisalTests(unittest.TestCase):
             EvidenceSnapshot.capture(self.scenario, self.result, self.context, captured_at=100)
         mutated = replace(self.scenario, mutation="disable_authorization_gate")
         with self.assertRaisesRegex(ValueError, "weakened"):
-            EvidenceSnapshot.capture(mutated, HarnessRunner().run(mutated),
+            EvidenceSnapshot.capture(mutated, HarnessRunner().run(mutated, observed_at=100),
                                      self.context, captured_at=100)
 
     def test_capture_rejects_inconsistent_summary_and_non_synthetic_evidence(self):
         self.result.status = "unknown"
         with self.assertRaisesRegex(ValueError, "conflicts"):
             EvidenceSnapshot.capture(self.scenario, self.result, self.context, captured_at=100)
-        self.result = HarnessRunner().run(self.scenario)
+        self.result = HarnessRunner().run(self.scenario, observed_at=100)
         self.result.observations[0] = replace(
             self.result.observations[0], evidence_class=EvidenceClass.HOSTED_LIVE)
         with self.assertRaisesRegex(ValueError, "synthetic"):

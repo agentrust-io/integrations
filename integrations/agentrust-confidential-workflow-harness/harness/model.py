@@ -1,5 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass, field, asdict
+import hashlib
+import json
 from enum import Enum
 from typing import Any
 
@@ -50,6 +52,11 @@ class Scenario:
     waiting_on_release: str | None = None
     inputs: dict[str, Any] = field(default_factory=dict)
 
+    def digest(self) -> str:
+        raw = json.dumps(asdict(self), sort_keys=True, separators=(",", ":"),
+                         allow_nan=False).encode("utf-8")
+        return "sha256:" + hashlib.sha256(raw).hexdigest()
+
 @dataclass
 class RunResult:
     scenario_id: str
@@ -62,6 +69,9 @@ class RunResult:
     blocked: list[str]
     limitations: list[str]
     package_versions: dict[str, str] = field(default_factory=dict)
+
+    scenario_digest: str | None = None
+    observed_at: int | None = None
 
     def to_dict(self) -> dict[str, Any]:
         d = asdict(self)
