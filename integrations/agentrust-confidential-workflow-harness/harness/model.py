@@ -75,6 +75,10 @@ class RunResult:
 
     def to_dict(self) -> dict[str, Any]:
         d = asdict(self)
+        # Preserve serialization of legacy results without observation metadata.
+        for key in ("scenario_digest", "observed_at"):
+            if d[key] is None:
+                del d[key]
         d["observations"] = [
             {
                 **asdict(o),

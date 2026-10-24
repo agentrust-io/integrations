@@ -16,8 +16,10 @@ historical results cannot become applicable without a fresh passing run.
 Run with `HarnessRunner().run(scenario, observed_at=...)` to stamp the full
 scenario digest and original observation time. Omit `observed_at` to use the
 runner entry time. Capture rejects mismatched scenarios and missing or future
-observation times. Later capture never resets evidence age. Legacy results
-without these fields require a fresh run.
+observation times. Later capture never resets evidence age. Legacy serialized results may omit both fields; the result schema requires
+them together when either is supplied. Null values and partial metadata are
+invalid. Legacy results without both fields remain readable but cannot be
+retained for reappraisal: they require a fresh run.
 
 Use `EvidenceSnapshot.capture(scenario, result, context, captured_at=...)`, then
 `appraise(snapshot, scenario, current_context, evaluated_at=...,
@@ -56,6 +58,7 @@ attestation, or completion of the full software milestone.
 ## Reproduce
 
 ```bash
+python -m pip install --require-hashes -r ../../requirements/validate.txt
 python -m unittest discover -s tests -v
 ```
 

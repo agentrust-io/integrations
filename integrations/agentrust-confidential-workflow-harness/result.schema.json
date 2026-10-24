@@ -15,8 +15,21 @@
     "limitations",
     "package_versions"
   ],
+  "dependentRequired": {
+    "scenario_digest": ["observed_at"],
+    "observed_at": ["scenario_digest"]
+  },
   "properties": {
     "scenario_id": {"type": "string"},
+    "scenario_digest": {
+      "type": "string", "pattern": "^sha256:[0-9a-f]{64}$",
+      "minLength": 71, "maxLength": 71,
+      "description": "Full scenario identity fixed before execution; not authentication."
+    },
+    "observed_at": {
+      "type": "integer", "minimum": 0,
+      "description": "Original observation time in UTC Unix seconds, not capture time."
+    },
     "transaction_id": {"type": "string"},
     "claim": {"type": "string"},
     "status": {"enum": ["passed", "refused", "unknown", "incomplete"]},
