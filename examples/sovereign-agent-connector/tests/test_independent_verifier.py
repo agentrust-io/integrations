@@ -86,3 +86,56 @@ def test_independent_verifier_cli_reports_malformed_bundle_as_fail(
 
     assert code == 1
     assert capsys.readouterr().err.startswith("FAIL:")
+
+
+def test_independent_verifier_rejects_padded_mve1_signatures() -> None:
+    bundle = copy.deepcopy(load_bundle())
+    anchors = load_anchors()
+    placement = bundle["base_bundle"]["placement_assertion"]
+    trusted_key = anchors["base"]["placement_operator"]
+    MODULE.verify_ed25519(placement, trusted_key)
+
+    placement["signature"] = placement["signature"] + "="
+    with pytest.raises(MODULE.VerificationError):
+        MODULE.verify_ed25519(placement, trusted_key)
+    with pytest.raises(MODULE.VerificationError):
+        MODULE.verify_live(bundle, anchors)
+
+
+@pytest.mark.parametrize("raw_len", [32, 63, 65])
+def test_independent_verifier_rejects_wrong_length_signature(raw_len: int) -> None:
+    import base64
+
+    bundle = copy.deepcopy(load_bundle())
+    anchors = load_anchors()
+    placement = bundle["base_bundle"]["placement_assertion"]
+    trusted_key = anchors["base"]["placement_operator"]
+    MODULE.verify_ed25519(placement, trusted_key)
+
+    placement["signature"] = (
+        base64.urlsafe_b64encode(b"\x02" * raw_len).rstrip(b"=").decode("ascii")
+    )
+    with pytest.raises(MODULE.VerificationError):
+        MODULE.verify_ed25519(placement, trusted_key)
+
+
+@pytest.mark.parametrize(
+    "bad_key_fn",
+    [
+        lambda k: k.upper(),
+        lambda k: " " + k,
+        lambda k: k[:62],
+        lambda k: "zz" * 32,
+    ],
+)
+def test_independent_verifier_rejects_malformed_trusted_key(bad_key_fn) -> None:
+    bundle = copy.deepcopy(load_bundle())
+    anchors = load_anchors()
+    placement = bundle["base_bundle"]["placement_assertion"]
+    trusted_key = anchors["base"]["placement_operator"]
+    MODULE.verify_ed25519(placement, trusted_key)
+
+    bad_key = bad_key_fn(trusted_key)
+    mutated = {**placement, "issuer_key": bad_key}
+    with pytest.raises(MODULE.VerificationError):
+        MODULE.verify_ed25519(mutated, bad_key)
