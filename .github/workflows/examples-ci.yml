@@ -249,7 +249,7 @@ jobs:
         # from PyPI, which is what makes them a check on the release.
         run: |
           python -m pip install --require-hashes -r ../requirements/wcm-harness.txt
-          python -m pip install "weight-custody-manifest[model-signing]>=0.27.0"
+          python -m pip install "weight-custody-manifest[model-signing]>=0.27.0" pyOpenSSL
 
       - name: Run every offline demo and the unit tests
         run: python run_demos.py
