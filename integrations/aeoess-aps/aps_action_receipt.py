@@ -217,9 +217,18 @@ def verify_aps_action_receipt(
         append a descriptor to a published receipt without changing its
         ``receipt_id``.
     """
-    if reference_time.tzinfo is None or reference_time.utcoffset() is None:
+    if (
+        not isinstance(reference_time, datetime)
+        or reference_time.tzinfo is None
+        or reference_time.utcoffset() is None
+    ):
         raise ValueError("reference_time must be timezone aware")
-    if max_age_seconds < 0 or clock_skew_seconds < 0:
+    if (
+        type(max_age_seconds) is not int
+        or type(clock_skew_seconds) is not int
+        or max_age_seconds < 0
+        or clock_skew_seconds < 0
+    ):
         raise ValueError("max_age_seconds and clock_skew_seconds must be non-negative")
     if not isinstance(receipt, dict):
         raise TypeError("receipt must be a dict")
@@ -318,7 +327,7 @@ def verify_aps_action_receipt(
             if recomputed != receipt["action_ref"]:
                 checks["action_binding"] = FAIL
                 reasons.append("action_ref_mismatch")
-            elif action["agent_id"] != receipt["subject_agent"]:
+            elif not isinstance(action, dict) or action.get("agent_id") != receipt["subject_agent"]:
                 checks["action_binding"] = FAIL
                 reasons.append("action_agent_mismatch")
             else:
