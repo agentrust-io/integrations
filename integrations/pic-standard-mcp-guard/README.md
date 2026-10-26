@@ -66,7 +66,7 @@ From the repository root of a fresh clone, with Python 3.11 (CI also runs the
 same lock on Python 3.12 and 3.13):
 
 ```bash
-python -m venv .venv
+python3 -m venv .venv
 .venv/bin/python -m pip install --require-hashes -r requirements/pic-standard-mcp-guard-fixed.txt
 .venv/bin/python -m pip check
 .venv/bin/python -m pip install --no-deps -e integrations/pic-standard-mcp-guard
@@ -76,7 +76,8 @@ python -m venv .venv
 .venv/bin/trace-tests verify --record trust-record.json --level 0
 ```
 
-On Windows, use `.venv\Scripts\` in place of `.venv/bin/`.
+On Windows, create the environment with `py -3.11 -m venv .venv` and use
+`.venv\Scripts\` in place of `.venv/bin/`.
 
 Expected:
 
