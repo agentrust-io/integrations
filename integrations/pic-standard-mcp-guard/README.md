@@ -56,6 +56,40 @@ fresh temporary sandbox, declared `impact: irreversible`) through `guard_mcp_too
 hook, observes that the tool actually ran, signs a Level 0 Trust Record, and
 self-verifies it before writing. All keys are deterministic Ed25519 TEST keys.
 
+## Reproduce from the fixed lock
+
+This is the exact procedure for evaluating this integration. Runtime and test
+dependencies are installed from the committed hash-locked requirements, and the
+integration is then installed with `--no-deps`.
+
+From the repository root of a fresh clone, with Python 3.11 (CI also runs the
+same lock on Python 3.12 and 3.13):
+
+```bash
+python -m venv .venv
+.venv/bin/python -m pip install --require-hashes -r requirements/pic-standard-mcp-guard-fixed.txt
+.venv/bin/python -m pip check
+.venv/bin/python -m pip install --no-deps -e integrations/pic-standard-mcp-guard
+.venv/bin/python -m pip check
+.venv/bin/python -m pytest integrations/pic-standard-mcp-guard/tests -q
+.venv/bin/python integrations/pic-standard-mcp-guard/examples/emit_record.py --out trust-record.json
+.venv/bin/trace-tests verify --record trust-record.json --level 0
+```
+
+On Windows, use `.venv\Scripts\` in place of `.venv/bin/`.
+
+Expected:
+
+- both `pip check` runs report no broken requirements;
+- pytest reports `157 passed`;
+- `emit_record.py` prints
+  `wrote trust-record.json (status=record-emitted, pic_decision=allowed)`;
+- `trace-tests verify` reports `Result: PASS  (15 checks, 4 skipped)`.
+
+The fixed lock pins `pic-standard` 0.9.1, `agentrust-trace` 0.11.0,
+`agentrust-trace-adapters` 0.2.0, and `agentrust-trace-tests` 0.6.2.
+All four are released on PyPI.
+
 ## What is verified
 
 - Missing, empty, or `None` `__pic_request_id` is rejected by the coordinator before
