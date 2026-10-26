@@ -1,7 +1,7 @@
 # Evidence-driven release gate: composed first-party SOFTWARE federation
 
-**Date:** October 16, 2026  
-**Scope:** AgenTrust integrations #199, Frequency two-host software laboratory  
+**Date:** October 16, 2026
+**Scope:** AgenTrust integrations #199, Frequency two-host software laboratory
 **Decision:** **Software integration pilot PASS; full independently accepted
 confidential workflow gate remains OPEN.**
 

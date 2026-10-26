@@ -7,7 +7,7 @@ description: >-
   Deterministic acceptance harness for boundary-separated confidential workflow
   evidence, negative cases, and gate mutation proofs.
 maintainer:
-  github: altrudev
+  github: dinakarjs
 repository: https://github.com/agentrust-io/integrations
 license: Apache-2.0
 tier: community
@@ -16,4 +16,4 @@ marketplace:
   mark: CWH
   keywords: [confidentiality, acceptance, harness, policy, evidence, mutation]
 tested_against:
-  cmcp-runtime: "0.5.0"
+  cmcp-runtime: "0.7.0"

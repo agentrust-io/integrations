@@ -32,6 +32,12 @@ The released component and bounded live-peer experiments use:
 - `cmcp-runtime==0.7.0`
 - `ca2a-runtime==0.4.0`
 
+The manifest's `tested_against` records the bounded released-package software
+run using cMCP 0.7.0 above; it does not re-date the historical two-host captures.
+Srinivasa Dinakar Jainti (`@dinakarjs`) maintains this successor following the
+requested takeover of #330; the original contributor and capture attribution
+remain in their existing records.
+
 Protocol/API changes remain in the owning repositories. Any scenario that needs
 an unreleased surface must carry `waiting_on_release`; a blocked required case
 makes the overall result `incomplete`.
