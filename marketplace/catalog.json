@@ -1,6 +1,6 @@
 {
   "catalog_version": 1,
-  "count": 49,
+  "count": 50,
   "integrations": [
     {
       "name": "Claude Code",
@@ -812,7 +812,7 @@
       "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/pic-standard-mcp-guard",
       "homepage": "https://github.com/pic-standard/pic-standard",
       "repository": "https://github.com/agentrust-io/integrations",
-      "tier": "community",
+      "tier": "verified",
       "stack": [
         "TRACE"
       ],
