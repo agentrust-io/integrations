@@ -5,6 +5,8 @@ import json
 from pathlib import Path
 import urllib.request
 
+from proofable_fetch import PINS as FETCH_PINS, PUBLICATION as FETCH_PUBLICATION, SOURCE_URL as FETCH_SOURCE_URL
+
 PROOFABLE = '9851059900e29ba701bb0f4df2bf89a2107f430c'
 HISTORICAL_PROOFABLE = '3a45f026fd0c06b9d1d411c053597584b6b1c3dc'
 MINTID = 'b678e5cd6b5736e1795fd18d497fd8e501272dcd'
@@ -22,10 +24,15 @@ def fetch(out):
     for record in RECORDS:
         for suffix in ['.jsonl', '.md', '.manifest.json']:
             files['mintid/' + record + suffix] = f'https://gitlab.com/mintid/mintid/-/raw/{MINTID}/test-harness/trace/records/{record}{suffix}'
-    lock = {'proofable_docs_commit': PROOFABLE, 'mintid_public_commit': MINTID, 'files': []}
+    for name in FETCH_PINS:
+        files['proofable-fetch/' + name] = FETCH_SOURCE_URL + '/' + name
+    lock = {'proofable_docs_commit': PROOFABLE, 'mintid_public_commit': MINTID,
+            'proofable_fetch_docs_commit': FETCH_PUBLICATION, 'files': []}
     for name, url in files.items():
         with urllib.request.urlopen(url, timeout=60) as response:
             content = response.read()
+        if name.startswith('proofable-fetch/') and hashlib.sha256(content).hexdigest() != FETCH_PINS[Path(name).name]:
+            raise ValueError('Pinned Proofable fetch bytes changed: ' + name)
         path = out / name
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(content)
