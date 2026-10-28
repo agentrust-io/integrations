@@ -24,6 +24,7 @@ _ADAPTER_URI = (
     "https://github.com/agentrust-io/integrations/tree/main/integrations/openshell"
 )
 _MODES = {"enforce", "advisory", "silent"}
+_LIMIT = 2**53 - 1
 
 
 def _canonical_json(value: Any) -> bytes:
@@ -172,9 +173,15 @@ def build_transcript(
     """Build the canonical transcript and return its bytes and action count."""
     if not sandbox_id or not sandbox_id.strip():
         raise MissingEvidence("sandbox_id is required to correlate OpenShell and ACS evidence")
-    if not capture_complete:
+    if type(capture_complete) is not bool or not capture_complete:
         raise MissingEvidence("capture is incomplete; refusing to present a partial log as a transcript")
-    if capture_start < 0 or capture_end < capture_start:
+    if (
+        type(capture_start) is not int
+        or type(capture_end) is not int
+        or capture_start < 0
+        or capture_end < capture_start
+        or capture_end > _LIMIT
+    ):
         raise ValueError("capture_start and capture_end must be ordered Unix milliseconds")
     if not openshell_version or not openshell_version.strip():
         raise MissingEvidence("openshell_version is required to validate OCSF provenance")
