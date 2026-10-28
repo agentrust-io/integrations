@@ -69,12 +69,12 @@ TRACE only works as a standard if it is genuinely neutral. Integrations are list
 | [LangChain](integrations/langchain/) | agentrust-io | trace | verified |
 | [SOVP](integrations/litzki-systems-sovp/) | Litzki Systems | trace | verified |
 | [LlamaIndex](integrations/llamaindex/) | agentrust-io | trace | verified |
-| [Nobulex](integrations/nobulex/) | Nobulex | trace | verified |
 | [OntoGuard Decision Authorization](integrations/ontoguard-decision-authorization/) | OntoGuard AI | trace | verified |
 | [OpenAI Agents SDK](integrations/openai-agents/) | agentrust-io | trace | verified |
 | [OpenShell TRACE Adapter](integrations/openshell/) | agentrust-io | trace | community |
 | [OpenTelemetry GenAI](integrations/otel-genai/) | agentrust-io | trace | community |
 | [Parmana](integrations/parmana-server/) | Parmana Systems | trace | verified |
+| [PIC Standard MCP Guard](integrations/pic-standard-mcp-guard/) | PIC Standard | trace | community |
 | [Observed-effect references](integrations/probityai-observed-effect/) | probityai | trace | community |
 | [ramen-ai cMCP Adapter](integrations/ramen-ai-cmcp/) | ramen-ai | cmcp, trace | verified |
 | [SAGE AgenTrust Bridge](integrations/sage-agenttrust/) | SAGE | cmcp, trace | community |
