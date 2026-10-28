@@ -629,3 +629,23 @@ def test_a_key_file_that_does_not_decode_is_reported_by_error_class_only(tmp_pat
     assert x.main([str(EX / "01-trust-record.json"), "--jwk", str(p), "--now", str(AT_ISSUE)]) == 1
     out = json.loads(capsys.readouterr().out)
     assert out["status"] == "no-key" and out["reason"] == "pinned key file: UnicodeDecodeError"
+
+
+def test_is_ed25519_jwk_and_load_json_reject_private_params_non_canonical_b64_and_duplicate_keys(
+    tmp_path,
+):
+    for param in ("d", "p", "q", "dp", "dq", "qi", "oth", "k"):
+        assert not x.is_ed25519_jwk({**JWK, param: "secret"})
+    assert not x.is_ed25519_jwk({**JWK, "x": JWK["x"] + "="})
+    assert not x.is_ed25519_jwk({**JWK, "x": "A" * 42 + "B"})
+    for bad_now in (True, False, -1, 1.5, "100"):
+        with pytest.raises(ValueError):
+            x.Instant(bad_now)  # type: ignore[arg-type]
+    dup = tmp_path / "dup.json"
+    dup.write_text('{"a": 1, "a": 2}', encoding="utf-8")
+    val, err = x.load_json(str(dup))
+    assert val is None and err is not None
+    nan_f = tmp_path / "nan.json"
+    nan_f.write_text('{"a": NaN}', encoding="utf-8")
+    val, err = x.load_json(str(nan_f))
+    assert val is None and err is not None
