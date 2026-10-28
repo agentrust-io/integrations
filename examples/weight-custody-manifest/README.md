@@ -15,7 +15,7 @@ For a public open-weight model, base-weight confidentiality is theater (anyone c
 ```bash
 git clone https://github.com/agentrust-io/integrations.git
 cd integrations/examples/weight-custody-manifest
-pip install -r requirements.txt      # weight-custody-manifest>=0.21.0, Python 3.11+
+pip install -r requirements-model-signing.txt  # full offline suite, Python 3.11+
 ```
 
 The offline demos need nothing else. `real_open_model.py` needs run-local extras (below).
@@ -81,7 +81,7 @@ The same machinery, two trust settings. **Closed** weights (a frontier model dep
 
 ```bash
 python closed_model_e2e.py                             # any of the offline examples
-pip install -r requirements-model-signing.txt          # for provenance_model_signing.py
+python provenance_model_signing.py                     # model-signing interop
 pip install -r requirements-infer.txt                  # for real_open_model.py
 python real_open_model.py
 ```

@@ -1,0 +1,17 @@
+# Compile with:
+#   uv pip compile requirements/pic-standard-mcp-guard-fixed.in --generate-hashes --universal \
+#     --python-version 3.11 -o requirements/pic-standard-mcp-guard-fixed.txt
+# The fixed job in .github/workflows/pic-standard-mcp-guard-conformance.yml
+# installs this exact package set. The four pinned packages are the released
+# versions exercised by the maintained adapter. The two agentrust-io pins must
+# equal tested_against in integrations/pic-standard-mcp-guard/integration.yaml.
+# rfc8785, pytest, and packaging are the integration's direct runtime and test
+# dependencies, which the --no-deps editable install does not pull in.
+# The floating job remains unpinned on purpose for drift detection.
+pic-standard[crypto]==0.9.1
+agentrust-trace==0.11.0
+agentrust-trace-adapters==0.2.0
+agentrust-trace-tests==0.6.2
+rfc8785
+pytest
+packaging>=24
