@@ -6,7 +6,7 @@ import nox
 
 
 nox.options.default_venv_backend = "venv"
-nox.options.sessions = ["capture_core", "trace_adapters", "capture_engines", "framework_adapters", "openai_agents_adapter", "google_adk_adapter", "shadow_ai", "wcm_integrations"]
+nox.options.sessions = ["capture_core", "trace_adapters", "capture_engines", "framework_adapters", "openai_agents_adapter", "google_adk_adapter", "shadow_ai", "shadow_ai_cmcp", "wcm_integrations"]
 
 
 def pytest(session: nox.Session, *paths: str) -> None:
@@ -89,6 +89,17 @@ def google_adk_adapter(session: nox.Session) -> None:
 def shadow_ai(session: nox.Session) -> None:
     session.install("pytest>=8", "pyyaml")
     session.env["PYTHONPATH"] = "shadow-ai/src"
+    pytest(session, "shadow-ai/tests")
+
+
+@nox.session(python="3.12")
+@nox.parametrize("cmcp_version", ["0.2.0", "0.7.0"])
+def shadow_ai_cmcp(session: nox.Session, cmcp_version: str) -> None:
+    """Published cMCP audit APIs only; these modules use the standard library."""
+    session.install("--require-hashes", "-r", "requirements/validate.txt")
+    session.install("--no-deps", f"cmcp-runtime=={cmcp_version}")
+    session.env["PYTHONPATH"] = "shadow-ai/src"
+    session.env["SHADOW_AI_REQUIRE_CMCP"] = "1"
     pytest(session, "shadow-ai/tests")
 
 

@@ -25,7 +25,7 @@ to produce durable evidence:
 2. **Scope denied, the same motion out of scope:** the agent requests the same
    in-envelope motion as the authorized path (the same approved zone and
    in-limit speed, a fresh valid safety token) but under an undeclared workflow.
-   cMCP denies it on scope before the controller is consulted, so the safety
+   cMCP denies it on scope before the motion is forwarded, so the safety
    token is never checked. The only difference from the authorized path is the
    workflow scope, not the motion or its safety: the trust layer withholds the
    action because it is outside the agent's declared purpose.
@@ -131,20 +131,28 @@ or agent identity.
 
 ## Run it
 
+For a single-terminal walkthrough, use the [presenter guide](PRESENTING.md).
+It starts and stops its own local services, pauses at five explicit steps,
+measures motion forwarding, verifies saved evidence after shutdown, and rejects
+an altered copy. It needs no frontend, model API, robot, or cloud account.
+The original three-path runner below remains available for the safety-rejection
+scenario as well.
+
 Prerequisites:
 
 - Python 3.11 or newer
 - Git
 
-The project is a developer preview. `requirements.txt` pins the TRACE commit
-and a cMCP external-evidence PR commit used for this reproducible example
-until the summit release stack is available from PyPI.
+The project is a developer preview using released PyPI packages.
+`requirements.txt` declares supported dependency ranges;
+`requirements-presenter.txt` locks the complete Python 3.11 environment with
+package hashes for reproducible rehearsals.
 
 ```bash
 cd industrial-embodied-ai
 python -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+python -m pip install --require-hashes -r requirements-presenter.txt
 ```
 
 Start the mock controller:

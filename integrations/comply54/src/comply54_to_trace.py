@@ -138,7 +138,7 @@ def comply54_to_trace_payload(result: dict, agent_id: str, model: str, key=None)
         "appraisal": {
             "status": appraisal_status,
             "verifier": "https://github.com/comply54/comply54",
-            "policy_ref": f"comply54-v0.1.0/{','.join(pack_ids)}",
+            "policy_ref": f"urn:comply54:v0.1.0:{','.join(pack_ids)}",
         },
 
         # ── Transparency (no log anchor at Level 0) ───────────────────────────

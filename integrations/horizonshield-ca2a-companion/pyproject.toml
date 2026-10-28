@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "horizonshield-ca2a-companion-integration"
+version = "0.1.0"
+description = "Runs the MUSUBI companion for cA2A (profile v0) against released ca2a-runtime"
+requires-python = ">=3.11"
+license = "MIT"
+dependencies = [
+  # Exact pin, not a floor. companion_v0.py calls the private
+  # ca2a_runtime.delegation.credential._check_revocation, which can change in
+  # any release without notice. agentrust-io/ca2a#263 asks for a public call;
+  # when it ships, this entry switches to it and the pin is dropped.
+  "ca2a-runtime==0.4.0",
+  # settle_v1_1.py (Bitcoin header view and anchor proof), shipped byte for
+  # byte from horizon-shield and loaded with nenrin_verify.musubi.load.
+  "nenrin-verify==0.5.6",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
+
+[tool.setuptools]
+py-modules = []
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

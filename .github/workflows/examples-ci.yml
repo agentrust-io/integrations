@@ -103,7 +103,7 @@ jobs:
         with:
           python-version: "3.11"
           cache: "pip"
-          cache-dependency-path: examples/industrial-embodied-ai/requirements.txt
+          cache-dependency-path: examples/industrial-embodied-ai/requirements-presenter.txt
 
       - name: Install controller test dependencies
         run: python -m pip install --require-hashes -r ../requirements/controller-tests.txt
@@ -113,11 +113,15 @@ jobs:
 
       - name: Install artifact validation dependencies
         if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
-        run: python -m pip install -r requirements.txt
+        run: python -m pip install --require-hashes -r requirements-presenter.txt
 
       - name: Verify committed evidence artifacts
         if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
         run: python validate_artifacts.py
+
+      - name: Rehearse the presenter demo and verify saved evidence offline
+        if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+        run: python -m unittest discover -s tests -p 'live_*.py' -v
 
   healthcare:
     runs-on: ubuntu-latest
@@ -245,7 +249,9 @@ jobs:
         # from PyPI, which is what makes them a check on the release.
         run: |
           python -m pip install --require-hashes -r ../requirements/wcm-harness.txt
-          python -m pip install "weight-custody-manifest[model-signing]>=0.27.0"
+          # model-signing 1.1.1 imports OpenSSL without declaring pyOpenSSL, which
+          # sigstore 4.5.1 stopped pulling in (sigstore/model-transparency#685).
+          python -m pip install "weight-custody-manifest[model-signing]>=0.27.0" pyOpenSSL
 
       - name: Run every offline demo and the unit tests
         run: python run_demos.py
