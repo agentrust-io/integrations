@@ -81,8 +81,9 @@ class SourceSystem:
                 "'self' is not accepted here: a runtime producing its own record does not "
                 "need an adapter."
             )
-        if self.ingested_at is not None and not (
-            1_700_000_000 <= self.ingested_at < 4_000_000_000
+        if self.ingested_at is not None and (
+            type(self.ingested_at) is not int
+            or not (1_700_000_000 <= self.ingested_at < 4_000_000_000)
         ):
             # Milliseconds are the common mistake and they pass a lower bound
             # alone, which is why there is an upper one. A record timestamped in
