@@ -68,8 +68,9 @@ passes **8/8**. These are exact tested versions, not a claim that every later
 release is compatible.
 
 The AgenTrust maintainers reproduced release 0.1.1 independently on 2026-09-23
-in a fresh Windows Python 3.12 environment. Release 0.2.0 has not yet been
-reproduced by a maintainer.
+in a fresh Windows Python 3.12 environment, and release 0.2.0 on 2026-10-12 in
+the same setup, including an independent recomputation of the `references`
+digest (review on #295).
 
 `trace-tests verify` checks the signature against the key the record carries in
 `cnf.jwk`, so a record signed with any key passes Level 0. A relying party
