@@ -48,11 +48,31 @@ was made against, and `verified_at_overridden`, so a historical verdict is never
 reported it; this tool passes no revocation bundle or store, so it reports `no_check_performed`, which is not an
 affirming appraisal (section 3.2.3). A stale or tampered record is `invalid`, with the reason.
 
+## Approval-outcome references: the crosswalk and fixtures
+
+What an `approval-outcome` reference resolves to, and what a relying party may conclude from it, is in
+[`CROSSWALK.md`](CROSSWALK.md), with eight records and seven receipt bundles in
+[`examples/approval-outcome/`](examples/approval-outcome/) (one case per way the composition can fail, each
+recomputed from the committed bytes by `tests/test_approval_outcome_fixtures.py`) and the registry's offline receipt
+verifier vendored as [`verify_receipt.py`](verify_receipt.py) (MIT; standard library only). The verifier binds the
+passkey's signed ask to the ceremony the sealed record and the registry-signed binding commit to, and its
+`--require-approval` mode refuses to call an approval verified when the approval evidence is absent; both are
+covered by `tests/test_verify_receipt_regressions.py`.
+
+What this integration does **not** ship: a relying-party verdict in code. The composition logic lives in the fixture
+test as the worked example; a packaged `assess()` with structured verifier results, identity taken only from the
+signed binding, and an authenticated amendment scope is under separate assessment and follows in this directory
+once settled. Until then `decision.amendment` is informational, as the crosswalk's boundary says.
+
+Adopters: xChk (in.xchk.io) mints the Trust Record per run and points at its sealed receipts as `approval-outcome`
+references; the registry is the only relying party so far (software-only, Level 0).
+
 ## Run it
 
 ```
 pip install -e "integrations/xchk-registry[test]" agentrust-trace-tests
 pytest integrations/xchk-registry/tests -q                          # offline; REGISTRY_LIVE=1 adds one live key fetch
+python integrations/xchk-registry/verify_receipt.py integrations/xchk-registry/examples/approval-outcome/01-approval-confirmed.bundle.json --require-approval
 trace-tests verify --record integrations/xchk-registry/examples/01-trust-record.json --level 0 --max-age 315360000
 ```
 
