@@ -270,3 +270,38 @@ def test_malformed_signed_jsonl(producer):
     ).encode()
     with pytest.raises(BundleError, match="JSON"):
         check(producer, (raw, sig, files))
+
+
+def test_non_canonical_base64_signature_and_boolean_capture_bounds_rejected(producer):
+    from agentrust_trace_adapters.openshell import MissingEvidence, build_transcript
+
+    raw, sig, files = producer[0]()
+    envelope = json.loads(sig)
+    # 64 zero bytes with non-zero trailing padding bits before '==' ('B==' instead of 'A==')
+    envelope["signature"] = "A" * 85 + "B=="
+    with pytest.raises(BundleError, match="signature"):
+        check(producer, (raw, json.dumps(envelope).encode(), files))
+
+    with pytest.raises(ValueError, match="capture_start"):
+        build_transcript(
+            sandbox_id="sandbox-a",
+            policy_bundle_hash="sha256:" + "a" * 64,
+            ocsf_jsonl=files["events.ocsf.jsonl"],
+            acs_decisions=[{"allow": True}],
+            capture_start=False,
+            capture_end=True,
+            capture_complete=True,
+            openshell_version="synthetic",
+        )
+    with pytest.raises(MissingEvidence, match="incomplete"):
+        build_transcript(
+            sandbox_id="sandbox-a",
+            policy_bundle_hash="sha256:" + "a" * 64,
+            ocsf_jsonl=files["events.ocsf.jsonl"],
+            acs_decisions=[{"allow": True}],
+            capture_start=100,
+            capture_end=200,
+            capture_complete="yes",  # type: ignore[arg-type]
+            openshell_version="synthetic",
+        )
+

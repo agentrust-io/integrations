@@ -15,7 +15,7 @@ For a public open-weight model, base-weight confidentiality is theater (anyone c
 ```bash
 git clone https://github.com/agentrust-io/integrations.git
 cd integrations/examples/weight-custody-manifest
-pip install -r requirements-model-signing.txt  # full offline suite, Python 3.11+
+pip install -r requirements-model-signing.txt  # all offline demos, Python 3.11+
 ```
 
 The offline demos need nothing else. `real_open_model.py` needs run-local extras (below).
@@ -93,6 +93,7 @@ python real_open_model.py
 `run_demos.py` runs every offline example and the unit tests, and must exit 0.
 
 ```bash
+pip install pytest            # required for the unit-test phase
 python run_demos.py          # run everything
 python run_demos.py --list   # show the plan, including what is skipped and why
 ```
