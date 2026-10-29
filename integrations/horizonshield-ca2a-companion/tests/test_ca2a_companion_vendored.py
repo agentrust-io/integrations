@@ -1,9 +1,14 @@
-"""The vendored files are the horizon-shield files, and the vectors rebuild.
+"""The vendored files match their pinned SHA-256 digests, and the vectors rebuild.
 
-SOURCE_COMMIT is the horizon-shield commit the files were copied from, at
-workers/hs-ledger/nenrin/musubi-v0/ca2a-companion-v0/. The rebuild runs
-gen_vectors.py in a temporary directory: it signs every credential and
-revocation with ca2a-runtime and must reproduce vectors.json byte for byte.
+SOURCE_COMMIT is the horizon-shield commit the files were sourced from, at
+workers/hs-ledger/nenrin/musubi-v0/ca2a-companion-v0/. gen_vectors.py and
+vectors/vectors.json are byte-identical to SOURCE_COMMIT; companion_v0.py is
+derived from SOURCE_COMMIT (upstream SHA-256
+a6e2b2c9d920eda65723e1d863e8e108df642c6b3ece8b40499726bfc425a781) with a
+local defense-in-depth request_sha256 type/hex validation guard in settle.
+The rebuild runs gen_vectors.py in a temporary directory: it signs every
+credential and revocation with ca2a-runtime and must reproduce vectors.json
+byte for byte.
 """
 
 from __future__ import annotations
@@ -17,8 +22,13 @@ import sys
 from hs_ca2a_support import MUSUBI_DIRS, VECTORS_PATH, VENDOR
 
 SOURCE_COMMIT = "05b4924254ebf3c7a5c4523bb2f2fd74ff22b61a"
+UPSTREAM_COMPANION_SHA256 = (
+    "a6e2b2c9d920eda65723e1d863e8e108df642c6b3ece8b40499726bfc425a781"
+)
 VENDORED_SHA256 = {
-    "companion_v0.py": "a6e2b2c9d920eda65723e1d863e8e108df642c6b3ece8b40499726bfc425a781",
+    # Derived from SOURCE_COMMIT (UPSTREAM_COMPANION_SHA256) with local
+    # defense-in-depth request_sha256 type/hex validation guard in settle.
+    "companion_v0.py": "fc53665ce6dfd7f763299ff0c2ab3e8f91cc8698ce7e7a327021f93dc77c9627",
     "gen_vectors.py": "2904a9310bb8f32d9efd808e1fea0a9cb38d7145c54002b684ebd7946adac005",
     "vectors/vectors.json": "4b4e2362ab6dda3743e5ba1cd76285a0872344f40086bc95b18b3bd34490d2a2",
 }
