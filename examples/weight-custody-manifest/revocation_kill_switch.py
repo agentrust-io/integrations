@@ -133,8 +133,22 @@ def main() -> int:
     print("new release after recall:", denied.released, " (refused)")
     reason = next((c.detail for c in denied.failures if c.name == "attestation_revocation"), None)
     print("why                     :", reason)
+    failed_checks = {c.name for c in denied.failures}
     if denied.released or reason is None:
         raise RuntimeError("expected the release to be refused on attestation_revocation")
+    if "manifest_authorized" in failed_checks:
+        # Checks are independent, not short-circuited: if revoked_kbs's
+        # manifest pin were ever dropped, attestation_revocation would still
+        # fail and the check above would still pass, even though the pin
+        # itself is broken. Asserting manifest_authorized passed is what
+        # actually proves this step is isolating revocation, per the comment
+        # on revoked_kbs above - and it is exactly the assertion that would
+        # have caught the original bug this PR fixes.
+        raise RuntimeError(
+            "expected manifest_authorized to pass so this step isolates "
+            "revocation; it failed too, meaning revoked_kbs's manifest pin "
+            "is broken and this is no longer demonstrating the kill switch"
+        )
 
     rule("Step 3 - The enclave already serving zeroizes at the next cadence lapse")
     later = NOW + timedelta(minutes=31)  # past the 30m window, and re-attestation now fails
