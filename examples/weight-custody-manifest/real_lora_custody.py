@@ -39,6 +39,7 @@ from wcm import (
     artifact_files,
     generate_ed25519,
     generate_transport_keypair,
+    manifest_identity,
     model_signing_digest,
     open_sealed,
     verify_manifest,
@@ -273,7 +274,13 @@ def main() -> int:
 
     transport_private, transport_public = generate_transport_keypair()
     kbs = KeyBrokerService(
-        {manifest.weights_hash: key}, require_channel_binding=True
+        {manifest.weights_hash: key},
+        require_channel_binding=True,
+        # Without this the manifest is not pinned, so verify_and_release
+        # refuses on manifest_authorized regardless of attestation and the
+        # KBS never returns a sealed key: see real_open_model.py and the
+        # other offline demos, which all pin it the same way.
+        trusted_manifest_identities=[manifest_identity(manifest)],
     )
     challenge = kbs.issue_challenge()
     evidence = SoftwareProvider().produce(
