@@ -7,7 +7,7 @@ description: >-
   authorized-intent and approval-outcome references; checks their signatures offline.
 maintainer:
   github: pavancharak
-repository: https://github.com/pavancharak/parmana
+repository: https://github.com/pavancharak/parmana-core
 homepage: https://docs.parmanasystems.com
 license: Apache-2.0
 tier: verified

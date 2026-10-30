@@ -65,15 +65,17 @@ TRACE only works as a standard if it is genuinely neutral. Integrations are list
 | [EPI Recorder](integrations/epilabs-epi-recorder/) | EPI Labs | trace, wcm | verified |
 | [EvidenceBound Core](integrations/evidencebound-core/) | EvidenceBound | trace | community |
 | [Google ADK](integrations/google-adk/) | agentrust-io | trace | verified |
+| [MUSUBI companion for cA2A](integrations/horizonshield-ca2a-companion/) | The HORIZONs Co., Ltd. | ca2a | community |
+| [MUSUBI trace terms](integrations/horizonshield-musubi-trace-terms/) | The HORIZONs Co., Ltd. | trace | community |
 | [LangChain](integrations/langchain/) | agentrust-io | trace | verified |
 | [SOVP](integrations/litzki-systems-sovp/) | Litzki Systems | trace | verified |
 | [LlamaIndex](integrations/llamaindex/) | agentrust-io | trace | verified |
-| [Nobulex](integrations/nobulex/) | Nobulex | trace | verified |
 | [OntoGuard Decision Authorization](integrations/ontoguard-decision-authorization/) | OntoGuard AI | trace | verified |
 | [OpenAI Agents SDK](integrations/openai-agents/) | agentrust-io | trace | verified |
 | [OpenShell TRACE Adapter](integrations/openshell/) | agentrust-io | trace | community |
 | [OpenTelemetry GenAI](integrations/otel-genai/) | agentrust-io | trace | community |
 | [Parmana](integrations/parmana-server/) | Parmana Systems | trace | verified |
+| [PIC Standard MCP Guard](integrations/pic-standard-mcp-guard/) | PIC Standard | trace | verified |
 | [Observed-effect references](integrations/probityai-observed-effect/) | probityai | trace | community |
 | [ramen-ai cMCP Adapter](integrations/ramen-ai-cmcp/) | ramen-ai | cmcp, trace | verified |
 | [SAGE AgenTrust Bridge](integrations/sage-agenttrust/) | SAGE | cmcp, trace | community |
@@ -93,6 +95,7 @@ TRACE only works as a standard if it is genuinely neutral. Integrations are list
 | [WCM Key Release to TRACE](integrations/wcm-trace/) | agentrust-io | wcm, trace | community |
 | [WCM Triton Repository Staging](integrations/wcm-triton/) | agentrust-io | wcm | verified |
 | [WCM Serving Guard for vLLM](integrations/wcm-vllm/) | agentrust-io | wcm | verified |
+| [xChk registry](integrations/xchk-registry/) | xChk | trace | community |
 | [agentrust-codex](plugins/agentrust-codex/) | agentrust-io | agent-manifest, trace | community |
 | [scheduled-agents](scheduled-agents/) | agentrust-io | trace | community |
 <!-- integration-index:end -->

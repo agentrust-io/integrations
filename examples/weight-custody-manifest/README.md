@@ -15,7 +15,7 @@ For a public open-weight model, base-weight confidentiality is theater (anyone c
 ```bash
 git clone https://github.com/agentrust-io/integrations.git
 cd integrations/examples/weight-custody-manifest
-pip install -r requirements.txt      # weight-custody-manifest>=0.21.0, Python 3.11+
+pip install -r requirements.txt      # weight-custody-manifest>=0.33.1, Python 3.11+
 ```
 
 The offline demos need nothing else. `real_open_model.py` needs run-local extras (below).

@@ -1,0 +1,7 @@
+# The files under vendor/ are copied byte for byte from horizon-shield, and
+# tests/test_ca2a_companion_vendored.py checks their SHA-256. They are not
+# reformatted here, so the two findings the repository gate reports in them
+# are ignored for those files only.
+[lint.per-file-ignores]
+"vendor/ca2a-companion-v0/companion_v0.py" = ["E401"]
+"vendor/ca2a-companion-v0/gen_vectors.py" = ["E401", "E741"]

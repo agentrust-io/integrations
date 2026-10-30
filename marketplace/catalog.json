@@ -1,6 +1,6 @@
 {
   "catalog_version": 1,
-  "count": 47,
+  "count": 50,
   "integrations": [
     {
       "name": "Claude Code",
@@ -640,25 +640,53 @@
       ]
     },
     {
-      "name": "Nobulex",
-      "package_name": "Nobulex",
-      "vendor": "Nobulex",
-      "description": "Emits Ed25519-signed JCS-canonical action receipts; each carries action_ref = SHA-256(JCS({agent_id, action_type, scope, timestamp_ms})) usable as TRACE external execution evidence (trace-spec #34).",
-      "path": "integrations/nobulex",
-      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/nobulex",
-      "homepage": "https://nobulex.com",
-      "repository": "https://github.com/arian-gogani/nobulex",
-      "tier": "verified",
+      "name": "MUSUBI companion for cA2A",
+      "package_name": "MUSUBI companion for cA2A",
+      "vendor": "The HORIZONs Co., Ltd.",
+      "description": "Offline verifier for a signed, Bitcoin-anchored log of cA2A revocations, use limits, execution receipts and commit-reveal items, judged with ca2a-runtime's own verify_chain.",
+      "path": "integrations/horizonshield-ca2a-companion",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/horizonshield-ca2a-companion",
+      "homepage": null,
+      "repository": "https://github.com/ogasurfproject-jpg/horizon-shield",
+      "tier": "community",
+      "stack": [
+        "cA2A"
+      ],
+      "category": "Evidence & receipts",
+      "mark": "MU",
+      "featured": null,
+      "keywords": [
+        "delegation",
+        "revocation",
+        "receipts",
+        "single-use",
+        "commit-reveal",
+        "ca2a"
+      ]
+    },
+    {
+      "name": "MUSUBI trace terms",
+      "package_name": "MUSUBI trace terms",
+      "vendor": "The HORIZONs Co., Ltd.",
+      "description": "Judges PIC/TRACE authorizations and Trust Records, read unchanged, against a contract and terms two parties signed, per call and overall: within, outside, undetermined or refused.",
+      "path": "integrations/horizonshield-musubi-trace-terms",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/horizonshield-musubi-trace-terms",
+      "homepage": null,
+      "repository": "https://github.com/ogasurfproject-jpg/horizon-shield",
+      "tier": "community",
       "stack": [
         "TRACE"
       ],
       "category": "Evidence & receipts",
-      "mark": "NX",
+      "mark": "MT",
       "featured": null,
       "keywords": [
-        "receipts",
-        "Ed25519",
-        "evidence"
+        "contract",
+        "authorization",
+        "pic-trace-bridge",
+        "trust-record",
+        "terms",
+        "counts"
       ]
     },
     {
@@ -762,7 +790,7 @@
       "path": "integrations/parmana-server",
       "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/parmana-server",
       "homepage": "https://docs.parmanasystems.com",
-      "repository": "https://github.com/pavancharak/parmana",
+      "repository": "https://github.com/pavancharak/parmana-core",
       "tier": "verified",
       "stack": [
         "TRACE"
@@ -776,6 +804,31 @@
         "refusal",
         "policy",
         "evidence"
+      ]
+    },
+    {
+      "name": "PIC Standard MCP Guard",
+      "package_name": "PIC Standard MCP Guard",
+      "vendor": "PIC Standard",
+      "description": "Uses a PIC Standard MCP pre-execution allow decision and a caller-verified post-dispatch observation to emit a signed TRACE Level 0 Trust Record linked through a detached bridge.",
+      "path": "integrations/pic-standard-mcp-guard",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/pic-standard-mcp-guard",
+      "homepage": "https://github.com/pic-standard/pic-standard",
+      "repository": "https://github.com/agentrust-io/integrations",
+      "tier": "verified",
+      "stack": [
+        "TRACE"
+      ],
+      "category": "Security & policy",
+      "mark": "PIC",
+      "featured": null,
+      "keywords": [
+        "pic",
+        "mcp",
+        "intent",
+        "policy",
+        "provenance",
+        "trace"
       ]
     },
     {
@@ -1074,6 +1127,29 @@
         "custody",
         "key-release",
         "evidence"
+      ]
+    },
+    {
+      "name": "xChk registry",
+      "package_name": "xChk registry",
+      "vendor": "xChk",
+      "description": "A software-only Level 0 Trust Record per run from an agent-licensing registry, with one approval-outcome reference per act a person was asked about.",
+      "path": "integrations/xchk-registry",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/xchk-registry",
+      "homepage": "https://in.xchk.io",
+      "repository": "https://github.com/agentrust-io/integrations",
+      "tier": "community",
+      "stack": [
+        "TRACE"
+      ],
+      "category": "Evidence & receipts",
+      "mark": "XC",
+      "featured": null,
+      "keywords": [
+        "trust-record",
+        "approval-outcome",
+        "registry",
+        "level-0"
       ]
     }
   ]

@@ -1,0 +1,26 @@
+name: xChk registry
+vendor: xChk
+integrates_with:
+  - trace
+description: >-
+  A software-only Level 0 Trust Record per run from an agent-licensing registry,
+  with one approval-outcome reference per act a person was asked about.
+maintainer:
+  github: minitru
+  email: sean@maclawran.ca
+repository: https://github.com/agentrust-io/integrations
+homepage: https://in.xchk.io
+license: Apache-2.0
+tier: community
+marketplace:
+  category: Evidence & receipts
+  mark: XC
+  keywords: [trust-record, approval-outcome, registry, level-0]
+# Role. The registry mints and signs the Trust Record: record-producer, software-only, Level 0. What an
+# approval-outcome reference resolves to, and what may be concluded from it, is a separate integration.
+trace_roles:
+  - record-producer
+trace_conformance_level: 0
+tested_against:
+  agentrust-trace: "0.11.0"
+  agentrust-trace-tests: "0.6.2"

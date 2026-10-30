@@ -68,8 +68,15 @@ def _public_key(pem: str) -> Ed25519PublicKey:
 
 
 def _verify(pem: str, signature_b64: str, message: bytes) -> bool:
-    key = _public_key(pem)
-    signature = base64.b64decode(signature_b64)
+    if not isinstance(signature_b64, str) or not signature_b64:
+        return False
+    try:
+        key = _public_key(pem)
+        signature = base64.b64decode(signature_b64.encode("ascii"), validate=True)
+    except (ValueError, TypeError):
+        return False
+    if len(signature) != 64 or base64.b64encode(signature).decode("ascii") != signature_b64:
+        return False
     try:
         key.verify(signature, message)
         return True
@@ -91,14 +98,17 @@ def verify_trust_record(record: dict[str, Any], keys: dict[str, str]) -> Check:
 
 def verify_refusal_record(record: dict[str, Any], keys: dict[str, str]) -> Check:
     """A Refusal Record: its hash, and its signature under `keys`."""
+    if not isinstance(record, dict) or not isinstance(keys, dict):
+        return Check(False, ["record and keys must be objects"])
     errors: list[str] = []
     message = canonical_serialize({k: record[k] for k in _REFUSAL_FIELDS if k in record})
     if hashlib.sha256(message).hexdigest() != record.get("refusalRecordHash"):
         errors.append("refusalRecordHash does not match the record")
-    signature = record.get("signature") or {}
+    raw_sig = record.get("signature")
+    signature = raw_sig if isinstance(raw_sig, dict) else {}
     if signature.get("algorithm") != "ed25519":
         errors.append(f"unsupported algorithm: {signature.get('algorithm')}")
-    elif signature.get("keyId") not in keys:
+    elif not isinstance(signature.get("keyId"), str) or signature.get("keyId") not in keys:
         errors.append(f"no public key for keyId {signature.get('keyId')!r}")
     elif not _verify(keys[signature["keyId"]], signature.get("value", ""), message):
         errors.append("signature does not verify")
@@ -107,13 +117,20 @@ def verify_refusal_record(record: dict[str, Any], keys: dict[str, str]) -> Check
 
 def verify_approval(approval: dict[str, Any], keys: dict[str, str]) -> Check:
     """A signed human approval: its signature over the payload."""
-    signature = approval.get("signature") or {}
+    if not isinstance(approval, dict) or not isinstance(keys, dict):
+        return Check(False, ["approval and keys must be objects"])
+    raw_sig = approval.get("signature")
+    signature = raw_sig if isinstance(raw_sig, dict) else {}
+    raw_payload = approval.get("payload")
+    payload = raw_payload if isinstance(raw_payload, dict) else {}
+    raw_issuer = payload.get("issuer")
+    issuer = raw_issuer if isinstance(raw_issuer, dict) else {}
     key_id = signature.get("keyId")
-    if key_id != approval.get("payload", {}).get("issuer", {}).get("keyId"):
+    if not isinstance(key_id, str) or key_id != issuer.get("keyId"):
         return Check(False, ["signature keyId differs from the payload's issuer keyId"])
     if key_id not in keys:
         return Check(False, [f"no public key for keyId {key_id!r}"])
-    message = canonical_serialize(approval["payload"])
+    message = canonical_serialize(payload)
     if not _verify(keys[key_id], signature.get("value", ""), message):
         return Check(False, ["signature does not verify"])
     return Check(True)

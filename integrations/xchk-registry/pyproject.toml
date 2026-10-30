@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "xchk-registry-integration"
+version = "0.2.0"
+description = "Verify a Trust Record minted by an xChk registry against the key the registry publishes"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "Apache-2.0"
+dependencies = [
+  "agentrust-trace>=0.11.0",
+]
+
+[project.optional-dependencies]
+test = ["pytest"]
+
+[tool.setuptools]
+py-modules = ["xchk_trace_record"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
