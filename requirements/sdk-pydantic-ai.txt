@@ -11,9 +11,9 @@ anyio==4.15.1 \
     #   httpx2
     #   pydantic-ai-slim
     #   pydantic-graph
-genai-prices==0.1.9 \
-    --hash=sha256:20ec774d32ec5d345510877fac415f2560bbfeb081bc4cd4e7ebce57a5503e8d \
-    --hash=sha256:3da8faa0a126e4df7be36696b90abe2be1fea8826bfcf45d39d91bc397fa9d1d
+genai-prices==0.1.13 \
+    --hash=sha256:6d2b40760a2f7f5e207bac9b98de0af80e60c58ead497872a5331a7cee610477 \
+    --hash=sha256:76c9e2dd3917fdacdf3bc562297c4591384142ea2283c477e1512fafa4e3a384
     # via pydantic-ai-slim
 griffelib==2.3.0 \
     --hash=sha256:1b8f9cd525681c26b1d6d574faa1371651e8459ca51d209684f50b8096ae06e0 \
@@ -53,7 +53,7 @@ opentelemetry-api==1.44.0 \
 opentelemetry-sdk==1.44.0 \
     --hash=sha256:cebe7f65dc12f26ead75c6064de12fd2a9052e5060c0272d402cfa203aae123b \
     --hash=sha256:df081c4c6bcfdb1211e3e86140376792643128a25f8d72d1d27675936e7e96ad
-    # via -r sdk-pydantic-ai.in
+    # via -r requirements/sdk-pydantic-ai.in
 opentelemetry-semantic-conventions==0.65b0 \
     --hash=sha256:1cacde7b0ad306f84c5ef08c3dbe1bbaf20165bba6f8bff43b670e555a086bcb \
     --hash=sha256:f9b2b81e9d5b64f11bc952075e7e9c7fb0aab075c7fd1c46d597f1b919852d60
@@ -65,10 +65,10 @@ pydantic==2.13.5 \
     #   genai-prices
     #   pydantic-ai-slim
     #   pydantic-graph
-pydantic-ai-slim==2.53.0 \
-    --hash=sha256:37539693ff944dca2ee1ad30ad3c2b5c8adfdb9f54808767098dbc5410130a9b \
-    --hash=sha256:979fb5553cc32baf9f3aaeff7a83c19d6ce6d19c0284f5cd54087bc9870b2522
-    # via -r sdk-pydantic-ai.in
+pydantic-ai-slim==2.61.0 \
+    --hash=sha256:1d1a2b651de2555c6d0e22e14716969db7cc4f7ff5bd0e06578d5fa6648be462 \
+    --hash=sha256:fe134b7fb8c65ca1e102bcd4c46bd8253866423f9a639ba7ed2341b6eb34b8f2
+    # via -r requirements/sdk-pydantic-ai.in
 pydantic-core==2.46.5 \
     --hash=sha256:013d6f3483d81e02e7c328831808f336c8596ee33b4bd4026b9ffb1e960b8942 \
     --hash=sha256:03b9666e41e35d8909852ba191a0607520f81b74eaf12ccf8737005dbb313821 \
@@ -191,9 +191,9 @@ pydantic-core==2.46.5 \
     --hash=sha256:fc8515076c11f3cfdf4fb142dcca0fe384b1230a3b5415458ac84f3e0903ec13 \
     --hash=sha256:ff218293c9c806138dca139765e3b067621be52bcd93cdc14c7711be7ddc90a9
     # via pydantic
-pydantic-graph==2.53.0 \
-    --hash=sha256:28f05d5f66f5f6b11ef8f1c263f93781271b3af77ef3b313cc51b88a2e33445a \
-    --hash=sha256:48d70fd7affe15f33773a74b9657ab9442569725d9e67263ac3a3b95de89f714
+pydantic-graph==2.61.0 \
+    --hash=sha256:30e93a073998d8bc90ef2b765a8e9b0dc443cca47eb54da78ed8a6986884752d \
+    --hash=sha256:e304dc150ffa148ce04c3b9b248d0333c639abb6812c4cf4f5bcaa9a8eec17fc
     # via pydantic-ai-slim
 truststore==0.10.4 \
     --hash=sha256:9d91bd436463ad5e4ee4aba766628dd6cd7010cf3e2461756b3303710eebc301 \

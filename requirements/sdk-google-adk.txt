@@ -29,9 +29,9 @@ attrs==26.1.0 \
     # via
     #   jsonschema
     #   referencing
-authlib==1.8.0 \
-    --hash=sha256:88aebbd9af6757e14e912d5dc007ae1dc1f3e27e3b2152ce7c552ee2c3b3c121 \
-    --hash=sha256:f3ecd5f1da737262fb53bf1a4d95c4ea1ad9dd509316587a255c99ab1838a4f0
+authlib==1.9.1 \
+    --hash=sha256:5c7d9848f47cac340f060f76ae0bc09b59f5c8e89cc1bb032d4370a0c55b5974 \
+    --hash=sha256:8b9be8b1e5174dcbf5520e984f1a22dc2edae5b6e40a61d4cedbf86b97e9e69b
     # via google-adk
 certifi==2026.10.19 \
     --hash=sha256:035c1e85572b141bf1c3a3eff0e33a8eb74917522f2559075ff8d2fea780a1ae \
@@ -373,6 +373,7 @@ cryptography==50.0.1 \
     # via
     #   agentrust-trace-tests
     #   authlib
+    #   google-adk
     #   google-auth
     #   joserfc
 distro==1.9.0 \
@@ -383,9 +384,9 @@ fastapi==0.141.1 \
     --hash=sha256:bfb91aa2d334c61cb35ba9a116fc123b3d3df31640b801cf57a7a78ec3f603b3 \
     --hash=sha256:e8822fc40db1e1858054d7a949a888695bc9bdce70139178e33bd2871a453ca1
     # via google-adk
-google-adk==2.11.0 \
-    --hash=sha256:4774e1fc7bb37727e56142e7d41e9035949ebfc876a2b15d5505969b02798bcd \
-    --hash=sha256:59258cec8d79306192bf65e0d43fa64b764f831e3b74ed3b8e6fe9df16a1e2c8
+google-adk==2.13.0 \
+    --hash=sha256:bc2389c9d41bfadd9f0c87d6bfd8d5c7eaf1c449e8906079600b8f3752ddaa88 \
+    --hash=sha256:bec4c4ee0aa3e63a2243c23365c5aef666ea539bc48c78dfbbf004dbddfc5f00
     # via -r requirements/sdk-google-adk.in
 google-auth[pyopenssl,requests]==2.57.1 \
     --hash=sha256:ab439dee60a6856412bc058f13a68eb6a59c5b81526bb89cfdcf89ce9c0a48c9 \
@@ -393,9 +394,9 @@ google-auth[pyopenssl,requests]==2.57.1 \
     # via
     #   google-adk
     #   google-genai
-google-genai==2.22.0 \
-    --hash=sha256:9fa3b5d9ddb635005d8ab2d6206fb2b3d7204b66965bbce7de13ecd1a866ebcd \
-    --hash=sha256:c514001c45470cc0a942440ae1b8215445d12bfb6c373aac94637127e1f74ec6
+google-genai==2.33.0 \
+    --hash=sha256:f3f8ab696b35caf95c222e05268740c1ccd6934257890506be73b126150d3b14 \
+    --hash=sha256:fced7f746da45264b34bcf6044a6fcdb91ebad1825e95c324ee48addb6e557ae
     # via google-adk
 graphviz==0.21 \
     --hash=sha256:20743e7183be82aaaa8ad6c93f8893c923bd6658a04c32ee115edb3c8a835f78 \
