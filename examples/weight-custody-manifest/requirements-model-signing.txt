@@ -1,0 +1,7 @@
+-r requirements.txt
+weight-custody-manifest[model-signing]>=0.33.1
+
+# model-signing 1.1.1 imports OpenSSL.crypto without declaring pyOpenSSL.
+# sigstore 4.5.1 no longer brings it in transitively. This range resolves
+# alongside WCM's cryptography 50 requirement.
+pyOpenSSL>=26.4.0,<27
