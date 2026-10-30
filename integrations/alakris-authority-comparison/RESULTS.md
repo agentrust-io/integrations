@@ -6,6 +6,8 @@ This contribution is an evidence appraiser and synthetic boundary fixture, with 
 
 ## Package checks
 
+The figures in this section describe the original 2026-10-06 run. The separate 2026-10-27 appraisal below records the current package check scope; original author and native-run reports remain unchanged.
+
 - Environment: isolated Frankfurt Linux task checkout, Python 3.12.15.
 - Released dependency: `agentrust-trace==0.11.0`. Inputs are `requirements.txt`; reproducible dependency versions and distribution hashes are in `requirements.lock`. Actual installed versions are in `results/python-packages.txt`.
 - Command: `python check_package.py --fetch` (or without `--fetch` to reuse pinned downloaded bytes).
@@ -63,3 +65,31 @@ Retry raw JSONL SHA-256: `e0618e6fca7322f7e8168ce48b6ebbe8fc9a5a7b8dfdf6bc305254
 - Implementation-side dispatch/effect adapters and an independent committed-effect observer, including lost response after a committed write.
 - Same-input matched runs, original deadlines/fallback scope, retries/duplicates and useful work lost.
 - Maintainer review, upstream issue/PR publication and links from AAIF WG #13. No Verified badge is requested by this packet.
+
+## Separate Proofable positive-fetch appraisal — 2026-10-27
+
+Input: `proofable/docs@e6eb5b9307be24a5d82cc7490f647f0c98e2d24a`, `public/evidence/aaif/authority-at-dispatch/2026-10-24-fetch-route`. All ten original files are retained by the downloader, with fixed SHA-256 pins in `proofable_fetch.py` and immutable source URLs in `fixtures/download-lock.json`. Output: `results/proofable-fetch-author.json`, separate from the historical and corrected Oct 8 reports. Exact appraiser/helper/test source hashes are included in the new report.
+
+Commands in a fresh Python 3.12 hash-locked environment:
+
+```sh
+.venv/bin/python check_package.py --fetch
+.venv/bin/python proofable_fetch.py --input fixtures/proofable-fetch --output results/proofable-fetch-author.json
+```
+
+`check_package.py` runs the complete unittest suite normally and under `-O`; the retained transcript is `results/tests.txt`, and installed dependency versions are `results/python-packages.txt`. The pinned fetch appraisal requires ten matching byte hashes, exact publisher checksum coverage, both envelope signatures/qHashes/DID-chain bindings, same declared signer/context, both request-digest reconstructions and unsigned create/job consistency. The generated-key negative controls test these checks independently of fixed artifact hashes. TRACE validation now covers all thirty immutable source pointers and still emits no TRACE record or attestation.
+
+| Result dimension | Meaning retained in the new report |
+|---|---|
+| Fixed publication integrity | Ten pinned artifacts and exact nine-entry publisher checksum inventory. |
+| Positive dispatch appraisal | Offline validation of two signed statements and request/correlation consistency; not a hosted replay. |
+| Deployment | Publisher claims MCP `0.1.7`, revision `18433a48d74af913550de7a018f02c7c724cc1c9`; no binary attestation. |
+| Service signing key | Signer/DID consistency verified; attribution to Proofable remains `not_measured`. |
+| Request commitment | Unique URL and generic criterion are committed; full returned marker is signed only in terminal receipt. |
+| Decision to job | Decision `jobId=null`; create-response join is unsigned and correlation-only. |
+| Authority chain | Grant and agent-identity qHash references present; their proof records and validation absent. |
+| Four comparison scenarios | All remain `UNMET`; a positive fetch establishes no veto, stale/revoked, unreachable-authority or post-dispatch denial result. |
+| EO01, target effects, latency | `not_measured`/unestablished; no operator-owned observer, target ingress log, commit-time recheck or revocation timing. |
+| Execution custody | Proofable-operated run, local offline reader; independent live reproduction and independent comparison remain false. |
+
+The source publisher README is preserved byte-identically despite its inaccurate statement that the full marker is inside the prompt. The request contains only the unique URL and generic `target-ack` criterion. The separate eight-case served packet from revision `61724c9f...` is not imported or combined with this run. Existing historical checksum FAILs, old N/A appraisals, original raw inputs and native MintID histories retain their original meaning. The check command validates old source packets afresh without rewriting the four historical author JSON reports; those committed outputs remain byte-identical rather than importing unrelated field-state changes from later reader versions. No live service/target call or scenario/operator acceptance is established by these offline checks.

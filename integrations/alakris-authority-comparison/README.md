@@ -13,7 +13,7 @@ python3.12 -m venv .venv
 .venv/bin/python check_package.py --fetch
 ```
 
-The single check command downloads pinned fixtures, runs the tests, writes author appraisals, verifies the corrected Proofable packet, preserves the historical Proofable hash failure, and validates TRACE reference shapes. To rerun individual stages:
+The single check command downloads pinned fixtures, runs the tests normally and under `-O`, validates the earlier author packets while retaining their historical reports, writes the separate positive fetch appraisal, preserves the historical Proofable hash failure, and validates TRACE reference shapes. To rerun individual stages (the `runner.py` commands explicitly regenerate the named historical appraisal):
 
 ```sh
 .venv/bin/python fetch_fixtures.py --out fixtures
@@ -24,6 +24,7 @@ The single check command downloads pinned fixtures, runs the tests, writes autho
 .venv/bin/python runner.py mintid --evidence fixtures/mintid \
   --record revocation-trace-local-20261005T094532Z --output results/mintid-author-local.json
 .venv/bin/python runner.py proofable --evidence fixtures/proofable --output results/proofable-author-oct8.json
+.venv/bin/python proofable_fetch.py --input fixtures/proofable-fetch --output results/proofable-fetch-author.json
 .venv/bin/python create_references.py --lock fixtures/download-lock.json --output results/trace-reference-shapes.json
 ```
 
@@ -63,6 +64,20 @@ The synthetic executor rechecks expiry and revocation at commit, binds issued di
 The corrected Proofable Oct 8 packet discloses 11 portable envelopes. The adapter recomputes qHashes, recovers EIP-191 signers with DID/chain binding, and requires exact qHash-set equality across trace, manifest references and envelopes. This measures historical receipt integrity; current freshness remains unappraised. The unreachable case has no applicable receipt to verify. Revocation latency remains unmeasured and target-side effects lack an independent witness.
 
 The verifier is vendored unchanged from the reviewed reader revision `2b54ee47491f0d1a86c7d9f47d434f8f02622043`; see `PORTABLE_ENVELOPE_NOTICE.txt` and its retained Apache-2.0 license. `fixtures/proofable` uses docs commit `9851059900e29ba701bb0f4df2bf89a2107f430c`. `fixtures/proofable-historical` preserves the earlier `3a45f026` packet, and `results/proofable-author.json` preserves its checksum FAIL. New results are written separately to `results/proofable-author-oct8.json`.
+
+### Separate Proofable positive fetch appraisal
+
+`proofable_fetch.py` reads the ten unmodified files in [the retained Oct 24 fetch packet](https://github.com/proofable/docs/tree/e6eb5b9307be24a5d82cc7490f647f0c98e2d24a/public/evidence/aaif/authority-at-dispatch/2026-10-24-fetch-route), at exact publication `e6eb5b9307be24a5d82cc7490f647f0c98e2d24a`. Its per-file SHA-256 pins include the publisher's `SHA256SUMS`, README and verifier script. Downloaded scripts are retained as bytes and never executed. The separate eight-case served run on revision `61724c9f...` is not an input to this adapter.
+
+The command above exits **0** only for the fixed bytes, exact nine-entry checksum inventory, two valid EIP-191/qHash/DID-chain envelopes, matching declared signer/context, request projection and retained response/job consistency checks. Source-file digests in the output identify the tested appraiser and its helper/test bytes. Unsafe or missing paths, oversized files, duplicate JSON keys (including JSON inside signed content), nonfinite constants and ambiguous SSE messages fail closed. No vendor API, target URL, credential or downloaded code is used. Output must be outside the input packet and is replaced atomically from a fresh temporary file, so an existing output hard link cannot overwrite a packet inode.
+
+The publisher reports hosted MCP `0.1.7`, service revision `18433a48d74af913550de7a018f02c7c724cc1c9`, and job `d259c7cc-0701-4624-a148-77b149f84e06`. These deployment fields are unsigned publisher claims, not independent binary attestation. The signed dispatch statement commits to SHA-256 of the documented `JSON.stringify` projection, in its specified key order. The URL occurs in `prompt`, the acceptance criterion is the generic `target-ack`, and the full returned marker is signed only in the terminal receipt. `runNowFirst` and the `acceptance.criteria` alias are outside that digest projection. The original publisher README's marker wording is retained unchanged; the appraisal does not infer a precommitment to the full marker.
+
+`integrity: PASS` means fixed artifact bytes and checksum coverage match. `positive_dispatch_appraisal: PASS` additionally means the signature, request and correlation checks pass. **Neither means scenario conformance.** The four existing scenario cases each remain `UNMET`, with all fourteen fields and explicit missing-measurement reasons. EO01 is unestablished and `not_measured` for this positive run; the historical appraisals and their earlier N/A fields are not rewritten or treated as a passing EO01 result.
+
+The signer is bound to its declared DID/wallet, but attribution of that wallet to Proofable is `not_measured` without a separately verified canonical trust source. No caller-provided wallet flag can promote that status. Grant and agent-identity proof records are absent. The decision's `jobId` is null; the unsigned create response correlates its qHash to the job ID, and identical requests share a digest. The service reports one GET and a returned marker; there is no executor-signed GET, retained external target ingress log, independent target witness, target-commit authority check or revocation-latency measurement. Service acceptance/completeness flags do not override these gaps. `independent_live_reproduction` and `independent_comparison_completed` remain false.
+
+Negative controls independently generate signed envelopes using local test keys. They check altered request digests, a different validly signed receipt request, bad signatures/qHashes/DID bindings, different valid signers/chains/principals and unsigned decision/job join mismatches independently of outer artifact hashes. A separate tamper control keeps semantic checks valid while the publication hash fails. These controls exercise the offline appraiser, not Proofable's live enforcement.
 
 ## Native implementation runs
 

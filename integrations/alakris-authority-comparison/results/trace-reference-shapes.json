@@ -3,6 +3,110 @@
     "file": "proofable/README.md",
     "reference": {
       "rel": "behavior-trace",
+      "id": "https://raw.githubusercontent.com/proofable/docs/9851059900e29ba701bb0f4df2bf89a2107f430c/public/evidence/aaif/authority-at-dispatch/2026-10-08/README.md",
+      "resolver": "https://raw.githubusercontent.com/proofable/docs/9851059900e29ba701bb0f4df2bf89a2107f430c/public/evidence/aaif/authority-at-dispatch/2026-10-08/README.md",
+      "digest": "sha256:e32b2580d2ff33d7379b3fc686855c389bcb113beeaf9c44a8e3e4db48e13271"
+    },
+    "reference_shape_validated": true,
+    "signature_verification": "not_measured",
+    "assurance": "public_vendor_log",
+    "trace_record_emitted": false
+  },
+  {
+    "file": "proofable/SHA256SUMS",
+    "reference": {
+      "rel": "behavior-trace",
+      "id": "https://raw.githubusercontent.com/proofable/docs/9851059900e29ba701bb0f4df2bf89a2107f430c/public/evidence/aaif/authority-at-dispatch/2026-10-08/SHA256SUMS",
+      "resolver": "https://raw.githubusercontent.com/proofable/docs/9851059900e29ba701bb0f4df2bf89a2107f430c/public/evidence/aaif/authority-at-dispatch/2026-10-08/SHA256SUMS",
+      "digest": "sha256:ec9222646d8edfa5954949cf0bdca0765e428f6c18d6ed34000ccfb325ddd001"
+    },
+    "reference_shape_validated": true,
+    "signature_verification": "not_measured",
+    "assurance": "public_vendor_log",
+    "trace_record_emitted": false
+  },
+  {
+    "file": "proofable/manifest.json",
+    "reference": {
+      "rel": "behavior-trace",
+      "id": "https://raw.githubusercontent.com/proofable/docs/9851059900e29ba701bb0f4df2bf89a2107f430c/public/evidence/aaif/authority-at-dispatch/2026-10-08/manifest.json",
+      "resolver": "https://raw.githubusercontent.com/proofable/docs/9851059900e29ba701bb0f4df2bf89a2107f430c/public/evidence/aaif/authority-at-dispatch/2026-10-08/manifest.json",
+      "digest": "sha256:90638a7e27b42ab784070ca6cea5dbc6add33671a3277744a9534cb7b51a424c"
+    },
+    "reference_shape_validated": true,
+    "signature_verification": "not_measured",
+    "assurance": "public_vendor_log",
+    "trace_record_emitted": false
+  },
+  {
+    "file": "proofable/trace.jsonl",
+    "reference": {
+      "rel": "behavior-trace",
+      "id": "https://raw.githubusercontent.com/proofable/docs/9851059900e29ba701bb0f4df2bf89a2107f430c/public/evidence/aaif/authority-at-dispatch/2026-10-08/trace.jsonl",
+      "resolver": "https://raw.githubusercontent.com/proofable/docs/9851059900e29ba701bb0f4df2bf89a2107f430c/public/evidence/aaif/authority-at-dispatch/2026-10-08/trace.jsonl",
+      "digest": "sha256:96241d8409c4661f8e60cd0904e7245434f48bf5711d9c377706f29ff721a0c8"
+    },
+    "reference_shape_validated": true,
+    "signature_verification": "not_measured",
+    "assurance": "public_vendor_log",
+    "trace_record_emitted": false
+  },
+  {
+    "file": "proofable/authority-effect-results.json",
+    "reference": {
+      "rel": "behavior-trace",
+      "id": "https://raw.githubusercontent.com/proofable/docs/9851059900e29ba701bb0f4df2bf89a2107f430c/public/evidence/aaif/authority-at-dispatch/2026-10-08/authority-effect-results.json",
+      "resolver": "https://raw.githubusercontent.com/proofable/docs/9851059900e29ba701bb0f4df2bf89a2107f430c/public/evidence/aaif/authority-at-dispatch/2026-10-08/authority-effect-results.json",
+      "digest": "sha256:45c953291efce44499cb995f5c7d271683399a04bc155aea1389b78468cbe7e0"
+    },
+    "reference_shape_validated": true,
+    "signature_verification": "not_measured",
+    "assurance": "public_vendor_log",
+    "trace_record_emitted": false
+  },
+  {
+    "file": "proofable/authority-effect-results.md",
+    "reference": {
+      "rel": "behavior-trace",
+      "id": "https://raw.githubusercontent.com/proofable/docs/9851059900e29ba701bb0f4df2bf89a2107f430c/public/evidence/aaif/authority-at-dispatch/2026-10-08/authority-effect-results.md",
+      "resolver": "https://raw.githubusercontent.com/proofable/docs/9851059900e29ba701bb0f4df2bf89a2107f430c/public/evidence/aaif/authority-at-dispatch/2026-10-08/authority-effect-results.md",
+      "digest": "sha256:60a6d77a1705c6e0152e0fb72131824715966cd3c2574f5a3b06820ecd8ab47b"
+    },
+    "reference_shape_validated": true,
+    "signature_verification": "not_measured",
+    "assurance": "public_vendor_log",
+    "trace_record_emitted": false
+  },
+  {
+    "file": "proofable/portable-proofs.json",
+    "reference": {
+      "rel": "behavior-trace",
+      "id": "https://raw.githubusercontent.com/proofable/docs/9851059900e29ba701bb0f4df2bf89a2107f430c/public/evidence/aaif/authority-at-dispatch/2026-10-08/portable-proofs.json",
+      "resolver": "https://raw.githubusercontent.com/proofable/docs/9851059900e29ba701bb0f4df2bf89a2107f430c/public/evidence/aaif/authority-at-dispatch/2026-10-08/portable-proofs.json",
+      "digest": "sha256:74ef851d4001a572d841bcfa27cfb1216dc2d5be063049196986d00c69b5e7cc"
+    },
+    "reference_shape_validated": true,
+    "signature_verification": "not_measured",
+    "assurance": "public_vendor_log",
+    "trace_record_emitted": false
+  },
+  {
+    "file": "proofable/verify-portable-proofs.mjs",
+    "reference": {
+      "rel": "behavior-trace",
+      "id": "https://raw.githubusercontent.com/proofable/docs/9851059900e29ba701bb0f4df2bf89a2107f430c/public/evidence/aaif/authority-at-dispatch/2026-10-08/verify-portable-proofs.mjs",
+      "resolver": "https://raw.githubusercontent.com/proofable/docs/9851059900e29ba701bb0f4df2bf89a2107f430c/public/evidence/aaif/authority-at-dispatch/2026-10-08/verify-portable-proofs.mjs",
+      "digest": "sha256:f7eb8f74885518b3ba0d945f60500e3236a25ad569fdcc6c8e44af462eaa3248"
+    },
+    "reference_shape_validated": true,
+    "signature_verification": "not_measured",
+    "assurance": "public_vendor_log",
+    "trace_record_emitted": false
+  },
+  {
+    "file": "proofable-historical/README.md",
+    "reference": {
+      "rel": "behavior-trace",
       "id": "https://raw.githubusercontent.com/proofable/docs/3a45f026fd0c06b9d1d411c053597584b6b1c3dc/public/evidence/aaif/authority-at-dispatch/2026-10-06/README.md",
       "resolver": "https://raw.githubusercontent.com/proofable/docs/3a45f026fd0c06b9d1d411c053597584b6b1c3dc/public/evidence/aaif/authority-at-dispatch/2026-10-06/README.md",
       "digest": "sha256:67dcbff2c2045f421ad8ef8dd1926f0ff967870c66570cd45575d13a127cda4a"
@@ -13,7 +117,7 @@
     "trace_record_emitted": false
   },
   {
-    "file": "proofable/SHA256SUMS",
+    "file": "proofable-historical/SHA256SUMS",
     "reference": {
       "rel": "behavior-trace",
       "id": "https://raw.githubusercontent.com/proofable/docs/3a45f026fd0c06b9d1d411c053597584b6b1c3dc/public/evidence/aaif/authority-at-dispatch/2026-10-06/SHA256SUMS",
@@ -26,7 +130,7 @@
     "trace_record_emitted": false
   },
   {
-    "file": "proofable/manifest.json",
+    "file": "proofable-historical/manifest.json",
     "reference": {
       "rel": "behavior-trace",
       "id": "https://raw.githubusercontent.com/proofable/docs/3a45f026fd0c06b9d1d411c053597584b6b1c3dc/public/evidence/aaif/authority-at-dispatch/2026-10-06/manifest.json",
@@ -39,7 +143,7 @@
     "trace_record_emitted": false
   },
   {
-    "file": "proofable/trace.jsonl",
+    "file": "proofable-historical/trace.jsonl",
     "reference": {
       "rel": "behavior-trace",
       "id": "https://raw.githubusercontent.com/proofable/docs/3a45f026fd0c06b9d1d411c053597584b6b1c3dc/public/evidence/aaif/authority-at-dispatch/2026-10-06/trace.jsonl",
@@ -52,7 +156,7 @@
     "trace_record_emitted": false
   },
   {
-    "file": "proofable/authority-effect-results.json",
+    "file": "proofable-historical/authority-effect-results.json",
     "reference": {
       "rel": "behavior-trace",
       "id": "https://raw.githubusercontent.com/proofable/docs/3a45f026fd0c06b9d1d411c053597584b6b1c3dc/public/evidence/aaif/authority-at-dispatch/2026-10-06/authority-effect-results.json",
@@ -65,7 +169,7 @@
     "trace_record_emitted": false
   },
   {
-    "file": "proofable/authority-effect-results.md",
+    "file": "proofable-historical/authority-effect-results.md",
     "reference": {
       "rel": "behavior-trace",
       "id": "https://raw.githubusercontent.com/proofable/docs/3a45f026fd0c06b9d1d411c053597584b6b1c3dc/public/evidence/aaif/authority-at-dispatch/2026-10-06/authority-effect-results.md",
@@ -149,6 +253,136 @@
       "id": "https://gitlab.com/mintid/mintid/-/raw/b678e5cd6b5736e1795fd18d497fd8e501272dcd/test-harness/trace/records/revocation-trace-local-20261005T094532Z.manifest.json",
       "resolver": "https://gitlab.com/mintid/mintid/-/raw/b678e5cd6b5736e1795fd18d497fd8e501272dcd/test-harness/trace/records/revocation-trace-local-20261005T094532Z.manifest.json",
       "digest": "sha256:10e8513dde5931208559b9f35b2f9c675ccf78bd156878fd7d2b59050c5a036b"
+    },
+    "reference_shape_validated": true,
+    "signature_verification": "not_measured",
+    "assurance": "public_vendor_log",
+    "trace_record_emitted": false
+  },
+  {
+    "file": "proofable-fetch/1-invocation.json",
+    "reference": {
+      "rel": "behavior-trace",
+      "id": "https://raw.githubusercontent.com/proofable/docs/e6eb5b9307be24a5d82cc7490f647f0c98e2d24a/public/evidence/aaif/authority-at-dispatch/2026-10-24-fetch-route/1-invocation.json",
+      "resolver": "https://raw.githubusercontent.com/proofable/docs/e6eb5b9307be24a5d82cc7490f647f0c98e2d24a/public/evidence/aaif/authority-at-dispatch/2026-10-24-fetch-route/1-invocation.json",
+      "digest": "sha256:566b2cc841a1c4966bf56ca98f21c4a479476a97172e3287c1572a2f0a59c871"
+    },
+    "reference_shape_validated": true,
+    "signature_verification": "not_measured",
+    "assurance": "public_vendor_log",
+    "trace_record_emitted": false
+  },
+  {
+    "file": "proofable-fetch/2-request-arguments.json",
+    "reference": {
+      "rel": "behavior-trace",
+      "id": "https://raw.githubusercontent.com/proofable/docs/e6eb5b9307be24a5d82cc7490f647f0c98e2d24a/public/evidence/aaif/authority-at-dispatch/2026-10-24-fetch-route/2-request-arguments.json",
+      "resolver": "https://raw.githubusercontent.com/proofable/docs/e6eb5b9307be24a5d82cc7490f647f0c98e2d24a/public/evidence/aaif/authority-at-dispatch/2026-10-24-fetch-route/2-request-arguments.json",
+      "digest": "sha256:8dd4cf11e11a29347ba1d73921a2b2fce0a8ac3ccac56aea860bbf6778d95da7"
+    },
+    "reference_shape_validated": true,
+    "signature_verification": "not_measured",
+    "assurance": "public_vendor_log",
+    "trace_record_emitted": false
+  },
+  {
+    "file": "proofable-fetch/3-create-response.txt",
+    "reference": {
+      "rel": "behavior-trace",
+      "id": "https://raw.githubusercontent.com/proofable/docs/e6eb5b9307be24a5d82cc7490f647f0c98e2d24a/public/evidence/aaif/authority-at-dispatch/2026-10-24-fetch-route/3-create-response.txt",
+      "resolver": "https://raw.githubusercontent.com/proofable/docs/e6eb5b9307be24a5d82cc7490f647f0c98e2d24a/public/evidence/aaif/authority-at-dispatch/2026-10-24-fetch-route/3-create-response.txt",
+      "digest": "sha256:2db3795531b68a1f627d5e38d0a99783a2c789fcea0802629a6e4d85466fa1a8"
+    },
+    "reference_shape_validated": true,
+    "signature_verification": "not_measured",
+    "assurance": "public_vendor_log",
+    "trace_record_emitted": false
+  },
+  {
+    "file": "proofable-fetch/4-dispatch-decision.json",
+    "reference": {
+      "rel": "behavior-trace",
+      "id": "https://raw.githubusercontent.com/proofable/docs/e6eb5b9307be24a5d82cc7490f647f0c98e2d24a/public/evidence/aaif/authority-at-dispatch/2026-10-24-fetch-route/4-dispatch-decision.json",
+      "resolver": "https://raw.githubusercontent.com/proofable/docs/e6eb5b9307be24a5d82cc7490f647f0c98e2d24a/public/evidence/aaif/authority-at-dispatch/2026-10-24-fetch-route/4-dispatch-decision.json",
+      "digest": "sha256:2970e1c6a1e7291d36bcb752e1b7b2c9416c24eb6e6c699c1dcfd19c2b2e6b5f"
+    },
+    "reference_shape_validated": true,
+    "signature_verification": "not_measured",
+    "assurance": "public_vendor_log",
+    "trace_record_emitted": false
+  },
+  {
+    "file": "proofable-fetch/5-job-record.json",
+    "reference": {
+      "rel": "behavior-trace",
+      "id": "https://raw.githubusercontent.com/proofable/docs/e6eb5b9307be24a5d82cc7490f647f0c98e2d24a/public/evidence/aaif/authority-at-dispatch/2026-10-24-fetch-route/5-job-record.json",
+      "resolver": "https://raw.githubusercontent.com/proofable/docs/e6eb5b9307be24a5d82cc7490f647f0c98e2d24a/public/evidence/aaif/authority-at-dispatch/2026-10-24-fetch-route/5-job-record.json",
+      "digest": "sha256:40e0bb4a7d75396182b026884f83c350316fa3be6b00bff2ce9ea3cac146d415"
+    },
+    "reference_shape_validated": true,
+    "signature_verification": "not_measured",
+    "assurance": "public_vendor_log",
+    "trace_record_emitted": false
+  },
+  {
+    "file": "proofable-fetch/6-terminal-receipt.json",
+    "reference": {
+      "rel": "behavior-trace",
+      "id": "https://raw.githubusercontent.com/proofable/docs/e6eb5b9307be24a5d82cc7490f647f0c98e2d24a/public/evidence/aaif/authority-at-dispatch/2026-10-24-fetch-route/6-terminal-receipt.json",
+      "resolver": "https://raw.githubusercontent.com/proofable/docs/e6eb5b9307be24a5d82cc7490f647f0c98e2d24a/public/evidence/aaif/authority-at-dispatch/2026-10-24-fetch-route/6-terminal-receipt.json",
+      "digest": "sha256:34688c283148a0524b550666fa74839b38410c26fd63425734a2753ba89f040c"
+    },
+    "reference_shape_validated": true,
+    "signature_verification": "not_measured",
+    "assurance": "public_vendor_log",
+    "trace_record_emitted": false
+  },
+  {
+    "file": "proofable-fetch/README.md",
+    "reference": {
+      "rel": "behavior-trace",
+      "id": "https://raw.githubusercontent.com/proofable/docs/e6eb5b9307be24a5d82cc7490f647f0c98e2d24a/public/evidence/aaif/authority-at-dispatch/2026-10-24-fetch-route/README.md",
+      "resolver": "https://raw.githubusercontent.com/proofable/docs/e6eb5b9307be24a5d82cc7490f647f0c98e2d24a/public/evidence/aaif/authority-at-dispatch/2026-10-24-fetch-route/README.md",
+      "digest": "sha256:57dcce249c71c083f43f70f25bae4bf24d0904a201a664da3f4c181c43aeceed"
+    },
+    "reference_shape_validated": true,
+    "signature_verification": "not_measured",
+    "assurance": "public_vendor_log",
+    "trace_record_emitted": false
+  },
+  {
+    "file": "proofable-fetch/SHA256SUMS",
+    "reference": {
+      "rel": "behavior-trace",
+      "id": "https://raw.githubusercontent.com/proofable/docs/e6eb5b9307be24a5d82cc7490f647f0c98e2d24a/public/evidence/aaif/authority-at-dispatch/2026-10-24-fetch-route/SHA256SUMS",
+      "resolver": "https://raw.githubusercontent.com/proofable/docs/e6eb5b9307be24a5d82cc7490f647f0c98e2d24a/public/evidence/aaif/authority-at-dispatch/2026-10-24-fetch-route/SHA256SUMS",
+      "digest": "sha256:0a47e2b25bdf5959a774df690098a0d22f73e7d31453099ae53b45c370858f5a"
+    },
+    "reference_shape_validated": true,
+    "signature_verification": "not_measured",
+    "assurance": "public_vendor_log",
+    "trace_record_emitted": false
+  },
+  {
+    "file": "proofable-fetch/health-at-run.json",
+    "reference": {
+      "rel": "behavior-trace",
+      "id": "https://raw.githubusercontent.com/proofable/docs/e6eb5b9307be24a5d82cc7490f647f0c98e2d24a/public/evidence/aaif/authority-at-dispatch/2026-10-24-fetch-route/health-at-run.json",
+      "resolver": "https://raw.githubusercontent.com/proofable/docs/e6eb5b9307be24a5d82cc7490f647f0c98e2d24a/public/evidence/aaif/authority-at-dispatch/2026-10-24-fetch-route/health-at-run.json",
+      "digest": "sha256:b6849d19f65356cb3da0a1d0d4e840c1e1244830c9c2a637641f0cf7cf468616"
+    },
+    "reference_shape_validated": true,
+    "signature_verification": "not_measured",
+    "assurance": "public_vendor_log",
+    "trace_record_emitted": false
+  },
+  {
+    "file": "proofable-fetch/verify.mjs",
+    "reference": {
+      "rel": "behavior-trace",
+      "id": "https://raw.githubusercontent.com/proofable/docs/e6eb5b9307be24a5d82cc7490f647f0c98e2d24a/public/evidence/aaif/authority-at-dispatch/2026-10-24-fetch-route/verify.mjs",
+      "resolver": "https://raw.githubusercontent.com/proofable/docs/e6eb5b9307be24a5d82cc7490f647f0c98e2d24a/public/evidence/aaif/authority-at-dispatch/2026-10-24-fetch-route/verify.mjs",
+      "digest": "sha256:d1919890e1d5ff3c5da0f552c90e09ef672e514c7f2dc3e35c91276358c926a6"
     },
     "reference_shape_validated": true,
     "signature_verification": "not_measured",
