@@ -120,13 +120,40 @@ def main() -> int:
 
     rule("Step 2 - A recall revokes the attestation key. New releases are refused.")
     # The revocation authority marks the key revoked; the KBS enforces it live.
+    # Pinned the same way as Step 1's broker, so this step isolates revocation:
+    # without it, the release is also refused on manifest_authorized, and the
+    # demo would be showing an unpinned broker, not the kill switch.
     revoked_kbs = KeyBrokerService(
-        {weights_hash: key}, now=lambda: NOW, revoked_attestation_keys={LIVE_KEY_ID}
+        {weights_hash: key},
+        now=lambda: NOW,
+        revoked_attestation_keys={LIVE_KEY_ID},
+        trusted_manifest_identities=[manifest_identity(manifest)],
     )
     denied = _release(revoked_kbs, manifest, serving)
     print("new release after recall:", denied.released, " (refused)")
     reason = next((c.detail for c in denied.failures if c.name == "attestation_revocation"), None)
     print("why                     :", reason)
+    if denied.released or reason is None:
+        raise RuntimeError("expected the release to be refused on attestation_revocation")
+    # Checks are independent, not short-circuited: if revoked_kbs's manifest
+    # pin were ever dropped, attestation_revocation would still fail and the
+    # check above would still pass, even though the pin itself is broken. So
+    # isolating revocation requires positively locating manifest_authorized
+    # and confirming it passed - not just confirming its name is absent from
+    # the failures, which would also be true if the check never ran at all
+    # (renamed, removed, or otherwise gone from a future SDK release).
+    manifest_checks = [c for c in denied.checks if c.name == "manifest_authorized"]
+    if len(manifest_checks) != 1:
+        raise RuntimeError(
+            f"expected exactly one manifest_authorized check to run, found "
+            f"{len(manifest_checks)}: {[c.name for c in denied.checks]}"
+        )
+    if not manifest_checks[0].passed:
+        raise RuntimeError(
+            "expected manifest_authorized to pass so this step isolates "
+            "revocation; it failed too, meaning revoked_kbs's manifest pin "
+            "is broken and this is no longer demonstrating the kill switch"
+        )
 
     rule("Step 3 - The enclave already serving zeroizes at the next cadence lapse")
     later = NOW + timedelta(minutes=31)  # past the 30m window, and re-attestation now fails
