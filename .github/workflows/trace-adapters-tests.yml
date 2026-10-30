@@ -11,6 +11,7 @@ on:
       - "integrations/google-adk/**"
       - "integrations/openshell/**"
       - "integrations/openai-agents/**"
+      - "scripts/test_evidence.py"
       - "requirements/adapters*.in"
       - "requirements/adapters*.txt"
       - "requirements/sdk-*.in"
@@ -27,6 +28,7 @@ on:
       - "integrations/google-adk/**"
       - "integrations/openshell/**"
       - "integrations/openai-agents/**"
+      - "scripts/test_evidence.py"
       - "requirements/adapters*.in"
       - "requirements/adapters*.txt"
       - "requirements/sdk-*.in"
@@ -169,7 +171,22 @@ jobs:
       - name: Test released LangChain and LangGraph interoperability
         run: |
           pip install --require-hashes -r requirements/sdk-langchain.txt
-          python -m pytest integrations/langchain/test_langgraph_interop.py -q
+          python scripts/test_evidence.py capture \
+            --integration integrations/langchain \
+            --output "$RUNNER_TEMP/langchain-evidence" \
+            --evidence-class synthetic \
+            -- python -m pytest integrations/langchain/test_langgraph_interop.py -q
+      - name: Report declaration and execution consistency
+        if: always()
+        run: python scripts/test_evidence.py check "$RUNNER_TEMP/langchain-evidence"
+      - name: Retain LangChain execution receipt and log
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: langchain-execution-evidence
+          path: ${{ runner.temp }}/langchain-evidence/
+          retention-days: 30
+          if-no-files-found: warn
 
   llamaindex-workflow-adapter:
     runs-on: ubuntu-latest
