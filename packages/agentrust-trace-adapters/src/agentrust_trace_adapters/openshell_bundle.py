@@ -102,6 +102,8 @@ def verify_bundle(
     try:
         encoded = _text(signature["signature"])
         signed = base64.b64decode(encoded, validate=True)
+        if len(signed) != 64 or base64.b64encode(signed).decode("ascii") != encoded:
+            raise ValueError("non-canonical 64-byte base64 signature")
         key.verify(signed, manifest_bytes)
     except (ValueError, InvalidSignature) as exc:
         raise BundleError("invalid gateway signature") from exc

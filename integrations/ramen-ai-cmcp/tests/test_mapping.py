@@ -132,6 +132,14 @@ class TestVerifyV5Receipt:
         assert valid is False
         assert "Unknown kid" in (reason or "")
 
+    def test_non_canonical_base64url_signature_rejected(self):
+        from _receipt_verify import _b64url_decode
+
+        for bad_sig in ("A" * 85 + "B", "A" * 86 + "==", "A+B/C" + "A" * 81):
+            with pytest.raises(ValueError):
+                _b64url_decode(bad_sig)
+
+
 
 class TestBuildTraceRecord:
     @pytest.fixture
