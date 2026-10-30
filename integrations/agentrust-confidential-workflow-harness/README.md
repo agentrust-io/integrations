@@ -1,5 +1,46 @@
 # Confidential Workflow Acceptance Harness
 
+The [canonical acceptance procedure](https://github.com/agentrust-io/integrations/issues/199)
+defines the paired controls and evidence boundaries. The utility-specific
+reproduction steps and local trust boundary are documented below.
+
+## Offline synthetic evidence reappraisal
+
+`harness.reappraisal` retains an immutable copy of a deterministic run result
+and compares it with explicit current verifier inputs: scenario, policy/trust
+digests, a named dependency inventory, evaluation time and freshness budget.
+Changed inputs or expired evidence return `reassessment_required` with reasons;
+the historical result is retained. A changed dependency calls for reassessment,
+not automatic refusal of the new workload. Refused, unknown and incomplete
+historical results cannot become applicable without a fresh passing run.
+
+Run with `HarnessRunner().run(scenario, observed_at=...)` to retain the full
+scenario digest and original observation time in memory. These fields are
+private local reuse metadata and are always excluded from public `to_dict()`
+output. Both the result and each observation use explicit public-field lists;
+new internal dataclass fields are excluded by default, and emitted mutable
+values are copied. The public result schema rejects the private metadata. `EvidenceSnapshot.capture`
+retains them separately inside its local `result_json`; the snapshot, its
+content digests and dataclass representations are private and must not be
+published. Capture rejects mismatched scenarios and missing or future
+observation times. Later capture never resets evidence age. Legacy run objects
+without both fields require a fresh run before retention for reappraisal.
+
+Use `EvidenceSnapshot.capture(scenario, result, context, captured_at=...)`, then
+`appraise(snapshot, scenario, current_context, evaluated_at=...,
+max_age_seconds=...)`. Times are UTC Unix integer seconds. The optional run timestamp is caller-trusted
+fixture input, not authenticated time. Evidence
+expires exactly at the verifier-selected age limit. This is evidence freshness,
+not the credential-expiry verification exercised by protocol-specific adapters.
+The existing unittest discovery command runs the paired reappraisal controls.
+
+This utility accepts caller-trusted local synthetic fixtures only. It does not
+authenticate a snapshot, verify completeness of caller-supplied dependencies,
+provide persistent revocation, execute an adapter, or authorize a new action.
+Its hashes identify bytes; replacing both content and hashes is outside this
+local trust boundary. `applicable` is limited to the selected synthetic claim
+and explicit inputs, not protocol acceptance or permission to execute.
+
 A deterministic software harness for issue #199. It keeps authorization, delivery,
 receipt, admission, execution, response verification and release outcomes separate
 and preserves unavailable evidence instead of inferring success from dispatch.
@@ -22,6 +63,7 @@ attestation, or completion of the full software milestone.
 ## Reproduce
 
 ```bash
+python -m pip install --require-hashes -r ../../requirements/validate.txt
 python -m unittest discover -s tests -v
 ```
 

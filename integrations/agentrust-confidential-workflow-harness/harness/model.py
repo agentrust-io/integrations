@@ -1,5 +1,8 @@
 from __future__ import annotations
 from dataclasses import dataclass, field, asdict
+from copy import deepcopy
+import hashlib
+import json
 from enum import Enum
 from typing import Any
 
@@ -50,6 +53,11 @@ class Scenario:
     waiting_on_release: str | None = None
     inputs: dict[str, Any] = field(default_factory=dict)
 
+    def digest(self) -> str:
+        raw = json.dumps(asdict(self), sort_keys=True, separators=(",", ":"),
+                         allow_nan=False).encode("utf-8")
+        return "sha256:" + hashlib.sha256(raw).hexdigest()
+
 @dataclass
 class RunResult:
     scenario_id: str
@@ -63,15 +71,32 @@ class RunResult:
     limitations: list[str]
     package_versions: dict[str, str] = field(default_factory=dict)
 
+    scenario_digest: str | None = None
+    observed_at: int | None = None
+
     def to_dict(self) -> dict[str, Any]:
-        d = asdict(self)
-        d["observations"] = [
-            {
-                **asdict(o),
-                "boundary": o.boundary.value,
-                "outcome": o.outcome.value,
-                "evidence_class": o.evidence_class.value,
-            }
-            for o in self.observations
-        ]
-        return d
+        # Explicit public projection: new internal fields are private by default.
+        # Values in declared public fields still require caller-side classification.
+        return deepcopy({
+            "scenario_id": self.scenario_id,
+            "transaction_id": self.transaction_id,
+            "claim": self.claim,
+            "status": self.status,
+            "observations": [
+                {
+                    "boundary": o.boundary.value,
+                    "outcome": o.outcome.value,
+                    "source": o.source,
+                    "evidence_class": o.evidence_class.value,
+                    "lineage": o.lineage,
+                    "caused_by": o.caused_by,
+                    "detail": o.detail,
+                }
+                for o in self.observations
+            ],
+            "boundary_outcomes": self.boundary_outcomes,
+            "mutation_proof": self.mutation_proof,
+            "blocked": self.blocked,
+            "limitations": self.limitations,
+            "package_versions": self.package_versions,
+        })
