@@ -4,9 +4,8 @@ Status: informative, unexecuted checklist for
 [#333](https://github.com/agentrust-io/integrations/issues/333).
 The reusable acceptance procedure remains in
 [#199](https://github.com/agentrust-io/integrations/issues/199).
-This draft retains its current path pending final placement confirmation; it
-does not propose a second reusable procedure. Rajnish recommends extending
-`integrations/alakris-authority-comparison/` and reusing its contract and CI.
+This scenario-specific checklist belongs to the existing Alakris authority
+comparison integration and does not propose a second reusable procedure.
 Existing owners retain implementation and runtime/profile decisions.
 
 ## Prerequisites and scope
