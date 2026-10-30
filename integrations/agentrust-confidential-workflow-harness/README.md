@@ -1,7 +1,8 @@
 # Confidential Workflow Acceptance Harness
 
-The [informative acceptance profile](ACCEPTANCE-PROFILE.md) describes the
-paired controls and evidence boundaries for issue #199.
+The [canonical acceptance procedure](https://github.com/agentrust-io/integrations/issues/199)
+defines the paired controls and evidence boundaries. The utility-specific
+reproduction steps and local trust boundary are documented below.
 
 ## Offline synthetic evidence reappraisal
 
