@@ -75,6 +75,15 @@ uv run python test-harness/trace/revocation_trace.py \
 
 This exercises presentation refusal, refresh and control paths; it does not execute a payment. Emergency credentials are operator-only and excluded. Unavailability requires an isolated local stack and is not independently reproduced by the public testnet run. Native results, exact revisions, commands and environment are recorded in `RESULTS.md`; an attempted or blocked run is not a pass.
 
+## Effect-observation checklist
+
+The [EO01-EO08 scenario checklist](docs/effect-observation-checklist.md) records
+the eight unexecuted paired cases and their runtime, target-operator and
+independent-observer prerequisites for [#333](https://github.com/agentrust-io/integrations/issues/333).
+The reusable acceptance procedure remains canonical in
+[#199](https://github.com/agentrust-io/integrations/issues/199). This checklist
+does not establish live acceptance or measured commit-after-revocation behavior.
+
 ## Review requests
 
 - Chris: corrected public digests and offline envelopes are appraised for the Oct 8 packet. Independent live reproduction remains open; retain sanitized trace, author custody, unmeasured latency and absent target witness.
