@@ -20,20 +20,20 @@ class DelegatedConduitTests(unittest.TestCase):
         self.cli = str(Path(tmp.name) / "conduit")
         Path(self.cli).touch()
         self.calls = []
-        self.start = receipt("job_start", "session")
-        self.finish = receipt("job_poll", "session", self.start["hash"])
+        self.start = receipt("job_start", "session", transaction_id="test-id")
+        self.finish = receipt("job_poll", "session", self.start["hash"], transaction_id="test-id")
 
     def transport(self, cli, action, params):
         self.calls.append(action)
         if action == "job_start":
             return {"ok": True, "receipt": self.start,
-                    "result": {"session_id": "session", "intent": "inspect",
-                               "network": False, "commit_sha": "abc",
+                    "result": {"transaction_id": "test-id","session_id": "session", "intent": "inspect",
+                               "network": False, "commit_sha": "a" * 40,
                                "repo": "/home/ubuntu/src/integrations"}}
         return {"ok": True, "receipt": self.finish,
-                "result": {"session_id": "session", "running": False,
-                           "exit_code": 0, "commit_sha": "abc",
-                           "commit_sha_end": "abc",
+                "result": {"transaction_id": "test-id","session_id": "session", "running": False,
+                           "exit_code": 0, "commit_sha": "a" * 40,
+                           "commit_sha_end": "a" * 40,
                            "worktree_clean_start": True,
                            "worktree_clean_end": True}}
 

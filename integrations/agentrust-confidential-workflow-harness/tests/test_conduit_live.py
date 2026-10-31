@@ -20,17 +20,17 @@ class ConduitLiveTests(unittest.TestCase):
         self.cli=str(Path(self.tmp.name)/"cli")
         Path(self.cli).touch()
         self.session="session-1"
-        self.started=receipt("job_start",self.session)
-        self.finished=receipt("job_poll",self.session,self.started["hash"])
+        self.started=receipt("job_start",self.session, transaction_id="txn-1")
+        self.finished=receipt("job_poll",self.session,self.started["hash"], transaction_id="txn-1")
     def transport(self,cli,action,params):
         if action=="job_start":
             return {"ok":True, "receipt":self.started,
-                    "result":{"session_id":self.session,"intent":"inspect",
-                              "commit_sha":"abc","network":False,
+                    "result":{"transaction_id":"txn-1","session_id":self.session,"intent":"inspect",
+                              "commit_sha":"a" * 40,"network":False,
                               "repo":"/home/ubuntu/src/integrations"}}
         return {"ok":True,"receipt":self.finished,
-                "result":{"session_id":self.session,"running":False,"exit_code":0,
-                          "commit_sha":"abc","commit_sha_end":"abc",
+                "result":{"transaction_id":"txn-1","session_id":self.session,"running":False,"exit_code":0,
+                          "commit_sha":"a" * 40,"commit_sha_end":"a" * 40,
                           "worktree_clean_start":True,"worktree_clean_end":True}}
     def invoke(self,**opts):
         return run(transaction_id="txn-1",repo="/home/ubuntu/src/integrations",
@@ -91,3 +91,62 @@ class ConduitLiveTests(unittest.TestCase):
         self.finished["hash"] = hashlib.sha256(json.dumps(
             payload, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
         self.assertEqual(self.invoke().outcome, "untrusted-or-unsuccessful-result")
+
+    def test_requests_carry_transaction(self):
+        original = self.transport
+        def transport(cli, action, params):
+            self.assertEqual(params["transaction_id"], "txn-1")
+            return original(cli, action, params)
+        self.transport = transport
+        self.assertEqual(self.invoke().outcome, "observed-live-conduit-inspect")
+
+    def test_unbound_transactions_are_rejected(self):
+        original = self.transport
+        for action in ("job_start", "job_poll"):
+            for location in ("result", "detail"):
+                for value in (None, "another-transaction"):
+                    def transport(cli, requested, params):
+                        import copy
+                        response = copy.deepcopy(original(cli, requested, params))
+                        if requested == action:
+                            target = response["result"] if location == "result" else response["receipt"]["detail"]
+                            target["transaction_id"] = value
+                            record = response["receipt"]
+                            material = {k: v for k, v in record.items() if k != "hash"}
+                            record["hash"] = hashlib.sha256(json.dumps(material, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+                        return response
+                    self.transport = transport
+                    with self.subTest(action=action, location=location, value=value):
+                        self.assertIn(self.invoke().outcome, {"untrusted-start", "untrusted-or-unsuccessful-result"})
+
+    def test_missing_and_invalid_commit_is_rejected(self):
+        original = self.transport
+        for value in (None, "", "abc", "g" * 40):
+            def transport(cli, action, params):
+                response = original(cli, action, params)
+                response["result"]["commit_sha"] = value
+                response["result"]["commit_sha_end"] = value
+                return response
+            self.transport = transport
+            with self.subTest(value=value):
+                self.assertEqual(self.invoke().outcome, "untrusted-start")
+
+    def test_malformed_nested_responses_are_unknown(self):
+        original = self.transport
+        for action in ("job_start", "job_poll"):
+            for field in ("response", "result", "receipt", "detail"):
+                for malformed in ([], None, "bad"):
+                    def transport(cli, requested, params):
+                        import copy
+                        response = copy.deepcopy(original(cli, requested, params))
+                        if requested == action:
+                            if field == "response":
+                                return malformed
+                            if field == "detail":
+                                response["receipt"]["detail"] = malformed
+                            else:
+                                response[field] = malformed
+                        return response
+                    self.transport = transport
+                    with self.subTest(action=action, field=field, malformed=malformed):
+                        self.assertEqual(self.invoke().outcome, "unknown-transport-or-protocol")

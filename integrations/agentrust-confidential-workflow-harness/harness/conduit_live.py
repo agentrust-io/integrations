@@ -6,6 +6,7 @@ The remote receipt is hash chained but NOT digitally signed or independent.
 """
 import hashlib
 import json
+import re
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
@@ -58,25 +59,42 @@ def run(*, transaction_id: str, repo: str, cli: str,
     if not admitted:
         return LiveResult("refused-cmcp", transaction_id)
     try:
-        start = transport(cli, "job_start", {"intent": "inspect", "repo": repo})
+        start = transport(cli, "job_start", {"intent": "inspect", "repo": repo, "transaction_id": transaction_id})
+        if not isinstance(start, dict):
+            raise ValueError("non-object-start")
         if not start.get("ok"):
             return LiveResult("refused-conduit", transaction_id)
         sr = start["receipt"]
         job = start["result"]
+        if (not isinstance(job, dict) or not isinstance(sr, dict)
+                or not isinstance(sr.get("detail"), dict)):
+            raise ValueError("malformed-start")
         session = job["session_id"]
-        if (not _receipt_hash(sr) or sr["status"] != "PASS"
+        if (not isinstance(session, str) or not session
+            or not isinstance(job.get("commit_sha"), str)
+            or re.fullmatch(r"[0-9a-f]{40}", job["commit_sha"]) is None
+            or job.get("transaction_id") != transaction_id
+            or sr["detail"].get("transaction_id") != transaction_id
+            or not _receipt_hash(sr) or sr["status"] != "PASS"
             or sr["action"] != "job_start" or sr["node"] != "vps-377a113a"
             or sr.get("detail", {}).get("session_id") != session
             or job.get("repo") != repo
             or job.get("intent") != "inspect"
             or job.get("network") is not False):
             return LiveResult("untrusted-start", transaction_id)
-        poll = transport(cli, "job_poll", {"session_id": session})
+        poll = transport(cli, "job_poll", {"session_id": session, "transaction_id": transaction_id})
+        if not isinstance(poll, dict):
+            raise ValueError("non-object-poll")
         if not poll.get("ok"):
             return LiveResult("unknown-unobserved-result", transaction_id, sr["hash"])
         fr = poll["receipt"]
         finished = poll["result"]
-        if (not _receipt_hash(fr) or fr.get("action") != "job_poll"
+        if (not isinstance(finished, dict) or not isinstance(fr, dict)
+                or not isinstance(fr.get("detail"), dict)):
+            raise ValueError("malformed-finish")
+        if (finished.get("transaction_id") != transaction_id
+            or fr["detail"].get("transaction_id") != transaction_id
+            or not _receipt_hash(fr) or fr.get("action") != "job_poll"
             or fr.get("status") != "PASS"
             or fr.get("node") != sr["node"]
             or fr.get("detail", {}).get("session_id") != session

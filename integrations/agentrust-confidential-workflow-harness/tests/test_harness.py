@@ -28,6 +28,11 @@ def scenario(**overrides):
     return Scenario(**base)
 
 class HarnessTests(unittest.TestCase):
+    def test_deterministic_run_does_not_claim_installed_package_execution(self):
+        result = HarnessRunner().run(scenario())
+        self.assertEqual(result.package_versions, {})
+        self.assertIn("deterministic software adapter only", result.limitations)
+
     def setUp(self):
         self.runner = HarnessRunner()
 

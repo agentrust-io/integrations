@@ -1,5 +1,15 @@
 # Live Frequency Conduit bridge acceptance, October 16 2026
 
+**Current acceptance limit (2026-10-31):** the captures below are historical.
+The hardened consumer requires `transaction_id` in both job request parameters,
+both result objects, and both hash-covered receipt `detail` objects, with the
+same nonempty value. It requires a full lowercase 40-hex Git commit from the
+start result and matching finish/start/end commit fields. Legacy responses
+without those bindings are refused. The remote Conduit operator must implement
+and exercise this contract before a new live acceptance claim; no fresh live
+capture or remote deployment is included in this repair. Local transport tests
+are synthetic, and the historical captures are unchanged.
+
 The `harness.conduit_live` bounded adapter performs cMCP 0.7.0 authorization
 before dispatching one fixed `inspect` intent to the VPS with the preexisting
 Frequency Conduit CLI. That CLI uses restricted-key SSH transport and a
