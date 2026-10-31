@@ -1,0 +1,4 @@
+cmcp-runtime==0.7.0
+ca2a-runtime==0.4.0
+# Keep the reviewed probe environment above the affected CA-bundle release.
+certifi>=2026.10.19

@@ -1,0 +1,75 @@
+{
+  "evidence_class": "live-software-two-host-same-operator",
+  "execution": {
+    "commit_sha": "53c3399c1fa74a985cd74de3c40d48ca02e53bfb",
+    "exit_code": 0,
+    "finish_receipt_hash": "1d9569f7eeb5693faeed052511f89a0032361fb5b06a031d81a6a0ae19f3726c",
+    "session_id": "fe9c3918-8449-4a86-a722-0193ff1288f1",
+    "start_receipt_hash": "e3b1547af56264cdb790cbe86d7a313cb5d3d69dd28a9f2dd42e25dab898b63b"
+  },
+  "nonce": "94594cfc2fdc4baca89bce376ddbbcaa",
+  "origin_ca2a_verification": "passed-in-process-not-exportable",
+  "peer_public_key": "69a7a6092973975edd92b2a836704a5c90c462825e69a08d20996e795a854d3d",
+  "repo": "/home/ubuntu/src/integrations",
+  "request_sha256": "4d20e95870afa4eda47776c9a92d43543522678e1c6f30aac98a52a6f39034f2",
+  "schema": "frequency-ca2a-trace-replay-packet/1",
+  "trace_bundle": {
+    "manifest": {
+      "assurance": "software-only-same-operator",
+      "capability": "conduit.inspect",
+      "execution": {
+        "commit_sha": "53c3399c1fa74a985cd74de3c40d48ca02e53bfb",
+        "exit_code": 0,
+        "finish_receipt_hash": "1d9569f7eeb5693faeed052511f89a0032361fb5b06a031d81a6a0ae19f3726c",
+        "session_id": "fe9c3918-8449-4a86-a722-0193ff1288f1",
+        "start_receipt_hash": "e3b1547af56264cdb790cbe86d7a313cb5d3d69dd28a9f2dd42e25dab898b63b"
+      },
+      "nonce": "94594cfc2fdc4baca89bce376ddbbcaa",
+      "policy_bundle_hash": "sha256:edb1c936ac9e922da1ef8e6c382f14a7d65d4076472c6f8ec19d50bfb3be4956",
+      "repo": "/home/ubuntu/src/integrations",
+      "request_sha256": "4d20e95870afa4eda47776c9a92d43543522678e1c6f30aac98a52a6f39034f2",
+      "schema": "frequency-ca2a-software-manifest/1",
+      "trace_record_hash": "sha256:f830659f2af40ff74a42b48e04b1a6c544c41f25e9863c18aae56adc70ff77a5",
+      "transaction_id": "live-ca2a-a40f23585ad2451f9c738971ae64c050"
+    },
+    "record": {
+      "appraisal": {
+        "status": "none",
+        "verifier": "https://appraisal.invalid/software-mode"
+      },
+      "build_provenance": {
+        "digest": "sha256:ee038106752c12b17ed8384d8327b658173704a7ce1276a5a8c182ccb162e00f",
+        "slsa_level": 0
+      },
+      "cnf": {
+        "jwk": {
+          "crv": "Ed25519",
+          "kty": "OKP",
+          "x": "LGugbd4aGn3IyWdqfDjedsPy32JoQTzCd3m8brDC1_E"
+        }
+      },
+      "data_class": "confidential",
+      "eat_profile": "tag:agentrust-io.com,2026:trace-v0.2",
+      "iat": 1792165120,
+      "model": {
+        "model_id": "conduit-inspect-no-model",
+        "provider": "frequency-software-only"
+      },
+      "policy": {
+        "bundle_hash": "sha256:edb1c936ac9e922da1ef8e6c382f14a7d65d4076472c6f8ec19d50bfb3be4956",
+        "enforcement_mode": "enforce"
+      },
+      "runtime": {
+        "measurement": "sha256:747428e46e6150aecb29100aec4eb8de7c343bbac0f3ea8b051457d58d6270e0",
+        "nonce": "94594cfc2fdc4baca89bce376ddbbcaa",
+        "platform": "software-only"
+      },
+      "signature": "wVJeZkY1GP89VqSTUkNK-0wIkMvx6Djxt_MiT9ZuicnwZmSVEnc6eXE-FuHzwMWF3hWrzlZNOv2RsDTVgrlZAg",
+      "subject": "did:example:frequency-ca2a-vps-software",
+      "transparency": "https://transparency.invalid/software-mode"
+    },
+    "signature": "d7ccc70413f9dbf17feedc59c30857329fafa5fb9000f9f3818fc7eaffe368d5d281c9ba6276effa0d6eb2e79df33a7c09e82e57f0df0b58e3561982b3b8fb01"
+  },
+  "transaction_id": "live-ca2a-a40f23585ad2451f9c738971ae64c050",
+  "trusted_issuer": "880a6aa8cd1976f69176cb1a095b5deb8449579d253b14003fc14ff9d983ed02"
+}

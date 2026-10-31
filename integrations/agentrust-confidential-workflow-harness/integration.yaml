@@ -3,11 +3,12 @@ vendor: agentrust-io
 integrates_with:
   - cmcp
   - ca2a
+  - trace
 description: >-
   Deterministic acceptance harness for boundary-separated confidential workflow
   evidence, negative cases, and gate mutation proofs.
 maintainer:
-  github: altrudev
+  github: dinakarjs
 repository: https://github.com/agentrust-io/integrations
 license: Apache-2.0
 tier: community
@@ -15,5 +16,8 @@ marketplace:
   category: Security & policy
   mark: CWH
   keywords: [confidentiality, acceptance, harness, policy, evidence, mutation]
+trace_roles: [record-producer, record-consumer]
+trace_conformance_level: 0
 tested_against:
-  cmcp-runtime: "0.5.0"
+  cmcp-runtime: "0.7.0"
+  agentrust-trace: "0.11.0"
