@@ -100,7 +100,7 @@ def run(*, transaction_id: str, repo: str, cli: str,
             or fr.get("detail", {}).get("session_id") != session
             or fr.get("prev_hash") != sr["hash"]
             or finished.get("session_id") != session
-            or finished.get("running") or finished.get("exit_code") != 0
+            or finished.get("running") is not False or finished.get("exit_code") != 0
             or finished.get("commit_sha") != job.get("commit_sha")
             or finished.get("commit_sha_end") != job.get("commit_sha")
             or finished.get("worktree_clean_start") is not True

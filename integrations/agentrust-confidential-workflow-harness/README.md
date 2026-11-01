@@ -24,6 +24,7 @@ See [About, licensing, IP boundaries, glossary and live-peer threat model](REMOT
 ## Reproduce
 
 ```bash
+python -m pip install --require-hashes -r ../../requirements/confidential-workflow-probe.txt
 python -m unittest discover -s tests -v
 ```
 
@@ -31,6 +32,19 @@ The released component and bounded live-peer experiments use:
 
 - `cmcp-runtime==0.7.0`
 - `ca2a-runtime==0.4.0`
+- `agentrust-trace==0.11.0`
+- `agentrust-trace-tests==0.6.2`
+
+Run these commands from this integration directory. The Level 0 regression checks
+both records emitted by the released-package probe through the TRACE loader and
+TR-ENV, TR-SIG, TR-POL and TR-APR modules, with default freshness checks. It also
+rejects a subject-tampered twin. The probe emits current Unix timestamps and
+synthetic `did:example:` subjects. Optional checks can be skipped by the suite;
+this is bounded synthetic software conformance, with no live dispatch, trusted
+identity provisioning, higher-level appraisal or hardware acceptance.
+
+The cA2A runtime pin is recorded here and in the probe lock because the integration
+manifest schema does not permit `ca2a-runtime` in `tested_against`.
 
 The manifest's `tested_against` records the bounded released-package software
 run using cMCP 0.7.0 above; it does not re-date the historical two-host captures.

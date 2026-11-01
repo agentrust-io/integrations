@@ -4,6 +4,8 @@ No tool is dispatched and no live or hardware assurance is claimed.
 """
 from dataclasses import dataclass
 from importlib.metadata import version
+from time import time
+from urllib.parse import quote
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from cmcp_runtime.runtime_gateway import GovernancePolicy, MCPGateway
 from ca2a_runtime.trace_binding import HopContext, HopSpec, emit_dag, trace_record_hash
@@ -35,8 +37,12 @@ def probe(*, transaction_id: str, subject: str, tool_name: str,
     ctx = HopContext.software(model_provider="synthetic", model_id="no-model-run",
         image_label="interoperability-probe", policy_bundle_hash=policy_digest,
         runtime_nonce=nonce)
-    hops = [HopSpec(subject=f"{subject}:{transaction_id}", signing_key=Ed25519PrivateKey.generate(), context=ctx, iat=1),
-            HopSpec(subject=f"peer:{transaction_id}", signing_key=Ed25519PrivateKey.generate(), context=ctx, iat=2, credential_id=f"test:{transaction_id}")]
+    # TRACE Level 0 requires URI identities and a current Unix timestamp.
+    # These are synthetic example DIDs, not independently established identities.
+    identity = f"did:example:workflow:{quote(subject, safe='')}:{quote(transaction_id, safe='')}"
+    issued_at = int(time())
+    hops = [HopSpec(subject=f"{identity}:root", signing_key=Ed25519PrivateKey.generate(), context=ctx, iat=issued_at),
+            HopSpec(subject=f"{identity}:peer", signing_key=Ed25519PrivateKey.generate(), context=ctx, iat=issued_at, credential_id=f"test:{transaction_id}")]
     try:
         records = emit_dag(hops)
         hashes = tuple(trace_record_hash(record) for record in records)

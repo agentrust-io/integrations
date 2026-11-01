@@ -131,6 +131,42 @@ class ConduitLiveTests(unittest.TestCase):
             with self.subTest(value=value):
                 self.assertEqual(self.invoke().outcome, "untrusted-start")
 
+    def test_finish_requires_explicit_false_running(self):
+        original = self.transport
+        missing = object()
+        for value in (missing, None, 0, "", [], {}, True, "false"):
+            def transport(cli, action, params):
+                response = original(cli, action, params)
+                if action == "job_poll":
+                    if value is missing:
+                        del response["result"]["running"]
+                    else:
+                        response["result"]["running"] = value
+                return response
+            self.transport = transport
+            with self.subTest(value=value):
+                self.assertEqual(self.invoke().outcome, "untrusted-or-unsuccessful-result")
+
+    def test_finish_commits_are_checked_with_a_valid_start(self):
+        original = self.transport
+        missing = object()
+        for field in ("commit_sha", "commit_sha_end"):
+            for value in (missing, None, "", "abc", "g" * 40, "b" * 40):
+                calls = []
+                def transport(cli, action, params):
+                    calls.append(action)
+                    response = original(cli, action, params)
+                    if action == "job_poll":
+                        if value is missing:
+                            del response["result"][field]
+                        else:
+                            response["result"][field] = value
+                    return response
+                self.transport = transport
+                with self.subTest(field=field, value=value):
+                    self.assertEqual(self.invoke().outcome, "untrusted-or-unsuccessful-result")
+                    self.assertEqual(calls, ["job_start", "job_poll"])
+
     def test_malformed_nested_responses_are_unknown(self):
         original = self.transport
         for action in ("job_start", "job_poll"):

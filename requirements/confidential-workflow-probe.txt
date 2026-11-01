@@ -12,6 +12,10 @@ agentrust-trace==0.11.0 \
     # via
     #   ca2a-runtime
     #   cmcp-runtime
+agentrust-trace-tests==0.6.2 \
+    --hash=sha256:6bb0a86f5514c266223818d0883ea9c7c1a449d87947a0b7bd57dcdf58dbfbea \
+    --hash=sha256:bb2021031b0705645a75780ee443e6be16e8758d83ad4486d1cbf0e2f5b59fad
+    # via -r requirements/confidential-workflow-probe.in
 annotated-types==0.8.0 \
     --hash=sha256:13b2beaad985e05e2d6407ee4c4f35590b11f8d693a258a561055cac8f64cab7 \
     --hash=sha256:f072f4d804ea359e4eaf198b1af7a8b0943881a87f31bb764f8bf219bb9419e0
@@ -247,6 +251,7 @@ click==8.5.0 \
     --hash=sha256:255bc9599cf7748b4b1a446ccc735421bd08a2ae529a8b88597d3de5664ee360 \
     --hash=sha256:ba0d2089de75ea0310e2dde03160e6ca10009947fb95a182f9b54021bb272e34
     # via
+    #   agentrust-trace-tests
     #   cmcp-runtime
     #   uvicorn
 cmcp-runtime==0.7.0 \
@@ -316,6 +321,7 @@ cryptography==50.0.2 \
     # via
     #   agent-manifest
     #   agentrust-trace
+    #   agentrust-trace-tests
     #   ca2a-runtime
     #   cmcp-runtime
 h11==0.16.0 \
@@ -341,7 +347,9 @@ idna==3.20 \
 jsonschema==4.26.0 \
     --hash=sha256:0c26707e2efad8aa1bfc5b7ce170f3fccc2e4918ff85989ba9ffa9facb2be326 \
     --hash=sha256:d489f15263b8d200f8387e64b4c3a75f06629559fb73deb8fdfb525f2dab50ce
-    # via agentrust-trace
+    # via
+    #   agentrust-trace
+    #   agentrust-trace-tests
 jsonschema-specifications==2025.9.1 \
     --hash=sha256:98802fee3a11ee76ecaca44429fda8a41bff98b00a0f2838151b113f210cc6fe \
     --hash=sha256:b540987f239e745613c7a9176f3edb72b832a4ac465cf02712288397832b5e8d
@@ -588,6 +596,7 @@ rfc8785==0.1.4 \
     --hash=sha256:e545841329fe0eee4f6a3b44e7034343100c12b4ec566dc06ca9735681deb4da
     # via
     #   agentrust-trace
+    #   agentrust-trace-tests
     #   ca2a-runtime
     #   cmcp-runtime
 rpds-py==2026.9.1 \
