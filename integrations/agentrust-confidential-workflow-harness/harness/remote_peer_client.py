@@ -6,6 +6,7 @@ by ca2a-runtime 0.4.0. This remains software-only, same-operator evidence.
 """
 import hashlib
 import json
+import re
 import time
 import subprocess
 from dataclasses import dataclass
@@ -121,7 +122,13 @@ def run(*, transaction_id: str, nonce: str, repo: str, issuer_private,
                 body.get("capability") != CAPABILITY or
                 body.get("assurance") != "software-only" or
                 not isinstance(execution, dict) or
-                execution.get("exit_code") != 0 or
+                execution.get("transaction_id") != transaction_id or
+                not isinstance(execution.get("session_id"), str) or
+                not execution["session_id"] or
+                not isinstance(execution.get("commit_sha"), str) or
+                re.fullmatch(r"[0-9a-f]{40}", execution["commit_sha"]) is None or
+                type(execution.get("exit_code")) is not int or
+                execution["exit_code"] != 0 or
                 not isinstance(execution.get("start_receipt_hash"), str) or
                 not isinstance(execution.get("finish_receipt_hash"), str)):
             return LivePeerResult("refused-output-binding", transaction_id,

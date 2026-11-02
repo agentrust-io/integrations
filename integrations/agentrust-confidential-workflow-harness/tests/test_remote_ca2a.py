@@ -27,10 +27,10 @@ class RemoteCA2ATests(unittest.TestCase):
         self.calls = []
         self.last_submit = None
 
-    def dispatch(self, agent, repo):
+    def dispatch(self, agent, repo, transaction_id):
         self.dispatch_count += 1
-        return {"session_id":"session", "start_receipt_hash":"a"*64,
-                "finish_receipt_hash":"b"*64,"commit_sha":"abc","exit_code":0}
+        return {"transaction_id": transaction_id, "session_id":"session", "start_receipt_hash":"a"*64,
+                "finish_receipt_hash":"b"*64,"commit_sha":"a"*40,"exit_code":0}
 
     def send(self, request):
         self.calls.append(request["method"])
@@ -138,3 +138,107 @@ class RemoteCA2ATests(unittest.TestCase):
         result=self.invoke(credential_not_after_offset=-2)
         self.assertEqual(result.outcome,"refused-authenticated-peer")
         self.assertEqual(self.dispatch_count,0)
+
+    def worker(self, agent, action, params):
+        from test_conduit_live import receipt
+        transaction = params["transaction_id"]
+        session = "worker-session"
+        start = receipt("job_start", session, transaction_id=transaction)
+        if action == "job_start":
+            return {"ok": True, "receipt": start, "result": {
+                "transaction_id": transaction, "session_id": session,
+                "intent": "inspect", "network": False,
+                "repo": "/home/ubuntu/src/integrations", "commit_sha": "a" * 40}}
+        return {"ok": True, "receipt": receipt(
+            "job_poll", session, start["hash"], transaction_id=transaction),
+            "result": {"transaction_id": transaction, "session_id": session,
+                "running": False, "exit_code": 0, "commit_sha": "a" * 40,
+                "commit_sha_end": "a" * 40, "worktree_clean_start": True,
+                "worktree_clean_end": True}}
+
+    def test_actual_worker_through_signed_service_and_client(self):
+        from unittest.mock import patch
+        from harness.remote_peer_service import execute_job
+        self.dispatch = execute_job
+        with patch("harness.remote_peer_service._agent", side_effect=self.worker) as agent:
+            result = self.invoke()
+        self.assertEqual(result.outcome, "authenticated-remote-ca2a-software")
+        self.assertTrue(result.trace_verified)
+        self.assertEqual([c.args[2]["transaction_id"] for c in agent.call_args_list],
+                         ["transaction-1", "transaction-1"])
+
+    def test_malformed_worker_never_gains_signed_success(self):
+        import hashlib
+        from unittest.mock import patch
+        from harness.remote_peer_service import execute_job
+        self.dispatch = execute_job
+        missing = object()
+        cases = []
+        for action in ("job_start", "job_poll"):
+            cases.extend((action, "top", "ok", v)
+                         for v in (missing, "false", False, 1, None))
+            cases.extend((action, "result", "transaction_id", v)
+                         for v in (missing, None, "other-transaction"))
+            cases.extend((action, "detail", "transaction_id", v)
+                         for v in (missing, None, "other-transaction"))
+            cases.extend((action, "result", "session_id", v)
+                         for v in (missing, None, ""))
+        cases.extend(("job_start", "result", "commit_sha", v)
+                     for v in (missing, None, "abc", "A" * 40, "g" * 40))
+        cases.extend(("job_poll", "result", "running", v)
+                     for v in (missing, None, 0, "false", "", [], {}))
+        cases.extend(("job_poll", "result", "exit_code", v)
+                     for v in (missing, False, 0.0, "0", None, 1))
+        for action, location, field, value in cases:
+            def worker(agent, requested, params):
+                response = self.worker(agent, requested, params)
+                if requested == action:
+                    target = (response if location == "top" else
+                              response["receipt"]["detail"] if location == "detail"
+                              else response["result"])
+                    if value is missing:
+                        target.pop(field, None)
+                    else:
+                        target[field] = value
+                    if field == "session_id" and location == "result":
+                        response["receipt"]["detail"][field] = target.get(field)
+                    record = response["receipt"]
+                    record["hash"] = hashlib.sha256(json.dumps(
+                        {k: v for k, v in record.items() if k != "hash"},
+                        sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+                return response
+            with self.subTest(action=action, location=location, field=field, value=value):
+                with patch("harness.remote_peer_service._agent", side_effect=worker):
+                    result = self.invoke()
+                self.assertEqual(result.outcome, "unknown-authenticated-execution")
+                self.assertFalse(result.trace_verified)
+                self.assertIsNone(result.finish_receipt_hash)
+        with patch("harness.remote_peer_service._agent", side_effect=self.worker):
+            self.assertEqual(self.invoke().outcome, "authenticated-remote-ca2a-software")
+
+    def test_client_refuses_malformed_signed_execution(self):
+        original = self.dispatch
+        for field, value in (("exit_code", False), ("exit_code", 0.0),
+                             ("session_id", None), ("session_id", ""),
+                             ("commit_sha", "abc"), ("commit_sha", "A" * 40),
+                             ("transaction_id", "other-transaction")):
+            def dispatch(agent, repo, transaction_id):
+                observed = original(agent, repo, transaction_id)
+                observed[field] = value
+                return observed
+            self.dispatch = dispatch
+            with self.subTest(field=field, value=value):
+                self.assertIn(self.invoke().outcome,
+                              {"refused-output-binding", "unknown-authenticated-execution"})
+
+    def test_receipts_from_other_transaction_are_refused(self):
+        from unittest.mock import patch
+        from harness.remote_peer_service import execute_job
+        self.dispatch = execute_job
+        def stale(agent, action, params):
+            return self.worker(agent, action, {**params, "transaction_id": "transaction-1"})
+        with patch("harness.remote_peer_service._agent", side_effect=stale):
+            self.assertEqual(self.invoke().outcome, "authenticated-remote-ca2a-software")
+            result = self.invoke(transaction_id="transaction-2")
+        self.assertEqual(result.outcome, "unknown-authenticated-execution")
+        self.assertFalse(result.trace_verified)

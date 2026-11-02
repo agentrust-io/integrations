@@ -186,3 +186,31 @@ class ConduitLiveTests(unittest.TestCase):
                     self.transport = transport
                     with self.subTest(action=action, field=field, malformed=malformed):
                         self.assertEqual(self.invoke().outcome, "unknown-transport-or-protocol")
+
+    def test_ok_flags_require_true(self):
+        original = self.transport
+        for action in ("job_start", "job_poll"):
+            for value in ("false", 1, None, [], {}):
+                def transport(cli, requested, params):
+                    response = original(cli, requested, params)
+                    if requested == action:
+                        response["ok"] = value
+                    return response
+                self.transport = transport
+                with self.subTest(action=action, value=value):
+                    expected = ("refused-conduit" if action == "job_start"
+                                else "unknown-unobserved-result")
+                    self.assertEqual(self.invoke().outcome, expected)
+
+    def test_exit_code_is_integer_zero(self):
+        original = self.transport
+        for value in (False, 0.0, "0", None, 1):
+            def transport(cli, action, params):
+                response = original(cli, action, params)
+                if action == "job_poll":
+                    response["result"]["exit_code"] = value
+                return response
+            self.transport = transport
+            with self.subTest(value=value):
+                self.assertEqual(self.invoke().outcome,
+                                 "untrusted-or-unsuccessful-result")

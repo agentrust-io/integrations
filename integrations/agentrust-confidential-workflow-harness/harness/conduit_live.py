@@ -62,7 +62,7 @@ def run(*, transaction_id: str, repo: str, cli: str,
         start = transport(cli, "job_start", {"intent": "inspect", "repo": repo, "transaction_id": transaction_id})
         if not isinstance(start, dict):
             raise ValueError("non-object-start")
-        if not start.get("ok"):
+        if start.get("ok") is not True:
             return LiveResult("refused-conduit", transaction_id)
         sr = start["receipt"]
         job = start["result"]
@@ -85,7 +85,7 @@ def run(*, transaction_id: str, repo: str, cli: str,
         poll = transport(cli, "job_poll", {"session_id": session, "transaction_id": transaction_id})
         if not isinstance(poll, dict):
             raise ValueError("non-object-poll")
-        if not poll.get("ok"):
+        if poll.get("ok") is not True:
             return LiveResult("unknown-unobserved-result", transaction_id, sr["hash"])
         fr = poll["receipt"]
         finished = poll["result"]
@@ -100,7 +100,9 @@ def run(*, transaction_id: str, repo: str, cli: str,
             or fr.get("detail", {}).get("session_id") != session
             or fr.get("prev_hash") != sr["hash"]
             or finished.get("session_id") != session
-            or finished.get("running") is not False or finished.get("exit_code") != 0
+            or finished.get("running") is not False
+            or type(finished.get("exit_code")) is not int
+            or finished["exit_code"] != 0
             or finished.get("commit_sha") != job.get("commit_sha")
             or finished.get("commit_sha_end") != job.get("commit_sha")
             or finished.get("worktree_clean_start") is not True

@@ -111,3 +111,19 @@ A forbidden recipient takes precedence over permission.
 The deterministic software-version gate uses [SemVer 2.0.0](https://semver.org/)
 with a fixed minimum of `1.0.0`: `1.0.0-rc.1` is below that minimum, and build
 metadata does not change precedence. Invalid versions are refused.
+
+## Conduit result acceptance
+
+Both Conduit paths require literal boolean success flags, a nonempty session,
+a full lowercase 40-hex commit and an integer zero exit code (booleans are
+refused). Completion requires `running is False`; only `running is True`
+continues remote polling. The signed remote path passes the authorized
+transaction ID through both worker calls, their result echoes and hash-covered
+receipt details, and binds it into the signed execution output. Missing or
+mismatched worker context remains unknown. The caller independently checks the
+signed execution fields before reporting success.
+
+These stricter echoes require Conduit operator adoption and a fresh live
+capture. Historical captures are not reclassified. Tests use a mocked worker
+through the real released cA2A service/client and TRACE signing/verification;
+they establish software refusal boundaries, not independent remote execution.

@@ -7,6 +7,7 @@ key must be provisioned and pinned out of band. Never expose as a public API.
 import hashlib
 import json
 import os
+import re
 import sqlite3
 import subprocess
 import sys
@@ -54,7 +55,7 @@ def _consume(path: Path, occurrence: str) -> bool:
         db.close()
 
 
-def _receipt_ok(receipt, action, session):
+def _receipt_ok(receipt, action, session, transaction_id):
     if not isinstance(receipt, dict):
         return False
     digest = receipt.get("hash")
@@ -62,7 +63,9 @@ def _receipt_ok(receipt, action, session):
     return (isinstance(digest, str) and _digest(body) == digest
             and receipt.get("action") == action
             and receipt.get("status") == "PASS"
-            and receipt.get("detail", {}).get("session_id") == session)
+            and isinstance(receipt.get("detail"), dict)
+            and receipt["detail"].get("session_id") == session
+            and receipt["detail"].get("transaction_id") == transaction_id)
 
 
 def _agent(agent_path: str, action: str, params: dict, *, timeout=12) -> dict:
@@ -78,38 +81,48 @@ def _agent(agent_path: str, action: str, params: dict, *, timeout=12) -> dict:
     return data
 
 
-def execute_job(agent: str, repo: str) -> dict:
-    started = _agent(agent, "job_start", {"intent": "inspect", "repo": repo})
-    if not started.get("ok"):
+def execute_job(agent: str, repo: str, transaction_id: str) -> dict:
+    started = _agent(agent, "job_start", {"intent": "inspect", "repo": repo,
+                                         "transaction_id": transaction_id})
+    if started.get("ok") is not True:
         raise RuntimeError("conduit-refused-start")
     start = started["receipt"]
     job = started["result"]
     sid = job["session_id"]
-    if not (_receipt_ok(start, "job_start", sid)
+    if not (isinstance(sid, str) and sid
+            and isinstance(job.get("commit_sha"), str)
+            and re.fullmatch(r"[0-9a-f]{40}", job["commit_sha"]) is not None
+            and job.get("transaction_id") == transaction_id
+            and _receipt_ok(start, "job_start", sid, transaction_id)
             and job.get("intent") == "inspect"
             and job.get("network") is False
             and job.get("repo") == repo):
         raise RuntimeError("untrusted-conduit-start")
     # There is intentionally no retry of job_start on uncertain delivery.
     for _ in range(16):
-        polled = _agent(agent, "job_poll", {"session_id": sid})
-        if not polled.get("ok"):
+        polled = _agent(agent, "job_poll", {"session_id": sid,
+                                           "transaction_id": transaction_id})
+        if polled.get("ok") is not True:
             raise RuntimeError("unobserved-conduit-completion")
         finished = polled["result"]
-        if finished.get("running"):
+        if finished.get("running") is True:
             time.sleep(0.3)
             continue
         finish = polled["receipt"]
-        if not (_receipt_ok(finish, "job_poll", sid)
+        if not (finished.get("running") is False
+                and finished.get("transaction_id") == transaction_id
+                and _receipt_ok(finish, "job_poll", sid, transaction_id)
                 and finish.get("prev_hash") == start["hash"]
                 and finished.get("session_id") == sid
-                and finished.get("exit_code") == 0
+                and type(finished.get("exit_code")) is int
+                and finished["exit_code"] == 0
                 and finished.get("commit_sha") == job.get("commit_sha")
                 and finished.get("commit_sha_end") == job.get("commit_sha")
                 and finished.get("worktree_clean_start") is True
                 and finished.get("worktree_clean_end") is True):
             raise RuntimeError("invalid-conduit-outcome")
-        return {"session_id": sid, "start_receipt_hash": start["hash"],
+        return {"transaction_id": transaction_id,
+                "session_id": sid, "start_receipt_hash": start["hash"],
                 "finish_receipt_hash": finish["hash"],
                 "commit_sha": job["commit_sha"], "exit_code": 0}
     raise RuntimeError("unknown-conduit-timeout")
@@ -163,7 +176,7 @@ def serve(request: dict, *, channel_private, challenge_secret: bytes,
         return {"status": 403, "envelope": producer.finish(403, {
             "error": {"code": "delegation-or-context-refused"}})}
     try:
-        observed = ((dispatch or execute_job)(agent, allowed_repo))
+        observed = ((dispatch or execute_job)(agent, allowed_repo, message["transaction_id"]))
         body = {"accepted": True,
                 "transaction_id": message["transaction_id"],
                 "nonce": message["nonce"], "repo": allowed_repo,
