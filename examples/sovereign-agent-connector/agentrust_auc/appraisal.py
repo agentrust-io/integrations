@@ -46,12 +46,13 @@ class AppraisalPolicy:
 
 
 def _workload_key_thumbprint(workload_key: str) -> bytes:
-    try:
-        key_bytes = bytes.fromhex(workload_key)
-    except ValueError as exc:
-        raise BundleError("workload key is not valid hex") from exc
-    if len(key_bytes) != 32:
-        raise BundleError("workload key must be a 32-byte Ed25519 public key")
+    if (
+        not isinstance(workload_key, str)
+        or len(workload_key) != 64
+        or any(c not in "0123456789abcdef" for c in workload_key)
+    ):
+        raise BundleError("workload key must be a 32-byte Ed25519 public key in lowercase hex")
+    key_bytes = bytes.fromhex(workload_key)
     x = base64.urlsafe_b64encode(key_bytes).rstrip(b"=").decode()
     canonical = json.dumps(
         {"crv": "Ed25519", "kty": "OKP", "x": x},
@@ -70,6 +71,11 @@ def _azure_imds_time(value: Any) -> datetime:
         raise BundleError("Azure IMDS document timestamp is malformed") from exc
 
 
+def _validate_validity_seconds(validity_seconds: int) -> None:
+    if type(validity_seconds) is not int or validity_seconds <= 0:
+        raise BundleError("validity_seconds must be a positive integer")
+
+
 def make_placement_assertion(
     *,
     workload_key: str,
@@ -80,6 +86,10 @@ def make_placement_assertion(
     signing_key: Ed25519PrivateKey,
 ) -> dict[str, Any]:
     """Create accountable placement evidence, explicitly separate from hardware."""
+    _workload_key_thumbprint(workload_key)
+    _validate_validity_seconds(validity_seconds)
+    if not isinstance(issued_at, datetime) or issued_at.tzinfo is None:
+        raise BundleError("issued_at must be a timezone-aware datetime")
     return _sign(
         {
             "type": "auc:OperatorPlacementAssertion",
@@ -106,6 +116,7 @@ def make_azure_placement_assertion(
 ) -> dict[str, Any]:
     """Join verified Azure IMDS identity to ARM placement and derive jurisdiction."""
     _workload_key_thumbprint(workload_key)
+    _validate_validity_seconds(validity_seconds)
     nonce = imds_document.get("nonce")
     if not isinstance(nonce, str) or len(nonce) != 10 or not nonce.isdigit():
         raise BundleError("Azure IMDS document has no valid 10-digit challenge")
@@ -178,6 +189,7 @@ def make_gcp_placement_assertion(
     relying-party interpretation of Google's signed GCE zone claim.
     """
     _workload_key_thumbprint(workload_key)
+    _validate_validity_seconds(validity_seconds)
     if observed_at.tzinfo is None:
         raise BundleError("GCP observation timestamp must be timezone-aware")
     gce = verified_claims.get("submods", {}).get("gce", {})
@@ -195,7 +207,7 @@ def make_gcp_placement_assertion(
         raise BundleError("GCP Confidential Space debug mode is not allowed")
     issued_at = verified_claims.get("iat")
     expires_at = verified_claims.get("exp")
-    if not isinstance(issued_at, int) or not isinstance(expires_at, int):
+    if type(issued_at) is not int or type(expires_at) is not int:
         raise BundleError("GCP token validity window is malformed")
     observed_epoch = int(observed_at.timestamp())
     if not issued_at <= observed_epoch <= expires_at:
@@ -205,7 +217,7 @@ def make_gcp_placement_assertion(
     instance_id = gce.get("instance_id")
     if not all(isinstance(value, str) and value for value in (image_digest, project_id)):
         raise BundleError("GCP workload identity claims are incomplete")
-    if not isinstance(instance_id, str | int):
+    if isinstance(instance_id, bool) or not isinstance(instance_id, str | int) or str(instance_id) == "":
         raise BundleError("GCP instance identity claim is missing")
 
     return _sign(

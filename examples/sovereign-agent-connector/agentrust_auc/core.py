@@ -75,7 +75,20 @@ def _b64(value: bytes) -> str:
 
 
 def _unb64(value: str) -> bytes:
-    return base64.urlsafe_b64decode(value + "=" * (-len(value) % 4))
+    if (
+        not isinstance(value, str)
+        or not value
+        or len(value) % 4 == 1
+        or any(
+            c not in "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
+            for c in value
+        )
+    ):
+        raise ValueError("invalid base64url string")
+    raw = base64.urlsafe_b64decode(value.encode("ascii") + b"=" * (-len(value) % 4))
+    if _b64(raw) != value:
+        raise ValueError("non-canonical base64url string")
+    return raw
 
 
 def _public_hex(key: Ed25519PrivateKey) -> str:
@@ -90,6 +103,12 @@ def _sign(body: dict[str, Any], key: Ed25519PrivateKey) -> dict[str, Any]:
 
 
 def _verify_signed(value: dict[str, Any], trusted_key_hex: str) -> None:
+    if (
+        not isinstance(trusted_key_hex, str)
+        or len(trusted_key_hex) != 64
+        or any(c not in "0123456789abcdef" for c in trusted_key_hex)
+    ):
+        raise BundleError("trusted_key_hex must be 64 lowercase hex characters")
     if value.get("issuer_key") != trusted_key_hex:
         raise BundleError("signed artifact issuer does not match its pinned trust key")
     signature = value.get("signature")
@@ -97,8 +116,11 @@ def _verify_signed(value: dict[str, Any], trusted_key_hex: str) -> None:
         raise BundleError("signed artifact has no signature")
     body = {key: item for key, item in value.items() if key != "signature"}
     try:
+        sig_bytes = _unb64(signature)
+        if len(sig_bytes) != 64:
+            raise ValueError("Ed25519 signature must be 64 bytes")
         Ed25519PublicKey.from_public_bytes(bytes.fromhex(trusted_key_hex)).verify(
-            _unb64(signature), _canonical(body)
+            sig_bytes, _canonical(body)
         )
     except (InvalidSignature, ValueError) as exc:
         raise BundleError("signed artifact signature is invalid") from exc
