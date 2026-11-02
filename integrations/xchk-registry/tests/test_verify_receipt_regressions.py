@@ -300,7 +300,7 @@ def test_an_amendment_on_a_record_that_seals_no_digest_is_pending_not_failed(tmp
     with redirect_stdout(out):
         code, rep = v.verify(str(p))
     text = out.getvalue()
-    assert rep["amendment"] == {"command": b["decision"]["amendment"]["command"], "checkable": False, "committed": False}
+    assert rep["amendment"] is None   # 2 Nov 2026: the record hash fails below, and a report that does not verify commits to nothing
     assert "seals no action digest" in text and "FAIL the sealed record commits" not in text
     assert "FAIL record hash recomputed" in text and code == 1
 
@@ -405,4 +405,74 @@ def test_an_amendment_without_the_asks_digest_is_never_committed(tmp_path):
     b = copy.deepcopy(good)
     b["decision"].pop("actionParamsHash")                # challenge kept: the signed ask no longer matches
     code, rep, _ = rep_of(b)
-    assert code == 1 and rep["amendment"]["committed"] is False
+    assert code == 1 and rep["amendment"] is None   # 2 Nov 2026: withheld on a failed verdict
+
+
+def test_a_hybrid_signature_with_a_half_removed_is_refused(tmp_path):
+    """Review of #350 (rajnisht7, 2 Nov 2026): the verifier checked only the signatures a bundle carried, so a hybrid
+    signature with either half removed, the list removed down to the legacy single field, or the `alg` label rewritten
+    to match, still verified under --require-approval. The required set now comes from signed fields (the sealed
+    profile's signing dial; for older seals the seal's windowStart), on the seal, the profile and the binding alike."""
+    for name in ("01-approval-confirmed.bundle.json", "07-amended.bundle.json"):
+        good = load(name)
+        assert [s["alg"] for s in good["registrySignature"]["signatures"]] == ["ed25519", "ml-dsa-65"]
+        assert good["profile"]["document"]["dials"]["signing"] == "ed25519+ml-dsa-65"
+        for drop in ("ml-dsa-65", "ed25519"):
+            b = copy.deepcopy(good)
+            b["registrySignature"]["signatures"] = [s for s in b["registrySignature"]["signatures"] if s["alg"] != drop]
+            code, out = run(b, tmp_path, require_approval=True)
+            assert code == 1 and f"the {drop} signature this receipt requires is missing" in out, out
+        b = copy.deepcopy(good)
+        del b["registrySignature"]["signatures"]                       # the legacy single Ed25519 field is left
+        code, out = run(b, tmp_path)
+        assert code == 1 and "ml-dsa-65 signature this receipt requires is missing" in out, out
+        b = copy.deepcopy(good)
+        b["registrySignature"]["signatures"] = b["registrySignature"]["signatures"][:1]
+        b["registrySignature"]["alg"] = "ed25519"                       # relabelled to match: the label is not consulted
+        code, out = run(b, tmp_path)
+        assert code == 1 and "ml-dsa-65 signature this receipt requires is missing" in out, out
+        for where in (("profile", "signature"), ("approver", "binding")):
+            b = copy.deepcopy(good)
+            obj = b[where[0]][where[1]]
+            obj["signatures"] = [s for s in obj["signatures"] if s["alg"] != "ml-dsa-65"]
+            code, out = run(b, tmp_path)
+            assert code == 1 and "ml-dsa-65 signature this receipt requires is missing" in out, (where, out)
+
+
+def test_a_report_that_does_not_verify_names_nobody_and_commits_to_nothing(tmp_path):
+    """Review of #350 (rajnisht7, 2 Nov 2026): on a receipt whose seal signature is corrupted, boundIdentity and
+    amendment.committed were still fully populated, so a caller reading them before the exit code could act on them.
+    Both are null on every non-zero exit, strict refusals included."""
+    def rep_of(b, strict=False):
+        p = tmp_path / "r.json"
+        p.write_text(json.dumps(b), encoding="utf-8")
+        with redirect_stdout(io.StringIO()):
+            return v.verify(str(p), require_approval=strict)
+    good = load("07-amended.bundle.json")
+    code, rep = rep_of(good)
+    assert code == 0 and rep["boundIdentity"]["email"] and rep["amendment"]["committed"] is True
+    b = copy.deepcopy(good)
+    sig = b["registrySignature"]["signatures"][0]["signature"]
+    i = len(sig) // 2
+    b["registrySignature"]["signatures"][0]["signature"] = sig[:i] + ("A" if sig[i] != "A" else "B") + sig[i + 1:]
+    code, rep = rep_of(b)
+    assert code == 1 and rep["failed"] >= 1 and rep["boundIdentity"] is None and rep["amendment"] is None, rep
+    b = copy.deepcopy(good)
+    del b["seal"]                                                      # strict refuses: nothing failed, nothing is reported either
+    code, rep = rep_of(b, strict=True)
+    assert code == 3 and rep["boundIdentity"] is None and rep["amendment"] is None, rep
+
+
+def test_the_verifier_writes_utf8_whatever_the_console_locale(tmp_path):
+    """Review of #350 (drk-ram, 2 Nov 2026, Windows): under a cp1252 console the human lines (U+2194, an em dash) and
+    the --json report raised UnicodeEncodeError, exit 1 with a traceback — the exit of a failed check. The CLI now
+    reconfigures stdout to UTF-8; here PYTHONIOENCODING stands in for the Windows console."""
+    import os
+    import subprocess
+    env = dict(os.environ, PYTHONIOENCODING="cp1252", PYTHONUTF8="0", PYTHONLEGACYWINDOWSSTDIO="1")
+    bundle = str(FX / "01-approval-confirmed.bundle.json")
+    for flags in ([], ["--json", "--require-approval"]):
+        r = subprocess.run([sys.executable, str(HERE.parent / "verify_receipt.py"), bundle] + flags, capture_output=True, env=env, timeout=180)
+        assert r.returncode == 0 and b"UnicodeEncodeError" not in r.stderr, r.stderr.decode(errors="replace")[-600:]
+        if flags:
+            assert json.loads(r.stdout.decode("utf-8"))["exit"] == 0

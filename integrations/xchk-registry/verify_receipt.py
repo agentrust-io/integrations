@@ -22,7 +22,7 @@ Checks (each reproduces the rule the registry used to write the bytes; bundle fo
   1. record hash   = sha256(canonical(record))           canonical = sorted keys, no whitespace, JSON scalars, UTF-8
   2. Merkle path   from the record hash to the seal root  node = sha256(left_hex + right_hex); odd node promoted unhashed
   3. seal hash     = sha256(canonical(seal fields))
-  4. registry sig  EVERY signature the seal carries, over the seal-hash bytes, each with the pinned key of its alg and
+  4. registry sig  EVERY signature the seal carries, and every one it must carry (2 Nov 2026), over the seal-hash bytes, each with the pinned key of its alg and
                    keyId: Ed25519 (pure Python, below) and — since 24 Sep 2026 — ML-DSA-65 (FIPS 204). A hybrid must
                    pass both. Unknown algs fail. Key ids are recomputed from the pinned keys.
                    The ML-DSA half needs `pip install dilithium-py` (pure Python, MIT); without it that half is
@@ -206,9 +206,29 @@ def pinned_keys(rs: dict) -> list:
         return [{"alg": alg, "keyId": rs.get("keyId"), "publicKeyRaw": rs["publicKeyRaw"]}]
     return []
 
+# 2 Nov 2026 (review of agentrust-io/integrations#350, rajnisht7): the signatures a receipt MUST carry come from signed
+# fields only. The `alg` label and the pinned key list are unsigned and an editor of the bundle can rewrite them; the
+# sealed profile's `signing` dial is hashed into the seal (profileHash, 6 Oct 2026), and for a seal older than profiles
+# the seal's own windowStart is hashed. Both registries issued their first hybrid seal in the same minute.
+HYBRID_SINCE = "2026-09-24T14:40:00Z"   # last Ed25519-only seal 14:38:47Z, first hybrid 14:43:43Z (in.xchk.io and xchk.me)
 
-def registry_verify(ok, sig_obj: dict, msg: bytes, keys: list, what: str) -> int:
-    """Verify every signature the object lists. Returns the number of WAITs (unverifiable halves); FAILs go through ok()."""
+
+def required_algs(seal, profile_doc):
+    """The algorithms every registry signature in this bundle must carry, read from signed fields; None when the bundle
+    is not sealed, in which case whatever is present is checked and nothing is required. Pure."""
+    dials = profile_doc.get("dials") if isinstance(profile_doc, dict) else None
+    dial = dials.get("signing") if isinstance(dials, dict) else None
+    if isinstance(dial, str) and dial not in ("", "none"):
+        return set(dial.split("+"))
+    ws = seal.get("windowStart") if isinstance(seal, dict) else None
+    if isinstance(ws, str) and ws.endswith("Z"):   # ISO-8601 UTC as the registry writes it: lexical order is time order
+        return {"ed25519", "ml-dsa-65"} if ws >= HYBRID_SINCE else {"ed25519"}
+    return None
+
+
+def registry_verify(ok, sig_obj: dict, msg: bytes, keys: list, what: str, required=None) -> int:
+    """Verify every signature the object lists, and require every one `required` names (2 Nov 2026). Returns the number
+    of WAITs (unverifiable halves); FAILs go through ok()."""
     sigs = sig_obj.get("signatures") if isinstance(sig_obj.get("signatures"), list) and sig_obj.get("signatures") else None
     if not sigs and sig_obj.get("signature"):
         alg = sig_obj.get("alg") if sig_obj.get("alg") and sig_obj.get("alg") != "ed25519+ml-dsa-65" else "ed25519"
@@ -239,6 +259,10 @@ def registry_verify(ok, sig_obj: dict, msg: bytes, keys: list, what: str) -> int
             print(f"  WAIT {what}: {alg} signature present (keyId {kid}) — install dilithium-py to verify the post-quantum half")
         else:
             ok(r, f"{what}: {alg} signature verifies with pinned key {kid}" + (" (FIPS 204, post-quantum)" if alg == "ml-dsa-65" else ""))
+    present = {s.get("alg") for s in sigs}
+    for alg in sorted(required or ()):
+        if alg not in present:
+            ok(False, f"{what}: the {alg} signature this receipt requires is missing — a hybrid signature with a half removed is not the registry's signature")
     if len(sigs) > 1 and waits == 0:
         print(f"  ..   {what}: HYBRID — {' + '.join(s.get('alg', '?') for s in sigs)}, every half checked")
     return waits
@@ -530,7 +554,7 @@ def verify(path: str, artifact_path: Optional[str] = None, require_approval: boo
         report["checks"].append({"status": "FAIL", "text": text})
         failed = sum(1 for c in report["checks"] if c["status"] == "FAIL")
         print(f"\nRESULT: does NOT verify ({failed} check(s) failed)")
-        report.update(exit=1, result="fails", failed=failed, pending=None)
+        report.update(exit=1, result="fails", failed=failed, pending=None, boundIdentity=None, amendment=None)
         return 1, report
 
 
@@ -544,13 +568,18 @@ def _verify(path, artifact_path, require_approval, report):
     assertion with a key, a registry-signed binding, and an ask-v1 challenge. Without it, a bundle stripped of its
     approver still exits 0 (nothing FAILED, the steps were only WAIT), and a caller that reads 0 as "approval
     verified" is wrong. Absence of failure is not verification. `boundIdentity` is the email, proofing level and method
-    from the registry-signed binding, never the readable labels beside it (null without a binding). `amendment` is null when the decision carries none,
+    from the registry-signed binding, never the readable labels beside it (null without a binding). Both are null whenever the exit is not 0 (2 Nov 2026). `amendment` is null when the decision carries none,
     else {command, committed}: committed only when the sealed record's paramsHash recomputes over that command AND
     the amendment cites the ask the person signed (finding 3)."""
     checks = report["checks"]
 
     def done(code, result):
         report.update(exit=code, result=result, failed=failed, pending=pending)
+        if code != 0:
+            # 2 Nov 2026 (review of #350, rajnisht7): with the seal signature corrupted, boundIdentity and amendment
+            # (committed: true) were still filled in, and a caller that read them before the exit code took them as
+            # verified. A report that does not verify names nobody and commits to nothing.
+            report.update(boundIdentity=None, amendment=None)
         return code, report
 
     failed = 0
@@ -603,6 +632,7 @@ def _verify(path, artifact_path, require_approval, report):
 
     # 2. merkle
     seal = b.get("seal")
+    required = required_algs(seal, None)   # 2 Nov 2026: refined below once the sealed profile has hashed
     merkle = b.get("merkle")
     if seal and merkle and isinstance(merkle.get("proof"), list):
         # 19 Oct 2026: a bundle with no record hash, or a malformed proof step, is a failed check, never a crash — every
@@ -640,10 +670,12 @@ def _verify(path, artifact_path, require_approval, report):
                 dh = sha256_hex(canonical(doc))
                 ok(dh == ph, f"profile document hashes to the seal's profileHash: {dh}" if dh == ph
                    else f"profile document does NOT hash to the seal's profileHash: {dh}, seal says {ph}")
+                if dh == ph:
+                    required = required_algs(seal, doc)
                 psig = prof.get("signature") or {}
                 pkeys = pinned_keys(b.get("registrySignature") or {})
                 if (psig.get("signature") or psig.get("signatures")) and pkeys:
-                    pending += registry_verify(ok, psig, ph.encode("utf-8"), pkeys, "registry signature over the profile hash")
+                    pending += registry_verify(ok, psig, ph.encode("utf-8"), pkeys, "registry signature over the profile hash", required)
                 else:
                     ok(False, "profile carries no registry signature")
                 print(f"  ..   sealed under profile \"{doc.get('name')}\" of {doc.get('registry')} ({ph[:12]}…): "
@@ -659,7 +691,7 @@ def _verify(path, artifact_path, require_approval, report):
         if not isinstance(seal.get("sealHash"), str):
             ok(False, "seal names its hash, for the registry signature to be checked over")
         else:
-            pending += registry_verify(ok, rs, seal["sealHash"].encode("utf-8"), keys, "registry signature over the seal hash")
+            pending += registry_verify(ok, rs, seal["sealHash"].encode("utf-8"), keys, "registry signature over the seal hash", required)
         pinned = ", ".join(f"{k.get('alg')}/{k.get('keyId')}" for k in keys)  # 18 Oct 2026: no nested same-quote f-string (3.12-only syntax)
         print(f"  ..   keys pinned in the bundle: {pinned}; confirm at {rs.get('wellKnown')} when online")
     elif seal:
@@ -703,7 +735,7 @@ def _verify(path, artifact_path, require_approval, report):
         bd = ap.get("binding") or {}
         if (bd.get("signature") or bd.get("signatures")) and keys and bd.get("fields"):
             f = bd["fields"]
-            pending += registry_verify(ok, bd, canonical(f).encode("utf-8"), keys, f"identity binding: credential ↔ {f.get('approverEmail')} (level {f.get('authLevel')})")
+            pending += registry_verify(ok, bd, canonical(f).encode("utf-8"), keys, f"identity binding: credential ↔ {f.get('approverEmail')} (level {f.get('authLevel')})", required)
             ok(f.get("recordHash") == b.get("recordHash"), "binding names this record hash")
             ok(f.get("credentialId") == ap.get("credentialId"), "binding names the credential that signed the assertion")
             # 17 Oct 2026: the key the assertion was checked with must be the key the registry bound to that credential,
@@ -893,6 +925,12 @@ def _verify(path, artifact_path, require_approval, report):
 
 
 if __name__ == "__main__":
+    # 2 Nov 2026 (review of agentrust-io/integrations#350, drk-ram, on Windows): the human lines carry U+2194 and an em
+    # dash and the JSON report is written with ensure_ascii=False, so under a cp1252 console the verifier died with a
+    # UnicodeEncodeError and exit 1 — indistinguishable from "a check failed". A verifier's output encoding is its own
+    # business, not the console's: stdout is UTF-8 from here on, whatever the locale, and `python -I` cannot undo it.
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
     flags = {"--require-approval", "--json"}
     argv = [x for x in sys.argv[1:] if x not in flags]
     if len(argv) not in (1, 2):
