@@ -6,7 +6,7 @@ and preserves unavailable evidence instead of inferring success from dispatch.
 
 ## Scope of this PR
 
-This initial implementation provides:
+The expanded experimental implementation provides:
 
 - a fixed harness core;
 - machine-readable manifest and result schemas;
@@ -16,8 +16,10 @@ This initial implementation provides:
 - branch-preserving observations for retries;
 - causal provenance fields (`caused_by`) on observations.
 
-It does **not** claim cMCP or cA2A conformance, live-peer acceptance, hardware
-attestation, or completion of the full software milestone.
+The published release API calls and one first-party software peer path are
+exercised, but this is not a claim of independently established protocol
+conformance, hardware attestation or completed Issue #199 acceptance.
+See [About, licensing, IP boundaries, glossary and live-peer threat model](REMOTE-CA2A-PEER.md).
 
 ## Reproduce
 
@@ -25,11 +27,10 @@ attestation, or completion of the full software milestone.
 python -m unittest discover -s tests -v
 ```
 
-The deterministic adapter records the package release targets that will be used
-when protocol-specific adapters are wired:
+The released component and bounded live-peer experiments use:
 
-- `cmcp-runtime==0.5.0`
-- `ca2a-runtime==0.2.0`
+- `cmcp-runtime==0.7.0`
+- `ca2a-runtime==0.4.0`
 
 Protocol/API changes remain in the owning repositories. Any scenario that needs
 an unreleased surface must carry `waiting_on_release`; a blocked required case
