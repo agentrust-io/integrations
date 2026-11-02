@@ -71,7 +71,7 @@ references; the registry is the only relying party so far (software-only, Level 
 
 ```
 pip install -e "integrations/xchk-registry[test]" agentrust-trace-tests
-pytest integrations/xchk-registry/tests -q                          # offline; REGISTRY_LIVE=1 adds one live key fetch
+pytest integrations/xchk-registry/tests -q                          # offline; REGISTRY_LIVE=1 adds one live key fetch; dilithium-py (in [test]) is required
 python integrations/xchk-registry/verify_receipt.py integrations/xchk-registry/examples/approval-outcome/01-approval-confirmed.bundle.json --require-approval
 trace-tests verify --record integrations/xchk-registry/examples/01-trust-record.json --level 0 --max-age 315360000
 ```
