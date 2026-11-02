@@ -22,6 +22,7 @@ import verify_receipt as v  # noqa: E402
 
 CONTRACT = json.loads((HERE.parent / "verdict-contract.json").read_text(encoding="utf-8"))
 BASE = json.loads((HERE.parent / "examples" / "approval-outcome" / CONTRACT["fixture"]).read_text(encoding="utf-8"))
+KEY_DOCUMENT = str(HERE.parent / "examples" / "approval-outcome" / CONTRACT["keyDocument"])   # 2 Nov 2026: rows with "keys": true run with --keys
 
 
 def _walk(doc, path):
@@ -85,18 +86,21 @@ def _retype_as_registration(doc, path):
 OPS = {"clear-user-verified": _clear_user_verified, "retype-as-registration": _retype_as_registration}
 
 
-def _run(doc, tmp_path, strict):
+def _run(doc, tmp_path, strict, keys=False):
     p = tmp_path / "c.json"
     p.write_text(json.dumps(doc), encoding="utf-8")
     out = io.StringIO()
     with redirect_stdout(out):
-        code, report = v.verify(str(p), require_approval=strict)
+        code, report = v.verify(str(p), require_approval=strict, keys_path=KEY_DOCUMENT if keys else None)
     return code, report, out.getvalue()
 
 
 def test_the_genuine_receipt_passes_strict_mode(tmp_path):
     code, report, out = _run(copy.deepcopy(BASE), tmp_path, strict=True)
     assert code == 0, out
+    assert report["keyDocument"] is None
+    code, report, out = _run(copy.deepcopy(BASE), tmp_path, strict=True, keys=True)
+    assert code == 0 and report["keyDocument"]["allPinned"] is True, out
 
 
 DELETES = [r for r in CONTRACT["evidence"] if r.get("delete")]
@@ -111,11 +115,11 @@ def test_deleting_evidence_never_passes_strict_mode(row, tmp_path):
     _delete(doc, row["path"])
     assert row["delete"] in ("strict-refuses", "fails")
     if row["delete"] == "fails":   # 20 Oct 2026: removing it is a failed check even in the default run
-        code, report, out = _run(doc, tmp_path, strict=False)
+        code, report, out = _run(doc, tmp_path, strict=False, keys=row.get("keys", False))
         assert code == 1, f"{row['path']} deleted, default exit {code}: {row['why']}\n{out[-600:]}"
         if row.get("fail_text"):   # 2 Nov 2026: and it is THIS check that failed, not a neighbour
             assert "FAIL " + row["fail_text"] in out, f"{row['path']} deleted: no FAIL line starting {row['fail_text']!r}\n{out[-900:]}"
-    code, report, out = _run(doc, tmp_path, strict=True)
+    code, report, out = _run(doc, tmp_path, strict=True, keys=row.get("keys", False))
     assert code in (1, 3), f"{row['path']} deleted, strict exit {code}: {row['why']}\n{out[-600:]}"
 
 
@@ -123,7 +127,7 @@ def test_deleting_evidence_never_passes_strict_mode(row, tmp_path):
 def test_altering_evidence_fails(row, tmp_path):
     doc = copy.deepcopy(BASE)
     (OPS[row["op"]] if row.get("op") else _tamper)(doc, row.get("tamper_key", row["path"]))
-    code, report, out = _run(doc, tmp_path, strict=False)
+    code, report, out = _run(doc, tmp_path, strict=False, keys=row.get("keys", False))
     assert row["tamper"] == "fails"
     assert code == 1, f"{row.get('tamper_key', row['path'])} altered, exit {code}: {row['why']}\n{out[-600:]}"
     if row.get("fail_text"):   # 2 Nov 2026 (review of #350, drk-ram): exit 1 alone pins nothing; the guard's own line must be there

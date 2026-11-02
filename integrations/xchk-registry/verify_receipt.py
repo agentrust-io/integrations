@@ -2,13 +2,14 @@
 """Verify an xChk receipt bundle with no network. Standard library only (post-quantum half optional, see below).
 Flags: --require-approval (exit 3 unless the approval evidence AND the seal chain — seal, Merkle path, registry
 signature over the seal — are present and checked), --json (a structured
-report on stdout instead of the human lines; see verify()).
+report on stdout instead of the human lines; see verify()), --keys xchk-keys.json (the registry's key document, fetched
+once from https://<registry>/.well-known/xchk-keys.json: every key the bundle pins must be in it, or a check fails).
 
 MIT License. Copyright (c) 2026 Sean MacGuire. Permission is hereby granted, free of charge, to any person
 obtaining a copy of this file, to deal in it without restriction, subject to this notice being included.
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
 
-Usage:  python3 verify_receipt.py xchk-receipt-<hash>.json [file]
+Usage:  python3 verify_receipt.py xchk-receipt-<hash>.json [file] [--require-approval] [--json] [--keys xchk-keys.json]
 Exit:   0 = every offline check passed; 1 = a check failed; 2 = could not read the bundle;
         3 = --require-approval and the approval evidence or the seal chain is missing.
 Changes: verify/CHANGELOG.md (https://in.xchk.io/verify/CHANGELOG.md). A copy saved before 20 Oct 2026 can accept
@@ -30,6 +31,10 @@ Checks (each reproduces the rule the registry used to write the bytes; bundle fo
   4b. root         the SLH-DSA-SHA2-128s (FIPS 205) key statement, when the bundle carries one: shown, and checked that
                    every pinned key is listed in it; the SLH-DSA signature itself needs a library this script does not
                    ship (WAIT) — pin the root's public key once and check it with any FIPS 205 implementation.
+  4c. key document with --keys (2 Nov 2026): every key the bundle pins is in the registry's published key document,
+                   active or retired, by alg, keyId and raw public key, and the bundle's root key is the document's root.
+                   Without it checks 4, 4b and 5 prove the bundle is consistent under ITS OWN keys, not that those keys
+                   are the registry's: a bundle re-signed under someone else's keys passes them all.
   5. approver      the passkey assertion that answered: ECDSA P-256 over authenticatorData || sha256(clientDataJSON),
                    user-verified flag set; then the registry's identity binding (same rules as 4) tying that credential
                    to this person for THIS record hash
@@ -206,6 +211,59 @@ def pinned_keys(rs: dict) -> list:
         alg = rs.get("alg") if rs.get("alg") and rs.get("alg") != "ed25519+ml-dsa-65" else "ed25519"
         return [{"alg": alg, "keyId": rs.get("keyId"), "publicKeyRaw": rs["publicKeyRaw"]}]
     return []
+
+# ---------------------------------------------------------------------------------- registry key document (--keys)
+# 2 Nov 2026 (review of agentrust-io/integrations#350, drk-ram): every key this script checks a signature with is the key
+# the bundle carries, so a bundle re-signed under someone else's keys — the key list, the root statement's list and every
+# signature rewritten together — passed every check, --require-approval included; "verifies" meant "consistent under its
+# own keys". The relying party closes that gap by supplying the registry's key document, fetched once from
+# https://<registry>/.well-known/xchk-keys.json and kept as a file: every key the bundle pins must be in it, active or
+# retired, by alg, keyId and raw public key, and a revoked or unlisted key is a failed check that names the key. This
+# script never fetches the document; a document it cannot read is exit 2, never a pass.
+
+
+def load_key_document(path: str) -> dict:
+    """The registry's key document as a dict with `keys`, `retired`, `revoked` lists (missing ones empty). Raises
+    ValueError when the file is not a key document."""
+    with open(path, "r", encoding="utf-8") as f:
+        doc = json.load(f)
+    if not isinstance(doc, dict) or not isinstance(doc.get("keys"), list) or not doc["keys"]:
+        raise ValueError("not an xchk-keys.json document (no `keys` list)")
+    for k in ("retired", "revoked"):
+        if not isinstance(doc.get(k), list):
+            doc[k] = []
+    return doc
+
+
+def key_document_check(ok, keys: list, root, doc: dict) -> bool:
+    """Every key the bundle pins against the registry's key document; the bundle's root key against the document's.
+    Returns True when all are listed and none revoked. FAILs go through ok()."""
+    def same(x, k):
+        return isinstance(x, dict) and x.get("alg") == k.get("alg") and x.get("keyId") == k.get("keyId") and x.get("publicKeyRaw") == k.get("publicKeyRaw")
+    registry = doc.get("registry") or "the registry"
+    all_listed = True
+    for k in keys:
+        label = f"{k.get('alg')}/{k.get('keyId')}"
+        revoked = next((x for x in doc["revoked"] if same(x, k)), None)
+        if revoked:
+            all_listed = False
+            ok(False, f"the registry's key document lists pinned key {label} as REVOKED" + (f" since {revoked.get('revokedAt')}" if revoked.get("revokedAt") else ""))
+        elif any(same(x, k) for x in doc["keys"]):
+            ok(True, f"the registry's key document ({registry}) lists pinned key {label}")
+        elif any(same(x, k) for x in doc["retired"]):
+            ok(True, f"the registry's key document ({registry}) lists pinned key {label} as retired")
+        else:
+            all_listed = False
+            ok(False, f"the registry's key document does not list pinned key {label} — a receipt signed with a key the registry never published is not the registry's")
+    droot = doc.get("root")
+    if isinstance(root, dict) and root.get("publicKeyRaw") and isinstance(droot, dict) and droot.get("publicKeyRaw"):
+        rid = key_id_for(str(root.get("alg", "")), b64d(root["publicKeyRaw"]))
+        is_root = root.get("alg") == droot.get("alg") and root["publicKeyRaw"] == droot["publicKeyRaw"]
+        all_listed = all_listed and is_root
+        ok(is_root, f"the bundle's root key {rid} is the registry's root key" if is_root
+           else f"the bundle's root key {rid} is NOT the registry's root key {droot.get('keyId')} — the key statement vouching for the pinned keys is not the registry's")
+    return all_listed
+
 
 # 2 Nov 2026 (review of agentrust-io/integrations#350, rajnisht7): the signatures a receipt MUST carry come from signed
 # fields only. The `alg` label and the pinned key list are unsigned and an editor of the bundle can rewrite them; the
@@ -547,21 +605,21 @@ def ots_attestations(proof: bytes, digest: bytes) -> list:
     return out
 
 
-def main(path: str, artifact_path: Optional[str] = None, require_approval: bool = False) -> int:
+def main(path: str, artifact_path: Optional[str] = None, require_approval: bool = False, keys_path: Optional[str] = None) -> int:
     """Human-readable run; the exit code is the verdict (0 verifies, 1 a check failed, 2 unreadable, 3 strict mode and
     the approval evidence is missing). verify() returns the same code with a structured report (--json)."""
-    return verify(path, artifact_path, require_approval)[0]
+    return verify(path, artifact_path, require_approval, keys_path)[0]
 
 
-def verify(path: str, artifact_path: Optional[str] = None, require_approval: bool = False):
+def verify(path: str, artifact_path: Optional[str] = None, require_approval: bool = False, keys_path: Optional[str] = None):
     """(exit code, report) for one bundle file. A bundle whose fields have the wrong TYPES (a string where an object
     belongs, a float in a sealed body, a lone surrogate, bad base64) ends in a failed check and exit 1, never a
     traceback and never a pass (19 Oct 2026: a type-mutation sweep over every field found 35 crashing lines; the
     field-removal sweep had covered only absence). `pending` is null when the run stopped on such a bundle."""
     report = {"result": None, "exit": None, "failed": 0, "pending": 0, "approvalEvidenceMissing": [], "sealChainMissing": [],
-              "boundIdentity": None, "amendment": None, "withheld": [], "checks": []}
+              "boundIdentity": None, "amendment": None, "withheld": [], "keyDocument": None, "checks": []}
     try:
-        return _verify(path, artifact_path, require_approval, report)
+        return _verify(path, artifact_path, require_approval, report, keys_path)
     except (KeyError, TypeError, AttributeError, ValueError, IndexError, OverflowError) as exc:
         text = f"the bundle is malformed ({type(exc).__name__}: {str(exc)[:160]}); it cannot be what the registry issued"
         print("  FAIL " + text)
@@ -572,7 +630,7 @@ def verify(path: str, artifact_path: Optional[str] = None, require_approval: boo
         return 1, report
 
 
-def _verify(path, artifact_path, require_approval, report):
+def _verify(path, artifact_path, require_approval, report, keys_path=None):
     """Returns (exit code, report). The report is what a caller may act on (19 Oct 2026, GHSA-w2fx-3qmx-rx85, finding
     2): `checks` lists every check that RAN with OK or FAIL; `pending` counts steps that could not run here; a step
     that did not run is in neither. `approvalEvidenceMissing` names what an approval verdict still needs;
@@ -584,7 +642,9 @@ def _verify(path, artifact_path, require_approval, report):
     verified" is wrong. Absence of failure is not verification. `boundIdentity` is the email, proofing level and method
     from the registry-signed binding, never the readable labels beside it (null without a binding). Both are null, and `withheld` names them, whenever the exit is not 0 (2 Nov 2026). `amendment` is null when the decision carries none,
     else {command, committed}: committed only when the sealed record's paramsHash recomputes over that command AND
-    the amendment cites the ask the person signed (finding 3)."""
+    the amendment cites the ask the person signed (finding 3). `keyDocument` (2 Nov 2026) is null when no --keys document
+    was supplied — the bundle's keys were then checked only against themselves — else {registry, servedAt, allPinned}:
+    allPinned is true only when every key the bundle pins is in the document and its root key is the document's."""
     checks = report["checks"]
 
     def done(code, result):
@@ -612,6 +672,14 @@ def _verify(path, artifact_path, require_approval, report):
     if b.get("format") not in ("xchk-receipt-bundle/1", "xchk-receipt-bundle/2"):
         print(f"not an xChk receipt bundle (format={b.get('format')!r})")
         return done(2, "unreadable")
+    key_doc = None
+    if keys_path:
+        try:
+            key_doc = load_key_document(keys_path)
+        except Exception as exc:  # noqa: BLE001 — a key document that cannot be read is no key document: refuse, never skip
+            print(f"could not read key document {keys_path}: {exc}")
+            return done(2, "unreadable")
+        report["keyDocument"] = {"registry": key_doc.get("registry"), "servedAt": key_doc.get("servedAt"), "allPinned": None}
 
     def ok(cond, text):
         nonlocal failed
@@ -700,6 +768,10 @@ def _verify(path, artifact_path, require_approval, report):
     # 4. registry signature(s) — Ed25519, or hybrid Ed25519 + ML-DSA-65
     rs = b.get("registrySignature") or {}
     keys = pinned_keys(rs)
+    # 4c. the registry's key document, when the relying party supplied one (2 Nov 2026): the keys the signatures above and
+    # below are checked with must be keys the registry published, or every signature check proves only self-consistency
+    if key_doc is not None and keys:
+        report["keyDocument"]["allPinned"] = key_document_check(ok, keys, rs.get("root"), key_doc)
     if seal and (rs.get("signature") or rs.get("signatures")) and keys:
         # 19 Oct 2026: a seal with no hash is a failed check, never a crash (field-removal sweep)
         if not isinstance(seal.get("sealHash"), str):
@@ -707,7 +779,10 @@ def _verify(path, artifact_path, require_approval, report):
         else:
             pending += registry_verify(ok, rs, seal["sealHash"].encode("utf-8"), keys, "registry signature over the seal hash", required, seal_chain_missing)
         pinned = ", ".join(f"{k.get('alg')}/{k.get('keyId')}" for k in keys)  # 18 Oct 2026: no nested same-quote f-string (3.12-only syntax)
-        print(f"  ..   keys pinned in the bundle: {pinned}; confirm at {rs.get('wellKnown')} when online")
+        if key_doc is not None:
+            print(f"  ..   keys pinned in the bundle: {pinned}; checked against the key document of {key_doc.get('registry')} served {key_doc.get('servedAt')}")
+        else:
+            print(f"  ..   keys pinned in the bundle: {pinned}; checked against THEMSELVES only — pass --keys with the document from {rs.get('wellKnown')} to check they are the registry's")
     elif seal:
         pending += 1
         seal_chain_missing.append("the registry's signature over the seal")
@@ -961,8 +1036,17 @@ if __name__ == "__main__":
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
     flags = {"--require-approval", "--json"}
-    argv = [x for x in sys.argv[1:] if x not in flags]
-    if len(argv) not in (1, 2):
+    args = sys.argv[1:]
+    keys_path = None
+    if "--keys" in args:   # 2 Nov 2026: --keys <xchk-keys.json>, the registry's key document saved as a file
+        i = args.index("--keys")
+        if i + 1 >= len(args) or args[i + 1].startswith("--"):
+            print(__doc__)
+            sys.exit(2)
+        keys_path = args[i + 1]
+        del args[i:i + 2]
+    argv = [x for x in args if x not in flags]
+    if len(argv) not in (1, 2) or any(x.startswith("--") for x in argv):
         print(__doc__)
         sys.exit(2)
     if "--json" in sys.argv:
@@ -970,8 +1054,8 @@ if __name__ == "__main__":
         # pending, what an approval verdict still needs, the amendment's standing — and the human lines as `transcript`.
         buf = io.StringIO()
         with redirect_stdout(buf):
-            code, report = verify(*argv, require_approval=("--require-approval" in sys.argv))
+            code, report = verify(*argv, require_approval=("--require-approval" in sys.argv), keys_path=keys_path)
         report["transcript"] = buf.getvalue().rstrip("\n").split("\n")
         print(json.dumps(report, ensure_ascii=False, indent=2))
         sys.exit(code)
-    sys.exit(main(*argv, require_approval=("--require-approval" in sys.argv)))
+    sys.exit(main(*argv, require_approval=("--require-approval" in sys.argv), keys_path=keys_path))

@@ -589,3 +589,104 @@ def test_the_artifact_check_pins_the_file(tmp_path):
         pg.write_text(json.dumps(good), encoding="utf-8")
         v.main(str(pg), str(f1))
     assert "FAIL this record carries no artifactHash" in out.getvalue()
+
+
+KEY_DOCUMENTS = FX / "xchk-keys"   # the registries' /.well-known/xchk-keys.json as served on 2 Nov 2026
+
+
+def _rep(bundle, tmp_path, strict=False, keys=None):
+    p = tmp_path / "k.json"
+    p.write_text(json.dumps(bundle), encoding="utf-8")
+    out = io.StringIO()
+    with redirect_stdout(out):
+        code, rep = v.verify(str(p), require_approval=strict, keys_path=keys)
+    return code, rep, out.getvalue()
+
+
+def test_a_bundle_re_keyed_outside_the_registry_passes_until_the_key_document_is_supplied(tmp_path):
+    """Review of #350 (drk-ram, 2 Nov 2026): fixture 01 re-signed under his own Ed25519 and ML-DSA-65 keys, the pinned
+    list and the root statement's list rewritten to match, still exited 0 under --require-approval, because every key
+    the verifier checks is the one the bundle carries. Fixture 09 is that bundle (verify/tests/rekey_fixture.py). With
+    --keys and the registry's published key document, every pinned key fails BY NAME; the genuine receipts pass."""
+    rekeyed = load("09-re-keyed-outside-the-registry.bundle.json")
+    genuine = load("01-approval-confirmed.bundle.json")
+    assert rekeyed["record"] == genuine["record"] and rekeyed["seal"] == genuine["seal"], "the sealed content is untouched"
+    own = {k["alg"]: k["keyId"] for k in rekeyed["registrySignature"]["keys"]}
+    assert own != {k["alg"]: k["keyId"] for k in genuine["registrySignature"]["keys"]}
+    code, rep, out = _rep(rekeyed, tmp_path, strict=True)                       # the finding, reproduced
+    assert code == 0 and "FAIL" not in out and rep["keyDocument"] is None, out
+    assert "checked against THEMSELVES only" in out
+    doc = str(KEY_DOCUMENTS / "in.xchk.io.2026-11-02.json")
+    code, rep, out = _rep(rekeyed, tmp_path, strict=True, keys=doc)            # closed
+    assert code == 1 and rep["result"] == "fails", out
+    for alg, kid in own.items():
+        assert f"FAIL the registry's key document does not list pinned key {alg}/{kid}" in out, out
+    assert rep["keyDocument"] == {"registry": "https://in.xchk.io", "servedAt": "2026-11-02T03:01:09.306Z", "allPinned": False}
+    assert rep["boundIdentity"] is None
+    for name in ("01-approval-confirmed", "03-decision-is-a-denial", "07-amended"):
+        code, rep, out = _rep(load(name + ".bundle.json"), tmp_path, keys=doc)
+        assert code == 0 and rep["keyDocument"]["allPinned"] is True, (name, out)
+        assert "lists pinned key ed25519/5ecb3da505414c4f" in out and "is the registry's root key" in out, (name, out)
+
+
+def test_the_other_registrys_key_document_refuses_this_registrys_receipt(tmp_path):
+    """xchk.me publishes its own keys and root: an in.xchk.io receipt checked against it fails on every pinned key and on
+    the root. The document the relying party pins decides which registry it trusts."""
+    code, rep, out = _rep(load("01-approval-confirmed.bundle.json"), tmp_path, keys=str(KEY_DOCUMENTS / "xchk.me.2026-11-02.json"))
+    assert code == 1 and rep["keyDocument"]["allPinned"] is False, out
+    assert "FAIL the registry's key document does not list pinned key ed25519/5ecb3da505414c4f" in out
+    assert "FAIL the bundle's root key acc7ad1aeb3ef177 is NOT the registry's root key" in out
+
+
+def test_a_retired_key_still_pins_and_a_revoked_key_fails(tmp_path):
+    """A receipt sealed under a key the registry has since retired must keep verifying (the document keeps retired keys);
+    one sealed under a key the registry revoked must not. Neither registry has retired or revoked a key yet (2 Nov 2026),
+    so the two states are made from the real document."""
+    real = json.loads((KEY_DOCUMENTS / "in.xchk.io.2026-11-02.json").read_text(encoding="utf-8"))
+    good = load("01-approval-confirmed.bundle.json")
+    pinned = {k["keyId"] for k in good["registrySignature"]["keys"]}
+    for state, want_code in (("retired", 0), ("revoked", 1)):
+        doc = copy.deepcopy(real)
+        moved = [k for k in doc["keys"] if k["keyId"] in pinned]
+        doc["keys"] = [k for k in doc["keys"] if k["keyId"] not in pinned]        # the revocation-bundle key stays active
+        doc[state] = [dict(k, status=state, **({"revokedAt": "2026-11-01T00:00:00Z"} if state == "revoked" else {})) for k in moved]
+        p = tmp_path / f"{state}.json"
+        p.write_text(json.dumps(doc), encoding="utf-8")
+        code, rep, out = _rep(good, tmp_path, strict=True, keys=str(p))
+        assert code == want_code, (state, out)
+        if state == "retired":
+            assert "lists pinned key ed25519/5ecb3da505414c4f as retired" in out and rep["keyDocument"]["allPinned"] is True
+        else:
+            assert "FAIL the registry's key document lists pinned key ed25519/5ecb3da505414c4f as REVOKED since 2026-11-01T00:00:00Z" in out
+            assert rep["keyDocument"]["allPinned"] is False
+
+
+def test_a_key_document_that_cannot_be_read_is_a_refusal_not_a_skipped_check(tmp_path):
+    """Fail closed: --keys names a file that is missing, not JSON, or not a key document → exit 2, never a pass."""
+    good = load("01-approval-confirmed.bundle.json")
+    bad = tmp_path / "notkeys.json"
+    for content in (None, "{not json", json.dumps({"registry": "x"}), json.dumps([]), json.dumps({"keys": []})):
+        if content is None:
+            bad.unlink(missing_ok=True)
+        else:
+            bad.write_text(content, encoding="utf-8")
+        code, rep, out = _rep(good, tmp_path, keys=str(bad))
+        assert code == 2 and rep["result"] == "unreadable" and "could not read key document" in out, (content, out)
+
+
+def test_keys_on_the_command_line(tmp_path):
+    import subprocess
+    script = str(HERE.parent / "verify_receipt.py")
+    bundle = str(FX / "09-re-keyed-outside-the-registry.bundle.json")
+    doc = str(KEY_DOCUMENTS / "in.xchk.io.2026-11-02.json")
+    r = subprocess.run([sys.executable, "-I", script, bundle, "--require-approval"], capture_output=True, text=True, check=False)
+    assert r.returncode == 0, r.stdout
+    r = subprocess.run([sys.executable, "-I", script, bundle, "--keys", doc, "--require-approval", "--json"], capture_output=True, text=True, check=False)
+    rep = json.loads(r.stdout)
+    assert r.returncode == 1 and rep["exit"] == 1 and rep["keyDocument"]["allPinned"] is False, r.stdout[-400:]
+    assert any("does not list pinned key" in line for line in rep["transcript"])
+    r = subprocess.run([sys.executable, "-I", script, "--keys", doc, bundle], capture_output=True, text=True, check=False)   # flag first
+    assert r.returncode == 1, r.stdout[-400:]
+    for argv in ([bundle, "--keys"], [bundle, "--keys", "--json"], [bundle, "--kyes", doc]):                  # a flag with no file, or a misspelt flag
+        r = subprocess.run([sys.executable, "-I", script] + argv, capture_output=True, text=True, check=False)
+        assert r.returncode == 2, (argv, r.stdout[-200:])

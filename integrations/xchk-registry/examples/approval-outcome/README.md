@@ -42,8 +42,9 @@ any of that is read; the test carries `01` with one signed field changed for tha
 | `06-assertion-from-another-credential.json` | the approver's key and assertion replaced by another key's | resolves | matches | **no** (binding names a different key) | `approved` | approval contradicted |
 | `07-amended.json` | its own; `decision.amendment` present (informational) | resolves | matches | yes | `approved` | approval confirmed, as amended (a worked example, see below) |
 | `08-assertion-over-another-ask.json` | the approver's assertion from another approval in the run | resolves | matches | **no** (the challenge the device signed names another ask) | `approved` | approval contradicted |
+| `09-re-keyed-outside-the-registry.json` | `01` re-signed under keys that are not the registry's, key list and root statement rewritten to match | resolves | matches | yes (under its own keys) | `approved` | approval consistent, **key not pinned** |
 
-`02`, `06` and `08` are the same approval as `01` with the served bundle changed afterwards; the
+`02`, `06`, `08` and `09` are the same approval as `01` with the served bundle changed afterwards; the
 Trust Record is identical and still verifies, because the record is a pointer and the
 tampering is on the thing pointed at. In `06` the assertion is a valid ECDSA P-256
 signature by a key that is not the one the registry's signed binding names for this
@@ -59,6 +60,18 @@ challenge the device signed: since 18 October 2026 the registry derives it from 
 digest of the action's parameters), and the verifier recomputes it from the bundle's own
 `decision` block. A bundle from before that date carries no `challenge`; the verifier
 reports that step as pending and the registry's binding is then the only pairing.
+
+`09` (2 Nov 2026, review of #350 by drk-ram) is `01` re-signed under Ed25519 and ML-DSA-65 keys
+that are not the registry's, with the pinned key list and the root statement's key list
+rewritten to match (`tests/rekey_fixture.py` rebuilds it; the root's own SLH-DSA signature is
+left as it was, which the Python verifier only reports as pending). Every offline check
+passes, `--require-approval` included, because every key the verifier checks with is the one
+the bundle carries. What tells it from `01` is the registry's key document,
+`xchk-keys/in.xchk.io.2026-11-02.json`, saved from `/.well-known/xchk-keys.json` and passed to
+the verifier with `--keys`: a key the document does not list fails by name. The test pins that
+document as the relying party would; a relying party that pins none can reach no verdict above
+"approval consistent, key not pinned", for `01` as much as for `09`. Unlike the other cases
+this one is derived, not minted, and its line in `expected.json` was written by hand.
 
 `05` is what spec section 3.1.2 rule 3 requires: a verifier must not reject a record
 because a reference cannot be resolved. The record verifies, and the approval it points at
@@ -82,4 +95,6 @@ pytest integrations/xchk-registry/tests -q
 ```
 
 Regeneration is the registry operator's: the generator runs on the registry with the seal
-key and writes this directory. A new run points at new receipts and replaces every file.
+key and writes this directory. A new run points at new receipts and replaces every file;
+`09` is then rebuilt from the new `01` with `tests/rekey_fixture.py`, and the key document is
+saved again from the registry.

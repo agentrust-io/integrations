@@ -26,13 +26,17 @@ from agentrust_trace import verify_record
 
 XCHK_DIR = Path(__file__).resolve().parents[1] / "examples" / "approval-outcome"
 VERIFIER = Path(__file__).resolve().parents[1] / "verify_receipt.py"
+# 2 Nov 2026 (review of #350, drk-ram): the registry's key document, /.well-known/xchk-keys.json as served on 2 Nov 2026,
+# pinned here as the relying party would pin it (the Trust Record signer is pinned the same way in expected.json). The
+# verifier checks every signature with the keys the BUNDLE carries; only this document says those keys are the registry's.
+KEY_DOCUMENT = XCHK_DIR / "xchk-keys" / "in.xchk.io.2026-11-02.json"
 # The fixtures were minted on 17 Oct 2026; a historical record is re-verified under an explicit, finite bound (ten
 # years, the same as the workflow), never by switching the bound off (section 3.2.2).
 MAX_AGE = 315360000
 EXPECTED = json.loads((XCHK_DIR / "expected.json").read_text(encoding="utf-8"))
 CASES = sorted(EXPECTED["cases"])
 OUTCOME_KEYS = ("trace_record_verifies", "reference_resolves", "digest_matches", "bundle_verifies",
-                "disposition", "verdict")
+                "disposition", "registry_keys_pinned", "verdict")
 
 
 def _load(name: str) -> dict:
@@ -43,13 +47,16 @@ def _jcs_sha256(obj: object) -> str:
     return "sha256:" + hashlib.sha256(rfc8785.dumps(obj)).hexdigest()
 
 
-def _verify(bundle_path: Path, require_approval: bool = False) -> dict:
+def _verify(bundle_path: Path, require_approval: bool = False, key_document: Path | None = None) -> dict:
     """The registry's offline verifier, run as it ships, with --json: the structured report (exit, result, the checks
     that ran, the pending count, the approval evidence still missing, the amendment's standing). Exit 0 means no check
     FAILED (pending steps are listed, not failed); with --require-approval it also means the approval evidence was
     present and checked. Absence of failure is not verification of an approval, so the verdict below asks for both,
-    and it reads the amendment from the report, never from the bundle's unsigned text."""
+    and it reads the amendment from the report, never from the bundle's unsigned text. With --keys (2 Nov 2026) the
+    bundle's pinned keys are also checked against the registry's key document; `keyDocument.allPinned` says so."""
     args = [sys.executable, "-I", str(VERIFIER), str(bundle_path), "--json"] + (["--require-approval"] if require_approval else [])
+    if key_document is not None:
+        args += ["--keys", str(key_document)]
     proc = subprocess.run(args, capture_output=True, text=True, check=False, timeout=60)
     report = json.loads(proc.stdout)
     assert report["exit"] == proc.returncode
@@ -70,9 +77,12 @@ def _record_verifies(record: dict) -> bool:
     return True
 
 
-def _assess(record: dict, bundle_name: str | None, bundle_override: dict | None = None, tmp_dir: Path | None = None) -> dict:
+def _assess(record: dict, bundle_name: str | None, bundle_override: dict | None = None, tmp_dir: Path | None = None,
+            key_document: Path | None = KEY_DOCUMENT) -> dict:
     """What a relying party concludes about the approval a record points at. `bundle_override` lets a test present
-    a mutated bundle for the same record; it is written to `tmp_dir` for the verifier."""
+    a mutated bundle for the same record; it is written to `tmp_dir` for the verifier. `key_document` is the registry's
+    key document the relying party pinned (2 Nov 2026); None means it pinned nothing, and the strongest verdict is then
+    approval-consistent-key-not-pinned: consistent under the bundle's own keys, which is all the verifier can check."""
     verifies = _record_verifies(record)
     if not verifies:
         # A Trust Record that does not verify is not evidence of anything, including the reference it carries: no
@@ -81,14 +91,14 @@ def _assess(record: dict, bundle_name: str | None, bundle_override: dict | None 
         # changed still reached approval-confirmed through its intact bundle.
         return {"trace_record_verifies": False, "reference_resolves": None,
                 "digest_matches": None, "bundle_verifies": None, "disposition": None,
-                "verdict": "record-invalid"}
+                "registry_keys_pinned": None, "verdict": "record-invalid"}
     reference = _approval_reference(record)
     assert reference["resolver"] == EXPECTED["resolver"]
     assert len(reference["id"]) == 64
     if bundle_name is None:
         return {"trace_record_verifies": verifies, "reference_resolves": False,
                 "digest_matches": None, "bundle_verifies": None, "disposition": None,
-                "verdict": "approval-unconfirmed"}
+                "registry_keys_pinned": None, "verdict": "approval-unconfirmed"}
     if bundle_override is not None:
         bundle = bundle_override
         assert tmp_dir is not None
@@ -104,6 +114,7 @@ def _assess(record: dict, bundle_name: str | None, bundle_override: dict | None 
     # an approval is "as amended" only when the verifier found the SEALED record committing to the amended command and
     # the amendment citing the signed ask; the bundle's decision.amendment text selects nothing on its own
     amended = bool(report["amendment"] and report["amendment"]["committed"])
+    keys_pinned = None
     if not (digest_matches and bundle_ok):
         verdict = "approval-contradicted"
     elif disposition != "approved":
@@ -113,13 +124,24 @@ def _assess(record: dict, bundle_name: str | None, bundle_override: dict | None 
         # Approval evidence present with the seal chain incomplete is its own verdict (review of #350, 20 Oct 2026):
         # the person's answer checks out, the receipt's place in the sealed chain does not.
         verdict = "approval-unverified" if strict["approvalEvidenceMissing"] else "approval-unsealed"
+    elif key_document is None or (pinned := _verify(bundle_path, require_approval=True, key_document=key_document))["exit"] != 0:
+        # 2 Nov 2026 (review of #350, drk-ram): every check so far was made with the keys the bundle carries, so a
+        # bundle re-signed under someone else's keys reaches this point with every check passed (fixture 09). Only the
+        # registry's key document, pinned by the relying party, says the keys are the registry's. Without it, or with
+        # a key the document does not list, the approval is consistent, never confirmed.
+        keys_pinned = False if key_document is not None else None
+        if key_document is not None:
+            assert pinned["keyDocument"]["allPinned"] is False, "the only check --keys adds is the key document's"
+        verdict = "approval-consistent-key-not-pinned"
     elif amended:
+        keys_pinned = True
         verdict = "approval-confirmed-as-amended"
     else:
+        keys_pinned = True
         verdict = "approval-confirmed"
     return {"trace_record_verifies": verifies, "reference_resolves": True,
             "digest_matches": digest_matches, "bundle_verifies": bundle_ok,
-            "disposition": disposition, "verdict": verdict}
+            "disposition": disposition, "registry_keys_pinned": keys_pinned, "verdict": verdict}
 
 
 def test_the_committed_records_are_exactly_the_declared_cases() -> None:
@@ -320,6 +342,32 @@ def test_an_approval_without_its_seal_chain_is_not_confirmed(strip: str, tmp_pat
     got = _assess(record, "01-approval-confirmed.bundle.json", bundle_override=bundle, tmp_dir=tmp_path)
     assert got["digest_matches"] and got["bundle_verifies"]
     assert got["verdict"] == "approval-unsealed"
+
+
+def test_a_bundle_re_keyed_outside_the_registry_is_consistent_never_confirmed(tmp_path: Path) -> None:
+    """Review of #350 (drk-ram, 2 Nov 2026): fixture 01 re-signed under his own Ed25519 and ML-DSA-65 keys, the pinned
+    key list and the root statement's list rewritten to match (09, rebuilt by tests/rekey_fixture.py). The verifier
+    passed it under --require-approval and this assessor said approval-confirmed, because every key either checks is
+    the one the bundle carries. Now: with the registry's key document pinned, 09 is approval-consistent-key-not-pinned
+    and 01 is confirmed; with no document pinned, even 01 is only consistent. The Trust Record is 01's, unchanged: the
+    record points at the same sealed receipt, and the tampering is on the carrier."""
+    before, after = _load("01-approval-confirmed.bundle.json"), _load("09-re-keyed-outside-the-registry.bundle.json")
+    assert after["record"] == before["record"] and after["seal"] == before["seal"] and after["merkle"] == before["merkle"]
+    assert after["approver"]["assertion"] == before["approver"]["assertion"]
+    assert {k["keyId"] for k in after["registrySignature"]["keys"]}.isdisjoint({k["keyId"] for k in before["registrySignature"]["keys"]})
+    record = _load("09-re-keyed-outside-the-registry.json")
+    assert record == _load("01-approval-confirmed.json")
+    got = _assess(record, "09-re-keyed-outside-the-registry.bundle.json")
+    assert got["digest_matches"] and got["bundle_verifies"] and got["registry_keys_pinned"] is False
+    assert got["verdict"] == "approval-consistent-key-not-pinned"
+    assert _verify(XCHK_DIR / "09-re-keyed-outside-the-registry.bundle.json", require_approval=True)["exit"] == 0, "the finding: strict mode alone passes it"
+    control = _assess(_load("01-approval-confirmed.json"), "01-approval-confirmed.bundle.json")
+    assert control["verdict"] == "approval-confirmed" and control["registry_keys_pinned"] is True
+    unpinned = _assess(_load("01-approval-confirmed.json"), "01-approval-confirmed.bundle.json", key_document=None)
+    assert unpinned["verdict"] == "approval-consistent-key-not-pinned" and unpinned["registry_keys_pinned"] is None
+    assert _assess(_load("07-amended.json"), "07-amended.bundle.json", key_document=None)["verdict"] == "approval-consistent-key-not-pinned"
+    # a verdict below confirmed is unchanged by the document: a contradicted bundle stays contradicted, pinned or not
+    assert _assess(_load("02-bundle-altered-after-issue.json"), "02-bundle-altered-after-issue.bundle.json", key_document=None)["verdict"] == "approval-contradicted"
 
 
 @pytest.mark.parametrize("field,value", [("data_class", "public")])

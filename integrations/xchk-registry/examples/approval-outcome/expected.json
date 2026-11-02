@@ -18,7 +18,8 @@
       "digest_matches": true,
       "bundle_verifies": true,
       "disposition": "approved",
-      "verdict": "approval-confirmed"
+      "verdict": "approval-confirmed",
+      "registry_keys_pinned": true
     },
     "02-bundle-altered-after-issue.json": {
       "bundle": "02-bundle-altered-after-issue.bundle.json",
@@ -28,7 +29,8 @@
       "digest_matches": false,
       "bundle_verifies": false,
       "disposition": "approved",
-      "verdict": "approval-contradicted"
+      "verdict": "approval-contradicted",
+      "registry_keys_pinned": null
     },
     "03-decision-is-a-denial.json": {
       "bundle": "03-decision-is-a-denial.bundle.json",
@@ -38,7 +40,8 @@
       "digest_matches": true,
       "bundle_verifies": true,
       "disposition": "denied",
-      "verdict": "not-an-approval"
+      "verdict": "not-an-approval",
+      "registry_keys_pinned": null
     },
     "04-no-answer.json": {
       "bundle": "04-no-answer.bundle.json",
@@ -48,7 +51,8 @@
       "digest_matches": true,
       "bundle_verifies": true,
       "disposition": "expired",
-      "verdict": "not-an-approval"
+      "verdict": "not-an-approval",
+      "registry_keys_pinned": null
     },
     "05-reference-unresolvable.json": {
       "bundle": null,
@@ -58,7 +62,8 @@
       "digest_matches": null,
       "bundle_verifies": null,
       "disposition": null,
-      "verdict": "approval-unconfirmed"
+      "verdict": "approval-unconfirmed",
+      "registry_keys_pinned": null
     },
     "06-assertion-from-another-credential.json": {
       "bundle": "06-assertion-from-another-credential.bundle.json",
@@ -68,7 +73,8 @@
       "digest_matches": true,
       "bundle_verifies": false,
       "disposition": "approved",
-      "verdict": "approval-contradicted"
+      "verdict": "approval-contradicted",
+      "registry_keys_pinned": null
     },
     "07-amended.json": {
       "bundle": "07-amended.bundle.json",
@@ -79,7 +85,8 @@
       "bundle_verifies": true,
       "disposition": "approved",
       "amended": true,
-      "verdict": "approval-confirmed-as-amended"
+      "verdict": "approval-confirmed-as-amended",
+      "registry_keys_pinned": true
     },
     "08-assertion-over-another-ask.json": {
       "bundle": "08-assertion-over-another-ask.bundle.json",
@@ -89,7 +96,22 @@
       "digest_matches": true,
       "bundle_verifies": false,
       "disposition": "approved",
-      "verdict": "approval-contradicted"
+      "verdict": "approval-contradicted",
+      "registry_keys_pinned": null
+    },
+    "09-re-keyed-outside-the-registry.json": {
+      "bundle": "09-re-keyed-outside-the-registry.bundle.json",
+      "reference": "aa2bfd5b1d9b6307ed22eb0daa4213383beecb57d7d31ec011060ac98f7fe0b5",
+      "trace_record_verifies": true,
+      "reference_resolves": true,
+      "digest_matches": true,
+      "bundle_verifies": true,
+      "disposition": "approved",
+      "registry_keys_pinned": false,
+      "verdict": "approval-consistent-key-not-pinned",
+      "note": "Derived, not minted: 01 re-signed under keys that are not the registry's by tests/rekey_fixture.py on 2 Nov 2026 (review of #350, drk-ram); the Trust Record is 01's. Added to this file by hand with the registry_keys_pinned field; the generator has not been re-run."
     }
-  }
+  },
+  "xchk_keys": "xchk-keys/in.xchk.io.2026-11-02.json",
+  "xchk_keys_note": "The registry's /.well-known/xchk-keys.json as served on 2 Nov 2026, pinned so the assessor checks the bundles' keys against the registry's offline; without it every verdict above approval-consistent-key-not-pinned is unreachable."
 }
