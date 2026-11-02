@@ -21,7 +21,20 @@ sys.path.insert(0, str(HERE.parent))
 import verify_receipt as v  # noqa: E402
 
 CONTRACT = json.loads((HERE.parent / "verdict-contract.json").read_text(encoding="utf-8"))
-BASE = json.loads((HERE.parent / "examples" / "approval-outcome" / CONTRACT["fixture"]).read_text(encoding="utf-8"))
+FIXTURES = HERE.parent / "examples" / "approval-outcome"
+_LOADED: dict = {}
+
+
+def _fixture(row=None):
+    """The genuine receipt a row runs on: its own `fixture` when it names one (2 Nov 2026: the anchor-chain rows need a
+    receipt that carries anchor.proof, which no 17 Oct fixture does), else the contract's."""
+    name = (row or {}).get("fixture", CONTRACT["fixture"])
+    if name not in _LOADED:
+        _LOADED[name] = json.loads((FIXTURES / name).read_text(encoding="utf-8"))
+    return copy.deepcopy(_LOADED[name])
+
+
+FIXTURE_NAMES = sorted({CONTRACT["fixture"], *(r["fixture"] for r in CONTRACT["evidence"] if r.get("fixture"))})
 KEY_DOCUMENT = str(HERE.parent / "examples" / "approval-outcome" / CONTRACT["keyDocument"])   # 2 Nov 2026: rows with "keys": true run with --keys
 
 
@@ -83,7 +96,44 @@ def _retype_as_registration(doc, path):
     node[k] = _reb64(node[k], json.dumps(cd, separators=(",", ":")).encode("utf-8"))
 
 
-OPS = {"clear-user-verified": _clear_user_verified, "retype-as-registration": _retype_as_registration}
+def _corrupt_op_return_root(doc, path):
+    """2 Nov 2026: the OP_RETURN guard is pinned only by altering the 32-byte root the transaction committed (payload
+    'xCk' + 6 bytes + root); a swap anywhere else in the raw transaction fails sha256d(transaction) = txid first."""
+    node, k = _walk(doc, path)
+    tx = bytearray(bytes.fromhex(node[k]))
+    i = tx.find(b"xCk")
+    assert i >= 0, "the genuine anchor transaction carries an xCk payload"
+    tx[i + 9] ^= 0x01
+    node[k] = bytes(tx).hex()
+
+
+def _corrupt_merkle_branch(doc, path):
+    """2 Nov 2026: the partial-Merkle-tree guard is pinned by altering the first branch hash, which sits after the
+    block header (120 bytes on Ravencoin), the tx count (4) and the hash count (1); a swap in the header part of the
+    merkleblock fails the header guard instead."""
+    node, k = _walk(doc, path)
+    mb = bytearray(bytes.fromhex(node[k]))
+    hdr_len = len(bytes.fromhex(doc["anchor"]["proof"]["headerHex"]))
+    assert len(mb) > hdr_len + 5 + 32, "the genuine merkleblock carries at least one branch hash"
+    mb[hdr_len + 5] ^= 0x01
+    node[k] = bytes(mb).hex()
+
+
+def _shorten_ots_root(doc, path):
+    """2 Nov 2026: the 32-byte-root guard is pinned by retagging the final sha256 op before the Bitcoin attestation as
+    sha1 (0x02), so the replay ends in 20 bytes; a character swap elsewhere replays to a different 32-byte root, which
+    only the chain can contradict, and the verifier rightly reports it as an outside fact."""
+    node, k = _walk(doc, path)
+    raw = bytearray(base64.b64decode(node[k]))
+    i = raw.find(v.OTS_BITCOIN)
+    assert i > 2 and raw[i - 1] == 0x00 and raw[i - 2] == 0x08, "the genuine proof ends in sha256 then the Bitcoin attestation"
+    raw[i - 2] = 0x02
+    node[k] = _reb64(node[k], bytes(raw))
+
+
+OPS = {"clear-user-verified": _clear_user_verified, "retype-as-registration": _retype_as_registration,
+       "corrupt-op-return-root": _corrupt_op_return_root, "corrupt-merkle-branch": _corrupt_merkle_branch,
+       "shorten-ots-root": _shorten_ots_root}
 
 
 def _run(doc, tmp_path, strict, keys=False):
@@ -95,12 +145,18 @@ def _run(doc, tmp_path, strict, keys=False):
     return code, report, out.getvalue()
 
 
-def test_the_genuine_receipt_passes_strict_mode(tmp_path):
-    code, report, out = _run(copy.deepcopy(BASE), tmp_path, strict=True)
+@pytest.mark.parametrize("name", FIXTURE_NAMES)
+def test_the_genuine_receipt_passes_strict_mode(name, tmp_path):
+    code, report, out = _run(_fixture({"fixture": name}), tmp_path, strict=True)
     assert code == 0, out
     assert report["keyDocument"] is None
-    code, report, out = _run(copy.deepcopy(BASE), tmp_path, strict=True, keys=True)
+    code, report, out = _run(_fixture({"fixture": name}), tmp_path, strict=True, keys=True)
     assert code == 0 and report["keyDocument"]["allPinned"] is True, out
+    if name == "anchored.bundle.json":   # 2 Nov 2026: every anchor guard ran and passed on the fixture that pins them
+        for text in ("manifest path (", "the raw anchor transaction's OP_RETURN carries that manifest root", "sha256d(transaction) = txid",
+                     "merkleblock header is the block header shipped with the bundle", "partial Merkle tree reproduces the header's Merkle root",
+                     "OpenTimestamps proof replays from the seal hash to a 32-byte Merkle root"):
+            assert "OK   " + text in out, f"the anchored fixture did not run the guard {text!r}\n{out[-900:]}"
 
 
 DELETES = [r for r in CONTRACT["evidence"] if r.get("delete")]
@@ -109,7 +165,7 @@ TAMPERS = [r for r in CONTRACT["evidence"] if r.get("tamper")]
 
 @pytest.mark.parametrize("row", DELETES, ids=[r["path"] for r in DELETES])
 def test_deleting_evidence_never_passes_strict_mode(row, tmp_path):
-    doc = copy.deepcopy(BASE)
+    doc = _fixture(row)
     for extra in row.get("delete_with", []):
         _delete(doc, extra)
     _delete(doc, row["path"])
@@ -123,9 +179,9 @@ def test_deleting_evidence_never_passes_strict_mode(row, tmp_path):
     assert code in (1, 3), f"{row['path']} deleted, strict exit {code}: {row['why']}\n{out[-600:]}"
 
 
-@pytest.mark.parametrize("row", TAMPERS, ids=[r.get("tamper_key", r["path"]) + (":" + r["op"] if r.get("op") else "") for r in TAMPERS])
+@pytest.mark.parametrize("row", TAMPERS, ids=[(r["fixture"].split(".")[0] + "/" if r.get("fixture") else "") + r.get("tamper_key", r["path"]) + (":" + r["op"] if r.get("op") else "") for r in TAMPERS])
 def test_altering_evidence_fails(row, tmp_path):
-    doc = copy.deepcopy(BASE)
+    doc = _fixture(row)
     (OPS[row["op"]] if row.get("op") else _tamper)(doc, row.get("tamper_key", row["path"]))
     code, report, out = _run(doc, tmp_path, strict=False, keys=row.get("keys", False))
     assert row["tamper"] == "fails"

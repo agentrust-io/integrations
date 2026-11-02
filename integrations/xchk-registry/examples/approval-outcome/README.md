@@ -90,6 +90,14 @@ into `01` after issue, or `07`'s amended command edited after issue, is contradi
 never "as amended". Until the private assessment settles the relying-party contract, the
 approval to rely on is of the ask as proposed.
 
+`anchored.bundle.json` (2 Nov 2026) is one more genuine receipt, approved by the same person on 29 Oct 2026 and
+fetched from the registry's bundle endpoint as served. It is not a crosswalk case and `expected.json` does not list
+it: it is here because it is the first fixture to carry `anchor.proof` (a batched Ravencoin anchor: the raw
+transaction, block header and merkleblock, with this seal's path to the anchored manifest root) and an OpenTimestamps
+proof already upgraded to a Bitcoin block. The anchor-chain rows of `verdict-contract.json` name it as their fixture;
+the 17 Oct cases predate batched anchoring, so until it arrived those seven guards of the verifier were pinned by no
+test (a guard-mutation sweep found them).
+
 ## Running the checks
 
 ```
