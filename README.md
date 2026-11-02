@@ -77,6 +77,7 @@ TRACE only works as a standard if it is genuinely neutral. Integrations are list
 | [Parmana](integrations/parmana-server/) | Parmana Systems | trace | verified |
 | [PIC Standard MCP Guard](integrations/pic-standard-mcp-guard/) | PIC Standard | trace | verified |
 | [Observed-effect references](integrations/probityai-observed-effect/) | probityai | trace | community |
+| [Provenza](integrations/provenza-agent-manifest/) | Provenza | agent-manifest | community |
 | [ramen-ai cMCP Adapter](integrations/ramen-ai-cmcp/) | ramen-ai | cmcp, trace | verified |
 | [SAGE AgenTrust Bridge](integrations/sage-agenttrust/) | SAGE | cmcp, trace | community |
 | [Agent Sentinel](integrations/sentinel/) | a1k7 | trace | community |

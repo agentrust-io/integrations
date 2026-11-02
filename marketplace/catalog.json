@@ -1,6 +1,6 @@
 {
   "catalog_version": 1,
-  "count": 50,
+  "count": 51,
   "integrations": [
     {
       "name": "Claude Code",
@@ -829,6 +829,30 @@
         "policy",
         "provenance",
         "trace"
+      ]
+    },
+    {
+      "name": "Provenza",
+      "package_name": "Provenza",
+      "vendor": "Provenza",
+      "description": "Issues a composition-only Agent Manifest v0.2 per governed agent, signed as a hybrid Ed25519 + ML-DSA-65 COSE_Sign, binding its approved MCP tool catalog and audit-log root.",
+      "path": "integrations/provenza-agent-manifest",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/provenza-agent-manifest",
+      "homepage": null,
+      "repository": "https://github.com/kironovlaziz-del/provenza",
+      "tier": "community",
+      "stack": [
+        "Agent Manifest"
+      ],
+      "category": "Identity & trust",
+      "mark": "PVZ",
+      "featured": null,
+      "keywords": [
+        "agent-governance",
+        "mcp",
+        "post-quantum",
+        "self-hosted",
+        "audit"
       ]
     },
     {
