@@ -71,7 +71,9 @@ the bundle carries. What tells it from `01` is the registry's key document,
 the verifier with `--keys`: a key the document does not list fails by name. The test pins that
 document as the relying party would; a relying party that pins none can reach no verdict above
 "approval consistent, key not pinned", for `01` as much as for `09`. Unlike the other cases
-this one is derived, not minted, and its line in `expected.json` was written by hand.
+this one is derived, not minted, and its line in `expected.json` was written by hand. What the
+document check does not do: compare a retired key's `notBefore`/`notAfter` with the seal's time,
+or the document's `registry` with the bundle's `wellKnown` (only key material decides).
 
 `05` is what spec section 3.1.2 rule 3 requires: a verifier must not reject a record
 because a reference cannot be resolved. The record verifies, and the approval it points at

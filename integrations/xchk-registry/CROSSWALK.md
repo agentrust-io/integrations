@@ -80,6 +80,12 @@ Two rules the verifier enforces that a relying party must not relax (19 October 
   verifier with `--keys`; a bundle whose keys are not in it, or a relying party that pinned no document, gets the
   verdict `approval-consistent-key-not-pinned`, never `approval-confirmed`. Fixture `09` is that re-keyed bundle. The
   verifier's `--json` report carries `keyDocument` (null when none was supplied) so a caller can tell the two apart.
+  A revoked key is refused however the document says it (the `revoked` list, a `revokedAt`, or a `status` other than
+  active or retired), and a revoked entry published without its public key is matched by key id. Limits, by design: a
+  retired key's `notBefore`/`notAfter` are not compared with the seal's time; the document's `registry` string is never
+  compared with the bundle's `wellKnown`, because the relying party chose the document and only key material decides;
+  and a bundle that pins no key has nothing to check, so `keyDocument.allPinned` is null there and the verdict falls
+  to the seal-chain rules above.
 - **An amendment the sealed record does not commit to is refused.** `decision.amendment` is readable text. The
   verifier checks that the sealed `record.paramsHash` recomputes over the amended command (the served
   `amendment.boundAs`, itself unsigned, counts only when it hashes to the sealed digest) and, where the ask carries a

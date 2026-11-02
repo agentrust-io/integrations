@@ -223,46 +223,74 @@ def pinned_keys(rs: dict) -> list:
 
 
 def load_key_document(path: str) -> dict:
-    """The registry's key document as a dict with `keys`, `retired`, `revoked` lists (missing ones empty). Raises
-    ValueError when the file is not a key document."""
-    with open(path, "r", encoding="utf-8") as f:
+    """The registry's key document as a dict with `keys`, `retired`, `revoked` lists (missing ones empty), every entry a
+    key with `alg` and `keyId`. Raises ValueError when the file is not a key document; read as utf-8-sig so a copy saved
+    by an editor that writes a byte-order mark still loads (2 Nov 2026, review)."""
+    with open(path, "r", encoding="utf-8-sig") as f:
         doc = json.load(f)
     if not isinstance(doc, dict) or not isinstance(doc.get("keys"), list) or not doc["keys"]:
         raise ValueError("not an xchk-keys.json document (no `keys` list)")
     for k in ("retired", "revoked"):
         if not isinstance(doc.get(k), list):
             doc[k] = []
+    for name in ("keys", "retired", "revoked"):
+        for x in doc[name]:
+            if not (isinstance(x, dict) and isinstance(x.get("alg"), str) and isinstance(x.get("keyId"), str)):
+                raise ValueError(f"`{name}` entry is not a key (alg and keyId are required)")
     return doc
+
+
+def _entry_revoked(x: dict, where: str) -> bool:
+    """A key the registry no longer stands behind, however the document says it: in the `revoked` list, or carrying
+    `revokedAt`, or with a `status` that is neither active nor retired (2 Nov 2026, review: `status: revoked` left in
+    place in `keys` read as pinned)."""
+    return where == "revoked" or bool(x.get("revokedAt")) or x.get("status") not in (None, "active", "retired")
 
 
 def key_document_check(ok, keys: list, root, doc: dict) -> bool:
     """Every key the bundle pins against the registry's key document; the bundle's root key against the document's.
-    Returns True when all are listed and none revoked. FAILs go through ok()."""
-    def same(x, k):
-        return isinstance(x, dict) and x.get("alg") == k.get("alg") and x.get("keyId") == k.get("keyId") and x.get("publicKeyRaw") == k.get("publicKeyRaw")
+    Returns True only when every pinned key is listed as active or retired by alg, keyId and raw public key, none is
+    revoked, and the bundle's root key, when it carries one, is the document's root. FAILs go through ok(). Limits, by
+    design: a retired key's notBefore/notAfter are not compared with the seal's time; the document's `registry` string
+    is never compared with the bundle's `wellKnown` (the relying party chose the document; only key material decides);
+    with no key pinned in the bundle there is nothing to check and the caller reports allPinned as null."""
     registry = doc.get("registry") or "the registry"
-    all_listed = True
+    listed = [(x, name) for name in ("keys", "retired", "revoked") for x in doc[name]]
+    all_ok = True
     for k in keys:
         label = f"{k.get('alg')}/{k.get('keyId')}"
-        revoked = next((x for x in doc["revoked"] if same(x, k)), None)
-        if revoked:
-            all_listed = False
-            ok(False, f"the registry's key document lists pinned key {label} as REVOKED" + (f" since {revoked.get('revokedAt')}" if revoked.get("revokedAt") else ""))
-        elif any(same(x, k) for x in doc["keys"]):
-            ok(True, f"the registry's key document ({registry}) lists pinned key {label}")
-        elif any(same(x, k) for x in doc["retired"]):
+        hits = [(x, where) for x, where in listed if x.get("alg") == k.get("alg") and x.get("keyId") == k.get("keyId")]
+        exact = [(x, where) for x, where in hits if x.get("publicKeyRaw") == k.get("publicKeyRaw")]
+        # a revoked entry may be published without its public key (the registry serves publicKeyRaw: null on revoked
+        # keys): it is matched by alg and keyId, so a revocation is never read as "never published"
+        by_id = [(x, where) for x, where in hits if x.get("publicKeyRaw") is None and _entry_revoked(x, where)]
+        x, where = (exact or by_id or [(None, None)])[0]
+        if x is None:
+            all_ok = False
+            if hits:
+                ok(False, f"the registry's key document lists keyId {k.get('keyId')} with a DIFFERENT {k.get('alg')} public key — the bundle's pinned key is not the one the registry published under that id")
+            else:
+                ok(False, f"the registry's key document does not list pinned key {label} — a receipt signed with a key the registry never published is not the registry's")
+        elif _entry_revoked(x, where):
+            all_ok = False
+            ok(False, f"the registry's key document lists pinned key {label} as REVOKED" + (f" since {x.get('revokedAt')}" if x.get("revokedAt") else ""))
+        elif where == "retired" or x.get("status") == "retired":
             ok(True, f"the registry's key document ({registry}) lists pinned key {label} as retired")
         else:
-            all_listed = False
-            ok(False, f"the registry's key document does not list pinned key {label} — a receipt signed with a key the registry never published is not the registry's")
+            ok(True, f"the registry's key document ({registry}) lists pinned key {label}")
     droot = doc.get("root")
-    if isinstance(root, dict) and root.get("publicKeyRaw") and isinstance(droot, dict) and droot.get("publicKeyRaw"):
+    if isinstance(root, dict) and root.get("publicKeyRaw"):
         rid = key_id_for(str(root.get("alg", "")), b64d(root["publicKeyRaw"]))
-        is_root = root.get("alg") == droot.get("alg") and root["publicKeyRaw"] == droot["publicKeyRaw"]
-        all_listed = all_listed and is_root
-        ok(is_root, f"the bundle's root key {rid} is the registry's root key" if is_root
-           else f"the bundle's root key {rid} is NOT the registry's root key {droot.get('keyId')} — the key statement vouching for the pinned keys is not the registry's")
-    return all_listed
+        if isinstance(droot, dict) and droot.get("publicKeyRaw"):
+            is_root = root.get("alg") == droot.get("alg") and root["publicKeyRaw"] == droot["publicKeyRaw"]
+            all_ok = all_ok and is_root
+            ok(is_root, f"the bundle's root key {rid} is the registry's root key" if is_root
+               else f"the bundle's root key {rid} is NOT the registry's root key {droot.get('keyId')} — the key statement vouching for the pinned keys is not the registry's")
+        else:
+            # 2 Nov 2026 (review): a document with no usable root used to skip this check and still report every key pinned
+            all_ok = False
+            ok(False, f"the bundle carries root key {rid} but the registry's key document publishes no root key to check it against")
+    return all_ok
 
 
 # 2 Nov 2026 (review of agentrust-io/integrations#350, rajnisht7): the signatures a receipt MUST carry come from signed

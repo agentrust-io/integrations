@@ -67,7 +67,7 @@ def main(src: str, dst: str) -> None:
     bd = (bundle.get("approver") or {}).get("binding")
     if bd and bd.get("fields"):
         resign(bd, v.canonical(bd["fields"]).encode("utf-8"))
-    bundle["fixtureNote"] = ("TEST FIXTURE, 2 Nov 2026: fixture 01 re-signed under keys that are not the registry's (tests/rekey_fixture.py). "
+    bundle["fixtureNote"] = ("TEST FIXTURE, 2 Nov 2026: fixture 01 re-signed under keys that are not the registry's (rekey_fixture.py, beside the tests). "
                              "Every offline check passes without --keys; with the registry's key document the pinned keys fail by name.")
     Path(dst).write_text(json.dumps(bundle, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(f"wrote {dst}: keys {new['ed25519']['keyId']} (ed25519), {new['ml-dsa-65']['keyId']} (ml-dsa-65); the registry's were "

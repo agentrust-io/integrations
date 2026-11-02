@@ -131,6 +131,7 @@ def _assess(record: dict, bundle_name: str | None, bundle_override: dict | None 
         # a key the document does not list, the approval is consistent, never confirmed.
         keys_pinned = False if key_document is not None else None
         if key_document is not None:
+            assert pinned["keyDocument"] is not None, f"the verifier could not read the pinned key document {key_document}: {pinned['transcript'][-1]}"
             assert pinned["keyDocument"]["allPinned"] is False, "the only check --keys adds is the key document's"
         verdict = "approval-consistent-key-not-pinned"
     elif amended:

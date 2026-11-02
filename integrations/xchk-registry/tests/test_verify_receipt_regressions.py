@@ -690,3 +690,77 @@ def test_keys_on_the_command_line(tmp_path):
     for argv in ([bundle, "--keys"], [bundle, "--keys", "--json"], [bundle, "--kyes", doc]):                  # a flag with no file, or a misspelt flag
         r = subprocess.run([sys.executable, "-I", script] + argv, capture_output=True, text=True, check=False)
         assert r.returncode == 2, (argv, r.stdout[-200:])
+
+
+def test_a_revoked_key_is_refused_however_the_document_says_it(tmp_path):
+    """Review of the key-pinning change (2 Nov 2026): list membership alone read `status: revoked` left in place as
+    pinned, and a revoked entry published without its public key (the registry serves publicKeyRaw null on revoked
+    keys) fell through to "never published", exit 1 for the wrong reason. Three shapes of the same revocation."""
+    real = json.loads((KEY_DOCUMENTS / "in.xchk.io.2026-11-02.json").read_text(encoding="utf-8"))
+    good = load("01-approval-confirmed.bundle.json")
+    ed = next(k for k in real["keys"] if k["alg"] == "ed25519" and k["keyId"] == "5ecb3da505414c4f")
+    shapes = {
+        "status revoked in place": lambda d: ed.update(status="revoked", revokedAt="2026-11-01T00:00:00Z"),
+        "revoked entry with null key still in keys": lambda d: ed.update(status="revoked", revokedAt="2026-11-01T00:00:00Z", publicKeyRaw=None),
+        "revoked entry with null key in the revoked list": lambda d: (d["keys"].remove(ed), d["revoked"].append(dict(ed, status="revoked", revokedAt="2026-11-01T00:00:00Z", publicKeyRaw=None))),
+    }
+    for name, shape in shapes.items():
+        doc = copy.deepcopy(real)
+        ed = next(k for k in doc["keys"] if k["keyId"] == "5ecb3da505414c4f")
+        shape(doc)
+        p = tmp_path / "rv.json"
+        p.write_text(json.dumps(doc), encoding="utf-8")
+        code, rep, out = _rep(good, tmp_path, strict=True, keys=str(p))
+        assert code == 1 and rep["keyDocument"]["allPinned"] is False, (name, out)
+        assert "FAIL the registry's key document lists pinned key ed25519/5ecb3da505414c4f as REVOKED since 2026-11-01T00:00:00Z" in out, (name, out)
+        assert "never published" not in out, (name, out)
+
+
+def test_the_right_key_id_under_a_different_public_key_fails(tmp_path):
+    """The document and the bundle agree on alg and keyId but not on the key: the pinned key is not the one the registry
+    published under that id. Asserted on its own (the contract's keyId tamper covers only the id)."""
+    real = json.loads((KEY_DOCUMENTS / "in.xchk.io.2026-11-02.json").read_text(encoding="utf-8"))
+    doc = copy.deepcopy(real)
+    ed = next(k for k in doc["keys"] if k["keyId"] == "5ecb3da505414c4f")
+    ed["publicKeyRaw"] = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="   # 32 zero bytes: a valid Ed25519 key, not the registry's
+    p = tmp_path / "diff.json"
+    p.write_text(json.dumps(doc), encoding="utf-8")
+    code, rep, out = _rep(load("01-approval-confirmed.bundle.json"), tmp_path, keys=str(p))
+    assert code == 1 and rep["keyDocument"]["allPinned"] is False, out
+    assert "FAIL the registry's key document lists keyId 5ecb3da505414c4f with a DIFFERENT ed25519 public key" in out, out
+
+
+def test_a_root_only_mismatch_is_not_pinned(tmp_path):
+    """Every pinned key listed, only the root wrong or absent: allPinned must be False, not merely exit 1 (a mutant that
+    dropped the root from allPinned survived the first sweep); a document with no root does not skip the check."""
+    real = json.loads((KEY_DOCUMENTS / "in.xchk.io.2026-11-02.json").read_text(encoding="utf-8"))
+    other = json.loads((KEY_DOCUMENTS / "xchk.me.2026-11-02.json").read_text(encoding="utf-8"))
+    good = load("01-approval-confirmed.bundle.json")
+    doc = copy.deepcopy(real)
+    doc["root"] = other["root"]
+    p = tmp_path / "root.json"
+    p.write_text(json.dumps(doc), encoding="utf-8")
+    code, rep, out = _rep(good, tmp_path, keys=str(p))
+    assert code == 1 and rep["keyDocument"]["allPinned"] is False, out
+    assert "FAIL the bundle's root key acc7ad1aeb3ef177 is NOT the registry's root key" in out and "lists pinned key ed25519/5ecb3da505414c4f\n" in out, out
+    doc = copy.deepcopy(real)
+    del doc["root"]
+    p.write_text(json.dumps(doc), encoding="utf-8")
+    code, rep, out = _rep(good, tmp_path, keys=str(p))
+    assert code == 1 and rep["keyDocument"]["allPinned"] is False, out
+    assert "FAIL the bundle carries root key acc7ad1aeb3ef177 but the registry's key document publishes no root key" in out, out
+
+
+def test_key_document_shapes_a_bom_loads_and_non_keys_are_unreadable(tmp_path):
+    """A copy saved by an editor with a byte-order mark is the same document; a `keys` list of non-keys is not a key
+    document and is exit 2, as the docstring promises, never exit 1 with a null registry."""
+    good = load("01-approval-confirmed.bundle.json")
+    real = (KEY_DOCUMENTS / "in.xchk.io.2026-11-02.json").read_bytes()
+    p = tmp_path / "bom.json"
+    p.write_bytes(b"\xef\xbb\xbf" + real)
+    code, rep, out = _rep(good, tmp_path, keys=str(p))
+    assert code == 0 and rep["keyDocument"]["allPinned"] is True, out
+    for shape in ({"keys": [1, 2]}, {"keys": [{"alg": "ed25519"}]}, {"keys": [{"alg": "ed25519", "keyId": "x"}], "revoked": ["y"]}):
+        p.write_text(json.dumps(shape), encoding="utf-8")
+        code, rep, out = _rep(good, tmp_path, keys=str(p))
+        assert code == 2 and rep["result"] == "unreadable" and rep["keyDocument"] is None, (shape, out)

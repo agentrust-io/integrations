@@ -365,5 +365,5 @@
     "python": "https://in.xchk.io/verify/verify_receipt.py",
     "license": "MIT"
   },
-  "fixtureNote": "TEST FIXTURE, 2 Nov 2026: fixture 01 re-signed under keys that are not the registry's (verify/tests/rekey_fixture.py). Every offline check passes without --keys; with the registry's key document the pinned keys fail by name."
+  "fixtureNote": "TEST FIXTURE, 2 Nov 2026: fixture 01 re-signed under keys that are not the registry's (rekey_fixture.py, beside the tests). Every offline check passes without --keys; with the registry's key document the pinned keys fail by name."
 }
