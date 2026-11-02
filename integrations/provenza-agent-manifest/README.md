@@ -34,7 +34,9 @@ python src/verify_provenza_manifest.py agent-7-manifest.cose --ed25519 <base64> 
 
 `--ed25519` and `--ml-dsa` are the organization's audit public keys as Provenza lists them (`GET /api/v1/audit/keys`, standard base64); `--keys` takes a `{kid hex: base64url key}` JSON instead, as `GET /api/v1/agents/{id}/manifest` returns it. Obtain the keys from a source you trust independently of the manifest file. The `manifest verify` CLI of agent-manifest 0.15.0 takes a single Ed25519 key, so it cannot check both signers of a hybrid envelope; the script calls the SDK directly.
 
-The script checks both COSE signatures (`verify_cose_manifest`), recomputes the tool catalog root (`build_catalog_tree`) and prints the verification engine's verdict (`verify_manifest`). It exits 0 when the signatures verify and the verdict is `VALID` or `INCOMPLETE`.
+The script verifies the COSE signatures (`verify_cose_manifest`), recomputes the tool catalog root (`build_catalog_tree`) and prints the verification engine's verdict (`verify_manifest`). It exits 0 only when the verified signers include both an Ed25519 signer (algorithm -19, or -8) and an ML-DSA-65 signer (-49), the catalog root matches, and the verdict is `VALID` or `INCOMPLETE`.
+
+The hybrid signature is the conjunction of the two. `COSE_Sign` signers do not cover each other, so an envelope stripped down to one of them still verifies against that key; the script refuses it, whichever half remains, and names the missing family in `missing_signers`. For the same reason it refuses the Ed25519-only `COSE_Sign1` that a Provenza server without ML-DSA-65 issues: such a manifest is not the hybrid one this listing describes.
 
 ## Reproduction
 
@@ -45,7 +47,7 @@ python src/verify_provenza_manifest.py tests/agent-1-manifest.cose --keys tests/
 python -m pytest tests -q
 ```
 
-`tests/agent-1-manifest.cose` was issued by Provenza for an agent with one approved MCP tool (`files.read`); `tests/trusted_keys.json` holds the two public keys that signed it. Expected output: `signatures_verified: true`, `signers: 2`, `catalog_hash_matches: true`, `verdict: INCOMPLETE` (`EXPIRED` after 2027-01-31). The tests also show that a changed payload and an unknown key fail.
+`tests/agent-1-manifest.cose` was issued by Provenza for an agent with one approved MCP tool (`files.read`); `tests/trusted_keys.json` holds the two public keys that signed it. Expected output: `signatures_verified: true`, `signers: 2`, `algorithms: [-49, -19]`, `hybrid: true`, `catalog_hash_matches: true`, `verdict: INCOMPLETE`, exit code 0. After 2027-01-31 the verdict is `EXPIRED` and the exit code 1. The tests fix the clock for the validity window, so they assert one exit code each, and they show that a changed payload, an unknown key and an envelope with only one of the two signers fail.
 
 To issue one yourself: install Provenza ([self-hosting guide](https://github.com/kironovlaziz-del/provenza/blob/main/docs/self-hosting.md)), register an agent, approve an MCP server's tool for it, and press **Agent Manifest** on the agent's page.
 
