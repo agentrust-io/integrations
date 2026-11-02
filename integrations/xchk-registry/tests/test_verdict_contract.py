@@ -152,10 +152,11 @@ def test_the_genuine_receipt_passes_strict_mode(name, tmp_path):
     assert report["keyDocument"] is None
     code, report, out = _run(_fixture({"fixture": name}), tmp_path, strict=True, keys=True)
     assert code == 0 and report["keyDocument"]["allPinned"] is True, out
-    if name == "anchored.bundle.json":   # 2 Nov 2026: every anchor guard ran and passed on the fixture that pins them
+    if name == "anchored.bundle.json":   # 2 Nov 2026: every anchor guard, and the identity-provider guard, ran and passed on the fixture that pins them
         for text in ("manifest path (", "the raw anchor transaction's OP_RETURN carries that manifest root", "sha256d(transaction) = txid",
                      "merkleblock header is the block header shipped with the bundle", "partial Merkle tree reproduces the header's Merkle root",
-                     "OpenTimestamps proof replays from the seal hash to a 32-byte Merkle root"):
+                     "OpenTimestamps proof replays from the seal hash to a 32-byte Merkle root",
+                     "binding names the identity provider that vouched for the approver"):
             assert "OK   " + text in out, f"the anchored fixture did not run the guard {text!r}\n{out[-900:]}"
 
 
