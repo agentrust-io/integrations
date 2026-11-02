@@ -5,6 +5,7 @@ from __future__ import annotations
 import base64
 import hashlib
 import json
+import math
 import re
 import sys
 from dataclasses import dataclass
@@ -25,8 +26,39 @@ class TrustedSigner:
     public_key: Ed25519PublicKey
 
 
+def _unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    out: dict[str, Any] = {}
+    for k, v in pairs:
+        if k in out:
+            raise ValueError(f"duplicate JSON object key: {k!r}")
+        out[k] = v
+    return out
+
+
+def _no_nonfinite_constant(token: str) -> Any:
+    raise ValueError(f"non-finite JSON constant is not allowed: {token}")
+
+
+def _finite_float(token: str) -> float:
+    val = float(token)
+    if not math.isfinite(val):
+        raise ValueError(f"non-finite JSON float is not allowed: {token}")
+    return val
+
+
+def _loads_strict(text: str) -> Any:
+    return json.loads(
+        text,
+        object_pairs_hook=_unique_object,
+        parse_constant=_no_nonfinite_constant,
+        parse_float=_finite_float,
+    )
+
+
 def canonical_bytes(value: Any) -> bytes:
-    return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()
+    return json.dumps(
+        value, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False
+    ).encode()
 
 
 def b64url_decode(value: str) -> bytes:
@@ -61,7 +93,7 @@ def receipt_hash(receipt: dict[str, Any]) -> str:
 
 
 def load_trusted_keys(path: Path = ROOT / "trusted-keys.json") -> dict[str, TrustedSigner]:
-    data = json.loads(path.read_text())
+    data = _loads_strict(path.read_text(encoding="utf-8"))
     keys = {}
     for key_id, key in data["controller_signers"].items():
         keys[key_id] = TrustedSigner(
@@ -78,13 +110,13 @@ def verify_fixture(
 ) -> dict[str, Any]:
     if trusted_keys is None:
         trusted_keys = load_trusted_keys()
-    return verify_text(path.read_text(), trusted_keys)
+    return verify_text(path.read_text(encoding="utf-8"), trusted_keys)
 
 
 def verify_text(text: str, trusted_keys: dict[str, TrustedSigner]) -> dict[str, Any]:
     """Verify fixture JSON. Always returns a verdict; never raises on bad input."""
     try:
-        return verify_document(json.loads(text), trusted_keys)
+        return verify_document(_loads_strict(text), trusted_keys)
     except (KeyError, TypeError, AttributeError, ValueError, RecursionError):
         # The fixture is untrusted input: a wrong shape is a verdict, not a crash.
         return dict(MALFORMED)
@@ -108,6 +140,10 @@ def verify_document(
     previous_hash = None
     final_state = "absent"
     final_verdict = None
+
+    for receipt in receipts:
+        if not isinstance(receipt, dict) or type(receipt["sequence"]) is not int:
+            raise TypeError("receipt sequence must be an integer")
 
     for expected_sequence, receipt in enumerate(
         sorted(receipts, key=lambda r: r["sequence"]), start=1
