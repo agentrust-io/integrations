@@ -21,7 +21,8 @@ def digest(path: Path) -> str:
 
 
 def capture(root: Path, integration: str, output: Path, command: list[str],
-            evidence_class: str, timeout: int = 600) -> dict:
+            evidence_class: str, timeout: int = 600,
+            observe_packages: list[str] | None = None) -> dict:
     """Run an explicitly selected command in this interpreter's environment."""
     if timeout <= 0:
         raise ValueError("Timeout must be positive")
@@ -34,6 +35,14 @@ def capture(root: Path, integration: str, output: Path, command: list[str],
             observed[package] = importlib.metadata.version(package)
         except importlib.metadata.PackageNotFoundError:
             observed[package] = None
+    extra = {}
+    for package in observe_packages or []:
+        if not isinstance(package, str) or not package.strip():
+            raise ValueError("Observed package names must be nonempty strings")
+        try:
+            extra[package] = importlib.metadata.version(package)
+        except importlib.metadata.PackageNotFoundError:
+            extra[package] = None
     revision = subprocess.check_output(
         ["git", "rev-parse", "HEAD"], cwd=root, text=True,
     ).strip()
@@ -54,11 +63,16 @@ def capture(root: Path, integration: str, output: Path, command: list[str],
         except subprocess.TimeoutExpired:
             returncode = None
             timed_out = True
+    payload = {"command": command, "log_sha256": digest(log),
+               "observed_extra_packages": extra}
+    (output / "evidence.json").write_text(json.dumps(payload, sort_keys=True) + "\n")
     receipt = {
-        "version": 1, "integration": integration, "revision": revision,
+        "version": 2, "integration": integration, "revision": revision,
         "dirty": dirty, "manifest_sha256": digest(manifest),
         "declared_packages": declared, "observed_packages": observed,
         "command": command, "evidence_class": evidence_class,
+        "observed_extra_packages": extra,
+        "evidence_sha256": digest(output / "evidence.json"),
         "started_at": started, "finished_at": datetime.now(timezone.utc).isoformat(),
         "returncode": returncode, "timed_out": timed_out,
         "log_sha256": digest(log),
@@ -78,8 +92,18 @@ def validate(root: Path, directory: Path) -> list[str]:
         manifest.relative_to(root.resolve())
         declared = yaml.safe_load(manifest.read_text()).get("tested_against") or {}
         revision = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+        payload = json.loads((directory / "evidence.json").read_text())
+        extra = receipt["observed_extra_packages"]
         checks = {
-            "unsupported receipt version": receipt["version"] == 1,
+            "unsupported receipt version": type(receipt["version"]) is int and receipt["version"] == 2,
+            "evidence digest mismatch": receipt["evidence_sha256"] == digest(directory / "evidence.json"),
+            "command/log evidence mismatch": payload == {
+                "command": receipt["command"], "log_sha256": receipt["log_sha256"],
+                "observed_extra_packages": extra},
+            "missing extra package observation": isinstance(extra, dict) and all(
+                isinstance(name, str) and bool(name.strip())
+                and isinstance(version, str) and bool(version)
+                for name, version in extra.items()),
             "source revision mismatch": receipt["revision"] == revision,
             "dirty source snapshot": receipt["dirty"] is False,
             "current checkout is dirty": not subprocess.check_output(
@@ -89,10 +113,11 @@ def validate(root: Path, directory: Path) -> list[str]:
             "declared versions changed": receipt["declared_packages"] == declared,
             "missing tested_against declaration": bool(declared),
             "installed versions differ": receipt["observed_packages"] == declared,
-            "command did not pass": receipt["returncode"] == 0 and receipt["timed_out"] is False,
+            "command did not pass": type(receipt["returncode"]) is int and receipt["returncode"] == 0 and receipt["timed_out"] is False,
             "log digest mismatch": receipt["log_sha256"] == digest(directory / "output.log"),
             "invalid evidence class": receipt["evidence_class"] in {"synthetic", "captured", "live"},
-            "missing command": isinstance(receipt["command"], list) and bool(receipt["command"]),
+            "missing command": isinstance(receipt["command"], list) and bool(receipt["command"])
+            and all(isinstance(arg, str) for arg in receipt["command"]),
         }
         for field in ("started_at", "finished_at"):
             if datetime.fromisoformat(receipt[field]).tzinfo is None:
@@ -112,6 +137,8 @@ def main() -> int:
     record.add_argument("--output", type=Path, required=True)
     record.add_argument("--evidence-class", choices=["synthetic", "captured", "live"], required=True)
     record.add_argument("--timeout", type=int, default=600)
+    record.add_argument("--observe-package", action="append", default=[],
+                        help="Also record this installed distribution (repeatable)")
     record.add_argument("command", nargs=argparse.REMAINDER)
     check = sub.add_parser("check")
     check.add_argument("directory", type=Path)
@@ -125,7 +152,8 @@ def main() -> int:
         command = command[1:]
     if command[:1] == ["python"]:
         command[0] = sys.executable
-    receipt = capture(ROOT, args.integration, args.output, command, args.evidence_class, args.timeout)
+    receipt = capture(ROOT, args.integration, args.output, command, args.evidence_class, args.timeout,
+                      observe_packages=args.observe_package)
     return int(receipt["returncode"] != 0 or receipt["timed_out"])
 
 

@@ -173,6 +173,8 @@ jobs:
           pip install --require-hashes -r requirements/sdk-langchain.txt
           python scripts/test_evidence.py capture \
             --integration integrations/langchain \
+            --observe-package langchain-core \
+            --observe-package langgraph \
             --output "$RUNNER_TEMP/langchain-evidence" \
             --evidence-class synthetic \
             -- python -m pytest integrations/langchain/test_langgraph_interop.py -q

@@ -74,3 +74,54 @@ def test_reject_foreign_interpreter_and_path(checkout):
         evidence.capture(root, "integrations/demo", output, ["sh", "-c", "true"], "synthetic")
     with pytest.raises(ValueError):
         evidence.capture(root, "../outside", output, [sys.executable, "-c", "pass"], "synthetic")
+
+
+def test_command_substitution_does_not_match_retained_log(checkout):
+    receipt = run(checkout)
+    receipt["command"] = [sys.executable, "-c", "print('different command')"]
+    (checkout[1] / "receipt.json").write_text(json.dumps(receipt))
+    assert "command/log evidence mismatch" in evidence.validate(*checkout)
+
+
+def test_log_substitution_with_updated_receipt_hash_is_refused(checkout):
+    receipt = run(checkout)
+    log = checkout[1] / "output.log"
+    log.write_text("replacement")
+    receipt["log_sha256"] = evidence.digest(log)
+    (checkout[1] / "receipt.json").write_text(json.dumps(receipt))
+    assert "command/log evidence mismatch" in evidence.validate(*checkout)
+
+
+def test_changed_evidence_payload_is_refused(checkout):
+    run(checkout)
+    path = checkout[1] / "evidence.json"
+    payload = json.loads(path.read_text())
+    payload["command"] = [sys.executable, "-c", "pass"]
+    path.write_text(json.dumps(payload))
+    errors = evidence.validate(*checkout)
+    assert "evidence digest mismatch" in errors
+    assert "command/log evidence mismatch" in errors
+
+
+def test_explicit_extra_package_observations(checkout):
+    root, output = checkout
+    receipt = evidence.capture(root, "integrations/demo", output,
+        [sys.executable, "-c", "pass"], "synthetic", observe_packages=["pyyaml"])
+    assert receipt["observed_extra_packages"] == {
+        "pyyaml": evidence.importlib.metadata.version("pyyaml")}
+    assert evidence.validate(root, output) == []
+
+
+def test_requested_missing_package_is_inconsistent(checkout):
+    root, output = checkout
+    evidence.capture(root, "integrations/demo", output,
+        [sys.executable, "-c", "pass"], "synthetic",
+        observe_packages=["agentrust-nonexistent-test-distribution"])
+    assert "missing extra package observation" in evidence.validate(root, output)
+
+
+def test_boolean_exit_code_is_not_success(checkout):
+    receipt = run(checkout)
+    receipt["returncode"] = False
+    (checkout[1] / "receipt.json").write_text(json.dumps(receipt))
+    assert "command did not pass" in evidence.validate(*checkout)
