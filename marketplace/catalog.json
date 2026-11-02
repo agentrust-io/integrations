@@ -441,7 +441,8 @@
       "tier": "community",
       "stack": [
         "cMCP",
-        "cA2A"
+        "cA2A",
+        "TRACE"
       ],
       "category": "Security & policy",
       "mark": "CWH",
