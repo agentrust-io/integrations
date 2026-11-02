@@ -9,6 +9,7 @@ Run: pytest integrations/xchk-registry/tests -q   (the verifier itself is standa
 from __future__ import annotations
 
 import copy
+import hashlib
 import io
 import json
 import sys
@@ -476,3 +477,115 @@ def test_the_verifier_writes_utf8_whatever_the_console_locale(tmp_path):
         assert r.returncode == 0 and b"UnicodeEncodeError" not in r.stderr, r.stderr.decode(errors="replace")[-600:]
         if flags:
             assert json.loads(r.stdout.decode("utf-8"))["exit"] == 0
+
+
+def test_required_algs_reads_signed_fields_only():
+    """2 Nov 2026 (review): the profile's signing dial decides when a profile is sealed; the seal's own windowStart
+    otherwise; nothing when the bundle is not sealed. The alg label and the key list are never consulted."""
+    pre, post = {"windowStart": "2026-09-06T14:55:12.187Z"}, {"windowStart": "2026-10-17T15:44:25.565Z"}
+    assert v.required_algs(pre, None) == {"ed25519"}
+    assert v.required_algs(post, None) == {"ed25519", "ml-dsa-65"}
+    assert v.required_algs(post, {"dials": {"signing": "ed25519"}}) == {"ed25519"}
+    assert v.required_algs(pre, {"dials": {"signing": "ed25519+ml-dsa-65"}}) == {"ed25519", "ml-dsa-65"}
+    assert v.required_algs(post, {"dials": {"signing": "none"}}) == {"ed25519", "ml-dsa-65"}   # no dial: the date decides
+    assert v.required_algs(None, None) is None and v.required_algs({"windowStart": 5}, None) is None
+    assert v.binding_required({"signing": "ed25519"}, {"ed25519", "ml-dsa-65"}) == {"ed25519"}
+    assert v.binding_required({"approverEmail": "x"}, {"ed25519"}) == {"ed25519"}
+
+
+def test_an_edited_dial_does_not_relax_the_requirement(tmp_path):
+    """The profile's signing dial is read only from a document that hashes to the sealed profileHash, so an editor who
+    writes `signing: ed25519` into the bundle and strips the post-quantum half gets BOTH failures: the profile no longer
+    hashes, and the date fallback still requires the half. (The review's mutant that skips the genuine-dial branch
+    cannot be killed with today's fixtures: every sealed profile is from after the switch and agrees with the date; a
+    receipt from a registry whose sealed profile says `ed25519` after the switch would pin it.) A binding that carries
+    its own mode inside the signed fields is decided by that mode; editing it fails the binding's signature instead."""
+    good = load("01-approval-confirmed.bundle.json")
+    b = copy.deepcopy(good)
+    b["profile"]["document"]["dials"]["signing"] = "ed25519"
+    b["registrySignature"]["signatures"] = b["registrySignature"]["signatures"][:1]
+    code, out = run(b, tmp_path)
+    assert code == 1 and "FAIL profile document does NOT hash" in out
+    assert "registry signature over the seal hash: the ml-dsa-65 signature this receipt requires is missing" in out, out
+    b = copy.deepcopy(good)
+    b["approver"]["binding"]["fields"]["signing"] = "ed25519"
+    b["approver"]["binding"]["signatures"] = b["approver"]["binding"]["signatures"][:1]
+    code, out = run(b, tmp_path)
+    assert code == 1 and "DOES NOT verify" in out                     # the edited fields no longer match the signature
+    assert "identity binding" in out and "this receipt requires is missing" not in out, out
+
+
+def test_a_required_half_that_cannot_be_checked_here_is_not_a_pass(tmp_path, monkeypatch):
+    """Review of round one (2 Nov 2026): without dilithium-py the ML-DSA slot is a WAIT, and a required WAIT counted as
+    present, so garbage in that slot passed even --require-approval. Now strict mode refuses and names the half; the
+    default run stays a WAIT, as every unverifiable step does. With dilithium-py present the same garbage simply fails."""
+    def rep_of(b, strict=False):
+        p = tmp_path / "w.json"
+        p.write_text(json.dumps(b), encoding="utf-8")
+        out = io.StringIO()
+        with redirect_stdout(out):
+            code, rep = v.verify(str(p), require_approval=strict)
+        return code, rep, out.getvalue()
+    good = load("01-approval-confirmed.bundle.json")
+    b = copy.deepcopy(good)
+    b["registrySignature"]["signatures"][1]["signature"] = "AAAA"
+    if v.ml_dsa_65_verify(b"\x00" * 32, b"m", b"s") is not None:   # dilithium-py present: the garbage half is a failed check
+        code, rep, out = rep_of(b, strict=True)
+        assert code == 1 and "ml-dsa-65 signature DOES NOT verify" in out
+    monkeypatch.setattr(v, "ml_dsa_65_verify", lambda *a: None)       # the stock install: the half cannot be checked
+    code, rep, out = rep_of(b)
+    assert code == 0 and rep["pending"] >= 1 and "WAIT registry signature over the seal hash: ml-dsa-65" in out, out
+    code, rep, out = rep_of(b, strict=True)
+    # with no ML-DSA at all, the binding's and the profile's halves are unverifiable too: strict names every one of them
+    assert code == 3 and rep["result"] in ("seal-chain-incomplete", "approval-evidence-missing"), out
+    assert any(s.startswith("registry signature over the seal hash: its ml-dsa-65 half, which this receipt requires") for s in rep["sealChainMissing"]), rep
+    assert any("identity binding" in s and "ml-dsa-65 half" in s for s in rep["approvalEvidenceMissing"]), rep
+    b = copy.deepcopy(good)
+    b["approver"]["binding"]["signatures"][1]["signature"] = "AAAA"
+    code, rep, out = rep_of(b, strict=True)
+    assert code == 3 and any("identity binding" in s and "ml-dsa-65 half" in s for s in rep["approvalEvidenceMissing"]), rep
+
+
+def test_withheld_names_what_a_failed_report_leaves_out(tmp_path):
+    """So a consumer can tell absent from withheld (review of round one): null fields come with `withheld` naming them
+    on every non-zero exit, and `withheld` is empty on a verdict of 0."""
+    def rep_of(b, strict=False):
+        p = tmp_path / "wh.json"
+        p.write_text(json.dumps(b), encoding="utf-8")
+        with redirect_stdout(io.StringIO()):
+            return v.verify(str(p), require_approval=strict)
+    good = load("07-amended.bundle.json")
+    code, rep = rep_of(good)
+    assert code == 0 and rep["withheld"] == [] and rep["amendment"]["committed"] is True
+    b = copy.deepcopy(good)
+    del b["seal"]
+    code, rep = rep_of(b, strict=True)
+    assert code == 3 and rep["withheld"] == ["boundIdentity", "amendment"] and rep["boundIdentity"] is None
+
+
+def test_the_artifact_check_pins_the_file(tmp_path):
+    """The --artifact path: the file's sha256 against the record's artifactHash. No fixture is a file-write record, so
+    the record hash fails here by construction; the two file lines are what this pins (unpinned until 2 Nov 2026)."""
+    good = load("01-approval-confirmed.bundle.json")
+    f1, f2 = tmp_path / "written.bin", tmp_path / "other.bin"
+    f1.write_bytes(b"the bytes this action wrote")
+    f2.write_bytes(b"some other bytes")
+    b = copy.deepcopy(good)
+    b["record"]["artifactHash"] = hashlib.sha256(f1.read_bytes()).hexdigest()
+    p = tmp_path / "a.json"
+    p.write_text(json.dumps(b), encoding="utf-8")
+    for f, want in ((f1, "OK   file"), (f2, "FAIL file")):
+        out = io.StringIO()
+        with redirect_stdout(out):
+            code = v.main(str(p), str(f))
+        assert code == 1 and f"{want} {f} is {'the one' if want.startswith('OK') else 'NOT the one'} this action wrote" in out.getvalue(), out.getvalue()
+    out = io.StringIO()
+    with redirect_stdout(out):
+        v.main(str(p), artifact_path=str(f1))                        # the keyword form the CLI uses
+    assert "is the one this action wrote" in out.getvalue()
+    out = io.StringIO()
+    with redirect_stdout(out):
+        pg = tmp_path / "g.json"
+        pg.write_text(json.dumps(good), encoding="utf-8")
+        v.main(str(pg), str(f1))
+    assert "FAIL this record carries no artifactHash" in out.getvalue()

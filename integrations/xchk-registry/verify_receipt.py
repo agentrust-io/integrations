@@ -33,7 +33,8 @@ Checks (each reproduces the rule the registry used to write the bytes; bundle fo
   5. approver      the passkey assertion that answered: ECDSA P-256 over authenticatorData || sha256(clientDataJSON),
                    user-verified flag set; then the registry's identity binding (same rules as 4) tying that credential
                    to this person for THIS record hash
-  6. anchor        the raw Ravencoin transaction carries the seal hash in OP_RETURN; sha256d(tx) is the txid; the
+  6. anchor        the raw Ravencoin transaction carries the seal hash in OP_RETURN — or, for a batched anchor, a
+                   manifest root that anchor.manifest.path reaches from the seal hash; sha256d(tx) is the txid; the
                    merkleblock's partial Merkle tree reproduces its header's Merkle root and includes the txid.
                    Left for you to confirm on any explorer: that block hash + Merkle root are on the chain
                    (Ravencoin's block hash is a KAWPOW hash, which this script does not compute).
@@ -226,9 +227,20 @@ def required_algs(seal, profile_doc):
     return None
 
 
-def registry_verify(ok, sig_obj: dict, msg: bytes, keys: list, what: str, required=None) -> int:
+def binding_required(fields, fallback):
+    """The identity binding is signed when the bundle is fetched, under the registry's mode THEN, so the seal's date says
+    nothing about it: a seal from before the switch carries a hybrid binding. Nothing signed in the binding named the
+    mode (review of #350, 2 Nov 2026); when the registry signs it in as `signing`, it decides, and until then the seal's
+    set is the signed proxy, which covers the binding only for seals from after the switch. Pure."""
+    dial = fields.get("signing") if isinstance(fields, dict) else None
+    return set(dial.split("+")) if isinstance(dial, str) and dial not in ("", "none") else fallback
+
+
+def registry_verify(ok, sig_obj: dict, msg: bytes, keys: list, what: str, required=None, unverified=None) -> int:
     """Verify every signature the object lists, and require every one `required` names (2 Nov 2026). Returns the number
-    of WAITs (unverifiable halves); FAILs go through ok()."""
+    of WAITs (unverifiable halves); FAILs go through ok(). A required half that cannot be checked here is appended to
+    `unverified` (strict mode refuses on it): a label is not a signature, and without dilithium-py the ML-DSA slot
+    would otherwise pass on its label alone (review of #350, 2 Nov 2026)."""
     sigs = sig_obj.get("signatures") if isinstance(sig_obj.get("signatures"), list) and sig_obj.get("signatures") else None
     if not sigs and sig_obj.get("signature"):
         alg = sig_obj.get("alg") if sig_obj.get("alg") and sig_obj.get("alg") != "ed25519+ml-dsa-65" else "ed25519"
@@ -257,8 +269,10 @@ def registry_verify(ok, sig_obj: dict, msg: bytes, keys: list, what: str, requir
         if r is None:
             waits += 1
             print(f"  WAIT {what}: {alg} signature present (keyId {kid}) — install dilithium-py to verify the post-quantum half")
+            if unverified is not None and required and alg in required:
+                unverified.append(f"{what}: its {alg} half, which this receipt requires, cannot be checked here (install dilithium-py)")
         else:
-            ok(r, f"{what}: {alg} signature verifies with pinned key {kid}" + (" (FIPS 204, post-quantum)" if alg == "ml-dsa-65" else ""))
+            ok(r, f"{what}: {alg} signature {'verifies' if r else 'DOES NOT verify'} with pinned key {kid}" + (" (FIPS 204, post-quantum)" if alg == "ml-dsa-65" else ""))
     present = {s.get("alg") for s in sigs}
     for alg in sorted(required or ()):
         if alg not in present:
@@ -545,7 +559,7 @@ def verify(path: str, artifact_path: Optional[str] = None, require_approval: boo
     traceback and never a pass (19 Oct 2026: a type-mutation sweep over every field found 35 crashing lines; the
     field-removal sweep had covered only absence). `pending` is null when the run stopped on such a bundle."""
     report = {"result": None, "exit": None, "failed": 0, "pending": 0, "approvalEvidenceMissing": [], "sealChainMissing": [],
-              "boundIdentity": None, "amendment": None, "checks": []}
+              "boundIdentity": None, "amendment": None, "withheld": [], "checks": []}
     try:
         return _verify(path, artifact_path, require_approval, report)
     except (KeyError, TypeError, AttributeError, ValueError, IndexError, OverflowError) as exc:
@@ -554,7 +568,7 @@ def verify(path: str, artifact_path: Optional[str] = None, require_approval: boo
         report["checks"].append({"status": "FAIL", "text": text})
         failed = sum(1 for c in report["checks"] if c["status"] == "FAIL")
         print(f"\nRESULT: does NOT verify ({failed} check(s) failed)")
-        report.update(exit=1, result="fails", failed=failed, pending=None, boundIdentity=None, amendment=None)
+        report.update(exit=1, result="fails", failed=failed, pending=None, boundIdentity=None, amendment=None, withheld=["boundIdentity", "amendment"])
         return 1, report
 
 
@@ -568,7 +582,7 @@ def _verify(path, artifact_path, require_approval, report):
     assertion with a key, a registry-signed binding, and an ask-v1 challenge. Without it, a bundle stripped of its
     approver still exits 0 (nothing FAILED, the steps were only WAIT), and a caller that reads 0 as "approval
     verified" is wrong. Absence of failure is not verification. `boundIdentity` is the email, proofing level and method
-    from the registry-signed binding, never the readable labels beside it (null without a binding). Both are null whenever the exit is not 0 (2 Nov 2026). `amendment` is null when the decision carries none,
+    from the registry-signed binding, never the readable labels beside it (null without a binding). Both are null, and `withheld` names them, whenever the exit is not 0 (2 Nov 2026). `amendment` is null when the decision carries none,
     else {command, committed}: committed only when the sealed record's paramsHash recomputes over that command AND
     the amendment cites the ask the person signed (finding 3)."""
     checks = report["checks"]
@@ -579,7 +593,7 @@ def _verify(path, artifact_path, require_approval, report):
             # 2 Nov 2026 (review of #350, rajnisht7): with the seal signature corrupted, boundIdentity and amendment
             # (committed: true) were still filled in, and a caller that read them before the exit code took them as
             # verified. A report that does not verify names nobody and commits to nothing.
-            report.update(boundIdentity=None, amendment=None)
+            report.update(boundIdentity=None, amendment=None, withheld=["boundIdentity", "amendment"])
         return code, report
 
     failed = 0
@@ -675,7 +689,7 @@ def _verify(path, artifact_path, require_approval, report):
                 psig = prof.get("signature") or {}
                 pkeys = pinned_keys(b.get("registrySignature") or {})
                 if (psig.get("signature") or psig.get("signatures")) and pkeys:
-                    pending += registry_verify(ok, psig, ph.encode("utf-8"), pkeys, "registry signature over the profile hash", required)
+                    pending += registry_verify(ok, psig, ph.encode("utf-8"), pkeys, "registry signature over the profile hash", required, seal_chain_missing)
                 else:
                     ok(False, "profile carries no registry signature")
                 print(f"  ..   sealed under profile \"{doc.get('name')}\" of {doc.get('registry')} ({ph[:12]}…): "
@@ -691,7 +705,7 @@ def _verify(path, artifact_path, require_approval, report):
         if not isinstance(seal.get("sealHash"), str):
             ok(False, "seal names its hash, for the registry signature to be checked over")
         else:
-            pending += registry_verify(ok, rs, seal["sealHash"].encode("utf-8"), keys, "registry signature over the seal hash", required)
+            pending += registry_verify(ok, rs, seal["sealHash"].encode("utf-8"), keys, "registry signature over the seal hash", required, seal_chain_missing)
         pinned = ", ".join(f"{k.get('alg')}/{k.get('keyId')}" for k in keys)  # 18 Oct 2026: no nested same-quote f-string (3.12-only syntax)
         print(f"  ..   keys pinned in the bundle: {pinned}; confirm at {rs.get('wellKnown')} when online")
     elif seal:
@@ -735,7 +749,7 @@ def _verify(path, artifact_path, require_approval, report):
         bd = ap.get("binding") or {}
         if (bd.get("signature") or bd.get("signatures")) and keys and bd.get("fields"):
             f = bd["fields"]
-            pending += registry_verify(ok, bd, canonical(f).encode("utf-8"), keys, f"identity binding: credential ↔ {f.get('approverEmail')} (level {f.get('authLevel')})", required)
+            pending += registry_verify(ok, bd, canonical(f).encode("utf-8"), keys, f"identity binding: credential ↔ {f.get('approverEmail')} (level {f.get('authLevel')})", binding_required(f, required), approval_evidence_missing)
             ok(f.get("recordHash") == b.get("recordHash"), "binding names this record hash")
             ok(f.get("credentialId") == ap.get("credentialId"), "binding names the credential that signed the assertion")
             # 17 Oct 2026: the key the assertion was checked with must be the key the registry bound to that credential,
@@ -863,8 +877,23 @@ def _verify(path, artifact_path, require_approval, report):
     if proof and proof.get("txHex") and seal:
         tx = bytes.fromhex(proof["txHex"])
         payloads = tx_op_return_payloads(tx)
-        carries = any(p[:3] == b"xCk" and p[9:41].hex() == (seal.get("sealHash") or "") for p in payloads)
-        ok(carries, "the raw anchor transaction's OP_RETURN carries this seal hash")
+        committed = [p[9:41].hex() for p in payloads if p[:3] == b"xCk"]
+        manifest = anchor.get("manifest")
+        if manifest and isinstance(manifest.get("path"), list):
+            # 22 Oct 2026: a BATCHED anchor — the transaction carries a manifest root over many seals; this seal's path
+            # walks its hash to that root with the same rule as the record→seal path. A malformed path is a failed
+            # check, never a crash.
+            cur = seal.get("sealHash") or ""
+            try:
+                for step in manifest["path"]:
+                    cur = sha256_hex(step["hash"] + cur) if step.get("side") == "L" else sha256_hex(cur + step["hash"])
+                ok(cur == manifest.get("root"), f"manifest path ({len(manifest['path'])} steps) reaches root {manifest.get('root')} (this seal is 1 of {manifest.get('count')})")
+            except (KeyError, TypeError, AttributeError) as exc:
+                cur = None
+                ok(False, f"manifest path is malformed ({exc!r}); the path to the anchored root cannot be walked")
+            ok(cur is not None and cur in committed, "the raw anchor transaction's OP_RETURN carries that manifest root")
+        else:
+            ok((seal.get("sealHash") or "") in committed, "the raw anchor transaction's OP_RETURN carries this seal hash")
         ok(sha256d(tx)[::-1].hex() == proof.get("txid"), f"sha256d(transaction) = txid {proof.get('txid')}")
         hdr = bytes.fromhex(proof["headerHex"]) if proof.get("headerHex") else b""
         mb = bytes.fromhex(proof["merkleBlockHex"]) if proof.get("merkleBlockHex") else b""

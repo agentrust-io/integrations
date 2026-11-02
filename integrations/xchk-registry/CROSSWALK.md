@@ -70,7 +70,8 @@ Two rules the verifier enforces that a relying party must not relax (19 October 
   FAIL, the count of steps that could not run, the approval evidence still missing, and `boundIdentity`, the person
   and proofing level taken only from the registry-signed binding, never from the readable `approver.email` or
   `authLevel` beside it; a caller acts on that, not on the exit code alone. Both fields are null whenever the exit is
-  not 0 (2 Nov 2026): a report that does not verify names nobody and commits to nothing.
+  not 0 (2 Nov 2026): a report that does not verify names nobody and commits to nothing; `withheld` names them, so
+  absent and withheld read apart.
 - **An amendment the sealed record does not commit to is refused.** `decision.amendment` is readable text. The
   verifier checks that the sealed `record.paramsHash` recomputes over the amended command (the served
   `amendment.boundAs`, itself unsigned, counts only when it hashes to the sealed digest) and, where the ask carries a
