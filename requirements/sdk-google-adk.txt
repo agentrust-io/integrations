@@ -3,7 +3,7 @@
 agentrust-trace-tests==0.5.1 \
     --hash=sha256:5c13421d41357a5b2e096eced457f5dee65d4921b253b25dac53684b3d31eeeb \
     --hash=sha256:79e9d98a7106ae1c47b8378c8808be26f1fa34a62779e9f7b0e954cf40a2a19c
-    # via -r requirements/sdk-google-adk.in
+    # via -r sdk-google-adk.in
 aiosqlite==0.22.1 \
     --hash=sha256:043e0bd78d32888c0a9ca90fc788b38796843360c855a7262a532813133a0650 \
     --hash=sha256:21c002eb13823fad740196c5a2e9d8e62f6243bd9e7e4a1f87fb5e44ecb4fceb
@@ -386,7 +386,7 @@ fastapi==0.141.1 \
 google-adk==2.11.0 \
     --hash=sha256:4774e1fc7bb37727e56142e7d41e9035949ebfc876a2b15d5505969b02798bcd \
     --hash=sha256:59258cec8d79306192bf65e0d43fa64b764f831e3b74ed3b8e6fe9df16a1e2c8
-    # via -r requirements/sdk-google-adk.in
+    # via -r sdk-google-adk.in
 google-auth[pyopenssl,requests]==2.57.1 \
     --hash=sha256:ab439dee60a6856412bc058f13a68eb6a59c5b81526bb89cfdcf89ce9c0a48c9 \
     --hash=sha256:eb47b230fc6707eed4aee1c9cef55ec05bc1785eecba74ff8b572d531e921b1e
@@ -424,9 +424,9 @@ idna==3.19 \
     #   anyio
     #   httpx
     #   requests
-joserfc==1.7.5 \
-    --hash=sha256:add2c2c84e8373b084d526a8b53daba5d7a513a118cd2dcd9fc9f979d0922159 \
-    --hash=sha256:d5ff536e658e17664f8c1b1ab60dc4aa62aa973fcef1edd33cc44bda45d6f5ea
+joserfc==1.7.6 \
+    --hash=sha256:e2d72e3fa937ed8ddd42ad8c1cc337a43e7ffd02efa572a2aa15e2764a05b506 \
+    --hash=sha256:fb1cf6d2977318bef976c2ed2ef2167cc5f8ade8fc96f034e38f7abd656907c4
     # via authlib
 jsonschema==4.26.0 \
     --hash=sha256:0c26707e2efad8aa1bfc5b7ce170f3fccc2e4918ff85989ba9ffa9facb2be326 \
