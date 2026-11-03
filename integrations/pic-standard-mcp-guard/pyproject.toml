@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pic-standard-mcp-guard-agentrust-integration"
+version = "0.1.0"
+description = "PIC MCP allow decisions and verified observations as signed TRACE Level 0 Trust Records"
+requires-python = ">=3.11"
+license = "Apache-2.0"
+dependencies = [
+    "pic-standard[crypto]>=0.9.1",
+    "agentrust-trace>=0.11.0",
+    "agentrust-trace-adapters>=0.2.0",
+    "rfc8785",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "agentrust-trace-tests>=0.6.2",
+    "packaging>=24",
+]
+
+[tool.setuptools]
+py-modules = ["pic_trace_guard", "pic_trace_verify"]

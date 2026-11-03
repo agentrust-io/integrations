@@ -1,0 +1,2 @@
+# Vendored bytes; the tests check them against their SHA-256.
+vendor/** -text

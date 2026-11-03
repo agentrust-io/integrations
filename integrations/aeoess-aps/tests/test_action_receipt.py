@@ -613,3 +613,24 @@ def test_reference_time_must_be_aware() -> None:
 
 def test_status_vocabulary_is_closed() -> None:
     assert set(STATUSES) == {VERIFIED, INVALID, UNVERIFIED}
+
+
+@pytest.mark.parametrize(
+    ("bad_age", "bad_skew"),
+    [
+        (True, 0),
+        (False, 0),
+        (60, True),
+        (60.5, 0),
+        (60, 0.5),
+        (float("inf"), 0),
+    ],
+)
+def test_verify_aps_action_receipt_rejects_boolean_or_float_window_bounds(
+    bad_age, bad_skew
+) -> None:
+    receipt, pinned, action = _mint()
+    with pytest.raises(ValueError, match="max_age_seconds"):
+        _verify(receipt, pinned, action, max_age_seconds=bad_age, clock_skew_seconds=bad_skew)
+    with pytest.raises(ValueError, match="reference_time"):
+        _verify(receipt, pinned, action, reference_time="2026-09-18T12:00:00Z")  # type: ignore[arg-type]

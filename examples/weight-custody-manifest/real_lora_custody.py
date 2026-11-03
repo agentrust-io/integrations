@@ -28,7 +28,6 @@ from typing import Iterable
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
-from model_signing import signing as model_signing
 
 from wcm import (
     Ed25519Signer,
@@ -39,6 +38,7 @@ from wcm import (
     artifact_files,
     generate_ed25519,
     generate_transport_keypair,
+    manifest_identity,
     model_signing_digest,
     open_sealed,
     verify_manifest,
@@ -54,6 +54,12 @@ FORMAT = "wcm-encrypted-derivative/v1"
 
 def sign_artifact(root: pathlib.Path, output: pathlib.Path) -> tuple[str, pathlib.Path, pathlib.Path]:
     """Create a detached OpenSSF signature, retaining no private signing key."""
+    # Imported here, not at module level: this is the only function that
+    # needs the model-signing extra, and the KBS release path below (see
+    # build_kbs) must stay importable - by main() and by
+    # test_kbs_manifest_pinning.py - without requiring it or torch.
+    from model_signing import signing as model_signing
+
     signature_path = output / "adapter.model-signing.sig"
     public_key_path = output / "adapter.model-signing.pub.pem"
     key = ec.generate_private_key(ec.SECP256R1())
@@ -204,6 +210,29 @@ def run_inference(base_path: pathlib.Path, adapter_path: pathlib.Path) -> str:
     return tokenizer.decode(output[0], skip_special_tokens=True)
 
 
+def build_kbs(manifest: WeightCustodyManifest, key: bytes) -> KeyBrokerService:
+    """The manifest-pinned KBS that releases the derivative key.
+
+    A KBS built without ``trusted_manifest_identities`` never releases, no
+    matter how valid the attestation evidence is, so dropping the pin here
+    is a silent regression unless something exercises this exact
+    construction. It's factored out of ``main`` for exactly that reason: so
+    ``test_kbs_manifest_pinning.py`` can call it directly, without training a
+    LoRA adapter, downloading a model, or needing torch or the model-signing
+    extra - this module has no other dependency that isn't already needed
+    offline.
+    """
+    return KeyBrokerService(
+        {manifest.weights_hash: key},
+        require_channel_binding=True,
+        # Without this the manifest is not pinned, so verify_and_release
+        # refuses on manifest_authorized regardless of attestation and the
+        # KBS never returns a sealed key: see real_open_model.py and the
+        # other offline demos, which all pin it the same way.
+        trusted_manifest_identities=[manifest_identity(manifest)],
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--model", default="HuggingFaceTB/SmolLM2-135M-Instruct")
@@ -272,9 +301,7 @@ def main() -> int:
         raise RuntimeError("joint derivative-manifest verification failed")
 
     transport_private, transport_public = generate_transport_keypair()
-    kbs = KeyBrokerService(
-        {manifest.weights_hash: key}, require_channel_binding=True
-    )
+    kbs = build_kbs(manifest, key)
     challenge = kbs.issue_challenge()
     evidence = SoftwareProvider().produce(
         challenge,

@@ -130,3 +130,25 @@ def test_the_connector_result_is_labelled_a_mock():
     assert cases["refusal"]["connectorInvocations"] == 0
     assert cases["replay"]["connectorInvocations"] == 0
     assert REPORT["totalConnectorInvocations"] == 1
+
+
+@pytest.mark.parametrize(
+    "mutator",
+    [
+        lambda a: a["signature"].update({"value": "!!!" + a["signature"]["value"]}),
+        lambda a: a["signature"].update({"value": "not-valid-base64="}),
+        lambda a: a.update({"signature": "not-a-dict"}),
+        lambda a: a.update({"payload": None}),
+        lambda a: a["payload"].update({"issuer": "not-a-dict"}),
+    ],
+)
+def test_parmana_rejects_non_canonical_base64_and_non_dict_containers(mutator):
+    bad_app = copy.deepcopy(APPROVAL)
+    mutator(bad_app)
+    assert not pe.verify_approval(bad_app, APPROVER_KEYS).valid
+
+    bad_ref = copy.deepcopy(REFUSALS["refusal"])
+    bad_ref["signature"]["value"] = "!!!" + bad_ref["signature"]["value"]
+    assert not pe.verify_refusal_record(bad_ref, PARMANA_KEYS).valid
+    bad_ref["signature"] = ["not-a-dict"]
+    assert not pe.verify_refusal_record(bad_ref, PARMANA_KEYS).valid

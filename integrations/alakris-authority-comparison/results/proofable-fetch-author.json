@@ -1,0 +1,593 @@
+{
+  "schema": "aaif-authority-comparison/v1",
+  "implementation": "Proofable hosted MCP fetch",
+  "basis": "author_record",
+  "integrity": "PASS",
+  "publication": {
+    "commit": "e6eb5b9307be24a5d82cc7490f647f0c98e2d24a",
+    "path": "public/evidence/aaif/authority-at-dispatch/2026-10-24-fetch-route"
+  },
+  "publisher_deployment_claim": {
+    "mcp_version": "0.1.7",
+    "service_revision": "18433a48d74af913550de7a018f02c7c724cc1c9"
+  },
+  "artifact_hashes": [
+    {
+      "file": "1-invocation.json",
+      "expected": "566b2cc841a1c4966bf56ca98f21c4a479476a97172e3287c1572a2f0a59c871",
+      "actual": "566b2cc841a1c4966bf56ca98f21c4a479476a97172e3287c1572a2f0a59c871",
+      "match": true
+    },
+    {
+      "file": "2-request-arguments.json",
+      "expected": "8dd4cf11e11a29347ba1d73921a2b2fce0a8ac3ccac56aea860bbf6778d95da7",
+      "actual": "8dd4cf11e11a29347ba1d73921a2b2fce0a8ac3ccac56aea860bbf6778d95da7",
+      "match": true
+    },
+    {
+      "file": "3-create-response.txt",
+      "expected": "2db3795531b68a1f627d5e38d0a99783a2c789fcea0802629a6e4d85466fa1a8",
+      "actual": "2db3795531b68a1f627d5e38d0a99783a2c789fcea0802629a6e4d85466fa1a8",
+      "match": true
+    },
+    {
+      "file": "4-dispatch-decision.json",
+      "expected": "2970e1c6a1e7291d36bcb752e1b7b2c9416c24eb6e6c699c1dcfd19c2b2e6b5f",
+      "actual": "2970e1c6a1e7291d36bcb752e1b7b2c9416c24eb6e6c699c1dcfd19c2b2e6b5f",
+      "match": true
+    },
+    {
+      "file": "5-job-record.json",
+      "expected": "40e0bb4a7d75396182b026884f83c350316fa3be6b00bff2ce9ea3cac146d415",
+      "actual": "40e0bb4a7d75396182b026884f83c350316fa3be6b00bff2ce9ea3cac146d415",
+      "match": true
+    },
+    {
+      "file": "6-terminal-receipt.json",
+      "expected": "34688c283148a0524b550666fa74839b38410c26fd63425734a2753ba89f040c",
+      "actual": "34688c283148a0524b550666fa74839b38410c26fd63425734a2753ba89f040c",
+      "match": true
+    },
+    {
+      "file": "README.md",
+      "expected": "57dcce249c71c083f43f70f25bae4bf24d0904a201a664da3f4c181c43aeceed",
+      "actual": "57dcce249c71c083f43f70f25bae4bf24d0904a201a664da3f4c181c43aeceed",
+      "match": true
+    },
+    {
+      "file": "SHA256SUMS",
+      "expected": "0a47e2b25bdf5959a774df690098a0d22f73e7d31453099ae53b45c370858f5a",
+      "actual": "0a47e2b25bdf5959a774df690098a0d22f73e7d31453099ae53b45c370858f5a",
+      "match": true
+    },
+    {
+      "file": "health-at-run.json",
+      "expected": "b6849d19f65356cb3da0a1d0d4e840c1e1244830c9c2a637641f0cf7cf468616",
+      "actual": "b6849d19f65356cb3da0a1d0d4e840c1e1244830c9c2a637641f0cf7cf468616",
+      "match": true
+    },
+    {
+      "file": "verify.mjs",
+      "expected": "d1919890e1d5ff3c5da0f552c90e09ef672e514c7f2dc3e35c91276358c926a6",
+      "actual": "d1919890e1d5ff3c5da0f552c90e09ef672e514c7f2dc3e35c91276358c926a6",
+      "match": true
+    }
+  ],
+  "publisher_checksum_inventory_valid": true,
+  "positive_dispatch_appraisal": "PASS",
+  "positive_dispatch": {
+    "valid": true,
+    "checks": [
+      {
+        "check": "decision_envelope",
+        "valid": true,
+        "scope": "EIP-191/qHash/DID-chain integrity, not service identity"
+      },
+      {
+        "check": "receipt_envelope",
+        "valid": true,
+        "scope": "EIP-191/qHash/DID-chain integrity, not service identity"
+      },
+      {
+        "check": "same_declared_signer_context",
+        "valid": true,
+        "scope": "publisher-declared signer/context only"
+      },
+      {
+        "check": "same_principal_agent_context",
+        "valid": true,
+        "scope": "signed principal/agent fields versus unsigned request/invocation/job"
+      },
+      {
+        "check": "dispatch_allow_profile",
+        "valid": true,
+        "scope": "positive dispatch statement, no job/effect attestation"
+      },
+      {
+        "check": "decision_reference_context",
+        "valid": true,
+        "scope": "signed decision reference names this agent/request timestamp"
+      },
+      {
+        "check": "referenced_authority_ids",
+        "valid": true,
+        "scope": "references are identifiers only; grant/identity proof validation is unestablished"
+      },
+      {
+        "check": "request_args_digest",
+        "valid": true,
+        "scope": "fixed request projection"
+      },
+      {
+        "check": "receipt_request_digest",
+        "valid": true,
+        "scope": "same projected request in the signed receipt"
+      },
+      {
+        "check": "receipt_request_fields",
+        "valid": true,
+        "scope": "signed terminal report of this request, including unsigned-digest alias consistency"
+      },
+      {
+        "check": "create_response_shape",
+        "valid": true,
+        "scope": "unsigned retained MCP response"
+      },
+      {
+        "check": "create_decision_qhash_join",
+        "valid": true,
+        "scope": "unsigned create-response correlation, not a signed decision-to-job link"
+      },
+      {
+        "check": "receipt_reference_context",
+        "valid": true,
+        "scope": "signed receipt reference names this terminal job"
+      },
+      {
+        "check": "create_job_join",
+        "valid": true,
+        "scope": "unsigned create response/job versus signed terminal jobId"
+      },
+      {
+        "check": "job_receipt_consistency",
+        "valid": true,
+        "scope": "unsigned job record versus signed terminal statement"
+      },
+      {
+        "check": "reported_fetch",
+        "valid": true,
+        "scope": "service-reported execution, not an executor or target signature"
+      },
+      {
+        "check": "reported_marker",
+        "valid": true,
+        "scope": "full returned marker is signed only in the terminal statement"
+      },
+      {
+        "check": "reported_release",
+        "valid": true,
+        "scope": "unsigned publisher deployment metadata, not binary attestation"
+      }
+    ],
+    "envelopes": {
+      "decision": {
+        "valid": true,
+        "signer": "0xA41494e1E5F9E5Eaf786961e6ef84cd1a3071Eec",
+        "errors": []
+      },
+      "receipt": {
+        "valid": true,
+        "signer": "0xA41494e1E5F9E5Eaf786961e6ef84cd1a3071Eec",
+        "errors": []
+      }
+    },
+    "job_id": "d259c7cc-0701-4624-a148-77b149f84e06",
+    "target_url": "https://webhook.site/b008feae-131e-45bc-850b-c3a759865b88",
+    "returned_marker": "target-ack 6b86b1f0cd3adaced3f1",
+    "declared_service_signer": "0xa41494e1e5f9e5eaf786961e6ef84cd1a3071eec"
+  },
+  "service_key_attribution": {
+    "state": "not_measured",
+    "value": null,
+    "reason": "no separately verified canonical service-key trust source; declared signer integrity is not attribution"
+  },
+  "grant_and_agent_identity_validation": {
+    "state": "not_measured",
+    "value": null,
+    "reason": "decision names grant and identity qHashes but their proof records are absent"
+  },
+  "request_binding": {
+    "projection": [
+      "agentId",
+      "agentWallet (lowercased)",
+      "prompt",
+      "runtime (default null)",
+      "requiresJobApproval (default false)",
+      "acceptance.criterion",
+      "acceptance.mode"
+    ],
+    "outside_digest_projection": [
+      "runNowFirst",
+      "acceptance.criteria"
+    ],
+    "full_returned_marker_precommitted": false,
+    "reason": "prompt binds the unique URL, criterion is generic target-ack; full returned marker is signed only in terminal receipt"
+  },
+  "correlation_only_links": [
+    "decision jobId=null; unsigned create response joins decision qHash to jobId",
+    "identical requests share argsDigest; URL uniqueness is correlation, not replay prevention",
+    "no executor-signed GET; no retained target ingress log"
+  ],
+  "unmeasured": {
+    "target_commit": {
+      "state": "not_measured",
+      "value": null,
+      "reason": "signed service completion does not establish target-side committed effects"
+    },
+    "independent_target_witness": {
+      "state": "not_measured",
+      "value": null,
+      "reason": "public request-bin logs and an operator-owned observer are absent"
+    },
+    "revocation_latency": {
+      "state": "not_measured",
+      "value": null,
+      "reason": "no revocation timing measurement in this positive run"
+    },
+    "commit_time_authority": {
+      "state": "not_measured",
+      "value": null,
+      "reason": "dispatch-only; no authority recheck in flight or at target commit"
+    },
+    "EO01_unreachable_authority": {
+      "state": "not_measured",
+      "value": null,
+      "reason": "no separately unreachable authority experiment on this locally evaluated path"
+    }
+  },
+  "evidence_custody": {
+    "operator": "Proofable",
+    "observer": "Proofable",
+    "appraisal": "offline local reader",
+    "independent_target_observer": false
+  },
+  "independent_live_reproduction": false,
+  "independent_comparison_completed": false,
+  "scenario_conformance": "UNMET",
+  "cases": [
+    {
+      "case_id": "binding_veto",
+      "basis": "author_record",
+      "independent_live_reproduction": false,
+      "scenario_conformance": "UNMET",
+      "unmet_requirements": [
+        "positive author-operated fetch does not exercise the binding_veto scenario"
+      ],
+      "fields": {
+        "action_digest": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the binding_veto scenario"
+        },
+        "authority": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the binding_veto scenario"
+        },
+        "committed_effect": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the binding_veto scenario"
+        },
+        "decision": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the binding_veto scenario"
+        },
+        "dispatch": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the binding_veto scenario"
+        },
+        "duplicate_count": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the binding_veto scenario"
+        },
+        "fallback_scope": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the binding_veto scenario"
+        },
+        "independent_effect_witness": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the binding_veto scenario"
+        },
+        "original_deadline": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the binding_veto scenario"
+        },
+        "policy_digest": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the binding_veto scenario"
+        },
+        "receipt": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the binding_veto scenario"
+        },
+        "retry_count": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the binding_veto scenario"
+        },
+        "target_identity": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the binding_veto scenario"
+        },
+        "task_outcome": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the binding_veto scenario"
+        }
+      }
+    },
+    {
+      "case_id": "revoked_stale",
+      "basis": "author_record",
+      "independent_live_reproduction": false,
+      "scenario_conformance": "UNMET",
+      "unmet_requirements": [
+        "positive author-operated fetch does not exercise the revoked_stale scenario"
+      ],
+      "fields": {
+        "action_digest": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the revoked_stale scenario"
+        },
+        "authority": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the revoked_stale scenario"
+        },
+        "committed_effect": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the revoked_stale scenario"
+        },
+        "decision": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the revoked_stale scenario"
+        },
+        "dispatch": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the revoked_stale scenario"
+        },
+        "duplicate_count": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the revoked_stale scenario"
+        },
+        "fallback_scope": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the revoked_stale scenario"
+        },
+        "independent_effect_witness": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the revoked_stale scenario"
+        },
+        "original_deadline": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the revoked_stale scenario"
+        },
+        "policy_digest": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the revoked_stale scenario"
+        },
+        "receipt": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the revoked_stale scenario"
+        },
+        "retry_count": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the revoked_stale scenario"
+        },
+        "target_identity": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the revoked_stale scenario"
+        },
+        "task_outcome": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the revoked_stale scenario"
+        }
+      }
+    },
+    {
+      "case_id": "unreachable",
+      "basis": "author_record",
+      "independent_live_reproduction": false,
+      "scenario_conformance": "UNMET",
+      "unmet_requirements": [
+        "positive author-operated fetch does not exercise the unreachable scenario"
+      ],
+      "fields": {
+        "action_digest": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the unreachable scenario"
+        },
+        "authority": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the unreachable scenario"
+        },
+        "committed_effect": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the unreachable scenario"
+        },
+        "decision": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the unreachable scenario"
+        },
+        "dispatch": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the unreachable scenario"
+        },
+        "duplicate_count": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the unreachable scenario"
+        },
+        "fallback_scope": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the unreachable scenario"
+        },
+        "independent_effect_witness": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the unreachable scenario"
+        },
+        "original_deadline": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the unreachable scenario"
+        },
+        "policy_digest": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the unreachable scenario"
+        },
+        "receipt": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the unreachable scenario"
+        },
+        "retry_count": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the unreachable scenario"
+        },
+        "target_identity": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the unreachable scenario"
+        },
+        "task_outcome": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the unreachable scenario"
+        }
+      }
+    },
+    {
+      "case_id": "post_dispatch_revoke",
+      "basis": "author_record",
+      "independent_live_reproduction": false,
+      "scenario_conformance": "UNMET",
+      "unmet_requirements": [
+        "positive author-operated fetch does not exercise the post_dispatch_revoke scenario"
+      ],
+      "fields": {
+        "action_digest": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the post_dispatch_revoke scenario"
+        },
+        "authority": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the post_dispatch_revoke scenario"
+        },
+        "committed_effect": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the post_dispatch_revoke scenario"
+        },
+        "decision": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the post_dispatch_revoke scenario"
+        },
+        "dispatch": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the post_dispatch_revoke scenario"
+        },
+        "duplicate_count": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the post_dispatch_revoke scenario"
+        },
+        "fallback_scope": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the post_dispatch_revoke scenario"
+        },
+        "independent_effect_witness": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the post_dispatch_revoke scenario"
+        },
+        "original_deadline": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the post_dispatch_revoke scenario"
+        },
+        "policy_digest": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the post_dispatch_revoke scenario"
+        },
+        "receipt": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the post_dispatch_revoke scenario"
+        },
+        "retry_count": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the post_dispatch_revoke scenario"
+        },
+        "target_identity": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the post_dispatch_revoke scenario"
+        },
+        "task_outcome": {
+          "state": "not_measured",
+          "value": null,
+          "reason": "positive author-operated fetch does not exercise the post_dispatch_revoke scenario"
+        }
+      }
+    }
+  ],
+  "appraiser_source_sha256": {
+    "proofable_fetch.py": "db6585702fb9bd820bbdad5321f0b5953a64cdead6c05db08a900e12645cf57c",
+    "test_proofable_fetch.py": "262d5cf59061d8f443df5274d53a9dcf1f99485b739c78ff8af6e02e4d8e10b0",
+    "portable_envelope.py": "5622942634508fb7daa02292b9ea4a39d155e1a9928fe1f51461a8caf74e7e42",
+    "runner.py": "171d0b555a236894561b86ce8d8e8763affd112c1bfe7b250c9e9cc84f4f636e",
+    "fetch_fixtures.py": "78a9609df497d6895dc8a91de8b87c759e4c330674a1da192c7644540b24c0b9",
+    "check_package.py": "543586401fd525c9408fd3f13101138654312b6198edf34a236ad64cb0416f1c",
+    "comparison-contract.json": "62615642a8dac18a44d48746abe8e98e049e144109db64bd14ef7a1c69fac277"
+  },
+  "trace_record_emitted": false
+}

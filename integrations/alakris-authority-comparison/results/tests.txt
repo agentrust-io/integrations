@@ -1,3 +1,24 @@
+Command: python -m unittest -v
+test_changed_unsigned_request_digest_fails_with_valid_envelopes (test_proofable_fetch.IndependentCryptoControls.test_changed_unsigned_request_digest_fails_with_valid_envelopes) ... ok
+test_did_binding_is_required (test_proofable_fetch.IndependentCryptoControls.test_did_binding_is_required) ... ok
+test_different_valid_signer_or_chain_fails_context (test_proofable_fetch.IndependentCryptoControls.test_different_valid_signer_or_chain_fails_context) ... ok
+test_different_validly_signed_principal_fails_context (test_proofable_fetch.IndependentCryptoControls.test_different_validly_signed_principal_fails_context) ... ok
+test_different_validly_signed_receipt_request_fails_digest (test_proofable_fetch.IndependentCryptoControls.test_different_validly_signed_receipt_request_fails_digest) ... ok
+test_fresh_test_key_control_verifies_without_vendor_signatures (test_proofable_fetch.IndependentCryptoControls.test_fresh_test_key_control_verifies_without_vendor_signatures) ... ok
+test_unsigned_create_join_mismatches_are_not_promoted_to_attestation (test_proofable_fetch.IndependentCryptoControls.test_unsigned_create_join_mismatches_are_not_promoted_to_attestation) ... ok
+test_wrong_signature_and_qhash_fail_independently (test_proofable_fetch.IndependentCryptoControls.test_wrong_signature_and_qhash_fail_independently) ... ok
+test_ambiguous_and_nonfinite_json_rejected_including_signed_content (test_proofable_fetch.InputAndProjectionChecks.test_ambiguous_and_nonfinite_json_rejected_including_signed_content) ... ok
+test_checksum_inventory_rejects_escape_duplicate_and_omission (test_proofable_fetch.InputAndProjectionChecks.test_checksum_inventory_rejects_escape_duplicate_and_omission) ... ok
+test_multiple_envelopes_and_malformed_data_rejected (test_proofable_fetch.InputAndProjectionChecks.test_multiple_envelopes_and_malformed_data_rejected) ... ok
+test_multiple_sse_responses_and_ambiguous_nested_create_json_rejected (test_proofable_fetch.InputAndProjectionChecks.test_multiple_sse_responses_and_ambiguous_nested_create_json_rejected) ... ok
+test_projection_matches_published_digest_and_ignores_only_declared_exclusions (test_proofable_fetch.InputAndProjectionChecks.test_projection_matches_published_digest_and_ignores_only_declared_exclusions) ... ok
+test_stringify_preserves_unicode_and_js_key_order_without_rounding (test_proofable_fetch.InputAndProjectionChecks.test_stringify_preserves_unicode_and_js_key_order_without_rounding) ... ok
+test_atomic_output_failure_cleans_temporary_and_preserves_inputs (test_proofable_fetch.PublishedFetchChecks.test_atomic_output_failure_cleans_temporary_and_preserves_inputs) ... ok
+test_cli_keeps_output_outside_packet (test_proofable_fetch.PublishedFetchChecks.test_cli_keeps_output_outside_packet) ... ok
+test_cli_replaces_hardlinked_output_without_modifying_any_input (test_proofable_fetch.PublishedFetchChecks.test_cli_replaces_hardlinked_output_without_modifying_any_input) ... ok
+test_fixed_positive_packet_and_unmet_scenarios (test_proofable_fetch.PublishedFetchChecks.test_fixed_positive_packet_and_unmet_scenarios) ... ok
+test_missing_unsafe_and_oversized_files_rejected (test_proofable_fetch.PublishedFetchChecks.test_missing_unsafe_and_oversized_files_rejected) ... ok
+test_tampered_artifact_cannot_pass_even_if_semantics_match (test_proofable_fetch.PublishedFetchChecks.test_tampered_artifact_cannot_pass_even_if_semantics_match) ... ok
 test_emergency_bound_retains_blocks (test_runner.BoundaryChecks.test_emergency_bound_retains_blocks) ... ok
 test_forged_dispatch_rejected (test_runner.BoundaryChecks.test_forged_dispatch_rejected) ... ok
 test_late_veto_invalidates_prior_dispatch (test_runner.BoundaryChecks.test_late_veto_invalidates_prior_dispatch) ... ok
@@ -22,11 +43,78 @@ test_veto_no_effect (test_runner.Checks.test_veto_no_effect) ... ok
 test_duplicate_cases_rejected (test_runner.CompletenessChecks.test_duplicate_cases_rejected) ... ok
 test_four_cases_required (test_runner.CompletenessChecks.test_four_cases_required) ... ok
 test_missing_proofable_row_is_missing_not_na (test_runner.CompletenessChecks.test_missing_proofable_row_is_missing_not_na) ... ok
+test_corrected_packet_verifies (test_runner.CorrectedProofableChecks.test_corrected_packet_verifies) ... ok
+test_semantic_envelope_mutations_fail (test_runner.CorrectedProofableChecks.test_semantic_envelope_mutations_fail) ... ok
 test_reference_rejects_empty_username_credentials (test_runner.ReferenceChecks.test_reference_rejects_empty_username_credentials) ... ok
 test_reference_requires_http_uri (test_runner.ReferenceChecks.test_reference_requires_http_uri) ... ok
 test_released_trace_reference_shape (test_runner.ReferenceChecks.test_released_trace_reference_shape) ... ok
+test_authority_and_decision_omission_rejected (test_runner.RequiredFieldChecks.test_authority_and_decision_omission_rejected) ... ok
+test_complete_measured_fields_accepted (test_runner.RequiredFieldChecks.test_complete_measured_fields_accepted) ... ok
+test_each_required_field_omission_rejected_without_mutation (test_runner.RequiredFieldChecks.test_each_required_field_omission_rejected_without_mutation) ... ok
+test_empty_fields_rejected (test_runner.RequiredFieldChecks.test_empty_fields_rejected) ... ok
+test_explicit_unavailable_states_accepted_without_mutation (test_runner.RequiredFieldChecks.test_explicit_unavailable_states_accepted_without_mutation) ... ok
 
 ----------------------------------------------------------------------
-Ran 27 tests in 0.385s
+Ran 54 tests in 1.548s
+
+OK
+Command: python -O -m unittest -v
+test_changed_unsigned_request_digest_fails_with_valid_envelopes (test_proofable_fetch.IndependentCryptoControls.test_changed_unsigned_request_digest_fails_with_valid_envelopes) ... ok
+test_did_binding_is_required (test_proofable_fetch.IndependentCryptoControls.test_did_binding_is_required) ... ok
+test_different_valid_signer_or_chain_fails_context (test_proofable_fetch.IndependentCryptoControls.test_different_valid_signer_or_chain_fails_context) ... ok
+test_different_validly_signed_principal_fails_context (test_proofable_fetch.IndependentCryptoControls.test_different_validly_signed_principal_fails_context) ... ok
+test_different_validly_signed_receipt_request_fails_digest (test_proofable_fetch.IndependentCryptoControls.test_different_validly_signed_receipt_request_fails_digest) ... ok
+test_fresh_test_key_control_verifies_without_vendor_signatures (test_proofable_fetch.IndependentCryptoControls.test_fresh_test_key_control_verifies_without_vendor_signatures) ... ok
+test_unsigned_create_join_mismatches_are_not_promoted_to_attestation (test_proofable_fetch.IndependentCryptoControls.test_unsigned_create_join_mismatches_are_not_promoted_to_attestation) ... ok
+test_wrong_signature_and_qhash_fail_independently (test_proofable_fetch.IndependentCryptoControls.test_wrong_signature_and_qhash_fail_independently) ... ok
+test_ambiguous_and_nonfinite_json_rejected_including_signed_content (test_proofable_fetch.InputAndProjectionChecks.test_ambiguous_and_nonfinite_json_rejected_including_signed_content) ... ok
+test_checksum_inventory_rejects_escape_duplicate_and_omission (test_proofable_fetch.InputAndProjectionChecks.test_checksum_inventory_rejects_escape_duplicate_and_omission) ... ok
+test_multiple_envelopes_and_malformed_data_rejected (test_proofable_fetch.InputAndProjectionChecks.test_multiple_envelopes_and_malformed_data_rejected) ... ok
+test_multiple_sse_responses_and_ambiguous_nested_create_json_rejected (test_proofable_fetch.InputAndProjectionChecks.test_multiple_sse_responses_and_ambiguous_nested_create_json_rejected) ... ok
+test_projection_matches_published_digest_and_ignores_only_declared_exclusions (test_proofable_fetch.InputAndProjectionChecks.test_projection_matches_published_digest_and_ignores_only_declared_exclusions) ... ok
+test_stringify_preserves_unicode_and_js_key_order_without_rounding (test_proofable_fetch.InputAndProjectionChecks.test_stringify_preserves_unicode_and_js_key_order_without_rounding) ... ok
+test_atomic_output_failure_cleans_temporary_and_preserves_inputs (test_proofable_fetch.PublishedFetchChecks.test_atomic_output_failure_cleans_temporary_and_preserves_inputs) ... ok
+test_cli_keeps_output_outside_packet (test_proofable_fetch.PublishedFetchChecks.test_cli_keeps_output_outside_packet) ... ok
+test_cli_replaces_hardlinked_output_without_modifying_any_input (test_proofable_fetch.PublishedFetchChecks.test_cli_replaces_hardlinked_output_without_modifying_any_input) ... ok
+test_fixed_positive_packet_and_unmet_scenarios (test_proofable_fetch.PublishedFetchChecks.test_fixed_positive_packet_and_unmet_scenarios) ... ok
+test_missing_unsafe_and_oversized_files_rejected (test_proofable_fetch.PublishedFetchChecks.test_missing_unsafe_and_oversized_files_rejected) ... ok
+test_tampered_artifact_cannot_pass_even_if_semantics_match (test_proofable_fetch.PublishedFetchChecks.test_tampered_artifact_cannot_pass_even_if_semantics_match) ... ok
+test_emergency_bound_retains_blocks (test_runner.BoundaryChecks.test_emergency_bound_retains_blocks) ... ok
+test_forged_dispatch_rejected (test_runner.BoundaryChecks.test_forged_dispatch_rejected) ... ok
+test_late_veto_invalidates_prior_dispatch (test_runner.BoundaryChecks.test_late_veto_invalidates_prior_dispatch) ... ok
+test_manifest_cannot_omit_required_bytes (test_runner.BoundaryChecks.test_manifest_cannot_omit_required_bytes) ... ok
+test_measured_null_rejected (test_runner.BoundaryChecks.test_measured_null_rejected) ... ok
+test_root_age_is_seconds_not_root_identity (test_runner.BoundaryChecks.test_root_age_is_seconds_not_root_identity) ... ok
+test_action_tampering_between_dispatch_commit (test_runner.Checks.test_action_tampering_between_dispatch_commit) ... ok
+test_author_evidence_cannot_be_independent (test_runner.Checks.test_author_evidence_cannot_be_independent) ... ok
+test_escape_rejected (test_runner.Checks.test_escape_rejected) ... ok
+test_late_recovery_does_not_reopen (test_runner.Checks.test_late_recovery_does_not_reopen) ... ok
+test_mintid_outage_keeps_old_revision (test_runner.Checks.test_mintid_outage_keeps_old_revision) ... ok
+test_missing_field_cannot_be_measured_value (test_runner.Checks.test_missing_field_cannot_be_measured_value) ... ok
+test_missing_states_not_collapsed (test_runner.Checks.test_missing_states_not_collapsed) ... ok
+test_post_dispatch_recheck (test_runner.Checks.test_post_dispatch_recheck) ... ok
+test_published_proofable_stays_integrity_failed (test_runner.Checks.test_published_proofable_stays_integrity_failed) ... ok
+test_revoked_no_effect (test_runner.Checks.test_revoked_no_effect) ... ok
+test_tampering_fails (test_runner.Checks.test_tampering_fails) ... ok
+test_unknown_state_rejected (test_runner.Checks.test_unknown_state_rejected) ... ok
+test_unreachable_no_effect (test_runner.Checks.test_unreachable_no_effect) ... ok
+test_valid_control_and_duplicate (test_runner.Checks.test_valid_control_and_duplicate) ... ok
+test_veto_no_effect (test_runner.Checks.test_veto_no_effect) ... ok
+test_duplicate_cases_rejected (test_runner.CompletenessChecks.test_duplicate_cases_rejected) ... ok
+test_four_cases_required (test_runner.CompletenessChecks.test_four_cases_required) ... ok
+test_missing_proofable_row_is_missing_not_na (test_runner.CompletenessChecks.test_missing_proofable_row_is_missing_not_na) ... ok
+test_corrected_packet_verifies (test_runner.CorrectedProofableChecks.test_corrected_packet_verifies) ... ok
+test_semantic_envelope_mutations_fail (test_runner.CorrectedProofableChecks.test_semantic_envelope_mutations_fail) ... ok
+test_reference_rejects_empty_username_credentials (test_runner.ReferenceChecks.test_reference_rejects_empty_username_credentials) ... ok
+test_reference_requires_http_uri (test_runner.ReferenceChecks.test_reference_requires_http_uri) ... ok
+test_released_trace_reference_shape (test_runner.ReferenceChecks.test_released_trace_reference_shape) ... ok
+test_authority_and_decision_omission_rejected (test_runner.RequiredFieldChecks.test_authority_and_decision_omission_rejected) ... ok
+test_complete_measured_fields_accepted (test_runner.RequiredFieldChecks.test_complete_measured_fields_accepted) ... ok
+test_each_required_field_omission_rejected_without_mutation (test_runner.RequiredFieldChecks.test_each_required_field_omission_rejected_without_mutation) ... ok
+test_empty_fields_rejected (test_runner.RequiredFieldChecks.test_empty_fields_rejected) ... ok
+test_explicit_unavailable_states_accepted_without_mutation (test_runner.RequiredFieldChecks.test_explicit_unavailable_states_accepted_without_mutation) ... ok
+
+----------------------------------------------------------------------
+Ran 54 tests in 1.479s
 
 OK

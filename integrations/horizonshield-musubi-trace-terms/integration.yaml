@@ -1,0 +1,37 @@
+name: MUSUBI trace terms
+vendor: The HORIZONs Co., Ltd.
+integrates_with:
+  - trace
+description: >-
+  Judges PIC/TRACE authorizations and Trust Records, read unchanged, against a contract and
+  terms two parties signed, per call and overall: within, outside, undetermined or refused.
+maintainer:
+  github: ogasurfproject-jpg
+repository: https://github.com/ogasurfproject-jpg/horizon-shield
+license: MIT
+tier: community
+marketplace:
+  category: Evidence & receipts
+  mark: MT
+  keywords: [contract, authorization, pic-trace-bridge, trust-record, terms, counts]
+# Role. The evaluator consumes TRACE evidence: it checks each PIC/TRACE
+# authorization with agentrust-trace's own intent_bridge.verify_bridge and
+# reads each Trust Record the contractor names. It emits no Trust Record.
+# Level 0 here means: the two Trust Records the vectors consume unchanged
+# (copied from agentrust-io/trace-registry, see NOTICE) pass
+# `trace-tests verify --level 0` (tests/test_trace_terms_vendored.py). No
+# higher level is claimed.
+trace_roles:
+  - record-consumer
+trace_conformance_level: 0
+tested_against:
+  agentrust-trace: "0.11.0"
+  agentrust-trace-tests: "0.6.2"
+  # The schema records agentrust-io package keys only. The fixed job in
+  # .github/workflows/horizonshield-musubi-trace-terms-conformance.yml also pins
+  # nenrin-verify 0.5.6, which supplies contract_v0.py, agreement_verify.py and
+  # nenrin_verify.trace byte for byte from horizon-shield.
+  # The JSON Schema in agentrust-trace 0.11.0 is older than the one on
+  # trace-spec main (agentrust-io/trace-spec#591). Every result here is against
+  # the 0.11.0 release, not trace-spec main.
+  # Run on Python 3.11, 3.12 and 3.13.

@@ -1,6 +1,6 @@
-# Official PyPI uv 0.12.5 wheels for Linux amd64 and arm64 only.
-# https://pypi.org/pypi/uv/0.12.5/json
-uv==0.12.5 \
-    --hash=sha256:2d65b7b3bc3fd28678f62aa7fb5d90f106ad9782c1354af60b6cecdf9ea9ecd9 \
-    --hash=sha256:3e195ccf1ed60c8bb24a6447ce306441a4181d54b602407e09bc56e963911c15 \
-    --hash=sha256:58abfb0f658b39a834307a11223bc170294ea214263b4c99ecc7663720d43544
+# Official PyPI uv 0.13.4 wheels for Linux amd64 and arm64 only.
+# https://pypi.org/pypi/uv/0.13.4/json
+uv==0.13.4 \
+    --hash=sha256:05e4332791b4d55b6dde8695b7fa6079b26991519f44760887c5dfbd5ca4fe53 \
+    --hash=sha256:7b3cdf868e5415631fe797b648c0d6945d38d388f23367bdd0b6332e80a1fcb0 \
+    --hash=sha256:e90ab42825587821096cb0d071e387468da38cfa22818c91f9c0b3c0453048e8

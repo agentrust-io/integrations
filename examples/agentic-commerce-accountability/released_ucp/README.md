@@ -37,7 +37,7 @@ mypy, Bandit, and the final line `OFFLINE_SMOKE_PASSED`. A failing stage stops t
 smoke. CI runs this same script as non-root UID/GID `10001:10001`, without network
 access, writable image layers, Linux capabilities, secrets, or publishing steps.
 
-For host development with Python 3.12 and uv 0.12.5:
+For host development with Python 3.12 and uv 0.13.4:
 
 ```sh
 uv sync --frozen

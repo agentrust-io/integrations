@@ -1,0 +1,15 @@
+horizonshield-musubi-trace-terms: MIT, copyright (c) 2026 The HORIZONs Co., Ltd. See LICENSE.
+
+vendor/trace-terms-v0/vectors/vectors.json carries, unchanged, two Trust Records
+copied from agentrust-io/trace-registry at commit
+58850e9d0f7113be2a4c89b3c2e7b03447f2dcce (staging/processed/), licensed
+CC BY 4.0 by their authors:
+
+  summit-demo-record.json
+    producer verifiable-agent-summit-demo/0.1.0
+    sha256 of the registry file d9fbf07c7813b10da4cacdfda4260ba829178409a26829dbcdb4512eac08a51c
+  bernstein-3.20.0-20260920-165918-backend-99365805.json
+    producer bernstein/3.20.0 (the "trace" member of the registry file)
+    sha256 of the registry file bd39b2ecdea66b20e186663e24cd0217eab3f458256ef607ed2111a965481efb
+
+License: https://creativecommons.org/licenses/by/4.0/

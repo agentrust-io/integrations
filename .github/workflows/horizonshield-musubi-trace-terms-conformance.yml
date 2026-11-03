@@ -1,0 +1,59 @@
+# MUSUBI trace terms (musubi-trace-terms-v0) workflow.
+#
+# fixed     installs the entry with its exact pins: agentrust-trace and
+#           agentrust-trace-tests as named in integration.yaml tested_against,
+#           and nenrin-verify 0.5.6.
+# floating  installs the latest agentrust-trace and agentrust-trace-tests
+#           releases instead, unpinned on purpose, as drift detection. The
+#           evaluator calls TRACE's own verify_bridge, so a release that
+#           changes a verdict shows up here.
+# Both evaluate the 55 vendored vectors, check the vendored bytes, run the
+# evaluator's CLI, and run trace-tests Level 0 on the two Trust Records the
+# vectors consume. Nothing is fetched at test time.
+name: horizonshield-musubi-trace-terms conformance
+on:
+  push:
+    paths:
+      - "integrations/horizonshield-musubi-trace-terms/**"
+      - ".github/workflows/horizonshield-musubi-trace-terms-conformance.yml"
+  pull_request:
+    paths:
+      - "integrations/horizonshield-musubi-trace-terms/**"
+      - ".github/workflows/horizonshield-musubi-trace-terms-conformance.yml"
+  schedule:
+    - cron: "0 6 * * 1"   # weekly: catch drift against the latest released packages
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: ${{ matrix.mode }} (py${{ matrix.python }})
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12", "3.13"]
+        mode: [fixed, floating]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7.0.0
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install this integration with its pins (tested_against)
+        if: matrix.mode == 'fixed'
+        run: |
+          v=$(sed -n 's/^  agentrust-trace: "\(.*\)"$/\1/p' integrations/horizonshield-musubi-trace-terms/integration.yaml)
+          t=$(sed -n 's/^  agentrust-trace-tests: "\(.*\)"$/\1/p' integrations/horizonshield-musubi-trace-terms/integration.yaml)
+          test -n "$v" && test -n "$t"
+          pip install -e "integrations/horizonshield-musubi-trace-terms[test]" "agentrust-trace==$v" "agentrust-trace-tests==$t"
+      - name: Install the latest agentrust-trace releases
+        if: matrix.mode == 'floating'
+        run: pip install agentrust-trace agentrust-trace-tests "nenrin-verify==0.5.6" "pytest>=8"
+      - name: Record the versions under test
+        run: pip show agentrust-trace agentrust-trace-tests nenrin-verify | grep -E '^(Name|Version):'
+      - name: Integration tests
+        run: python -m pytest integrations/horizonshield-musubi-trace-terms/tests -q

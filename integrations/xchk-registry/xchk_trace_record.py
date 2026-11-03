@@ -35,6 +35,23 @@ from cryptography.exceptions import InvalidSignature
 # record older than the bound is reported `invalid` with the reason, and a historical record is re-verified at its
 # own time with --now, not by widening the bound to nothing. (18 Oct 2026, review of integrations#338.)
 MAX_AGE_SECONDS = 86400
+_PRIVATE_JWK_PARAMS = frozenset({"d", "p", "q", "dp", "dq", "qi", "oth", "k"})
+
+
+def _loads_strict(raw: str | bytes):
+    def _no_duplicate_keys(pairs):
+        out = {}
+        for k, v in pairs:
+            if k in out:
+                raise ValueError(f"duplicate JSON object key: {k!r}")
+            out[k] = v
+        return out
+
+    def _no_nonfinite(token: str):
+        raise ValueError(f"non-finite JSON constant is not allowed: {token}")
+
+    text = raw.decode("utf-8") if isinstance(raw, (bytes, bytearray)) else raw
+    return json.loads(text, object_pairs_hook=_no_duplicate_keys, parse_constant=_no_nonfinite)
 
 
 class Instant:
@@ -47,8 +64,10 @@ class Instant:
     __slots__ = ("at", "overridden")
 
     def __init__(self, now: int | None = None):
+        if now is not None and (type(now) is not int or now < 0):
+            raise ValueError("now must be a non-negative integer Unix timestamp")
         self.overridden = now is not None
-        self.at = int(now) if self.overridden else int(time.time())
+        self.at = now if self.overridden else int(time.time())
 
     def fields(self) -> dict:
         return {"verified_at": self.at, "verified_at_overridden": self.overridden}
@@ -93,15 +112,24 @@ def record_verifies(record: dict, jwk: dict, max_age_seconds: int = MAX_AGE_SECO
 
 def is_ed25519_jwk(jwk) -> bool:
     """An OKP/Ed25519 JWK with base64url key material of 32 bytes; nothing else is a key this tool verifies with."""
-    if not isinstance(jwk, dict) or jwk.get("kty") != "OKP" or jwk.get("crv") != "Ed25519":
+    if (
+        not isinstance(jwk, dict)
+        or _PRIVATE_JWK_PARAMS.intersection(jwk)
+        or jwk.get("kty") != "OKP"
+        or jwk.get("crv") != "Ed25519"
+    ):
         return False
     x = jwk.get("x")
-    if not isinstance(x, str) or not x:
+    if not isinstance(x, str) or not x or len(x) % 4 == 1:
         return False
     try:
-        return len(base64.urlsafe_b64decode(x + "=" * (-len(x) % 4))) == 32
+        raw = base64.urlsafe_b64decode(x.encode("ascii") + b"=" * (-len(x) % 4))
     except (ValueError, TypeError):
         return False
+    return (
+        len(raw) == 32
+        and base64.urlsafe_b64encode(raw).decode("ascii").rstrip("=") == x
+    )
 
 
 def key_from_published(doc, kid: str) -> dict | None:
@@ -120,10 +148,10 @@ def key_from_published(doc, kid: str) -> dict | None:
         if not isinstance(material, str) or not material:
             return None
         try:
-            raw = base64.b64decode(material, validate=True)
+            raw = base64.b64decode(material.encode("ascii"), validate=True)
         except (ValueError, TypeError):
             return None
-        if len(raw) != 32:
+        if len(raw) != 32 or base64.b64encode(raw).decode("ascii") != material:
             return None
         return {"kty": "OKP", "crv": "Ed25519", "x": base64.urlsafe_b64encode(raw).decode("ascii").rstrip("="), "kid": kid}
     return None
@@ -197,7 +225,7 @@ def published_key(origin: str, kid: str, timeout: float = 20.0) -> dict | None:
             raw = r.read(KEY_DOC_MAX_BYTES + 1)
         if len(raw) > KEY_DOC_MAX_BYTES:
             return None
-        doc = json.loads(raw)
+        doc = _loads_strict(raw)
     except Exception:  # noqa: BLE001
         return None
     try:
@@ -289,7 +317,7 @@ def verify_with_key_source(record: dict, pinned: dict | None, fetch=published_ke
         if refusal:
             return {"status": "no-key", "key_source": None, "kid": kid, "revocation": None, **bounds, "reason": refusal}
     if pinned is not None:
-        if isinstance(pinned, dict) and "d" in pinned:
+        if isinstance(pinned, dict) and _PRIVATE_JWK_PARAMS.intersection(pinned):
             # 19 Oct 2026: a trust anchor is a PUBLIC key; a file carrying the private member is refused, and no part of it
             # is echoed (the reason is fixed text)
             return {"status": "no-key", "key_source": None, "kid": kid, "revocation": None, **bounds, "reason": "the pinned key file holds a private key (member d); pin the public key only"}
@@ -339,7 +367,7 @@ def main(argv: list[str] | None = None) -> int:
                 print(json.dumps(out, indent=2))
                 return 1
             jwk = j.get("trace_signer_jwk", j) if isinstance(j, dict) else j   # a bare JWK, or {trace_signer_jwk: ...}; the shape is checked next
-            if not is_ed25519_jwk(jwk) and not (isinstance(jwk, dict) and "d" in jwk):
+            if not is_ed25519_jwk(jwk) and not (isinstance(jwk, dict) and _PRIVATE_JWK_PARAMS.intersection(jwk)):
                 jwk = {"not": "a jwk"}   # verify_with_key_source says so, with the reason; never None (that would mean "no pin given")
         out = verify_with_key_source(record, jwk, max_age_seconds=a.max_age, now=instant, registry=a.registry)
         out["approval_outcome_references"] = [
@@ -354,8 +382,8 @@ def load_json(path: str, detail: bool = True) -> tuple:
     """(value, None) or (None, why): a local file that is not JSON is reported, not raised. detail=False reports the
     error class only: a decode error's message can quote bytes of the file, and a key file's bytes are not echoed."""
     try:
-        return json.loads(Path(path).read_text(encoding="utf-8")), None
-    except (OSError, ValueError, UnicodeDecodeError) as e:
+        return _loads_strict(Path(path).read_text(encoding="utf-8")), None
+    except (OSError, ValueError, UnicodeDecodeError, RecursionError) as e:
         return None, f"{type(e).__name__}: {str(e)[:120]}" if detail else type(e).__name__
 
 
