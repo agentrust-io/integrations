@@ -4,7 +4,7 @@
 requires a signed human approval where the policy says so, and signs a record of every decision, refusals included.
 
 This integration treats those records as TRACE external evidence. Parmana issues no TRACE Trust Record. An agent
-runtime that does points at the Parmana record for its step through `references` (trace-spec §3.1.2):
+runtime that points at the Parmana record for its step through `references` (trace-spec §3.1.2):
 
 | Parmana decision | Parmana record             | `references` entries                                                   |
 | ---------------- | -------------------------- | ---------------------------------------------------------------------- |
