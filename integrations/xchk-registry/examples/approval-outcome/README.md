@@ -98,6 +98,13 @@ proof already upgraded to a Bitcoin block. The anchor-chain rows of `verdict-con
 the 17 Oct cases predate batched anchoring, so until it arrived those seven guards of the verifier were pinned by no
 test (a guard-mutation sweep found them).
 
+`anchored-unbatched.bundle.json` (3 Nov 2026) pins the other anchor shape: an unbatched anchor, whose transaction
+carries the seal hash itself, so the verifier checks that hash in the OP_RETURN instead of walking a manifest path. It
+is an allow record anchored on 10 Aug 2026, fetched from the registry's bundle endpoint as served. Every unbatched
+receipt with a captured raw transaction was anchored 8 to 10 Aug 2026, before bundles carried the passkey assertion
+and the ask-v1 challenge, so strict mode refuses any of them by design (exit 3, nothing failed);
+`verdict-contract.json` lists it under `defaultModeFixtures` and its row runs in the default mode.
+
 ## Running the checks
 
 ```

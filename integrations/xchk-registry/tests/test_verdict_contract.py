@@ -35,6 +35,7 @@ def _fixture(row=None):
 
 
 FIXTURE_NAMES = sorted({CONTRACT["fixture"], *(r["fixture"] for r in CONTRACT["evidence"] if r.get("fixture"))})
+DEFAULT_MODE_FIXTURES = CONTRACT.get("defaultModeFixtures", {})   # 3 Nov 2026: fixture -> why strict mode cannot pass it
 KEY_DOCUMENT = str(HERE.parent / "examples" / "approval-outcome" / CONTRACT["keyDocument"])   # 2 Nov 2026: rows with "keys": true run with --keys
 
 
@@ -146,12 +147,20 @@ def _run(doc, tmp_path, strict, keys=False):
 
 
 @pytest.mark.parametrize("name", FIXTURE_NAMES)
-def test_the_genuine_receipt_passes_strict_mode(name, tmp_path):
-    code, report, out = _run(_fixture({"fixture": name}), tmp_path, strict=True)
+def test_the_genuine_receipt_passes(name, tmp_path):
+    """Strict mode, except for a fixture the contract lists in defaultModeFixtures (3 Nov 2026): that one passes the
+    default run, and strict mode refuses it as the contract says, with nothing failed (exit 3, not 1)."""
+    strict = name not in DEFAULT_MODE_FIXTURES
+    if not strict:
+        code, _, out = _run(_fixture({"fixture": name}), tmp_path, strict=True)
+        assert code == 3, f"{name}: {DEFAULT_MODE_FIXTURES[name]}\n{out[-900:]}"
+    code, report, out = _run(_fixture({"fixture": name}), tmp_path, strict=strict)
     assert code == 0, out
     assert report["keyDocument"] is None
-    code, report, out = _run(_fixture({"fixture": name}), tmp_path, strict=True, keys=True)
+    code, report, out = _run(_fixture({"fixture": name}), tmp_path, strict=strict, keys=True)
     assert code == 0 and report["keyDocument"]["allPinned"] is True, out
+    if name == "anchored-unbatched.bundle.json":   # 3 Nov 2026: the unbatched OP_RETURN guard ran and passed
+        assert "OK   the raw anchor transaction's OP_RETURN carries this seal hash" in out, out[-900:]
     if name == "anchored.bundle.json":   # 2 Nov 2026: every anchor guard, and the identity-provider guard, ran and passed on the fixture that pins them
         for text in ("manifest path (", "the raw anchor transaction's OP_RETURN carries that manifest root", "sha256d(transaction) = txid",
                      "merkleblock header is the block header shipped with the bundle", "partial Merkle tree reproduces the header's Merkle root",
