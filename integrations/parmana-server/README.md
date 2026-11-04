@@ -1,6 +1,5 @@
 # Parmana
 
-
 [Parmana](https://github.com/pavancharak/parmana-core) decides whether an agent's action may run under a versioned policy,
 requires a signed human approval where the policy says so, and signs a record of every decision, refusals included.
 
