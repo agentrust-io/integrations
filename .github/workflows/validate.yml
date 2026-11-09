@@ -36,6 +36,8 @@ jobs:
         run: |
           python scripts/validate_compatibility.py
           python -m pytest tests/test_validate_compatibility.py -q
+      - name: Test execution evidence receipts
+        run: python -m pytest tests/test_test_evidence.py -q
       - name: Check generated integration index
         run: python scripts/generate_integration_index.py --check
       - name: Test and check generated Marketplace catalog
