@@ -36,8 +36,7 @@ class HarnessRunner:
                 "does not establish live-peer or hardware acceptance",
                 "does not claim cMCP or cA2A conformance",
             ],
-            package_versions={
-                "cmcp-runtime": "0.5.0",
-                "ca2a-runtime": "0.2.0",
-            },
+            # This deterministic adapter does not execute installed protocol packages.
+            # released_protocol_probe reports measured distribution versions separately.
+            package_versions={},
         )

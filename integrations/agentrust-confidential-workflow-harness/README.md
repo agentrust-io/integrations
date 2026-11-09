@@ -6,7 +6,7 @@ and preserves unavailable evidence instead of inferring success from dispatch.
 
 ## Scope of this PR
 
-This initial implementation provides:
+The expanded experimental implementation provides:
 
 - a fixed harness core;
 - machine-readable manifest and result schemas;
@@ -16,20 +16,41 @@ This initial implementation provides:
 - branch-preserving observations for retries;
 - causal provenance fields (`caused_by`) on observations.
 
-It does **not** claim cMCP or cA2A conformance, live-peer acceptance, hardware
-attestation, or completion of the full software milestone.
+The published release API calls and one first-party software peer path are
+exercised, but this is not a claim of independently established protocol
+conformance, hardware attestation or completed Issue #199 acceptance.
+See [About, licensing, IP boundaries, glossary and live-peer threat model](REMOTE-CA2A-PEER.md).
 
 ## Reproduce
 
 ```bash
+python -m pip install --require-hashes -r ../../requirements/confidential-workflow-probe.txt
 python -m unittest discover -s tests -v
 ```
 
-The deterministic adapter records the package release targets that will be used
-when protocol-specific adapters are wired:
+The released component and bounded live-peer experiments use:
 
-- `cmcp-runtime==0.5.0`
-- `ca2a-runtime==0.2.0`
+- `cmcp-runtime==0.7.0`
+- `ca2a-runtime==0.4.0`
+- `agentrust-trace==0.11.0`
+- `agentrust-trace-tests==0.6.2`
+
+Run these commands from this integration directory. The Level 0 regression checks
+both records emitted by the released-package probe through the TRACE loader and
+TR-ENV, TR-SIG, TR-POL and TR-APR modules, with default freshness checks. It also
+rejects a subject-tampered twin. The probe emits current Unix timestamps and
+synthetic `did:example:` subjects. Optional checks can be skipped by the suite;
+this is bounded synthetic software conformance, with no live dispatch, trusted
+identity provisioning, higher-level appraisal or hardware acceptance.
+
+The cA2A runtime pin is recorded here and in the probe lock because the integration
+manifest schema does not permit `ca2a-runtime` in `tested_against`.
+
+The manifest's `tested_against` records the bounded released-package software
+run using cMCP 0.7.0 above; it does not re-date the historical two-host captures.
+Srinivasa Dinakar Jainti (`@dinakarjs`) maintains this successor following the
+requested takeover of #330; the original contributor and capture attribution
+remain in their existing records.
 
 Protocol/API changes remain in the owning repositories. Any scenario that needs
 an unreleased surface must carry `waiting_on_release`; a blocked required case
@@ -90,3 +111,19 @@ A forbidden recipient takes precedence over permission.
 The deterministic software-version gate uses [SemVer 2.0.0](https://semver.org/)
 with a fixed minimum of `1.0.0`: `1.0.0-rc.1` is below that minimum, and build
 metadata does not change precedence. Invalid versions are refused.
+
+## Conduit result acceptance
+
+Both Conduit paths require literal boolean success flags, a nonempty session,
+a full lowercase 40-hex commit and an integer zero exit code (booleans are
+refused). Completion requires `running is False`; only `running is True`
+continues remote polling. The signed remote path passes the authorized
+transaction ID through both worker calls, their result echoes and hash-covered
+receipt details, and binds it into the signed execution output. Missing or
+mismatched worker context remains unknown. The caller independently checks the
+signed execution fields before reporting success.
+
+These stricter echoes require Conduit operator adoption and a fresh live
+capture. Historical captures are not reclassified. Tests use a mocked worker
+through the real released cA2A service/client and TRACE signing/verification;
+they establish software refusal boundaries, not independent remote execution.
