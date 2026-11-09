@@ -1,0 +1,18 @@
+name: Provenza
+vendor: Provenza
+integrates_with:
+  - agent-manifest
+description: >-
+  Issues a composition-only Agent Manifest v0.2 per governed agent, signed as a hybrid
+  Ed25519 + ML-DSA-65 COSE_Sign, binding its approved MCP tool catalog and audit-log root.
+maintainer:
+  github: kironovlaziz-del
+repository: https://github.com/kironovlaziz-del/provenza
+license: Apache-2.0
+tier: community
+marketplace:
+  category: Identity & trust
+  mark: PVZ
+  keywords: [agent-governance, mcp, post-quantum, self-hosted, audit]
+tested_against:
+  agent-manifest: "0.15.0"
