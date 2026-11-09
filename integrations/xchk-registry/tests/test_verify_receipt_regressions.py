@@ -723,7 +723,8 @@ def test_a_revocation_wins_over_an_active_entry_for_the_same_key(tmp_path):
     real = json.loads((KEY_DOCUMENTS / "in.xchk.io.2026-11-02.json").read_text(encoding="utf-8"))
     good = load("01-approval-confirmed.bundle.json")
     first = good["registrySignature"]["keys"][0]
-    for variant, raw in (("without raw key", None), ("with raw key", first["publicKeyRaw"])):
+    other = ("B" if first["publicKeyRaw"][0] != "B" else "C") + first["publicKeyRaw"][1:]   # one character off: a different key under the same id
+    for variant, raw in (("without raw key", None), ("with raw key", first["publicKeyRaw"]), ("with DIFFERENT raw key", other)):
         doc = copy.deepcopy(real)
         doc["revoked"].append({"alg": first["alg"], "keyId": first["keyId"], "publicKeyRaw": raw, "status": "revoked", "revokedAt": "2026-10-16T00:00:00Z"})
         assert any(k["keyId"] == first["keyId"] for k in doc["keys"]), "the active entry stays"
@@ -741,7 +742,14 @@ def test_a_revocation_wins_over_an_active_entry_for_the_same_key(tmp_path):
     p.write_text(json.dumps(doc), encoding="utf-8")
     code, rep, out = _rep(good, tmp_path, strict=True, keys=str(p))
     assert code == 1 and rep["keyDocument"]["allPinned"] is False and "as REVOKED" in out, out
-
+    # no revocation at all, but one keyId under two public keys (the second private-review case, 9 Nov 2026): contradictory, refused
+    doc = copy.deepcopy(real)
+    doc["keys"].append(dict(first, publicKeyRaw=other))
+    p = tmp_path / "twokeys.json"
+    p.write_text(json.dumps(doc), encoding="utf-8")
+    code, rep, out = _rep(good, tmp_path, strict=True, keys=str(p))
+    assert code == 1 and rep["keyDocument"]["allPinned"] is False and rep["boundIdentity"] is None, out
+    assert f"FAIL the registry's key document maps keyId {first['keyId']} to 2 DIFFERENT {first['alg']} public keys" in out, out
 
 def test_the_right_key_id_under_a_different_public_key_fails(tmp_path):
     """The document and the bundle agree on alg and keyId but not on the key: the pinned key is not the one the registry

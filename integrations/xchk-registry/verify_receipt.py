@@ -261,19 +261,25 @@ def key_document_check(ok, keys: list, root, doc: dict) -> bool:
         label = f"{k.get('alg')}/{k.get('keyId')}"
         hits = [(x, where) for x, where in listed if x.get("alg") == k.get("alg") and x.get("keyId") == k.get("keyId")]
         exact = [(x, where) for x, where in hits if x.get("publicKeyRaw") == k.get("publicKeyRaw")]
-        # a revoked entry may be published without its public key (the registry serves publicKeyRaw: null on revoked
-        # keys): it is matched by alg and keyId, so a revocation is never read as "never published"
-        by_id = [(x, where) for x, where in hits if x.get("publicKeyRaw") is None and _entry_revoked(x, where)]
         # 9 Nov 2026 (noah-ing, private review of agentrust-io/integrations#350): a revocation wins over an active entry
-        # for the same key. The exact active match used to be taken first, so a document that still listed the key as
-        # active beside its revocation pinned it. A document that says both is a contradiction and is named as one.
-        revoked = [(x, where) for x, where in exact + by_id if _entry_revoked(x, where)]
+        # for the same key IDENTITY (alg + keyId), whatever public key bytes the revoked entry carries — the raw key
+        # that matched, none (the registry serves publicKeyRaw: null on revoked keys), or other bytes. The exact active
+        # match used to be taken first, so a document that still listed the key as active beside its revocation pinned
+        # it, and a revocation under different bytes was not even a candidate. A document that says both, or that maps
+        # one keyId to two public keys, contradicts itself and is refused as such; keyId is sha256(spki)[:16], so two
+        # keys under one id is a forgery or a corrupt document, never a registry's publication.
+        revoked = [(x, where) for x, where in hits if _entry_revoked(x, where)]
+        raws = {x.get("publicKeyRaw") for x, _ in hits if x.get("publicKeyRaw") is not None}
         if revoked:
             x, where = revoked[0]
             all_ok = False
-            contradicted = any(not _entry_revoked(y, w) for y, w in exact)
+            contradicted = any(not _entry_revoked(y, w) for y, w in hits)
             ok(False, f"the registry's key document lists pinned key {label} as REVOKED" + (f" since {x.get('revokedAt')}" if x.get("revokedAt") else "")
                + (" — and ALSO as active: the document contradicts itself, and a revocation is never outweighed" if contradicted else ""))
+            continue
+        if len(raws) > 1:
+            all_ok = False
+            ok(False, f"the registry's key document maps keyId {k.get('keyId')} to {len(raws)} DIFFERENT {k.get('alg')} public keys — a contradictory document pins nothing")
             continue
         x, where = (exact or [(None, None)])[0]
         if x is None:
