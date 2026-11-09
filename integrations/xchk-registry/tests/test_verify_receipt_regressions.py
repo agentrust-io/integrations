@@ -715,6 +715,33 @@ def test_a_revoked_key_is_refused_however_the_document_says_it(tmp_path):
         assert "FAIL the registry's key document lists pinned key ed25519/5ecb3da505414c4f as REVOKED since 2026-11-01T00:00:00Z" in out, (name, out)
         assert "never published" not in out, (name, out)
 
+def test_a_revocation_wins_over_an_active_entry_for_the_same_key(tmp_path):
+    """Private review of #350 (noah-ing, 2 Nov 2026, reached us 9 Nov): the document still lists the key as active in
+    `keys` AND revokes it in `revoked`. The exact active match was taken first, so the revocation was never consulted:
+    exit 0, allPinned true. Now the revocation wins and the contradiction is named, with or without the raw key on the
+    revoked entry."""
+    real = json.loads((KEY_DOCUMENTS / "in.xchk.io.2026-11-02.json").read_text(encoding="utf-8"))
+    good = load("01-approval-confirmed.bundle.json")
+    first = good["registrySignature"]["keys"][0]
+    for variant, raw in (("without raw key", None), ("with raw key", first["publicKeyRaw"])):
+        doc = copy.deepcopy(real)
+        doc["revoked"].append({"alg": first["alg"], "keyId": first["keyId"], "publicKeyRaw": raw, "status": "revoked", "revokedAt": "2026-10-16T00:00:00Z"})
+        assert any(k["keyId"] == first["keyId"] for k in doc["keys"]), "the active entry stays"
+        p = tmp_path / "both.json"
+        p.write_text(json.dumps(doc), encoding="utf-8")
+        code, rep, out = _rep(good, tmp_path, strict=True, keys=str(p))
+        assert code == 1 and rep["keyDocument"]["allPinned"] is False and rep["boundIdentity"] is None, (variant, out)
+        assert f"FAIL the registry's key document lists pinned key {first['alg']}/{first['keyId']} as REVOKED since 2026-10-16T00:00:00Z — and ALSO as active: the document contradicts itself" in out, (variant, out)
+        assert "never published" not in out and "DIFFERENT" not in out, (variant, out)
+    # the same revocation written into the active entry's own status, beside a clean retired twin: still refused
+    doc = copy.deepcopy(real)
+    doc["retired"].append(dict(first, status="retired"))
+    next(k for k in doc["keys"] if k["keyId"] == first["keyId"]).update(status="revoked", revokedAt="2026-10-16T00:00:00Z")
+    p = tmp_path / "mixed.json"
+    p.write_text(json.dumps(doc), encoding="utf-8")
+    code, rep, out = _rep(good, tmp_path, strict=True, keys=str(p))
+    assert code == 1 and rep["keyDocument"]["allPinned"] is False and "as REVOKED" in out, out
+
 
 def test_the_right_key_id_under_a_different_public_key_fails(tmp_path):
     """The document and the bundle agree on alg and keyId but not on the key: the pinned key is not the one the registry

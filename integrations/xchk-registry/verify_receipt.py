@@ -264,16 +264,24 @@ def key_document_check(ok, keys: list, root, doc: dict) -> bool:
         # a revoked entry may be published without its public key (the registry serves publicKeyRaw: null on revoked
         # keys): it is matched by alg and keyId, so a revocation is never read as "never published"
         by_id = [(x, where) for x, where in hits if x.get("publicKeyRaw") is None and _entry_revoked(x, where)]
-        x, where = (exact or by_id or [(None, None)])[0]
+        # 9 Nov 2026 (noah-ing, private review of agentrust-io/integrations#350): a revocation wins over an active entry
+        # for the same key. The exact active match used to be taken first, so a document that still listed the key as
+        # active beside its revocation pinned it. A document that says both is a contradiction and is named as one.
+        revoked = [(x, where) for x, where in exact + by_id if _entry_revoked(x, where)]
+        if revoked:
+            x, where = revoked[0]
+            all_ok = False
+            contradicted = any(not _entry_revoked(y, w) for y, w in exact)
+            ok(False, f"the registry's key document lists pinned key {label} as REVOKED" + (f" since {x.get('revokedAt')}" if x.get("revokedAt") else "")
+               + (" — and ALSO as active: the document contradicts itself, and a revocation is never outweighed" if contradicted else ""))
+            continue
+        x, where = (exact or [(None, None)])[0]
         if x is None:
             all_ok = False
             if hits:
                 ok(False, f"the registry's key document lists keyId {k.get('keyId')} with a DIFFERENT {k.get('alg')} public key — the bundle's pinned key is not the one the registry published under that id")
             else:
                 ok(False, f"the registry's key document does not list pinned key {label} — a receipt signed with a key the registry never published is not the registry's")
-        elif _entry_revoked(x, where):
-            all_ok = False
-            ok(False, f"the registry's key document lists pinned key {label} as REVOKED" + (f" since {x.get('revokedAt')}" if x.get("revokedAt") else ""))
         elif where == "retired" or x.get("status") == "retired":
             ok(True, f"the registry's key document ({registry}) lists pinned key {label} as retired")
         else:
