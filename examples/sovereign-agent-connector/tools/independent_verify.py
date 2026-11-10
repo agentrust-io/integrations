@@ -12,6 +12,7 @@ import argparse
 import base64
 import hashlib
 import json
+import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -23,6 +24,8 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 BASE_PROFILE = "https://agentrust-io.com/profiles/aucp/v0.1"
 LIVE_PROFILE = "https://agentrust-io.com/profiles/aucp/v0.1/cmcp-mve1"
 BOUNDARIES = {"agreement", "delegation", "appraisal", "enforcement"}
+_B64URL_RE = re.compile(r"^[A-Za-z0-9_-]+\Z")
+_PRIVATE_JWK_PARAMETERS = frozenset({"d", "p", "q", "dp", "dq", "qi", "oth", "k"})
 
 
 class VerificationError(ValueError):
@@ -60,7 +63,19 @@ def digest(value: Any) -> str:
 
 
 def decode_b64url(value: str) -> bytes:
-    return base64.urlsafe_b64decode(value + "=" * (-len(value) % 4))
+    require(
+        isinstance(value, str) and bool(_B64URL_RE.match(value)) and len(value) % 4 != 1,
+        "invalid base64url encoding",
+    )
+    try:
+        raw = base64.urlsafe_b64decode(value + "=" * (-len(value) % 4))
+    except ValueError as exc:
+        raise VerificationError("invalid base64url encoding") from exc
+    require(
+        base64.urlsafe_b64encode(raw).rstrip(b"=").decode("ascii") == value,
+        "non-canonical base64url encoding",
+    )
+    return raw
 
 
 def key_thumbprint(public_key_hex: str) -> bytes:
@@ -77,10 +92,60 @@ def verify_ed25519(body: dict[str, Any], trusted_hex: str, *, cmcp: bool = False
     require(body.get("issuer_key", trusted_hex) == trusted_hex, "unexpected signing key")
     signature = body.get("signature")
     require(isinstance(signature, str), "missing signature")
+    try:
+        key_bytes = bytes.fromhex(trusted_hex)
+    except ValueError as exc:
+        raise VerificationError("invalid Ed25519 public key") from exc
+    sig_bytes = decode_b64url(signature)
+    require(len(key_bytes) == 32, "Ed25519 public key must be 32 bytes")
+    require(len(sig_bytes) == 64, "Ed25519 signature must be 64 bytes")
     unsigned = {key: value for key, value in body.items() if key != "signature"}
     try:
-        Ed25519PublicKey.from_public_bytes(bytes.fromhex(trusted_hex)).verify(
-            decode_b64url(signature), canonical(unsigned, ascii_only=cmcp)
+        Ed25519PublicKey.from_public_bytes(key_bytes).verify(
+            sig_bytes, canonical(unsigned, ascii_only=cmcp)
+        )
+    except (InvalidSignature, ValueError) as exc:
+        raise VerificationError("invalid Ed25519 signature") from exc
+
+
+def verify_trace_signature(
+    trace: dict[str, Any], trusted_hex: str | None = None, *, cmcp: bool = True
+) -> None:
+    require(isinstance(trace, dict), "TRACE claim must be a JSON object")
+    trace_body = trace.get("trace", trace)
+    require(isinstance(trace_body, dict), "TRACE payload must be a JSON object")
+    cnf = trace_body.get("cnf")
+    require(isinstance(cnf, dict), "missing TRACE cnf")
+    jwk = cnf.get("jwk")
+    require(isinstance(jwk, dict), "missing TRACE cnf.jwk")
+    require(
+        not (_PRIVATE_JWK_PARAMETERS & jwk.keys()),
+        "TRACE cnf.jwk must not contain private or symmetric key parameters",
+    )
+    require(
+        jwk.get("kty") == "OKP" and jwk.get("crv") == "Ed25519",
+        "unsupported TRACE JWK type",
+    )
+    x = jwk.get("x")
+    require(isinstance(x, str), "missing TRACE JWK public key")
+    key_bytes = decode_b64url(x)
+    require(len(key_bytes) == 32, "Ed25519 public key must be 32 bytes")
+    if trusted_hex is not None:
+        require(isinstance(trusted_hex, str), "invalid trusted signing key")
+        try:
+            trusted_bytes = bytes.fromhex(trusted_hex)
+        except ValueError as exc:
+            raise VerificationError("invalid Ed25519 public key") from exc
+        require(len(trusted_bytes) == 32, "Ed25519 public key must be 32 bytes")
+        require(key_bytes == trusted_bytes, "TRACE cnf.jwk does not match trusted key")
+    signature = trace.get("signature")
+    require(isinstance(signature, str), "missing signature")
+    sig_bytes = decode_b64url(signature)
+    require(len(sig_bytes) == 64, "Ed25519 signature must be 64 bytes")
+    unsigned = {key: value for key, value in trace.items() if key != "signature"}
+    try:
+        Ed25519PublicKey.from_public_bytes(key_bytes).verify(
+            sig_bytes, canonical(unsigned, ascii_only=cmcp)
         )
     except (InvalidSignature, ValueError) as exc:
         raise VerificationError("invalid Ed25519 signature") from exc
@@ -287,7 +352,7 @@ def verify_live(bundle: dict[str, Any], anchors: dict[str, Any]) -> Verdict:
         bundle["cmcp_trace_public_key"] == anchors["cmcp_trace"],
         "cMCP TRACE key does not match its out-of-band trust anchor",
     )
-    verify_ed25519(trace, anchors["cmcp_trace"], cmcp=True)
+    verify_trace_signature(trace, anchors["cmcp_trace"], cmcp=True)
     audit = trace["gateway"]["audit_chain"]
     require(audit["root"] == entries[0]["entry_hash"], "TRACE audit root mismatch")
     require(audit["tip"] == entries[-1]["entry_hash"], "TRACE audit tip mismatch")
@@ -358,14 +423,43 @@ def verify_live(bundle: dict[str, Any], anchors: dict[str, Any]) -> Verdict:
     )
 
 
+def _reject_duplicate_keys(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for key, value in pairs:
+        require(key not in result, f"duplicate JSON key: {key}")
+        result[key] = value
+    return result
+
+
+def load_json(source: Path | str | bytes) -> dict[str, Any]:
+    if isinstance(source, Path):
+        raw = source.read_text(encoding="utf-8")
+    elif isinstance(source, (bytes, bytearray)):
+        raw = bytes(source).decode("utf-8")
+    elif isinstance(source, str):
+        if source.lstrip().startswith(("{", "[")):
+            raw = source
+        else:
+            path = Path(source)
+            raw = path.read_text(encoding="utf-8") if path.is_file() else source
+    else:
+        raise VerificationError("JSON source must be a path or string")
+    try:
+        loaded = json.loads(raw, object_pairs_hook=_reject_duplicate_keys)
+    except json.JSONDecodeError as exc:
+        raise VerificationError(f"invalid JSON: {exc}") from exc
+    require(isinstance(loaded, dict), "top-level JSON value must be an object")
+    return loaded
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("bundle", type=Path)
     parser.add_argument("--trust-anchors", type=Path, required=True)
     args = parser.parse_args(argv)
     try:
-        bundle = json.loads(args.bundle.read_text(encoding="utf-8"))
-        anchors = json.loads(args.trust_anchors.read_text(encoding="utf-8"))
+        bundle = load_json(args.bundle)
+        anchors = load_json(args.trust_anchors)
         verdict = verify_live(bundle, anchors)
     except (
         OSError,
