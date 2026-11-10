@@ -286,3 +286,157 @@ def test_gcp_placement_fails_closed(mutation, message: str) -> None:
             validity_seconds=300,
             signing_key=signing_key,
         )
+
+
+def test_auc_rejects_boolean_gcp_claims_and_invalid_validity() -> None:
+    signing_key, _ = new_keypair()
+    for mut in (
+        lambda c: c.update({"iat": True}),
+        lambda c: c.update({"exp": True}),
+        lambda c: c["submods"]["gce"].update({"instance_id": True}),
+        lambda c: c["submods"]["gce"].update({"instance_id": ""}),
+    ):
+        claims = _gcp_claims()
+        mut(claims)
+        with pytest.raises(BundleError):
+            make_gcp_placement_assertion(
+                workload_key="ab" * 32,
+                token="signed.jwt.token",
+                verified_claims=claims,
+                zone_jurisdictions={"europe-west9-a": "FR"},
+                observed_at=NOW,
+                validity_seconds=300,
+                signing_key=signing_key,
+            )
+
+    for bad_val in (True, False, 0, -10, 1.5):
+        with pytest.raises(BundleError):
+            make_placement_assertion(
+                workload_key="ab" * 32,
+                jurisdiction="FR",
+                operator="op",
+                issued_at=NOW,
+                validity_seconds=bad_val,  # type: ignore[arg-type]
+                signing_key=signing_key,
+            )
+    for bad_wk in ("AB" * 32, "ab" * 31, 123):
+        with pytest.raises(BundleError):
+            make_placement_assertion(
+                workload_key=bad_wk,  # type: ignore[arg-type]
+                jurisdiction="FR",
+                operator="op",
+                issued_at=NOW,
+                validity_seconds=300,
+                signing_key=signing_key,
+            )
+
+
+def _load_independent_verify():
+    import importlib.util
+    import sys
+    from pathlib import Path
+
+    root = Path(__file__).parents[1]
+    spec = importlib.util.spec_from_file_location(
+        "independent_verify_for_appraisal", root / "tools" / "independent_verify.py"
+    )
+    assert spec is not None and spec.loader is not None
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = mod
+    spec.loader.exec_module(mod)
+    return mod
+
+
+@pytest.mark.parametrize("suffix", ["=", "=="])
+def test_padded_signature_rejected_by_both_core_and_independent_verifier(
+    suffix: str,
+) -> None:
+    import base64
+    from agentrust_auc.core import _verify_signed
+
+    ind = _load_independent_verify()
+    signing_key, public_key = new_keypair()
+    good = make_placement_assertion(
+        workload_key="ab" * 32,
+        jurisdiction="FR",
+        operator="op",
+        issued_at=NOW,
+        validity_seconds=300,
+        signing_key=signing_key,
+    )
+    # Canonical control passes both verifiers.
+    _verify_signed(good, public_key)
+    ind.verify_ed25519(good, public_key)
+
+    padded_sig = good["signature"] + suffix
+    assert base64.urlsafe_b64decode(padded_sig + "=" * (-len(padded_sig) % 4)) == (
+        base64.urlsafe_b64decode(good["signature"] + "==")
+    )
+    padded = {**good, "signature": padded_sig}
+    with pytest.raises(BundleError):
+        _verify_signed(padded, public_key)
+    with pytest.raises(ind.VerificationError):
+        ind.verify_ed25519(padded, public_key)
+
+
+@pytest.mark.parametrize("raw_len", [0, 32, 63, 65])
+def test_wrong_length_signature_rejected_by_both_core_and_independent_verifier(
+    raw_len: int,
+) -> None:
+    import base64
+    from agentrust_auc.core import _verify_signed
+
+    ind = _load_independent_verify()
+    signing_key, public_key = new_keypair()
+    good = make_placement_assertion(
+        workload_key="ab" * 32,
+        jurisdiction="FR",
+        operator="op",
+        issued_at=NOW,
+        validity_seconds=300,
+        signing_key=signing_key,
+    )
+    _verify_signed(good, public_key)
+    ind.verify_ed25519(good, public_key)
+
+    wrong_sig = base64.urlsafe_b64encode(b"\x01" * raw_len).rstrip(b"=").decode("ascii")
+    mutated = {**good, "signature": wrong_sig}
+    with pytest.raises(BundleError):
+        _verify_signed(mutated, public_key)
+    with pytest.raises(ind.VerificationError):
+        ind.verify_ed25519(mutated, public_key)
+
+
+@pytest.mark.parametrize(
+    "bad_key_fn",
+    [
+        lambda k: k.upper(),
+        lambda k: " " + k,
+        lambda k: k + "\n",
+        lambda k: k[:62],
+        lambda k: "zz" * 32,
+    ],
+)
+def test_malformed_trusted_key_rejected_by_both_core_and_independent_verifier(
+    bad_key_fn,
+) -> None:
+    from agentrust_auc.core import _verify_signed
+
+    ind = _load_independent_verify()
+    signing_key, public_key = new_keypair()
+    good = make_placement_assertion(
+        workload_key="ab" * 32,
+        jurisdiction="FR",
+        operator="op",
+        issued_at=NOW,
+        validity_seconds=300,
+        signing_key=signing_key,
+    )
+    _verify_signed(good, public_key)
+    ind.verify_ed25519(good, public_key)
+
+    bad_key = bad_key_fn(public_key)
+    with pytest.raises(BundleError):
+        _verify_signed(good, bad_key)
+    with pytest.raises(ind.VerificationError):
+        ind.verify_ed25519(good, bad_key)
