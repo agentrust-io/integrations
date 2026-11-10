@@ -318,6 +318,83 @@ class TestState:
         core.save_state(p, {"a": 1})
         assert [f.name for f in tmp_path.iterdir()] == ["baseline.json"]
 
+    def test_duplicate_keys_rejected_by_load_state(self, tmp_path):
+        p = tmp_path / "baseline.json"
+        p.write_text('{"a": 1, "a": 2}', encoding="utf-8")
+        assert core.load_state(p) is None
+
+    @pytest.mark.parametrize("raw", [
+        '{"a": NaN}',
+        '{"a": Infinity}',
+        '{"a": -Infinity}',
+    ])
+    def test_nonfinite_constants_rejected_by_load_state(self, tmp_path, raw):
+        p = tmp_path / "baseline.json"
+        p.write_text(raw, encoding="utf-8")
+        assert core.load_state(p) is None
+
+    @pytest.mark.parametrize("raw", [
+        '{"a": 1e309}',
+        '{"a": -1e309}',
+        '{"a": 1e999}',
+        '{"nested": {"items": [1, 1e309]}}',
+    ])
+    def test_exponent_overflow_rejected_by_load_state(self, tmp_path, raw):
+        p = tmp_path / "baseline.json"
+        p.write_text(raw, encoding="utf-8")
+        assert core.load_state(p) is None
+
+    @pytest.mark.parametrize("bad_val", [
+        float("nan"),
+        float("inf"),
+        float("-inf"),
+    ])
+    def test_sha_mapping_rejects_nonfinite_values(self, bad_val):
+        with pytest.raises(ValueError):
+            core.sha_mapping({"a": bad_val})
+
+    def test_check_seal_rejects_wrong_seal_alg(self):
+        sealed = core.attach_seal({"skills": {"a": "1"}})
+        sealed["integrity"]["alg"] = "MD5"
+        assert core.check_seal(sealed) == core.INTEGRITY_BROKEN
+
+    @pytest.mark.parametrize("bad_val", [
+        float("nan"),
+        float("inf"),
+        float("-inf"),
+        {"nested": [float("nan")]},
+    ])
+    def test_check_seal_returns_broken_without_raising_on_in_memory_nonfinite(self, bad_val):
+        sealed = core.attach_seal({"skills": {"a": "1"}})
+        sealed["corrupted"] = bad_val
+        assert core.check_seal(sealed) == core.INTEGRITY_BROKEN
+
+    @pytest.mark.parametrize("bad_payload", [
+        {"a": float("nan")},
+        {"a": float("inf")},
+        {"a": float("-inf")},
+        {"nested": {"x": [float("inf")]}},
+    ])
+    def test_save_state_refuses_nonfinite_and_preserves_existing_file(self, tmp_path, bad_payload):
+        p = tmp_path / "baseline.json"
+        valid_sealed = core.save_baseline(p, {"skills": {"deploy": "sha256:abc"}, "version": 1})
+        before_bytes = p.read_bytes()
+        with pytest.raises(ValueError):
+            core.save_state(p, bad_payload)
+        assert p.read_bytes() == before_bytes
+        loaded = core.load_state(p)
+        assert loaded == valid_sealed
+        assert core.check_seal(loaded) == core.INTEGRITY_OK
+
+    def test_finite_save_load_seal_positive_control(self, tmp_path):
+        p = tmp_path / "baseline.json"
+        snapshot = {"skills": {"deploy": "sha256:abc"}, "threshold": 0.75, "max_float": 1e308}
+        sealed = core.save_baseline(p, snapshot)
+        loaded = core.load_state(p)
+        assert loaded == sealed
+        assert core.check_seal(loaded) == core.INTEGRITY_OK
+
+
     def test_atomic_write_replaces_rather_than_truncating(self, tmp_path):
         p = tmp_path / "baseline.json"
         core.save_state(p, {"generation": 1})
@@ -336,7 +413,7 @@ def test_core_has_no_third_party_dependencies():
     must import with the standard library alone."""
     src = Path(__file__).resolve().parent.parent / "src" / "agentrust_capture_core"
     stdlib_ok = {
-        "hashlib", "json", "os", "tempfile", "time", "uuid", "datetime", "pathlib",
+        "hashlib", "json", "math", "os", "tempfile", "time", "uuid", "datetime", "pathlib",
         "dataclasses", "collections", "collections.abc", "__future__",
     }
     for module in sorted(src.glob("*.py")):

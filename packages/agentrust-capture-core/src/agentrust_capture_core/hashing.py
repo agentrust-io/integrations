@@ -90,7 +90,9 @@ def sha_mapping(value: dict) -> str:
     """Digest a mapping by canonical JSON, so key order cannot change the result."""
     import json
 
-    return sha_bytes(json.dumps(value, sort_keys=True, separators=(",", ":")).encode())
+    return sha_bytes(
+        json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
+    )
 
 
 def tree_digest(
