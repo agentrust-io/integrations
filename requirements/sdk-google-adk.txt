@@ -3,7 +3,7 @@
 agentrust-trace-tests==0.5.1 \
     --hash=sha256:5c13421d41357a5b2e096eced457f5dee65d4921b253b25dac53684b3d31eeeb \
     --hash=sha256:79e9d98a7106ae1c47b8378c8808be26f1fa34a62779e9f7b0e954cf40a2a19c
-    # via -r requirements/sdk-google-adk.in
+    # via -r sdk-google-adk.in
 aiosqlite==0.22.1 \
     --hash=sha256:043e0bd78d32888c0a9ca90fc788b38796843360c855a7262a532813133a0650 \
     --hash=sha256:21c002eb13823fad740196c5a2e9d8e62f6243bd9e7e4a1f87fb5e44ecb4fceb
@@ -29,9 +29,9 @@ attrs==26.1.0 \
     # via
     #   jsonschema
     #   referencing
-authlib==1.8.0 \
-    --hash=sha256:88aebbd9af6757e14e912d5dc007ae1dc1f3e27e3b2152ce7c552ee2c3b3c121 \
-    --hash=sha256:f3ecd5f1da737262fb53bf1a4d95c4ea1ad9dd509316587a255c99ab1838a4f0
+authlib==1.9.1 \
+    --hash=sha256:5c7d9848f47cac340f060f76ae0bc09b59f5c8e89cc1bb032d4370a0c55b5974 \
+    --hash=sha256:8b9be8b1e5174dcbf5520e984f1a22dc2edae5b6e40a61d4cedbf86b97e9e69b
     # via google-adk
 certifi==2026.10.19 \
     --hash=sha256:035c1e85572b141bf1c3a3eff0e33a8eb74917522f2559075ff8d2fea780a1ae \
@@ -386,7 +386,7 @@ fastapi==0.141.1 \
 google-adk==2.11.0 \
     --hash=sha256:4774e1fc7bb37727e56142e7d41e9035949ebfc876a2b15d5505969b02798bcd \
     --hash=sha256:59258cec8d79306192bf65e0d43fa64b764f831e3b74ed3b8e6fe9df16a1e2c8
-    # via -r requirements/sdk-google-adk.in
+    # via -r sdk-google-adk.in
 google-auth[pyopenssl,requests]==2.57.1 \
     --hash=sha256:ab439dee60a6856412bc058f13a68eb6a59c5b81526bb89cfdcf89ce9c0a48c9 \
     --hash=sha256:eb47b230fc6707eed4aee1c9cef55ec05bc1785eecba74ff8b572d531e921b1e
