@@ -4,7 +4,7 @@
 requires a signed human approval where the policy says so, and signs a record of every decision, refusals included.
 
 This integration treats those records as TRACE external evidence. Parmana issues no TRACE Trust Record. An agent
-runtime that does points at the Parmana record for its step through `references` (trace-spec §3.1.2):
+runtime that points at the Parmana record for its step through `references` (trace-spec §3.1.2):
 
 | Parmana decision | Parmana record             | `references` entries                                                   |
 | ---------------- | -------------------------- | ---------------------------------------------------------------------- |
@@ -15,8 +15,7 @@ One Parmana record per decision. Each entry's `digest` is `sha256:` over the RFC
 object as the resolver retains it. The `approval-outcome` entry points at the signed approval inside the Trust Record
 (`#/transaction/signals/approvalArtifact`), because Parmana retains it there, under the Trust Record's own signature.
 
-Parmana signs in its own canonical form, not RFC 8785, and TRACE does not re-sign its records: `parmana_evidence.py`
-checks those signatures offline, with Parmana's public key and nothing else.
+Parmana's canonical form is JSON with recursively sorted keys. For plain JSON values it matches RFC 8785, and `parmana-core` pins this with conformance tests. Two non-JSON inputs differ: `undefined` values are dropped and `Date` values become ISO strings. TRACE does not re-sign its records: `parmana_evidence.py` checks those signatures offline, with Parmana's public key and nothing else.
 
 ## Fixtures
 
