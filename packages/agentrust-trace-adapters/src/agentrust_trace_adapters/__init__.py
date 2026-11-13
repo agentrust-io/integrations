@@ -24,6 +24,17 @@ from .evidence import (
     SourceSystem,
     digest_bytes,
 )
+from .gap_reconciler import (
+    GAP_DISCLOSURE_UNVERIFIED,
+    RECEIPT_GAP_DISCLOSED,
+    RECEIPT_INVALID,
+    RECEIPT_MISSING_REQUIRED,
+    DisclosureVerdict,
+    MalformedInput,
+    Reconciliation,
+    reconcile_chain,
+    verify_disclosure,
+)
 from .openshell import (
     OpenShellEvidence,
     build_openshell_record,
@@ -34,9 +45,16 @@ from .openshell import (
 __all__ = [
     "AppraisalEvidence",
     "DIGEST_RE",
+    "DisclosureVerdict",
+    "GAP_DISCLOSURE_UNVERIFIED",
+    "MalformedInput",
     "MissingEvidence",
     "OpenShellEvidence",
     "PolicyEvidence",
+    "RECEIPT_GAP_DISCLOSED",
+    "RECEIPT_INVALID",
+    "RECEIPT_MISSING_REQUIRED",
+    "Reconciliation",
     "SourceSystem",
     "TRACE_PROFILE",
     "appraisal_from_evidence",
@@ -45,7 +63,9 @@ __all__ = [
     "build_policy_bundle",
     "build_transcript",
     "digest_bytes",
+    "reconcile_chain",
     "software_measurement",
+    "verify_disclosure",
 ]
 
 __version__ = "0.2.0"
