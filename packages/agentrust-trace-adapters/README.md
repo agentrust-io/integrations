@@ -148,3 +148,16 @@ acceptance cases in [the producer contract](docs/openshell-bundle-candidate.md).
 The contract is development work for NVIDIA/OpenShell#2745 and does not exist
 upstream yet, so no live exporter compatibility or hardware assurance is claimed.
 The OpenShell transcript adapter is unaffected.
+
+## Gap disclosure reconciliation
+
+`reconcile_chain` judges a receipt chain that may contain `GapDisclosure/1.0`.
+It implements the library slice of [integrations#416](https://github.com/agentrust-io/integrations/issues/416)
+against trace-spec section 3.3.4. Splice facts are derived from the chain.
+`cause` and `receipts_lost_estimate` are reported and never select an outcome.
+A missing credential is `receipt_missing_required` unless an independently
+retained inventory entry is bound by a verified two-sided disclosure. A tail
+disclosure stays `gap_disclosure_unverified`. Retry is not authorized.
+
+The contract, the four review rules, and the non-claims are in
+[docs/gap-disclosure-reconciler.md](docs/gap-disclosure-reconciler.md).
