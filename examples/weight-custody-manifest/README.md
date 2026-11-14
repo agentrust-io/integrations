@@ -15,7 +15,7 @@ For a public open-weight model, base-weight confidentiality is theater (anyone c
 ```bash
 git clone https://github.com/agentrust-io/integrations.git
 cd integrations/examples/weight-custody-manifest
-pip install -r requirements.txt      # weight-custody-manifest>=0.33.1, Python 3.11+
+pip install -r requirements-model-signing.txt  # all offline demos, Python 3.11+
 ```
 
 The offline demos need nothing else. `real_open_model.py` needs run-local extras (below).
@@ -67,7 +67,7 @@ The same machinery, two trust settings. **Closed** weights (a frontier model dep
 
 - **`transparency_log.py`** -- the append-only Merkle log (SPEC 3.7 / RFC 9162): inclusion and consistency proofs, and a monitor detecting a suppressed revocation.
 - **`post_quantum.py`** -- sign and verify a manifest with ML-DSA-65 and with the Ed25519+ML-DSA-65 hybrid profile.
-- **`provenance_model_signing.py`** -- interop with OpenSSF model-signing: a WCM manifest references a model-signing signature as its provenance, and `verify_provenance` cryptographically verifies it. Needs the extra: `pip install "weight-custody-manifest[model-signing]"`.
+- **`provenance_model_signing.py`** -- interop with OpenSSF model-signing: a WCM manifest references a model-signing signature as its provenance, and `verify_provenance` cryptographically verifies it. Install `requirements-model-signing.txt` for this demo.
 
 ### Verifying real attestations
 
@@ -81,7 +81,7 @@ The same machinery, two trust settings. **Closed** weights (a frontier model dep
 
 ```bash
 python closed_model_e2e.py                             # any of the offline examples
-pip install "weight-custody-manifest[model-signing]"   # for provenance_model_signing.py
+python provenance_model_signing.py                     # model-signing interop
 pip install -r requirements-infer.txt                  # for real_open_model.py
 python real_open_model.py
 ```
@@ -93,6 +93,7 @@ python real_open_model.py
 `run_demos.py` runs every offline example and the unit tests, and must exit 0.
 
 ```bash
+pip install pytest            # required for the unit-test phase
 python run_demos.py          # run everything
 python run_demos.py --list   # show the plan, including what is skipped and why
 ```

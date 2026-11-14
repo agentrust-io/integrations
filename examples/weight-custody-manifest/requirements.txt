@@ -1,4 +1,4 @@
 # The Weight Custody Manifest reference SDK, from PyPI.
-# Covers the offline examples. provenance_model_signing.py additionally needs the
-# [model-signing] extra: pip install "weight-custody-manifest[model-signing]".
+# Covers the offline examples. For provenance_model_signing.py, install
+# requirements-model-signing.txt instead.
 weight-custody-manifest>=0.33.1

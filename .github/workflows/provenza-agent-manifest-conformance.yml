@@ -1,0 +1,44 @@
+name: provenza-agent-manifest conformance
+on:
+  push:
+    paths:
+      - "integrations/provenza-agent-manifest/**"
+      - ".github/workflows/provenza-agent-manifest-conformance.yml"
+  pull_request:
+    paths:
+      - "integrations/provenza-agent-manifest/**"
+      - ".github/workflows/provenza-agent-manifest-conformance.yml"
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  conformance:
+    name: ${{ matrix.sdk }} agent-manifest, Python ${{ matrix.python }}
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12", "3.13"]
+        # tested_against, and the latest release (drift detection)
+        sdk: ["pinned", "latest"]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install agent-manifest
+        run: |
+          if [ "${{ matrix.sdk }}" = pinned ]; then
+            v=$(sed -n 's/^  agent-manifest: "\([^"]*\)"$/\1/p' integrations/provenza-agent-manifest/integration.yaml)
+            test -n "$v"
+            python -m pip install "agent-manifest==$v" pytest
+          else
+            python -m pip install agent-manifest pytest
+          fi
+      # This integration verifies Agent Manifests; it emits no TRACE record.
+      - name: Integration tests against the sample manifest
+        run: python -m pytest integrations/provenza-agent-manifest/tests -q
