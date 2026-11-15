@@ -113,6 +113,48 @@ class ReceiptFixtureTests(unittest.TestCase):
             {"result": "invalid", "receipt_state": "signature_format"},
         )
 
+    def test_boolean_sequence_is_rejected(self) -> None:
+        for seq in (True, False):
+            with self.subTest(sequence=seq):
+                self.assertEqual(
+                    self.verify_mutated(lambda f, s=seq: f["receipts"][0].__setitem__("sequence", s)),
+                    {"result": "invalid", "receipt_state": "malformed"},
+                )
+
+    def test_duplicate_json_keys_are_rejected(self) -> None:
+        from verify_receipts import verify_document, verify_text
+
+        trusted = load_trusted_keys()
+        raw = (ROOT / "fixtures" / "valid-chain.json").read_text(encoding="utf-8")
+        dup = raw.rstrip()[:-1] + ', "extra": 1, "extra": 2}'
+        parsed_lenient = json.loads(dup)
+        self.assertEqual(
+            verify_document(parsed_lenient, trusted),
+            {"result": "valid", "receipt_state": "accepted"},
+        )
+        self.assertEqual(
+            verify_text(dup, trusted),
+            {"result": "invalid", "receipt_state": "malformed"},
+        )
+
+    def test_nonfinite_json_and_canonical_bytes_are_rejected(self) -> None:
+        from verify_receipts import canonical_bytes, verify_text
+
+        trusted = load_trusted_keys()
+        raw = (ROOT / "fixtures" / "valid-chain.json").read_text(encoding="utf-8")
+        for token in ("NaN", "Infinity", "-Infinity", "1e309"):
+            with self.subTest(token=token):
+                crafted = raw.rstrip()[:-1] + f', "extra": {token}}}'
+                self.assertEqual(
+                    verify_text(crafted, trusted),
+                    {"result": "invalid", "receipt_state": "malformed"},
+                )
+        for bad in (float("nan"), float("inf"), float("-inf")):
+            with self.subTest(bad=bad):
+                with self.assertRaises(ValueError):
+                    canonical_bytes({"x": bad})
+
+
 
 if __name__ == "__main__":
     unittest.main()
