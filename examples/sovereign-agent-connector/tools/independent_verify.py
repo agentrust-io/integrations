@@ -60,7 +60,20 @@ def digest(value: Any) -> str:
 
 
 def decode_b64url(value: str) -> bytes:
-    return base64.urlsafe_b64decode(value + "=" * (-len(value) % 4))
+    if (
+        not isinstance(value, str)
+        or not value
+        or len(value) % 4 == 1
+        or any(
+            c not in "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
+            for c in value
+        )
+    ):
+        raise ValueError("invalid base64url string")
+    raw = base64.urlsafe_b64decode(value.encode("ascii") + b"=" * (-len(value) % 4))
+    if base64.urlsafe_b64encode(raw).rstrip(b"=").decode("ascii") != value:
+        raise ValueError("non-canonical base64url string")
+    return raw
 
 
 def key_thumbprint(public_key_hex: str) -> bytes:
@@ -74,13 +87,22 @@ def require(condition: bool, message: str) -> None:
 
 
 def verify_ed25519(body: dict[str, Any], trusted_hex: str, *, cmcp: bool = False) -> None:
+    require(
+        isinstance(trusted_hex, str)
+        and len(trusted_hex) == 64
+        and all(c in "0123456789abcdef" for c in trusted_hex),
+        "invalid trusted public key hex",
+    )
     require(body.get("issuer_key", trusted_hex) == trusted_hex, "unexpected signing key")
     signature = body.get("signature")
     require(isinstance(signature, str), "missing signature")
     unsigned = {key: value for key, value in body.items() if key != "signature"}
     try:
+        sig_bytes = decode_b64url(signature)
+        if len(sig_bytes) != 64:
+            raise ValueError("Ed25519 signature must be 64 bytes")
         Ed25519PublicKey.from_public_bytes(bytes.fromhex(trusted_hex)).verify(
-            decode_b64url(signature), canonical(unsigned, ascii_only=cmcp)
+            sig_bytes, canonical(unsigned, ascii_only=cmcp)
         )
     except (InvalidSignature, ValueError) as exc:
         raise VerificationError("invalid Ed25519 signature") from exc
