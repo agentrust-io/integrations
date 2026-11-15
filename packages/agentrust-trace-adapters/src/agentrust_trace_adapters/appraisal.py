@@ -28,12 +28,22 @@ class AppraisalEvidence:
     def __post_init__(self) -> None:
         if self.status not in self.STATUSES:
             raise ValueError(f"unsupported appraisal status {self.status!r}")
-        if not self.verifier.strip() or not self.policy_ref.strip():
+        if (
+            not isinstance(self.verifier, str)
+            or not self.verifier.strip()
+            or not isinstance(self.policy_ref, str)
+            or not self.policy_ref.strip()
+        ):
             raise MissingEvidence("appraisal requires verifier and policy_ref")
-        if not self.signature_verified:
+        if self.signature_verified is not True:
             raise MissingEvidence(
                 "a source verdict is not a TRACE appraisal until its evidence signature is verified"
             )
+        if self.timestamp is not None and (
+            type(self.timestamp) is not int
+            or not 0 < self.timestamp <= 9_007_199_254_740_991
+        ):
+            raise ValueError("appraisal timestamp must be a positive RFC 8785 safe integer")
 
 
 def appraisal_from_evidence(evidence: AppraisalEvidence) -> dict[str, object]:

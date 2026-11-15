@@ -34,6 +34,9 @@ __all__ = ["TRACE_PROFILE", "build_record", "software_measurement"]
 TRACE_PROFILE = "tag:agentrust-io.com,2026:trace-v0.2"
 
 _SUBJECT_RE = re.compile(r"^(spiffe://[^/]+/.+|did:[a-z0-9]+:.+)$")
+_PRIVATE_JWK_PARAMS = frozenset({"d", "p", "q", "dp", "dq", "qi", "oth", "k"})
+_MIN_TRACE_IAT = 1_700_000_000
+_MAX_SAFE_INT = 9_007_199_254_740_991
 
 
 def software_measurement(*parts: str) -> str:
@@ -113,10 +116,20 @@ def build_record(
         )
     if not DIGEST_RE.fullmatch(workload_digest):
         raise ValueError(f"workload_digest {workload_digest!r} is not a sha256:/sha384: digest")
+    if not isinstance(jwk, dict) or _PRIVATE_JWK_PARAMS.intersection(jwk):
+        raise ValueError("jwk must be a public JWK dict without private key parameters")
+    if iat is not None and (
+        type(iat) is not int or not _MIN_TRACE_IAT <= iat <= _MAX_SAFE_INT
+    ):
+        raise ValueError("iat must be an RFC 8785 safe integer >= 1700000000")
+    if tool_call_count is not None and (
+        type(tool_call_count) is not int or not 0 <= tool_call_count <= _MAX_SAFE_INT
+    ):
+        raise ValueError("tool_call_count must be a non-negative RFC 8785 safe integer")
 
     record: dict[str, Any] = {
         "eat_profile": TRACE_PROFILE,
-        "iat": int(iat if iat is not None else time.time()),
+        "iat": iat if iat is not None else int(time.time()),
         "subject": subject,
         "model": {"provider": model_provider, "model_id": model_id},
         "runtime": {
