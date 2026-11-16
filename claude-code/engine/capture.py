@@ -31,6 +31,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import hashlib
 import json
 import os
 import stat
@@ -75,6 +76,34 @@ SIGNING_KEY = STATE_DIR / "signing_key.json"
 # hashing (files only, never secrets)
 # --------------------------------------------------------------------------- #
 _sha_bytes = core.sha_bytes
+
+
+def _catalog_root(tools):
+    """agent-manifest spec 3.2.3 catalog_hash: the RFC 9162 Merkle root over the
+    listed tools sorted by tool_id, each leaf H(0x00 || tool_id || 0x00 ||
+    schema digest || description digest). A verifier recomputes it from the
+    list, so a root built any other way makes the manifest contradict itself."""
+    def h(data):
+        return hashlib.sha256(data).digest()
+
+    def digest(value):
+        return bytes.fromhex(value.split(":", 1)[1])
+
+    leaves = [
+        h(b"\x00" + t["tool_id"].encode("utf-8") + b"\x00"
+          + digest(t["schema_hash"]) + digest(t["description_hash"]))
+        for t in sorted(tools, key=lambda t: t["tool_id"])
+    ]
+
+    def root(nodes):
+        if len(nodes) == 1:
+            return nodes[0]
+        k = 1
+        while k * 2 < len(nodes):
+            k *= 2
+        return h(b"\x01" + root(nodes[:k]) + root(nodes[k:]))
+
+    return "sha256:" + (root(leaves) if leaves else h(b"")).hex()
 _sha_file = core.sha_file
 _uuid7 = core.uuid7
 _now_iso = core.now_iso
@@ -414,7 +443,7 @@ def build_manifest(cur: dict) -> dict:
                 "bound_at": now,
             },
             "tool_manifest": {
-                "catalog_hash": cur["hashes"]["tool_catalog"],
+                "catalog_hash": _catalog_root(tools),
                 "tools": tools,
                 "allow_dynamic_registration": True,
                 "rug_pull_policy": "deny-and-alert",
@@ -489,9 +518,10 @@ def sign_all(cur: dict, outdir: Path) -> tuple[dict, dict]:
         "public_key_b64url": kp.public_b64url(),
         # The issuer this key signs for. agent-manifest spec 5.3.3 needs it.
         "issuers": [manifest["issuer"]],
-        "note": "load as {key_id: public_key_b64url} into the verifier's trusted_keys "
-                "and {key_id: issuers} into trusted_key_issuers; verifies both "
-                "manifest.json and trace.json, which share this key",
+        "note": "Verifies manifest.json and trace.json, which share this key. Pin the "
+                "key and its issuers through a channel you trust, then load them into "
+                "trusted_keys and trusted_key_issuers; copied from this file alone they "
+                "prove only that whoever wrote it signed both records.",
     }
     (outdir / "verification_key.json").write_text(
         json.dumps(verification_key, indent=2), encoding="utf-8"

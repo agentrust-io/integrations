@@ -108,9 +108,13 @@ exists only to make a local smoke-test command reproducible.
   hardware-attestation claim.
 - The instruction fingerprint covers visible `AGENTS.md` layers and the
   local memory summary, not Codex's internal system prompt.
-- A third party can verify the manifest signature with
-  `verification_key.json`, passing its `issuers` as `trusted_key_issuers`. Verifying each artifact binding requires runtime
-  hashes measured outside the signed manifest.
+- A third party can verify the manifest and the TRACE record, which share one
+  key, against a key and issuer they have pinned through a channel they trust.
+  Copied from `verification_key.json` alone they prove only that whoever wrote
+  the files signed them. The issuer `spiffe://codex.local/self-signed` names a
+  key that signs its own records, not an organization that vouched for it.
+  Verifying each artifact binding requires runtime hashes measured outside the
+  signed manifest.
 - SessionStart exposes the model and permission mode but no complete built-in
   tool roster. The tool catalog covers configured MCP servers, installed
   enabled plugins, and any tools supplied through the engine's explicit CLI

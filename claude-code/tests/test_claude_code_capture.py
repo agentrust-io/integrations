@@ -757,3 +757,114 @@ class TestIntegrityIsSurfacedBeforeDrift:
 
     def test_section_is_omitted_when_integrity_was_not_checked(self):
         assert "BASELINE ITSELF INTACT" not in capture.render_report(self._snap(), None, False)
+
+
+@pytest.fixture
+def signed(tmp_path, monkeypatch):
+    pytest.importorskip("agent_manifest")
+    _point_signing_key(tmp_path, monkeypatch)
+    cur = capture.snapshot({"model_id": "claude-x", "builtin_tools": ["Bash", "Read"], "mcp_servers": ["github"]})
+    manifest, trace = capture.sign_all(cur, tmp_path / "records")
+    vk = json.loads((tmp_path / "records" / "verification_key.json").read_text(encoding="utf-8"))
+    return manifest, trace, vk
+
+
+# ---------------------------------------------------------------------------
+# The published manifest is consistent, and issuer authorization holds.
+# ---------------------------------------------------------------------------
+def _sdk_enforces_issuer_policy():
+    import importlib.metadata
+
+    major, minor = (int(p) for p in importlib.metadata.version("agent-manifest").split(".")[:2])
+    return (major, minor) >= (0, 16)
+
+
+@pytest.mark.parametrize("count", range(10))
+def test_catalog_root_matches_the_sdk(count):
+    """Spec 3.2.3's Merkle root, checked against the SDK's own construction."""
+    pytest.importorskip("agent_manifest")
+    from agent_manifest import ToolEntry
+    from agent_manifest._merkle import build_catalog_tree
+
+    tools = [
+        {
+            "tool_id": "t.%d" % ((i * 7) % 10),  # unsorted on purpose
+            "tool_name": "t%d" % i,
+            "endpoint_id": "spiffe://x.local/t",
+            "schema_hash": "sha256:" + ("%02x" % i) * 32,
+            "description_hash": "sha256:" + ("%02x" % (i + 100)) * 32,
+            "version": "1.0.0",
+            "egress_destinations": [],
+        }
+        for i in range(count)
+    ]
+    expected = build_catalog_tree([ToolEntry.model_validate(t) for t in tools])
+    assert capture._catalog_root(tools) == expected
+
+
+def _verify(manifest, key_id, public_key, issuers):
+    from agent_manifest import RevocationStore, VerificationContext, verify_manifest
+
+    return verify_manifest(
+        manifest,
+        VerificationContext(
+            trusted_keys={key_id: public_key},
+            trusted_key_issuers=None if issuers is None else {key_id: issuers},
+        ),
+        RevocationStore(),
+    )
+
+
+def test_published_manifest_does_not_contradict_itself(signed):
+    manifest, _trace, vk = signed
+    assert vk["issuers"] == [manifest["issuer"]]
+    result = _verify(manifest, vk["key_id"], vk["public_key_b64url"], vk["issuers"])
+    assert result.signature_verified is True
+    assert result.fields_verified.tool_manifest.name != "MISMATCH"
+    assert result.result.name != "MISMATCH"
+
+
+@pytest.mark.parametrize(
+    "issuers",
+    [
+        ["spiffe://elsewhere.example/issuer"],
+        [],
+    ],
+    ids=["another-issuer", "empty-list"],
+)
+def test_a_key_not_authorized_for_the_issuer_is_refused(signed, issuers):
+    manifest, _trace, vk = signed
+    result = _verify(manifest, vk["key_id"], vk["public_key_b64url"], issuers)
+    assert result.result.name == "MISMATCH"
+    assert result.signature_verified is False
+
+
+def test_any_listed_issuer_authorizes(signed):
+    manifest, _trace, vk = signed
+    issuers = ["spiffe://elsewhere.example/issuer", manifest["issuer"]]
+    result = _verify(manifest, vk["key_id"], vk["public_key_b64url"], issuers)
+    assert result.signature_verified is True
+
+
+def test_an_issuer_changed_after_signing_is_refused(signed):
+    manifest, _trace, vk = signed
+    tampered = json.loads(json.dumps(manifest))
+    tampered["issuer"] = "spiffe://elsewhere.example/issuer"
+    result = _verify(tampered, vk["key_id"], vk["public_key_b64url"], [tampered["issuer"]])
+    assert result.signature_verified is False
+    assert result.result.name != "VALID"
+
+
+def test_the_key_must_be_trusted_under_its_own_id(signed):
+    manifest, _trace, vk = signed
+    result = _verify(manifest, "0" * 64, vk["public_key_b64url"], vk["issuers"])
+    assert result.signature_verified is False
+
+
+def test_no_issuer_policy_is_unverifiable(signed):
+    if not _sdk_enforces_issuer_policy():
+        pytest.skip("agent-manifest < 0.16 does not require an issuer policy")
+    manifest, _trace, vk = signed
+    result = _verify(manifest, vk["key_id"], vk["public_key_b64url"], None)
+    assert result.result.name == "UNVERIFIABLE"
+    assert result.signature_verified is False
