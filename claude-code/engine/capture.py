@@ -481,8 +481,8 @@ def sign_all(cur: dict, outdir: Path) -> tuple[dict, dict]:
     (outdir / "trace.json").write_text(json.dumps(trace, indent=2), encoding="utf-8")
     # Publish the public key so a third party can verify manifest.json and
     # trace.json without trusting this machine: load it into the verifier's
-    # trusted_keys as {key_id: public_key_b64url}. The private key never leaves
-    # ~/.claude.
+    # trusted_keys as {key_id: public_key_b64url}, and its issuers into
+    # trusted_key_issuers. The private key never leaves ~/.claude.
     verification_key = {
         "algorithm": "Ed25519",
         "key_id": kp.key_id,
