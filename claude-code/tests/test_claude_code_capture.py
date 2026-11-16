@@ -8,6 +8,7 @@ from __future__ import annotations
 import base64
 import importlib.util
 import json
+import os
 from pathlib import Path
 
 import pytest
@@ -868,3 +869,62 @@ def test_no_issuer_policy_is_unverifiable(signed):
     result = _verify(manifest, vk["key_id"], vk["public_key_b64url"], None)
     assert result.result.name == "UNVERIFIABLE"
     assert result.signature_verified is False
+
+
+@pytest.mark.parametrize(
+    "bad, message",
+    [
+        ([("a", "11"), ("a", "22")], "unique"),
+        ([("a\x00b", "11")], "NUL"),
+        ([("a", "sha512:" + "11" * 32)], "not a sha256 digest"),
+        ([("a", "sha256:" + "1" * 63)], "not a sha256 digest"),
+        ([("a", "sha256:" + "AB" * 32)], "not a sha256 digest"),
+    ],
+    ids=["duplicate-id", "nul-in-id", "other-algorithm", "short-digest", "uppercase-hex"],
+)
+def test_catalog_root_refuses_what_the_sdk_refuses(bad, message):
+    def tool(tool_id, digest):
+        value = digest if ":" in digest else "sha256:" + digest * 32
+        return {"tool_id": tool_id, "schema_hash": value, "description_hash": "sha256:" + "33" * 32}
+
+    with pytest.raises(ValueError, match=message):
+        capture._catalog_root([tool(i, d) for i, d in bad])
+
+
+def test_empty_catalog_root_is_the_rfc_9162_empty_tree():
+    import hashlib
+
+    assert capture._catalog_root([]) == "sha256:" + hashlib.sha256(b"").hexdigest()
+
+
+@pytest.mark.parametrize(
+    "content",
+    ["{broken", "[]", '{"private_b64url": 7}', '{"private_b64url": "!!"}'],
+    ids=["truncated", "not-object", "wrong-type", "not-a-key"],
+)
+def test_an_unreadable_signing_key_is_never_replaced(tmp_path, monkeypatch, content):
+    """A new key is a new identity; anyone who pinned the old one would see
+    verification fail with nothing to say why."""
+    pytest.importorskip("agent_manifest")
+    _point_signing_key(tmp_path, monkeypatch)
+    capture.SIGNING_KEY.parent.mkdir(parents=True)
+    capture.SIGNING_KEY.write_text(content, encoding="utf-8")
+    with pytest.raises(SystemExit, match="signing key is (unreadable|invalid)"):
+        capture._load_or_create_manifest_keypair()
+    assert capture.SIGNING_KEY.read_text(encoding="utf-8") == content
+
+
+def test_new_signing_key_is_never_written_wider_than_owner_only(tmp_path, monkeypatch):
+    """The final mode alone cannot show it: writing then chmod-ing also ends at
+    0600, but leaves the key readable in between. The key must go through the
+    temporary-file write that sets 0600 before any byte lands."""
+    pytest.importorskip("agent_manifest")
+    _point_signing_key(tmp_path, monkeypatch)
+    writes = []
+    real = capture.core.atomic_write
+    monkeypatch.setattr(capture.core, "atomic_write", lambda path, content, mode=None: (writes.append((path, mode)), real(path, content, mode=mode)))
+    monkeypatch.setattr(type(capture.SIGNING_KEY), "write_text", lambda *a, **k: pytest.fail("plain write of the key"))
+    capture._load_or_create_manifest_keypair()
+    assert writes == [(capture.SIGNING_KEY, 0o600)]
+    if os.name == "posix":
+        assert capture.SIGNING_KEY.stat().st_mode & 0o777 == 0o600

@@ -601,13 +601,14 @@ def test_trace_record_is_externally_verifiable_with_the_published_key(signed):
     """Before, the record was signed with a throwaway key that verification_key.json
     did not publish, so nobody could verify it without trusting its own cnf.jwk."""
     from agentrust_trace import verify_record
+    from cryptography.exceptions import InvalidSignature
     from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
     _manifest, trace, vk = signed
     verify_record(trace, {"kty": "OKP", "crv": "Ed25519", "x": vk["public_key_b64url"]}, max_age_seconds=None)
     other = Ed25519PrivateKey.generate().public_key().public_bytes_raw()
     other_x = base64.urlsafe_b64encode(other).decode().rstrip("=")
-    with pytest.raises(Exception):
+    with pytest.raises((InvalidSignature, ValueError)):
         verify_record(trace, {"kty": "OKP", "crv": "Ed25519", "x": other_x}, max_age_seconds=None)
 
 
@@ -623,6 +624,11 @@ def test_manifest_and_trace_share_one_stable_identity(tmp_path, monkeypatch):
     assert first_trace["cnf"]["jwk"]["x"] == published
     assert second_trace["cnf"]["jwk"]["x"] == published
     assert first_manifest["signature"]["key_id"] == second_manifest["signature"]["key_id"]
+    from agentrust_trace import verify_record
+
+    pinned = {"kty": "OKP", "crv": "Ed25519", "x": published}
+    for trace in (first_trace, second_trace):  # both sessions verify under one pinned key
+        verify_record(trace, pinned, max_age_seconds=None)
 
 
 # ---------------------------------------------------------------------------
@@ -724,3 +730,46 @@ def test_no_issuer_policy_is_unverifiable(signed):
     result = _verify(manifest, vk["key_id"], vk["public_key_b64url"], None)
     assert result.result.name == "UNVERIFIABLE"
     assert result.signature_verified is False
+
+
+@pytest.mark.parametrize(
+    "bad, message",
+    [
+        ([("a", "11"), ("a", "22")], "unique"),
+        ([("a\x00b", "11")], "NUL"),
+        ([("a", "sha512:" + "11" * 32)], "not a sha256 digest"),
+        ([("a", "sha256:" + "1" * 63)], "not a sha256 digest"),
+        ([("a", "sha256:" + "AB" * 32)], "not a sha256 digest"),
+    ],
+    ids=["duplicate-id", "nul-in-id", "other-algorithm", "short-digest", "uppercase-hex"],
+)
+def test_catalog_root_refuses_what_the_sdk_refuses(bad, message):
+    def tool(tool_id, digest):
+        value = digest if ":" in digest else "sha256:" + digest * 32
+        return {"tool_id": tool_id, "schema_hash": value, "description_hash": "sha256:" + "33" * 32}
+
+    with pytest.raises(ValueError, match=message):
+        capture._catalog_root([tool(i, d) for i, d in bad])
+
+
+def test_empty_catalog_root_is_the_rfc_9162_empty_tree():
+    import hashlib
+
+    assert capture._catalog_root([]) == "sha256:" + hashlib.sha256(b"").hexdigest()
+
+
+def test_slug_collisions_get_distinct_tool_ids_and_verify(tmp_path, monkeypatch):
+    """"foo" and "FOO" share a slug; the SDK refuses a repeated tool_id."""
+    pytest.importorskip("agent_manifest")
+    from agent_manifest import ToolEntry
+    from agent_manifest._merkle import build_catalog_tree
+
+    current = dict(_signable_snapshot(tmp_path, monkeypatch))
+    current["tools"] = sorted(set(current.get("tools", [])) | {"mcp:foo", "mcp:FOO", "mcp:f.o-o!"})
+    manifest = capture.build_manifest(current)
+    tools = manifest["artifacts"]["tool_manifest"]["tools"]
+    ids = [t["tool_id"] for t in tools]
+    assert len(ids) == len(set(ids))
+    assert "codex.mcp.foo" not in ids  # both colliding ids were disambiguated
+    root = build_catalog_tree([ToolEntry.model_validate(t) for t in tools])
+    assert manifest["artifacts"]["tool_manifest"]["catalog_hash"] == root

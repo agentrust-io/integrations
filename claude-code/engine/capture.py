@@ -34,7 +34,7 @@ import base64
 import hashlib
 import json
 import os
-import stat
+import re
 import sys
 import time
 from datetime import datetime, timedelta, timezone
@@ -82,12 +82,24 @@ def _catalog_root(tools):
     """agent-manifest spec 3.2.3 catalog_hash: the RFC 9162 Merkle root over the
     listed tools sorted by tool_id, each leaf H(0x00 || tool_id || 0x00 ||
     schema digest || description digest). A verifier recomputes it from the
-    list, so a root built any other way makes the manifest contradict itself."""
+    list, so a root built any other way makes the manifest contradict itself.
+
+    Refuses what the SDK's builder refuses, rather than hashing a catalog no
+    verifier would accept: a repeated or NUL-carrying tool_id, a digest that is
+    not sha256 hex, more than 1,000,000 tools."""
+    if len(tools) > 1000000:
+        raise ValueError("catalog_hash: more than 1,000,000 tools")
+    ids = [t["tool_id"] for t in tools]
+    if len(set(ids)) != len(ids) or any("\x00" in i for i in ids):
+        raise ValueError("catalog_hash: each tool_id must be unique and free of NUL")
+
     def h(data):
         return hashlib.sha256(data).digest()
 
     def digest(value):
-        return bytes.fromhex(value.split(":", 1)[1])
+        if not re.fullmatch(r"sha256:[0-9a-f]{64}", value):
+            raise ValueError("catalog_hash: %r is not a sha256 digest" % (value,))
+        return bytes.fromhex(value[len("sha256:"):])
 
     leaves = [
         h(b"\x00" + t["tool_id"].encode("utf-8") + b"\x00"
@@ -542,19 +554,34 @@ def _load_or_create_manifest_keypair():
     from agent_manifest import Ed25519KeyPair, generate_ed25519
     from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
+    # A key file that exists but cannot be read is never replaced: a new key
+    # would be a new identity, and anyone who pinned the old one would see
+    # verification fail with nothing to say why.
     existing = _load(SIGNING_KEY)
-    if existing and isinstance(existing.get("private_b64url"), str):
+    if SIGNING_KEY.exists() and not (
+        existing and isinstance(existing.get("private_b64url"), str)
+    ):
+        raise SystemExit(
+            "The AgenTrust signing key is unreadable. Restore it from backup or move it "
+            "aside before generating a new identity: %s" % SIGNING_KEY
+        )
+    if existing:
         try:
             pad = "=" * (-len(existing["private_b64url"]) % 4)
             raw = base64.urlsafe_b64decode(existing["private_b64url"] + pad)
             priv = Ed25519PrivateKey.from_private_bytes(raw)
             return Ed25519KeyPair(priv, priv.public_key())
         except (ValueError, TypeError):
-            pass  # corrupt key file: fall through and mint a fresh one
+            raise SystemExit(
+                "The AgenTrust signing key is invalid. Restore it or move it aside: %s"
+                % SIGNING_KEY
+            )
 
     kp = generate_ed25519()
-    SIGNING_KEY.parent.mkdir(parents=True, exist_ok=True)
-    SIGNING_KEY.write_text(
+    # Written to a temporary file at 0600 and moved into place, so the private
+    # key is never readable by others, even briefly, whatever the umask.
+    core.atomic_write(
+        SIGNING_KEY,
         json.dumps(
             {
                 "algorithm": "Ed25519",
@@ -565,12 +592,8 @@ def _load_or_create_manifest_keypair():
             },
             indent=2,
         ),
-        encoding="utf-8",
+        mode=0o600,
     )
-    try:  # best-effort owner-only permissions (no-op on filesystems without it)
-        os.chmod(SIGNING_KEY, stat.S_IRUSR | stat.S_IWUSR)
-    except OSError:
-        pass
     return kp
 
 

@@ -5,6 +5,16 @@ All notable changes to the AgenTrust for Claude Code plugin.
 ## Unreleased
 
 ### Fixed
+- **An unreadable signing key is no longer replaced with a new one.** A corrupt
+  or invalid `signing_key.json` minted a fresh identity and overwrote the file,
+  so anyone who pinned the old key saw verification fail with nothing to say
+  why. It now stops and names the file, as the Codex plugin does. A new key is
+  written through a temporary file at 0600, so it is never readable by others,
+  even briefly; before, it was written at the umask and narrowed afterwards.
+- **A catalog no verifier would accept is refused instead of hashed.** The
+  catalog root now refuses what the SDK's builder refuses: a repeated or
+  NUL-carrying `tool_id`, a digest that is not sha256 hex, more than 1,000,000
+  tools.
 - **The manifest's `tool_manifest.catalog_hash` no longer contradicts its own
   tool list.** It was a SHA-256 over the tool names, while agent-manifest spec
   3.2.3 defines it as the RFC 9162 Merkle root over the listed tools, which a

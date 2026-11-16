@@ -159,8 +159,9 @@ Verify the Agent Manifest on any machine against a key you have pinned. The
 key, and the issuer it signs for, are your own trust decision: take them once
 from a channel you trust, such as the producing machine or its owner, and keep
 them. Copied from `verification_key.json` alone they prove only that whoever
-wrote these files signed them. The issuer, `spiffe://claude-code.local/self-signed`,
-names a key that signs its own records, not an organization that vouched for it.
+wrote these files signed them. The issuer is `spiffe://claude-code.local/self-signed`
+on every install, so the key is what tells one producer from another; it names a
+key that signs its own records, not an organization that vouched for it.
 
 ```python
 import json
@@ -170,7 +171,8 @@ PINNED_KEY_ID = "<key_id>"              # your pins, not read from the files
 PINNED_PUBLIC_KEY = "<public_key_b64url>"
 PINNED_ISSUERS = ["spiffe://claude-code.local/self-signed"]
 
-manifest = json.load(open("manifest.json"))
+with open("manifest.json", encoding="utf-8") as f:
+    manifest = json.load(f)
 ctx = VerificationContext(
     trusted_keys={PINNED_KEY_ID: PINNED_PUBLIC_KEY},
     trusted_key_issuers={PINNED_KEY_ID: PINNED_ISSUERS},

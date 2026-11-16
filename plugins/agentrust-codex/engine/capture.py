@@ -77,12 +77,24 @@ def _catalog_root(tools):
     """agent-manifest spec 3.2.3 catalog_hash: the RFC 9162 Merkle root over the
     listed tools sorted by tool_id, each leaf H(0x00 || tool_id || 0x00 ||
     schema digest || description digest). A verifier recomputes it from the
-    list, so a root built any other way makes the manifest contradict itself."""
+    list, so a root built any other way makes the manifest contradict itself.
+
+    Refuses what the SDK's builder refuses, rather than hashing a catalog no
+    verifier would accept: a repeated or NUL-carrying tool_id, a digest that is
+    not sha256 hex, more than 1,000,000 tools."""
+    if len(tools) > 1000000:
+        raise ValueError("catalog_hash: more than 1,000,000 tools")
+    ids = [t["tool_id"] for t in tools]
+    if len(set(ids)) != len(ids) or any("\x00" in i for i in ids):
+        raise ValueError("catalog_hash: each tool_id must be unique and free of NUL")
+
     def h(data):
         return hashlib.sha256(data).digest()
 
     def digest(value):
-        return bytes.fromhex(value.split(":", 1)[1])
+        if not re.fullmatch(r"sha256:[0-9a-f]{64}", value):
+            raise ValueError("catalog_hash: %r is not a sha256 digest" % (value,))
+        return bytes.fromhex(value[len("sha256:"):])
 
     leaves = [
         h(b"\x00" + t["tool_id"].encode("utf-8") + b"\x00"
@@ -699,6 +711,16 @@ def build_manifest(current: Mapping[str, Any]) -> Dict[str, Any]:
                 "egress_destinations": [],
             }
         )
+    # _slug folds case and punctuation, so two names can share an id ("foo" and
+    # "FOO"). The spec needs each tool_id once, so only colliding ids gain a short
+    # hash of their full name; every other id stays as it was.
+    counts: Dict[str, int] = {}
+    for tool in tools:
+        counts[tool["tool_id"]] = counts.get(tool["tool_id"], 0) + 1
+    for tool in tools:
+        if counts[tool["tool_id"]] > 1:
+            suffix = hashlib.sha256(tool["tool_name"].encode("utf-8")).hexdigest()[:12]
+            tool["tool_id"] = "%s.%s" % (tool["tool_id"], suffix)
 
     scope = [
         "codex:%s=%s" % (key, value)
