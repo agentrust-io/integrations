@@ -3,7 +3,7 @@
 agentrust-trace-tests==0.5.1 \
     --hash=sha256:5c13421d41357a5b2e096eced457f5dee65d4921b253b25dac53684b3d31eeeb \
     --hash=sha256:79e9d98a7106ae1c47b8378c8808be26f1fa34a62779e9f7b0e954cf40a2a19c
-    # via -r sdk-google-adk.in
+    # via -r requirements/sdk-google-adk.in
 aiosqlite==0.22.1 \
     --hash=sha256:043e0bd78d32888c0a9ca90fc788b38796843360c855a7262a532813133a0650 \
     --hash=sha256:21c002eb13823fad740196c5a2e9d8e62f6243bd9e7e4a1f87fb5e44ecb4fceb
@@ -33,9 +33,9 @@ authlib==1.9.1 \
     --hash=sha256:5c7d9848f47cac340f060f76ae0bc09b59f5c8e89cc1bb032d4370a0c55b5974 \
     --hash=sha256:8b9be8b1e5174dcbf5520e984f1a22dc2edae5b6e40a61d4cedbf86b97e9e69b
     # via google-adk
-certifi==2026.10.19 \
-    --hash=sha256:035c1e85572b141bf1c3a3eff0e33a8eb74917522f2559075ff8d2fea780a1ae \
-    --hash=sha256:42d35340cc5b9ba78e818ddbff0c5b1c2b779de448a340fd1b989f5fa8670e1b
+certifi==2026.10.23 \
+    --hash=sha256:a9895e6e2758b371e0545e321a3a8fd1fcfd9829ada8824a936dfb16aaaf36cd \
+    --hash=sha256:e9b54de76e530bb6cf0ccd036787103acb58fd42ba930ea8bf948ddbaa2f61d1
     # via
     #   httpcore
     #   httpx
@@ -373,6 +373,7 @@ cryptography==50.0.1 \
     # via
     #   agentrust-trace-tests
     #   authlib
+    #   google-adk
     #   google-auth
     #   joserfc
 distro==1.9.0 \
@@ -383,19 +384,19 @@ fastapi==0.141.1 \
     --hash=sha256:bfb91aa2d334c61cb35ba9a116fc123b3d3df31640b801cf57a7a78ec3f603b3 \
     --hash=sha256:e8822fc40db1e1858054d7a949a888695bc9bdce70139178e33bd2871a453ca1
     # via google-adk
-google-adk==2.11.0 \
-    --hash=sha256:4774e1fc7bb37727e56142e7d41e9035949ebfc876a2b15d5505969b02798bcd \
-    --hash=sha256:59258cec8d79306192bf65e0d43fa64b764f831e3b74ed3b8e6fe9df16a1e2c8
-    # via -r sdk-google-adk.in
+google-adk==2.14.1 \
+    --hash=sha256:a92783e99babba5611163ce8fb4ced3ce6c5e630a34f15a3460bc577571a41a3 \
+    --hash=sha256:b0033571ca101f6bb8617f4791ada0f141f7ef32b0f21ff32116f1161b32ee3c
+    # via -r requirements/sdk-google-adk.in
 google-auth[pyopenssl,requests]==2.57.1 \
     --hash=sha256:ab439dee60a6856412bc058f13a68eb6a59c5b81526bb89cfdcf89ce9c0a48c9 \
     --hash=sha256:eb47b230fc6707eed4aee1c9cef55ec05bc1785eecba74ff8b572d531e921b1e
     # via
     #   google-adk
     #   google-genai
-google-genai==2.22.0 \
-    --hash=sha256:9fa3b5d9ddb635005d8ab2d6206fb2b3d7204b66965bbce7de13ecd1a866ebcd \
-    --hash=sha256:c514001c45470cc0a942440ae1b8215445d12bfb6c373aac94637127e1f74ec6
+google-genai==2.34.0 \
+    --hash=sha256:8e182cf3f73384167b96861cf0aef5102b5070f2db1ea11002879e913806ef37 \
+    --hash=sha256:a4cb02aebc4c357f863d2938132f0e3f7967fc5e00b8a4078673f68aad340665
     # via google-adk
 graphviz==0.21 \
     --hash=sha256:20743e7183be82aaaa8ad6c93f8893c923bd6658a04c32ee115edb3c8a835f78 \
@@ -838,7 +839,6 @@ typing-extensions==4.16.0 \
     --hash=sha256:481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8 \
     --hash=sha256:dc983d19a509c94dba722ee6abd33940f7c05a89e243c47e907eb4db6f1a43e5
     # via
-    #   anyio
     #   fastapi
     #   google-adk
     #   google-genai
