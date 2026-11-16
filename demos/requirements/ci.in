@@ -5,5 +5,5 @@
 #   uv pip compile requirements/ci.in --generate-hashes --universal \
 #     --python-version 3.11 -o requirements/ci.txt
 -r ../requirements.txt
-pytest>=8.0
+pytest>=9.2.0
 httpx>=0.27
