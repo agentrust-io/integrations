@@ -219,7 +219,7 @@ def rebuild(doc: dict[str, Any]) -> tuple[dict[str, Any], list[dict[str, Any]], 
         if not last:
             item = disclosure_for(previous=cursor, issuer_key_id=earlier_issuer, key=KEYS[earlier_issuer])
         else:
-            estimate = source["receipts_lost_estimate"] if "receipts_lost_estimate" in source else 3
+            estimate = source.get("receipts_lost_estimate", 3)
             signed_cause = "crash" if source.get("cause") == "shutdown" else source.get("cause", "crash")
             item = disclosure_for(
                 previous=previous if run == 1 else cursor,
@@ -228,7 +228,7 @@ def rebuild(doc: dict[str, Any]) -> tuple[dict[str, Any], list[dict[str, Any]], 
                 session_id=source.get("session_id", SESSION),
                 cause=signed_cause,
                 estimate=estimate,
-                type_name=source["type"] if "type" in source else None,
+                type_name=source.get("type"),
                 omit_estimate="receipts_lost_estimate" not in source,
             )
             if source.get("signature") == b64u(bytes(32)):
@@ -850,3 +850,107 @@ def test_reconcile_chain_judges_a_typeless_disclosure() -> None:
     )
     assert result.disclosures[0].failures == ("disclosure_type_unsupported",)
     assert result.status == RECEIPT_INVALID
+
+
+def test_unauthenticated_or_foreign_or_wrong_session_successor_cannot_seal_disclosure() -> None:
+    first = receipt(issuer_key_id=KEY_ID, key=KEY, credential_id="cred-0", previous=None, sequence=1)
+    gap = disclosure_for(
+        previous=element_digest(first),
+        issuer_key_id=KEY_ID,
+        key=KEY,
+        credential_id="cred-2",
+    )
+    trusted = trust(KEY_ID, FOREIGN_KEY_ID)
+
+    # 1. Tampered signature on successor
+    valid_succ = receipt(
+        issuer_key_id=KEY_ID,
+        key=KEY,
+        credential_id="cred-1",
+        previous=element_digest(gap),
+        sequence=3,
+    )
+    forged_succ = {**valid_succ, "signature": b64u(bytes(64))}
+    verdict_forged = verify_disclosure(
+        gap, [first, gap, forged_succ], session_id=SESSION, trusted_issuer_keys=trusted
+    )
+    assert verdict_forged.status == RECEIPT_INVALID
+    assert "disclosure_not_sealed_by_successor" in verdict_forged.failures
+    assert verdict_forged.derived_successor_present is False
+
+    # 2. Foreign-key-signed successor
+    foreign_succ = receipt(
+        issuer_key_id=FOREIGN_KEY_ID,
+        key=FOREIGN,
+        credential_id="cred-1",
+        previous=element_digest(gap),
+        sequence=3,
+    )
+    verdict_foreign = verify_disclosure(
+        gap, [first, gap, foreign_succ], session_id=SESSION, trusted_issuer_keys=trusted
+    )
+    assert verdict_foreign.status == RECEIPT_INVALID
+    assert "disclosure_not_sealed_by_successor" in verdict_foreign.failures
+
+    # 3. Cross-session successor
+    other_session_succ = receipt(
+        issuer_key_id=KEY_ID,
+        key=KEY,
+        credential_id="cred-1",
+        previous=element_digest(gap),
+        sequence=3,
+        session_id="other-session",
+    )
+    verdict_session = verify_disclosure(
+        gap, [first, gap, other_session_succ], session_id=SESSION, trusted_issuer_keys=trusted
+    )
+    assert verdict_session.status == RECEIPT_INVALID
+    assert "disclosure_not_sealed_by_successor" in verdict_session.failures
+
+
+def test_unlinked_or_foreign_hops_and_contradicting_credential_disclosures_are_rejected() -> None:
+    first = receipt(issuer_key_id=KEY_ID, key=KEY, credential_id="cred-0", previous=None, sequence=1)
+    unlinked_second = receipt(
+        issuer_key_id=KEY_ID,
+        key=KEY,
+        credential_id="cred-1",
+        previous="sha256:" + "00" * 32,
+        sequence=2,
+    )
+    trusted = trust(KEY_ID, FOREIGN_KEY_ID)
+    res_unlinked = reconcile_chain(
+        [dumps(first), dumps(unlinked_second)],
+        session_id=SESSION,
+        trusted_issuer_keys=trusted,
+        expected_credential_ids=["cred-0", "cred-1"],
+        completeness_required=True,
+    )
+    assert res_unlinked.status == RECEIPT_INVALID
+    assert res_unlinked.accepted_as_complete is False
+    assert res_unlinked.policy_accepted is False
+
+    # Disclosure claiming a credential_id that is also present as a hop receipt
+    gap_same_cred = disclosure_for(
+        previous=element_digest(first),
+        issuer_key_id=KEY_ID,
+        key=KEY,
+        credential_id="cred-0",
+    )
+    valid_succ = receipt(
+        issuer_key_id=KEY_ID,
+        key=KEY,
+        credential_id="cred-1",
+        previous=element_digest(gap_same_cred),
+        sequence=3,
+    )
+    res_contra = reconcile_chain(
+        [dumps(first), dumps(gap_same_cred), dumps(valid_succ)],
+        session_id=SESSION,
+        trusted_issuer_keys=trusted,
+        expected_credential_ids=["cred-0", "cred-1"],
+        accept_disclosed_gaps=True,
+    )
+    assert res_contra.status == RECEIPT_INVALID
+    assert "disclosure_contradicted" in res_contra.failures
+    assert res_contra.policy_accepted is False
+

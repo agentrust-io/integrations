@@ -48,18 +48,18 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
 __all__ = [
     "COMPLETE",
-    "CredentialCoverage",
     "DISCLOSURE_TYPE",
-    "DisclosureVerdict",
     "EFFECT_UNKNOWN",
     "GAP_DISCLOSURE_UNVERIFIED",
     "HIERARCHY_TYPE",
     "INVENTORY_NOT_SUPPLIED",
-    "MalformedInput",
     "RECEIPT_GAP_DISCLOSED",
     "RECEIPT_INVALID",
     "RECEIPT_MISSING_REQUIRED",
     "RECEIPT_PRESENT",
+    "CredentialCoverage",
+    "DisclosureVerdict",
+    "MalformedInput",
     "Reconciliation",
     "element_digest",
     "parse_untrusted_json",
@@ -313,7 +313,7 @@ def _judge_disclosure(
     predecessor = _element_by_digest(elements, disclosure.get("previous_receipt_hash"), disclosure_index)
     successor = _successor(elements, disclosure_index)
     ancestors = _authenticated_ancestors(elements, keys)
-    predecessor_issuer = _authenticated_issuer(predecessor, keys)
+    predecessor_issuer = _authenticated_issuer(predecessor, keys, session_id=session_id)
     derived_ancestors = ancestors.get(predecessor_issuer, ()) if predecessor_issuer else ()
     contradicting = _contradicting(
         elements,
@@ -321,6 +321,7 @@ def _judge_disclosure(
         successor,
         disclosure_index,
         digest,
+        disclosure.get("credential_id") if isinstance(disclosure.get("credential_id"), str) else None,
     )
 
     failures: list[str] = []
@@ -345,7 +346,17 @@ def _judge_disclosure(
         failures.append("disclosure_contradicted")
     if successor is None:
         warnings.append("disclosure_not_yet_sealed")
-    elif successor.get("previous_receipt_hash") != digest:
+    elif not _seal_holds(
+        elements,
+        disclosure_index,
+        digest,
+        successor,
+        session_id,
+        predecessor,
+        predecessor_issuer,
+        derived_ancestors,
+        keys,
+    ):
         failures.append("disclosure_not_sealed_by_successor")
 
     if failures:
@@ -374,7 +385,18 @@ def _judge_disclosure(
         receipts_lost_estimate=estimate if type(estimate) is int else None,
         bound_credential_id=bound if isinstance(bound, str) else None,
         derived_predecessor_present=predecessor is not None and predecessor_issuer is not None,
-        derived_successor_present=successor is not None,
+        derived_successor_present=successor is not None
+        and _seal_holds(
+            elements,
+            disclosure_index,
+            digest,
+            successor,
+            session_id,
+            predecessor,
+            predecessor_issuer,
+            derived_ancestors,
+            keys,
+        ),
         derived_ancestor_key_ids=tuple(derived_ancestors),
         derived_contradicting_digests=tuple(dict.fromkeys(contradicting)),
     )
@@ -389,29 +411,33 @@ def _cover_credentials(
 ) -> tuple[CredentialCoverage, ...]:
     if inventory is None:
         return ()
+    valid_chain_hops = _valid_chain_hop_digests(elements, session_id, keys)
+    all_hops = [element for element in elements if not _skipped_for_coverage(element)]
+    broken_chain_exists = any(element_digest(element) not in valid_chain_hops for element in all_hops)
     coverage: list[CredentialCoverage] = []
     for credential_id in inventory:
         hops = [
             element
-            for element in elements
-            if element.get("credential_id") == credential_id and not _skipped_for_coverage(element)
+            for element in all_hops
+            if element.get("credential_id") == credential_id
         ]
         verified = [
             element
             for element in hops
-            if element.get("session_id") == session_id
-            and _hop_signature_holds(element, keys)
+            if element_digest(element) in valid_chain_hops
         ]
-        forged = [
-            element
-            for element in hops
-            if isinstance(element.get("issuer_key_id"), str)
-            and element["issuer_key_id"] in keys
-            and not _signature_holds(element, keys[element["issuer_key_id"]])
-        ]
+        invalid_hop = any(element_digest(element) not in valid_chain_hops for element in hops)
         bound = [item for item in disclosures if item.bound_credential_id == credential_id]
-        if any(item.status == RECEIPT_INVALID for item in bound) or forged or len(verified) > 1:
-            # A second verified hop is not a fenced retry. Fence epochs are ignored.
+        if (
+            any(item.status == RECEIPT_INVALID for item in bound)
+            or invalid_hop
+            or len(verified) > 1
+            or len(bound) > 1
+            or (bool(verified) and bool(bound))
+            or (broken_chain_exists and bool(verified))
+        ):
+            # A second verified hop is not a fenced retry; a broken link or
+            # simultaneous hop+disclosure for the same credential is invalid.
             status = RECEIPT_INVALID
         elif verified:
             status = RECEIPT_PRESENT
@@ -501,8 +527,17 @@ def _authenticated_ancestors(
 def _authenticated_issuer(
     element: Mapping[str, Any] | None,
     keys: Mapping[str, Ed25519PublicKey],
+    *,
+    session_id: str | None = None,
 ) -> str | None:
     if element is None:
+        return None
+    if element.get("type") == HIERARCHY_TYPE:
+        return None
+    if session_id is not None and _gap_type(element) is None and element.get("session_id") != session_id:
+        return None
+    raw_sig = _canonical_b64url(element.get("signature"))
+    if raw_sig is None or len(raw_sig) != 64:
         return None
     issuer = element.get("issuer_key_id")
     if not isinstance(issuer, str) or not issuer:
@@ -514,6 +549,87 @@ def _authenticated_issuer(
     if not _signature_holds(element, keys[issuer]):
         return None
     return issuer
+
+
+def _seal_holds(
+    elements: Sequence[Mapping[str, Any]],
+    disclosure_index: int | None,
+    disclosure_digest: str,
+    successor: Mapping[str, Any],
+    session_id: str,
+    predecessor: Mapping[str, Any] | None,
+    predecessor_issuer: str | None,
+    derived_ancestors: Sequence[str],
+    keys: Mapping[str, Ed25519PublicKey],
+) -> bool:
+    if successor.get("previous_receipt_hash") != disclosure_digest:
+        return False
+    allowed_issuers = {predecessor_issuer, *derived_ancestors} if predecessor_issuer else set()
+    if disclosure_index is None:
+        return False
+    prev_digest = disclosure_digest
+    for candidate in elements[disclosure_index + 1 :]:
+        if candidate.get("type") == HIERARCHY_TYPE:
+            continue
+        if candidate.get("previous_receipt_hash") != prev_digest:
+            return False
+        if candidate.get("session_id") != session_id:
+            return False
+        cand_issuer = _authenticated_issuer(candidate, keys, session_id=session_id)
+        if cand_issuer is None:
+            return False
+        if predecessor_issuer in keys and cand_issuer not in allowed_issuers:
+            return False
+        if _gap_type(candidate) is not None or _is_disclosure_candidate(candidate):
+            prev_digest = element_digest(candidate)
+            continue
+        # Reached the terminal non-disclosure hop receipt that seals the splice.
+        if cand_issuer in keys and not _signature_holds(candidate, keys[cand_issuer]):
+            return False
+        pred_seq = _sequence(predecessor)
+        succ_seq = _sequence(candidate)
+        return not (pred_seq is not None and succ_seq is not None and succ_seq <= pred_seq)
+    return False
+
+
+def _valid_chain_hop_digests(
+    elements: Sequence[Mapping[str, Any]],
+    session_id: str,
+    keys: Mapping[str, Ed25519PublicKey],
+) -> set[str]:
+    ancestors = _authenticated_ancestors(elements, keys)
+    valid: set[str] = set()
+    prev_digest: str | None = None
+    last_hop_seq: int | None = None
+    chain_issuer: str | None = None
+    allowed_issuers: set[str] = set()
+    for element in elements:
+        if element.get("type") == HIERARCHY_TYPE:
+            continue
+        if element.get("previous_receipt_hash") != prev_digest:
+            return set()
+        if _gap_type(element) is not None or _is_disclosure_candidate(element):
+            prev_digest = element_digest(element)
+            continue
+        if element.get("session_id") != session_id:
+            return set()
+        if not _hop_signature_holds(element, keys):
+            return set()
+        issuer = element["issuer_key_id"]
+        if chain_issuer is None:
+            chain_issuer = issuer
+            allowed_issuers = {chain_issuer, *ancestors.get(chain_issuer, ())}
+        elif issuer not in allowed_issuers:
+            return set()
+        seq = _sequence(element)
+        if seq is not None and last_hop_seq is not None and seq <= last_hop_seq:
+            return set()
+        if seq is not None:
+            last_hop_seq = seq
+        digest = element_digest(element)
+        valid.add(digest)
+        prev_digest = digest
+    return valid
 
 
 def _element_by_digest(
@@ -570,6 +686,7 @@ def _contradicting(
     successor: Mapping[str, Any] | None,
     disclosure_index: int | None,
     disclosure_digest: str,
+    bound_credential_id: str | None = None,
 ) -> list[str]:
     if predecessor is None or disclosure_index is None:
         return []
@@ -577,6 +694,12 @@ def _contradicting(
     if predecessor_index is None:
         return []
     hits: list[str] = []
+    if bound_credential_id is not None:
+        for index, element in enumerate(elements):
+            if index == disclosure_index or element.get("type") == HIERARCHY_TYPE:
+                continue
+            if element.get("credential_id") == bound_credential_id:
+                hits.append(element_digest(element))
     right = disclosure_index
     if successor is not None:
         successor_index = _index_of(elements, successor)
@@ -604,9 +727,12 @@ def _contradicting(
                 continue
             sequence = _sequence(element)
             digest = element_digest(element)
-            if sequence is not None and predecessor_sequence < sequence < successor_sequence:
-                if digest != disclosure_digest:
-                    hits.append(digest)
+            if (
+                sequence is not None
+                and predecessor_sequence < sequence < successor_sequence
+                and digest != disclosure_digest
+            ):
+                hits.append(digest)
     return hits
 
 
@@ -709,9 +835,7 @@ def _descriptive_malformed(disclosure: Mapping[str, Any]) -> bool:
     estimate = disclosure.get("receipts_lost_estimate")
     if estimate is None:
         return False
-    if type(estimate) is not int or not -_SAFE_INT <= estimate <= _SAFE_INT:
-        return True
-    return False
+    return type(estimate) is not int or not -_SAFE_INT <= estimate <= _SAFE_INT
 
 
 def _chain_objects(
@@ -781,7 +905,7 @@ def _trust_store(trusted: Mapping[str, Mapping[str, Any]]) -> dict[str, Ed25519P
 def _public_key(jwk: Mapping[str, Any]) -> Ed25519PublicKey:
     if not isinstance(jwk, Mapping):
         raise MalformedInput("trusted issuer key is not a JWK object")
-    if any(field in jwk for field in ("d", "priv", "p", "q")):
+    if any(field in jwk for field in ("d", "priv", "p", "q", "dp", "dq", "qi", "oth", "k")):
         raise MalformedInput("private key material is not a trust anchor")
     if jwk.get("kty") != "OKP" or jwk.get("crv") != "Ed25519":
         raise MalformedInput("trusted issuer key is not Ed25519")
