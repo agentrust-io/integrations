@@ -539,7 +539,10 @@ def test_manifest_is_externally_verifiable_and_tamper_evident(tmp_path, monkeypa
 
     vk = json.loads((out / "verification_key.json").read_text(encoding="utf-8"))
     assert vk["key_id"] == manifest["signature"]["key_id"]
-    ctx = VerificationContext(trusted_keys={vk["key_id"]: vk["public_key_b64url"]})
+    ctx = VerificationContext(
+        trusted_keys={vk["key_id"]: vk["public_key_b64url"]},
+        trusted_key_issuers={vk["key_id"]: vk["issuers"]},
+    )
 
     # a third party with only the published public key verifies the manifest
     good = verify_manifest(manifest, ctx, RevocationStore())

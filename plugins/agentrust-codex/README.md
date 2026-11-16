@@ -109,7 +109,7 @@ exists only to make a local smoke-test command reproducible.
 - The instruction fingerprint covers visible `AGENTS.md` layers and the
   local memory summary, not Codex's internal system prompt.
 - A third party can verify the manifest signature with
-  `verification_key.json`. Verifying each artifact binding requires runtime
+  `verification_key.json`, passing its `issuers` as `trusted_key_issuers`. Verifying each artifact binding requires runtime
   hashes measured outside the signed manifest.
 - SessionStart exposes the model and permission mode but no complete built-in
   tool roster. The tool catalog covers configured MCP servers, installed

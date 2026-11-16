@@ -487,8 +487,11 @@ def sign_all(cur: dict, outdir: Path) -> tuple[dict, dict]:
         "algorithm": "Ed25519",
         "key_id": kp.key_id,
         "public_key_b64url": kp.public_b64url(),
-        "note": "load as {key_id: public_key_b64url} into the verifier's trusted_keys; "
-                "verifies both manifest.json and trace.json, which share this key",
+        # The issuer this key signs for. agent-manifest spec 5.3.3 needs it.
+        "issuers": [manifest["issuer"]],
+        "note": "load as {key_id: public_key_b64url} into the verifier's trusted_keys "
+                "and {key_id: issuers} into trusted_key_issuers; verifies both "
+                "manifest.json and trace.json, which share this key",
     }
     (outdir / "verification_key.json").write_text(
         json.dumps(verification_key, indent=2), encoding="utf-8"

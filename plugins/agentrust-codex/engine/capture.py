@@ -853,7 +853,10 @@ def sign_all(
         "algorithm": "Ed25519",
         "key_id": keypair.key_id,
         "public_key_b64url": keypair.public_b64url(),
-        "note": "Load this key into agent-manifest trusted_keys to verify the manifest signature.",
+        # The issuer this key signs for. agent-manifest spec 5.3.3 needs it.
+        "issuers": [manifest["issuer"]],
+        "note": "Load this key into agent-manifest trusted_keys and its issuers into "
+                "trusted_key_issuers to verify the manifest signature.",
     }
     _save(outdir / "verification_key.json", verification_key)
     return manifest, trace

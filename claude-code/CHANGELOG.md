@@ -5,6 +5,10 @@ All notable changes to the AgenTrust for Claude Code plugin.
 ## Unreleased
 
 ### Fixed
+- **`verification_key.json` now names the issuer its key signs for.** A verifier
+  needs that under agent-manifest spec 5.3.3, and agent-manifest 0.16 reports a
+  manifest checked without it as `UNVERIFIABLE`. The README snippet passes it as
+  `trusted_key_issuers`.
 - **The TRACE Trust Record is signed with the plugin's persisted key, not a
   throwaway one.** `sign_all` called `agentrust_trace.generate_key()` for each
   record, so the private half was discarded at once and the only copy of the

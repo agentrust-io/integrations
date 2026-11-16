@@ -361,7 +361,8 @@ def test_signed_outputs_verify_and_pass_trace_level_zero(tmp_path, monkeypatch):
         (out / "verification_key.json").read_text(encoding="utf-8")
     )
     context = VerificationContext(
-        trusted_keys={verification_key["key_id"]: verification_key["public_key_b64url"]}
+        trusted_keys={verification_key["key_id"]: verification_key["public_key_b64url"]},
+        trusted_key_issuers={verification_key["key_id"]: verification_key["issuers"]},
     )
     good = verify_manifest(manifest, context, RevocationStore())
     assert good.signature_verified is True

@@ -143,7 +143,8 @@ The manifest is signed with a **persistent** key kept at
 `~/.claude/agentrust/signing_key.json`. It is generated once, reused every run,
 and its private half never leaves your machine, so every record you produce
 carries the same signing identity. `verification_key.json` publishes only the
-public half (`{key_id, public_key_b64url}`).
+public half (`{key_id, public_key_b64url}`) and the issuer it signs for
+(`issuers`), which a verifier needs under agent-manifest spec 5.3.3.
 
 Confirm the TRACE record against the conformance suite:
 
@@ -161,7 +162,10 @@ from agent_manifest import VerificationContext, verify_manifest, RevocationStore
 
 manifest = json.load(open("manifest.json"))
 vk = json.load(open("verification_key.json"))
-ctx = VerificationContext(trusted_keys={vk["key_id"]: vk["public_key_b64url"]})
+ctx = VerificationContext(
+    trusted_keys={vk["key_id"]: vk["public_key_b64url"]},
+    trusted_key_issuers={vk["key_id"]: vk["issuers"]},
+)
 result = verify_manifest(manifest, ctx, RevocationStore())
 print(result.result, result.signature_verified)  # VALID True  (any tampering -> MISMATCH False)
 ```
