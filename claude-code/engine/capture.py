@@ -31,9 +31,10 @@ from __future__ import annotations
 
 import argparse
 import base64
+import hashlib
 import json
 import os
-import stat
+import re
 import sys
 import time
 from datetime import datetime, timedelta, timezone
@@ -75,6 +76,46 @@ SIGNING_KEY = STATE_DIR / "signing_key.json"
 # hashing (files only, never secrets)
 # --------------------------------------------------------------------------- #
 _sha_bytes = core.sha_bytes
+
+
+def _catalog_root(tools):
+    """agent-manifest spec 3.2.3 catalog_hash: the RFC 9162 Merkle root over the
+    listed tools sorted by tool_id, each leaf H(0x00 || tool_id || 0x00 ||
+    schema digest || description digest). A verifier recomputes it from the
+    list, so a root built any other way makes the manifest contradict itself.
+
+    Refuses what the SDK's builder refuses, rather than hashing a catalog no
+    verifier would accept: a repeated or NUL-carrying tool_id, a digest that is
+    not sha256 hex, more than 1,000,000 tools."""
+    if len(tools) > 1000000:
+        raise ValueError("catalog_hash: more than 1,000,000 tools")
+    ids = [t["tool_id"] for t in tools]
+    if len(set(ids)) != len(ids) or any("\x00" in i for i in ids):
+        raise ValueError("catalog_hash: each tool_id must be unique and free of NUL")
+
+    def h(data):
+        return hashlib.sha256(data).digest()
+
+    def digest(value):
+        if not re.fullmatch(r"sha256:[0-9a-f]{64}", value):
+            raise ValueError("catalog_hash: %r is not a sha256 digest" % (value,))
+        return bytes.fromhex(value[len("sha256:"):])
+
+    leaves = [
+        h(b"\x00" + t["tool_id"].encode("utf-8") + b"\x00"
+          + digest(t["schema_hash"]) + digest(t["description_hash"]))
+        for t in sorted(tools, key=lambda t: t["tool_id"])
+    ]
+
+    def root(nodes):
+        if len(nodes) == 1:
+            return nodes[0]
+        k = 1
+        while k * 2 < len(nodes):
+            k *= 2
+        return h(b"\x01" + root(nodes[:k]) + root(nodes[k:]))
+
+    return "sha256:" + (root(leaves) if leaves else h(b"")).hex()
 _sha_file = core.sha_file
 _uuid7 = core.uuid7
 _now_iso = core.now_iso
@@ -414,7 +455,7 @@ def build_manifest(cur: dict) -> dict:
                 "bound_at": now,
             },
             "tool_manifest": {
-                "catalog_hash": cur["hashes"]["tool_catalog"],
+                "catalog_hash": _catalog_root(tools),
                 "tools": tools,
                 "allow_dynamic_registration": True,
                 "rug_pull_policy": "deny-and-alert",
@@ -481,14 +522,18 @@ def sign_all(cur: dict, outdir: Path) -> tuple[dict, dict]:
     (outdir / "trace.json").write_text(json.dumps(trace, indent=2), encoding="utf-8")
     # Publish the public key so a third party can verify manifest.json and
     # trace.json without trusting this machine: load it into the verifier's
-    # trusted_keys as {key_id: public_key_b64url}. The private key never leaves
-    # ~/.claude.
+    # trusted_keys as {key_id: public_key_b64url}, and its issuers into
+    # trusted_key_issuers. The private key never leaves ~/.claude.
     verification_key = {
         "algorithm": "Ed25519",
         "key_id": kp.key_id,
         "public_key_b64url": kp.public_b64url(),
-        "note": "load as {key_id: public_key_b64url} into the verifier's trusted_keys; "
-                "verifies both manifest.json and trace.json, which share this key",
+        # The issuer this key signs for. agent-manifest spec 5.3.3 needs it.
+        "issuers": [manifest["issuer"]],
+        "note": "Verifies manifest.json and trace.json, which share this key. Pin the "
+                "key and its issuers through a channel you trust, then load them into "
+                "trusted_keys and trusted_key_issuers; copied from this file alone they "
+                "prove only that whoever wrote it signed both records.",
     }
     (outdir / "verification_key.json").write_text(
         json.dumps(verification_key, indent=2), encoding="utf-8"
@@ -509,19 +554,34 @@ def _load_or_create_manifest_keypair():
     from agent_manifest import Ed25519KeyPair, generate_ed25519
     from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
+    # A key file that exists but cannot be read is never replaced: a new key
+    # would be a new identity, and anyone who pinned the old one would see
+    # verification fail with nothing to say why.
     existing = _load(SIGNING_KEY)
-    if existing and isinstance(existing.get("private_b64url"), str):
+    if SIGNING_KEY.exists() and not (
+        existing and isinstance(existing.get("private_b64url"), str)
+    ):
+        raise SystemExit(
+            "The AgenTrust signing key is unreadable. Restore it from backup or move it "
+            "aside before generating a new identity: %s" % SIGNING_KEY
+        )
+    if existing:
         try:
             pad = "=" * (-len(existing["private_b64url"]) % 4)
             raw = base64.urlsafe_b64decode(existing["private_b64url"] + pad)
             priv = Ed25519PrivateKey.from_private_bytes(raw)
             return Ed25519KeyPair(priv, priv.public_key())
         except (ValueError, TypeError):
-            pass  # corrupt key file: fall through and mint a fresh one
+            raise SystemExit(
+                "The AgenTrust signing key is invalid. Restore it or move it aside: %s"
+                % SIGNING_KEY
+            )
 
     kp = generate_ed25519()
-    SIGNING_KEY.parent.mkdir(parents=True, exist_ok=True)
-    SIGNING_KEY.write_text(
+    # Written to a temporary file at 0600 and moved into place, so the private
+    # key is never readable by others, even briefly, whatever the umask.
+    core.atomic_write(
+        SIGNING_KEY,
         json.dumps(
             {
                 "algorithm": "Ed25519",
@@ -532,12 +592,8 @@ def _load_or_create_manifest_keypair():
             },
             indent=2,
         ),
-        encoding="utf-8",
+        mode=0o600,
     )
-    try:  # best-effort owner-only permissions (no-op on filesystems without it)
-        os.chmod(SIGNING_KEY, stat.S_IRUSR | stat.S_IWUSR)
-    except OSError:
-        pass
     return kp
 
 

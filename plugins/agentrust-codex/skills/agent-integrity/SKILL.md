@@ -77,7 +77,10 @@ to the changed category.
 For signed output, report these checks:
 
 - `manifest.json` carries an Ed25519 signature and
-  `verification_key.json` contains the public verification key. State that
+  `verification_key.json` contains the public verification key for both
+  records. A verifier pins that key, with the issuer
+  `spiffe://codex.local/self-signed` (the same on every install), through a
+  channel they trust. State that
   this verifies signature integrity. Artifact-binding verification needs
   separately measured runtime hashes.
 - `trace.json` is a TRACE Level 0 software-integrity record. Level 0 does not

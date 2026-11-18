@@ -71,6 +71,46 @@ _LIVE_KEYS = {
 
 
 _sha_bytes = core.sha_bytes
+
+
+def _catalog_root(tools):
+    """agent-manifest spec 3.2.3 catalog_hash: the RFC 9162 Merkle root over the
+    listed tools sorted by tool_id, each leaf H(0x00 || tool_id || 0x00 ||
+    schema digest || description digest). A verifier recomputes it from the
+    list, so a root built any other way makes the manifest contradict itself.
+
+    Refuses what the SDK's builder refuses, rather than hashing a catalog no
+    verifier would accept: a repeated or NUL-carrying tool_id, a digest that is
+    not sha256 hex, more than 1,000,000 tools."""
+    if len(tools) > 1000000:
+        raise ValueError("catalog_hash: more than 1,000,000 tools")
+    ids = [t["tool_id"] for t in tools]
+    if len(set(ids)) != len(ids) or any("\x00" in i for i in ids):
+        raise ValueError("catalog_hash: each tool_id must be unique and free of NUL")
+
+    def h(data):
+        return hashlib.sha256(data).digest()
+
+    def digest(value):
+        if not re.fullmatch(r"sha256:[0-9a-f]{64}", value):
+            raise ValueError("catalog_hash: %r is not a sha256 digest" % (value,))
+        return bytes.fromhex(value[len("sha256:"):])
+
+    leaves = [
+        h(b"\x00" + t["tool_id"].encode("utf-8") + b"\x00"
+          + digest(t["schema_hash"]) + digest(t["description_hash"]))
+        for t in sorted(tools, key=lambda t: t["tool_id"])
+    ]
+
+    def root(nodes):
+        if len(nodes) == 1:
+            return nodes[0]
+        k = 1
+        while k * 2 < len(nodes):
+            k *= 2
+        return h(b"\x01" + root(nodes[:k]) + root(nodes[k:]))
+
+    return "sha256:" + (root(leaves) if leaves else h(b"")).hex()
 _sha_file = core.sha_file
 _sha_mapping = core.sha_mapping
 _now_iso = core.now_iso
@@ -671,6 +711,16 @@ def build_manifest(current: Mapping[str, Any]) -> Dict[str, Any]:
                 "egress_destinations": [],
             }
         )
+    # _slug folds case and punctuation, so two names can share an id ("foo" and
+    # "FOO"). The spec needs each tool_id once, so only colliding ids gain a short
+    # hash of their full name; every other id stays as it was.
+    counts: Dict[str, int] = {}
+    for tool in tools:
+        counts[tool["tool_id"]] = counts.get(tool["tool_id"], 0) + 1
+    for tool in tools:
+        if counts[tool["tool_id"]] > 1:
+            suffix = hashlib.sha256(tool["tool_name"].encode("utf-8")).hexdigest()[:12]
+            tool["tool_id"] = "%s.%s" % (tool["tool_id"], suffix)
 
     scope = [
         "codex:%s=%s" % (key, value)
@@ -706,7 +756,7 @@ def build_manifest(current: Mapping[str, Any]) -> Dict[str, Any]:
                 "bound_at": now,
             },
             "tool_manifest": {
-                "catalog_hash": current["hashes"]["tool_catalog"],
+                "catalog_hash": _catalog_root(tools),
                 "tools": tools,
                 "allow_dynamic_registration": True,
                 "rug_pull_policy": "deny-and-alert",
@@ -830,7 +880,7 @@ def sign_all(
         )
     try:
         from agent_manifest import Ed25519Signer, Ed25519Verifier, Manifest
-        from agentrust_trace import generate_key, sign_record
+        from agentrust_trace import sign_record
     except ImportError as error:
         raise SystemExit(
             "Signing needs the released packages in requirements.txt "
@@ -844,7 +894,9 @@ def sign_all(
     Ed25519Verifier(keypair.public_bytes).verify(
         manifest, manifest["signature"]["signature_value"]
     )
-    trace = sign_record(build_trace(current), generate_key())
+    # The record shares the manifest's persisted key, published below, so a third
+    # party can verify it and the agent keeps one TRACE identity across sessions.
+    trace = sign_record(build_trace(current), keypair.private_key)
 
     outdir.mkdir(parents=True, exist_ok=True)
     _save(outdir / "manifest.json", manifest)
@@ -853,7 +905,12 @@ def sign_all(
         "algorithm": "Ed25519",
         "key_id": keypair.key_id,
         "public_key_b64url": keypair.public_b64url(),
-        "note": "Load this key into agent-manifest trusted_keys to verify the manifest signature.",
+        # The issuer this key signs for. agent-manifest spec 5.3.3 needs it.
+        "issuers": [manifest["issuer"]],
+        "note": "Verifies manifest.json and trace.json, which share this key. Pin the "
+                "key and its issuers through a channel you trust, then load them into "
+                "trusted_keys and trusted_key_issuers; copied from this file alone they "
+                "prove only that whoever wrote it signed both records.",
     }
     _save(outdir / "verification_key.json", verification_key)
     return manifest, trace
