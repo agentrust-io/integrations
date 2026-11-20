@@ -96,6 +96,7 @@ TRACE only works as a standard if it is genuinely neutral. Integrations are list
 | [WCM Key Release to TRACE](integrations/wcm-trace/) | agentrust-io | wcm, trace | community |
 | [WCM Triton Repository Staging](integrations/wcm-triton/) | agentrust-io | wcm | verified |
 | [WCM Serving Guard for vLLM](integrations/wcm-vllm/) | agentrust-io | wcm | verified |
+| [WIMSE CTA MCP Guard](integrations/wimse-cta-mcp-guard/) | Agentic Security IETF Corpus | trace | community |
 | [xChk registry](integrations/xchk-registry/) | xChk | trace | community |
 | [agentrust-codex](plugins/agentrust-codex/) | agentrust-io | agent-manifest, trace | community |
 | [scheduled-agents](scheduled-agents/) | agentrust-io | trace | community |

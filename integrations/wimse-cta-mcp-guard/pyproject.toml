@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wimse-cta-mcp-guard"
+version = "0.1.0"
+description = "WIMSE Context Taint Attestation MCP gate and verified observations as signed TRACE Level 0 Trust Records"
+requires-python = ">=3.11"
+license = "Apache-2.0"
+dependencies = [
+    "agentrust-trace>=0.11.0",
+    "agentrust-trace-adapters>=0.2.0",
+    "cryptography>=42.0.0",
+    "rfc8785>=0.1.2",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "agentrust-trace-tests>=0.6.2",
+    "packaging>=24",
+]
+cov = [
+    "pytest-cov",
+]
+
+[tool.setuptools]
+py-modules = ["cta_trace_guard", "cta_trace_verify"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

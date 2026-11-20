@@ -1,0 +1,41 @@
+name: WIMSE CTA MCP Guard
+vendor: Agentic Security IETF Corpus
+integrates_with:
+  - trace
+description: >-
+  Uses a WIMSE Context Taint Attestation (CTA) pre-execution MCP tool gate and
+  post-dispatch observation to emit a signed TRACE Level 0 Trust Record.
+maintainer:
+  github: drk-ram
+repository: https://github.com/agentrust-io/integrations
+homepage: https://datatracker.ietf.org/doc/draft-durga-wimse-ctx-isolation/
+license: Apache-2.0
+tier: community
+marketplace:
+  display_name: WIMSE CTA MCP Guard
+  category: Security & policy
+  mark: CTA
+  keywords: [wimse, cta, mcp, taint, provenance, trace]
+
+# The adapter is a record producer. Before dispatch it tracks session taint,
+# classifies the tool from a pinned declaration, and refuses a state-mutating
+# call in an UNTRUSTED_INGESTED session unless a policy-engine StepUpReceipt
+# bound to that exact call verifies. On allow it signs and verifies a detached
+# cta-trace-bridge-v1 envelope before the tool is entered. After dispatch a
+# caller-supplied observation must name the same call and establish it before
+# the adapter signs a Level 0 Trust Record that references the bridge.
+#
+# The record's model, runtime, data_class, and build_provenance describe the
+# governed run, not the CTA draft. examples/emit_record.py uses fixed TEST values
+# and labels them accordingly. Level 0 is software-only signing, with no hardware
+# attestation.
+trace_roles:
+  - record-producer
+trace_conformance_level: 0
+tested_against:
+  agentrust-trace: "0.11.0"
+  agentrust-trace-tests: "0.6.2"
+
+  # The schema accepts agentrust-io package keys only. The tests and example also
+  # run against agentrust-trace-adapters 0.2.0, cryptography, and rfc8785, which
+  # are declared in pyproject.toml.

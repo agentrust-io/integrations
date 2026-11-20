@@ -1,0 +1,18 @@
+# Compile with:
+#   uv pip compile requirements/wimse-cta-mcp-guard-fixed.in --generate-hashes --universal \
+#     --python-version 3.11 -o requirements/wimse-cta-mcp-guard-fixed.txt
+# The fixed job in .github/workflows/wimse-cta-mcp-guard-conformance.yml
+# installs this exact package set. The three pinned packages are the released
+# versions exercised by the adapter, tests, and example. The two agentrust-io
+# pins must equal tested_against in integrations/wimse-cta-mcp-guard/integration.yaml.
+# rfc8785, pytest, and packaging are the integration's direct runtime and test
+# dependencies, which the --no-deps editable install does not pull in.
+# The floating job remains unpinned on purpose for drift detection.
+agentrust-trace==0.11.0
+agentrust-trace-adapters==0.2.0
+agentrust-trace-tests==0.6.2
+cryptography>=42.0.0
+rfc8785
+pytest
+pytest-cov
+packaging>=24
