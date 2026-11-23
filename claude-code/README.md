@@ -137,13 +137,15 @@ files:
   ([trace-spec](https://github.com/agentrust-io/trace-spec)).
 - **`verification_key.json`**, the public key for the manifest.
 
-These are shareable proof a third party can verify without trusting your machine.
+A third party can verify both against a key they have pinned, without trusting
+your machine.
 
 The manifest is signed with a **persistent** key kept at
 `~/.claude/agentrust/signing_key.json`. It is generated once, reused every run,
 and its private half never leaves your machine, so every record you produce
 carries the same signing identity. `verification_key.json` publishes only the
-public half (`{key_id, public_key_b64url}`).
+public half (`{key_id, public_key_b64url}`) and the issuer it signs for
+(`issuers`), which a verifier needs under agent-manifest spec 5.3.3.
 
 Confirm the TRACE record against the conformance suite:
 
@@ -153,17 +155,34 @@ trace-tests verify --record trace.json --level 0
 python -m trace_tests.cli verify --record trace.json --level 0
 ```
 
-Verify the Agent Manifest on any machine, using only the published public key:
+Verify the Agent Manifest on any machine against a key you have pinned. The
+key, and the issuer it signs for, are your own trust decision: take them once
+from a channel you trust, such as the producing machine or its owner, and keep
+them. Copied from `verification_key.json` alone they prove only that whoever
+wrote these files signed them. The issuer is `spiffe://claude-code.local/self-signed`
+on every install, so the key is what tells one producer from another; it names a
+key that signs its own records, not an organization that vouched for it.
 
 ```python
 import json
 from agent_manifest import VerificationContext, verify_manifest, RevocationStore
 
-manifest = json.load(open("manifest.json"))
-vk = json.load(open("verification_key.json"))
-ctx = VerificationContext(trusted_keys={vk["key_id"]: vk["public_key_b64url"]})
+PINNED_KEY_ID = "<key_id>"              # your pins, not read from the files
+PINNED_PUBLIC_KEY = "<public_key_b64url>"
+PINNED_ISSUERS = ["spiffe://claude-code.local/self-signed"]
+
+with open("manifest.json", encoding="utf-8") as f:
+    manifest = json.load(f)
+ctx = VerificationContext(
+    trusted_keys={PINNED_KEY_ID: PINNED_PUBLIC_KEY},
+    trusted_key_issuers={PINNED_KEY_ID: PINNED_ISSUERS},
+)
 result = verify_manifest(manifest, ctx, RevocationStore())
-print(result.result, result.signature_verified)  # VALID True  (any tampering -> MISMATCH False)
+print(result.result.name, result.signature_verified)
+# INCOMPLETE True: the pinned key signed it for that issuer. INCOMPLETE because no
+# artifact hashes were checked; pass system_prompt_hash, policy_bundle_hash and
+# tool_catalog_hash to VerificationContext to check them too.
+# Changed after signing, or another key or issuer: MISMATCH False.
 ```
 
 ## Known limits (read before relying on it)

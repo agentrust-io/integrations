@@ -8,6 +8,7 @@ from __future__ import annotations
 import base64
 import importlib.util
 import json
+import os
 from pathlib import Path
 
 import pytest
@@ -539,7 +540,10 @@ def test_manifest_is_externally_verifiable_and_tamper_evident(tmp_path, monkeypa
 
     vk = json.loads((out / "verification_key.json").read_text(encoding="utf-8"))
     assert vk["key_id"] == manifest["signature"]["key_id"]
-    ctx = VerificationContext(trusted_keys={vk["key_id"]: vk["public_key_b64url"]})
+    ctx = VerificationContext(
+        trusted_keys={vk["key_id"]: vk["public_key_b64url"]},
+        trusted_key_issuers={vk["key_id"]: vk["issuers"]},
+    )
 
     # a third party with only the published public key verifies the manifest
     good = verify_manifest(manifest, ctx, RevocationStore())
@@ -754,3 +758,173 @@ class TestIntegrityIsSurfacedBeforeDrift:
 
     def test_section_is_omitted_when_integrity_was_not_checked(self):
         assert "BASELINE ITSELF INTACT" not in capture.render_report(self._snap(), None, False)
+
+
+@pytest.fixture
+def signed(tmp_path, monkeypatch):
+    pytest.importorskip("agent_manifest")
+    _point_signing_key(tmp_path, monkeypatch)
+    cur = capture.snapshot({"model_id": "claude-x", "builtin_tools": ["Bash", "Read"], "mcp_servers": ["github"]})
+    manifest, trace = capture.sign_all(cur, tmp_path / "records")
+    vk = json.loads((tmp_path / "records" / "verification_key.json").read_text(encoding="utf-8"))
+    return manifest, trace, vk
+
+
+# ---------------------------------------------------------------------------
+# The published manifest is consistent, and issuer authorization holds.
+# ---------------------------------------------------------------------------
+def _sdk_enforces_issuer_policy():
+    import importlib.metadata
+
+    major, minor = (int(p) for p in importlib.metadata.version("agent-manifest").split(".")[:2])
+    return (major, minor) >= (0, 16)
+
+
+@pytest.mark.parametrize("count", range(10))
+def test_catalog_root_matches_the_sdk(count):
+    """Spec 3.2.3's Merkle root, checked against the SDK's own construction."""
+    pytest.importorskip("agent_manifest")
+    from agent_manifest import ToolEntry
+    from agent_manifest._merkle import build_catalog_tree
+
+    tools = [
+        {
+            "tool_id": "t.%d" % ((i * 7) % 10),  # unsorted on purpose
+            "tool_name": "t%d" % i,
+            "endpoint_id": "spiffe://x.local/t",
+            "schema_hash": "sha256:" + ("%02x" % i) * 32,
+            "description_hash": "sha256:" + ("%02x" % (i + 100)) * 32,
+            "version": "1.0.0",
+            "egress_destinations": [],
+        }
+        for i in range(count)
+    ]
+    expected = build_catalog_tree([ToolEntry.model_validate(t) for t in tools])
+    assert capture._catalog_root(tools) == expected
+
+
+def _verify(manifest, key_id, public_key, issuers):
+    from agent_manifest import RevocationStore, VerificationContext, verify_manifest
+
+    return verify_manifest(
+        manifest,
+        VerificationContext(
+            trusted_keys={key_id: public_key},
+            trusted_key_issuers=None if issuers is None else {key_id: issuers},
+        ),
+        RevocationStore(),
+    )
+
+
+def test_published_manifest_does_not_contradict_itself(signed):
+    manifest, _trace, vk = signed
+    assert vk["issuers"] == [manifest["issuer"]]
+    result = _verify(manifest, vk["key_id"], vk["public_key_b64url"], vk["issuers"])
+    assert result.signature_verified is True
+    assert result.fields_verified.tool_manifest.name != "MISMATCH"
+    assert result.result.name != "MISMATCH"
+
+
+@pytest.mark.parametrize(
+    "issuers",
+    [
+        ["spiffe://elsewhere.example/issuer"],
+        [],
+    ],
+    ids=["another-issuer", "empty-list"],
+)
+def test_a_key_not_authorized_for_the_issuer_is_refused(signed, issuers):
+    manifest, _trace, vk = signed
+    result = _verify(manifest, vk["key_id"], vk["public_key_b64url"], issuers)
+    assert result.result.name == "MISMATCH"
+    assert result.signature_verified is False
+
+
+def test_any_listed_issuer_authorizes(signed):
+    manifest, _trace, vk = signed
+    issuers = ["spiffe://elsewhere.example/issuer", manifest["issuer"]]
+    result = _verify(manifest, vk["key_id"], vk["public_key_b64url"], issuers)
+    assert result.signature_verified is True
+
+
+def test_an_issuer_changed_after_signing_is_refused(signed):
+    manifest, _trace, vk = signed
+    tampered = json.loads(json.dumps(manifest))
+    tampered["issuer"] = "spiffe://elsewhere.example/issuer"
+    result = _verify(tampered, vk["key_id"], vk["public_key_b64url"], [tampered["issuer"]])
+    assert result.signature_verified is False
+    assert result.result.name != "VALID"
+
+
+def test_the_key_must_be_trusted_under_its_own_id(signed):
+    manifest, _trace, vk = signed
+    result = _verify(manifest, "0" * 64, vk["public_key_b64url"], vk["issuers"])
+    assert result.signature_verified is False
+
+
+def test_no_issuer_policy_is_unverifiable(signed):
+    if not _sdk_enforces_issuer_policy():
+        pytest.skip("agent-manifest < 0.16 does not require an issuer policy")
+    manifest, _trace, vk = signed
+    result = _verify(manifest, vk["key_id"], vk["public_key_b64url"], None)
+    assert result.result.name == "UNVERIFIABLE"
+    assert result.signature_verified is False
+
+
+@pytest.mark.parametrize(
+    "bad, message",
+    [
+        ([("a", "11"), ("a", "22")], "unique"),
+        ([("a\x00b", "11")], "NUL"),
+        ([("a", "sha512:" + "11" * 32)], "not a sha256 digest"),
+        ([("a", "sha256:" + "1" * 63)], "not a sha256 digest"),
+        ([("a", "sha256:" + "AB" * 32)], "not a sha256 digest"),
+    ],
+    ids=["duplicate-id", "nul-in-id", "other-algorithm", "short-digest", "uppercase-hex"],
+)
+def test_catalog_root_refuses_what_the_sdk_refuses(bad, message):
+    def tool(tool_id, digest):
+        value = digest if ":" in digest else "sha256:" + digest * 32
+        return {"tool_id": tool_id, "schema_hash": value, "description_hash": "sha256:" + "33" * 32}
+
+    with pytest.raises(ValueError, match=message):
+        capture._catalog_root([tool(i, d) for i, d in bad])
+
+
+def test_empty_catalog_root_is_the_rfc_9162_empty_tree():
+    import hashlib
+
+    assert capture._catalog_root([]) == "sha256:" + hashlib.sha256(b"").hexdigest()
+
+
+@pytest.mark.parametrize(
+    "content",
+    ["{broken", "[]", '{"private_b64url": 7}', '{"private_b64url": "!!"}'],
+    ids=["truncated", "not-object", "wrong-type", "not-a-key"],
+)
+def test_an_unreadable_signing_key_is_never_replaced(tmp_path, monkeypatch, content):
+    """A new key is a new identity; anyone who pinned the old one would see
+    verification fail with nothing to say why."""
+    pytest.importorskip("agent_manifest")
+    _point_signing_key(tmp_path, monkeypatch)
+    capture.SIGNING_KEY.parent.mkdir(parents=True)
+    capture.SIGNING_KEY.write_text(content, encoding="utf-8")
+    with pytest.raises(SystemExit, match="signing key is (unreadable|invalid)"):
+        capture._load_or_create_manifest_keypair()
+    assert capture.SIGNING_KEY.read_text(encoding="utf-8") == content
+
+
+def test_new_signing_key_is_never_written_wider_than_owner_only(tmp_path, monkeypatch):
+    """The final mode alone cannot show it: writing then chmod-ing also ends at
+    0600, but leaves the key readable in between. The key must go through the
+    temporary-file write that sets 0600 before any byte lands."""
+    pytest.importorskip("agent_manifest")
+    _point_signing_key(tmp_path, monkeypatch)
+    writes = []
+    real = capture.core.atomic_write
+    monkeypatch.setattr(capture.core, "atomic_write", lambda path, content, mode=None: (writes.append((path, mode)), real(path, content, mode=mode)))
+    monkeypatch.setattr(type(capture.SIGNING_KEY), "write_text", lambda *a, **k: pytest.fail("plain write of the key"))
+    capture._load_or_create_manifest_keypair()
+    assert writes == [(capture.SIGNING_KEY, 0o600)]
+    if os.name == "posix":
+        assert capture.SIGNING_KEY.stat().st_mode & 0o777 == 0o600

@@ -21,3 +21,4 @@ trace_roles:
 tested_against:
   agent-manifest: 0.12.0
   agentrust-trace: 0.10.0
+  agentrust-trace-tests: 0.4.1
