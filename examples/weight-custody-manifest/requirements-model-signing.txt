@@ -5,3 +5,7 @@ weight-custody-manifest[model-signing]>=0.33.1
 # sigstore 4.5.1 no longer brings it in transitively. This range resolves
 # alongside WCM's cryptography 50 requirement.
 pyOpenSSL>=26.4.0,<27
+
+# model-signing also imports certifi without declaring it; sigstore 4.6.0
+# dropped the "requests" dep that used to bring it in transitively.
+certifi
