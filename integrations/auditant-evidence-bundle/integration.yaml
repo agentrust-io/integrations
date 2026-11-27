@@ -1,0 +1,28 @@
+name: Auditant evidence bundle
+vendor: Auditant
+integrates_with:
+  - trace
+description: >-
+  Re-verifies an Auditant evidence bundle's hash chain and signed checkpoint offline, then emits a software-only TRACE log-import Trust Record bound to the bundle bytes.
+maintainer:
+  github: 4ugusta
+repository: https://github.com/agentrust-io/integrations
+homepage: https://auditant.co
+license: Apache-2.0
+tier: community
+marketplace:
+  display_name: Auditant
+  category: Evidence & receipts
+  mark: AU
+  keywords:
+    - audit-trail
+    - hash-chain
+    - checkpoint
+    - log-import
+    - evidence
+trace_roles:
+  - record-producer
+trace_conformance_level: 0
+tested_against:
+  agentrust-trace: "0.11.0"
+  agentrust-trace-tests: "0.6.2"

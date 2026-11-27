@@ -1,6 +1,6 @@
 {
   "catalog_version": 1,
-  "count": 51,
+  "count": 52,
   "integrations": [
     {
       "name": "Claude Code",
@@ -271,6 +271,30 @@
         "liability",
         "pre-deployment-review",
         "case-law"
+      ]
+    },
+    {
+      "name": "Auditant",
+      "package_name": "Auditant evidence bundle",
+      "vendor": "Auditant",
+      "description": "Re-verifies an Auditant evidence bundle's hash chain and signed checkpoint offline, then emits a software-only TRACE log-import Trust Record bound to the bundle bytes.",
+      "path": "integrations/auditant-evidence-bundle",
+      "url": "https://github.com/agentrust-io/integrations/tree/main/integrations/auditant-evidence-bundle",
+      "homepage": "https://auditant.co",
+      "repository": "https://github.com/agentrust-io/integrations",
+      "tier": "community",
+      "stack": [
+        "TRACE"
+      ],
+      "category": "Evidence & receipts",
+      "mark": "AU",
+      "featured": null,
+      "keywords": [
+        "audit-trail",
+        "hash-chain",
+        "checkpoint",
+        "log-import",
+        "evidence"
       ]
     },
     {

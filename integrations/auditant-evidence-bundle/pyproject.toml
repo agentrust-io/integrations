@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "auditant-agentrust-integration"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+  "agentrust-trace==0.11.0",
+  "cryptography>=42",
+  "rfc8785>=0.1.4",
+]
+
+[project.optional-dependencies]
+test = [
+  "pytest==9.1.1",
+  "agentrust-trace-tests==0.6.2",
+]
+
+[project.scripts]
+auditant-trace = "auditant_trace:main"
+
+[tool.setuptools]
+py-modules = ["auditant_trace"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

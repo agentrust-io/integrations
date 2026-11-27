@@ -55,6 +55,7 @@ TRACE only works as a standard if it is genuinely neutral. Integrations are list
 | [AAIF Authority Comparison Runner](integrations/alakris-authority-comparison/) | Alakris Research | trace | community |
 | [Agent Replay](integrations/altrudev-agent-replay/) | Altru.dev | trace | verified |
 | [Frequency Agent Execution Assurance](integrations/altrudev-frequency-agent-execution-assurance/) | Altru.dev | trace | community |
+| [Auditant evidence bundle](integrations/auditant-evidence-bundle/) | Auditant | trace | community |
 | [Bernstein MCP verifier](integrations/bernstein-mcp/) | Bernstein | trace | verified |
 | [CHAP](integrations/chap/) | agentrust-io | trace | verified |
 | [AI Agent Incident Register](integrations/companyscope-incident-register/) | CompanyScope | agent-manifest | verified |
