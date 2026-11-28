@@ -39,6 +39,7 @@ jobs:
           python -m pip install --no-cache-dir \
             "agentrust-trace==0.11.0" \
             "agentrust-trace-tests==0.6.2" \
+            "agentrust-trace-adapters==0.2.0" \
             "pytest==9.1.1"
 
       - name: Install only the thin integration locally
@@ -47,10 +48,10 @@ jobs:
       - name: Integration tests
         run: python -m pytest integrations/auditant-evidence-bundle/tests -q
 
-      - name: Emit a TRACE record from a demo bundle
+      - name: Emit a TRACE record from the Auditant-made fixture
         run: |
           python integrations/auditant-evidence-bundle/examples/emit_record.py \
-            --out auditant.trace.json --bundle demo-bundle.json
+            --out auditant.trace.json
 
       - name: Determine TRACE conformance level
         run: |
@@ -71,15 +72,20 @@ jobs:
           assert report["levels"][2]["passed"] is False
           PY
 
-      - name: Transcript hash is the bundle bytes
+      - name: Transcript hash is the tool-call events, recomputed here
         run: |
           python - <<'PY'
           import hashlib, json
           from pathlib import Path
 
+          import rfc8785
+
           record = json.loads(Path("auditant.trace.json").read_text())
-          digest = "sha256:" + hashlib.sha256(Path("demo-bundle.json").read_bytes()).hexdigest()
-          assert record["tool_transcript"]["hash"] == digest
+          bundle = json.loads(Path("integrations/auditant-evidence-bundle/fixtures/auditant-full.json").read_text())
+          calls = [e for e in bundle["events"] if e["actionType"] == "tool_call"]
+          assert record["tool_transcript"]["hash"] == "sha256:" + hashlib.sha256(rfc8785.dumps(calls)).hexdigest()
+          assert record["tool_transcript"]["call_count"] == len(calls)
+          assert record["origin"]["source_event_id"] == bundle["events"][-1]["eventId"]
           PY
 
       - name: Enforce declared TRACE Level 0
@@ -89,6 +95,6 @@ jobs:
         with:
           name: auditant-conformance-${{ matrix.os }}-py${{ matrix.python }}
           path: |
-            demo-bundle.json
+            integrations/auditant-evidence-bundle/fixtures/auditant-full.json
             auditant.trace.json
             auditant-trace-report.json

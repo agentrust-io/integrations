@@ -1,0 +1,248 @@
+{
+  "bundleVersion": "1.0.0",
+  "logId": "demo_org/prod",
+  "from": "2026-11-27T00:00:00.000Z",
+  "to": "2026-11-27T23:59:59.999Z",
+  "exportedAt": "2026-11-27T10:05:00.000Z",
+  "publicKeys": [
+    {
+      "keyId": "auditant-fbd28f98423e",
+      "pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE82vl8qkypFk1t7PcswTy3PDikZgM\n8RRp1hFv0vy8ScFax+0lExksfh4tx1TmIavOZG/XznjmU6CXI7WqIk5ZbA==\n-----END PUBLIC KEY-----\n"
+    }
+  ],
+  "events": [
+    {
+      "schemaVersion": "1.0.0",
+      "eventId": "evt_000001",
+      "ts": "2026-11-27T10:00:01.000Z",
+      "logId": "demo_org/prod",
+      "actor": {
+        "kind": "agent",
+        "id": "refund-agent",
+        "version": "0.3.1",
+        "mode": "autonomous"
+      },
+      "sessionId": "sess_fixture",
+      "actionType": "lifecycle",
+      "action": "session_start",
+      "surface": {
+        "plane": "action",
+        "adapter": "sdk",
+        "modality": "text"
+      },
+      "outcome": "ok",
+      "seq": 0,
+      "prevHash": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "eventHash": "sha256:61a2e4780e81043d3b4b2bd9e8cf1a266c1756242c3788da5f19d240b2250646"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "eventId": "evt_000002",
+      "ts": "2026-11-27T10:00:02.000Z",
+      "logId": "demo_org/prod",
+      "actor": {
+        "kind": "agent",
+        "id": "refund-agent",
+        "version": "0.3.1",
+        "mode": "autonomous"
+      },
+      "sessionId": "sess_fixture",
+      "actionType": "model_call",
+      "action": "demo-model",
+      "surface": {
+        "plane": "model",
+        "adapter": "gateway",
+        "modality": "text"
+      },
+      "outcome": "ok",
+      "inputHash": "sha256:cf07194ee232eb531e15f690000d19846dea69cf05504782658afcfacb9228a2",
+      "outputHash": "sha256:21606b5837ee49171e56cff2afe21083fb4dfe5c15c79b54695c2dc335181c89",
+      "cost": {
+        "currency": "USD",
+        "total": 0.0042,
+        "model": "demo-model",
+        "provider": "demo-provider"
+      },
+      "seq": 1,
+      "prevHash": "sha256:61a2e4780e81043d3b4b2bd9e8cf1a266c1756242c3788da5f19d240b2250646",
+      "eventHash": "sha256:99dd638341abe5439d882b1719e93a82a51ddab80f28179a40389ce281944e5f"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "eventId": "evt_000003",
+      "ts": "2026-11-27T10:00:03.000Z",
+      "logId": "demo_org/prod",
+      "actor": {
+        "kind": "agent",
+        "id": "refund-agent",
+        "version": "0.3.1",
+        "mode": "autonomous"
+      },
+      "sessionId": "sess_fixture",
+      "actionType": "tool_call",
+      "action": "lookup_order",
+      "surface": {
+        "plane": "action",
+        "adapter": "sdk",
+        "modality": "text"
+      },
+      "outcome": "ok",
+      "inputHash": "sha256:ece993e999d79e7f2345161a5a98ff209e1eea031bcfc566602a9546443aeee1",
+      "seq": 2,
+      "prevHash": "sha256:99dd638341abe5439d882b1719e93a82a51ddab80f28179a40389ce281944e5f",
+      "eventHash": "sha256:af8b114633bf70c1943c2faea5433763050acca03583a839fb5ea919939356f7"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "eventId": "evt_000004",
+      "ts": "2026-11-27T10:00:04.000Z",
+      "logId": "demo_org/prod",
+      "actor": {
+        "kind": "agent",
+        "id": "refund-agent",
+        "version": "0.3.1",
+        "mode": "autonomous"
+      },
+      "sessionId": "sess_fixture",
+      "actionType": "policy_decision",
+      "action": "issue_refund",
+      "surface": {
+        "plane": "action",
+        "adapter": "sdk",
+        "modality": "text"
+      },
+      "outcome": "ok",
+      "policy": {
+        "decision": "allow",
+        "policyId": "refund-limit",
+        "policyVersion": "1",
+        "engine": "auditant-cedar/1",
+        "reasons": [
+          "amount 40 is under the limit 100"
+        ]
+      },
+      "seq": 3,
+      "prevHash": "sha256:af8b114633bf70c1943c2faea5433763050acca03583a839fb5ea919939356f7",
+      "eventHash": "sha256:ad9cccd9b1980fe99dc6f2fdfedf4db33521864fef7699745e399b56a4a121f3"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "eventId": "evt_000005",
+      "ts": "2026-11-27T10:00:05.000Z",
+      "logId": "demo_org/prod",
+      "actor": {
+        "kind": "agent",
+        "id": "refund-agent",
+        "version": "0.3.1",
+        "mode": "autonomous"
+      },
+      "sessionId": "sess_fixture",
+      "actionType": "tool_call",
+      "action": "issue_refund",
+      "surface": {
+        "plane": "action",
+        "adapter": "sdk",
+        "modality": "text"
+      },
+      "outcome": "ok",
+      "inputHash": "sha256:12e3e612f21a311079bbb13dd00eee0268a9c12379c3025b96e3755a2b2bc484",
+      "seq": 4,
+      "prevHash": "sha256:ad9cccd9b1980fe99dc6f2fdfedf4db33521864fef7699745e399b56a4a121f3",
+      "eventHash": "sha256:e72be112ef933b698f23aadd9b1bb6e4f71b29252d81fa4b6a75039aa56a47b8"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "eventId": "evt_000006",
+      "ts": "2026-11-27T10:00:06.000Z",
+      "logId": "demo_org/prod",
+      "actor": {
+        "kind": "agent",
+        "id": "refund-agent",
+        "version": "0.3.1",
+        "mode": "autonomous"
+      },
+      "sessionId": "sess_fixture",
+      "actionType": "model_call",
+      "action": "other-model",
+      "surface": {
+        "plane": "model",
+        "adapter": "gateway",
+        "modality": "text"
+      },
+      "outcome": "ok",
+      "inputHash": "sha256:259a648c7737779497c41b77a45b5f7449eaa5d7f36a96cb92e5341678c54f4c",
+      "outputHash": "sha256:86a7e131e4b36059db897ed1422cb404787508b538229d1d8fb220d5ec71fbfc",
+      "cost": {
+        "currency": "USD",
+        "total": 0.0031,
+        "model": "other-model",
+        "provider": "demo-provider"
+      },
+      "seq": 5,
+      "prevHash": "sha256:e72be112ef933b698f23aadd9b1bb6e4f71b29252d81fa4b6a75039aa56a47b8",
+      "eventHash": "sha256:a2ae4c1c9955801777a98e6501ab862439ee76a6cfb69dab0007e91da2c14291"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "eventId": "evt_000007",
+      "ts": "2026-11-27T10:00:07.000Z",
+      "logId": "demo_org/prod",
+      "actor": {
+        "kind": "agent",
+        "id": "refund-agent",
+        "version": "0.3.1",
+        "mode": "autonomous"
+      },
+      "sessionId": "sess_fixture",
+      "actionType": "tool_call",
+      "action": "send_receipt",
+      "surface": {
+        "plane": "action",
+        "adapter": "sdk",
+        "modality": "text"
+      },
+      "outcome": "ok",
+      "inputHash": "sha256:03fd3de7634a49868d83fff628b0ade7fe99f344d5ce74d94471f281c6ffe6d9",
+      "seq": 6,
+      "prevHash": "sha256:a2ae4c1c9955801777a98e6501ab862439ee76a6cfb69dab0007e91da2c14291",
+      "eventHash": "sha256:16a1a13fd6d9ca583eb60fd7964f8a069a57b3c15131d68237cbf923774e8a6a"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "eventId": "evt_000008",
+      "ts": "2026-11-27T10:00:08.000Z",
+      "logId": "demo_org/prod",
+      "actor": {
+        "kind": "agent",
+        "id": "refund-agent",
+        "version": "0.3.1",
+        "mode": "autonomous"
+      },
+      "sessionId": "sess_fixture",
+      "actionType": "lifecycle",
+      "action": "session_end",
+      "surface": {
+        "plane": "action",
+        "adapter": "sdk",
+        "modality": "text"
+      },
+      "outcome": "ok",
+      "seq": 7,
+      "prevHash": "sha256:16a1a13fd6d9ca583eb60fd7964f8a069a57b3c15131d68237cbf923774e8a6a",
+      "eventHash": "sha256:411938a52b86dd8fec5f0b16d0c7f5730f53cd80437c26e4480622370e93dbe9"
+    }
+  ],
+  "checkpoints": [
+    {
+      "checkpoint": {
+        "origin": "auditant.dev/demo_org/prod",
+        "treeSize": 8,
+        "headHash": "sha256:411938a52b86dd8fec5f0b16d0c7f5730f53cd80437c26e4480622370e93dbe9",
+        "timestamp": "2026-11-27T10:05:00.000Z"
+      },
+      "body": "auditant.dev/demo_org/prod\n8\nQRk4pSuG3Y/sXwsW0Mf1cw9TzYBDfCbkSAYiNw6T2+k=\n",
+      "keyId": "auditant-fbd28f98423e",
+      "signature": "MEUCIQD4NDGb9yscchDgd+TePYVM0HfB+reaHMtmo44khdK0rQIgacyvYFZrfogVCMCwg7x8anOnST2x0KD4xgWPbOIXceY="
+    }
+  ]
+}

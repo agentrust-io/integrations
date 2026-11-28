@@ -1,0 +1,150 @@
+{
+  "bundleVersion": "1.0.0",
+  "logId": "demo_org/prod",
+  "from": "2026-11-27T00:00:00.000Z",
+  "to": "2026-11-27T23:59:59.999Z",
+  "exportedAt": "2026-11-27T10:05:00.000Z",
+  "publicKeys": [
+    {
+      "keyId": "auditant-fbd28f98423e",
+      "pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE82vl8qkypFk1t7PcswTy3PDikZgM\n8RRp1hFv0vy8ScFax+0lExksfh4tx1TmIavOZG/XznjmU6CXI7WqIk5ZbA==\n-----END PUBLIC KEY-----\n"
+    }
+  ],
+  "events": [
+    {
+      "schemaVersion": "1.0.0",
+      "eventId": "evt_000005",
+      "ts": "2026-11-27T10:00:05.000Z",
+      "logId": "demo_org/prod",
+      "actor": {
+        "kind": "agent",
+        "id": "refund-agent",
+        "version": "0.3.1",
+        "mode": "autonomous"
+      },
+      "sessionId": "sess_fixture",
+      "actionType": "tool_call",
+      "action": "issue_refund",
+      "surface": {
+        "plane": "action",
+        "adapter": "sdk",
+        "modality": "text"
+      },
+      "outcome": "ok",
+      "inputHash": "sha256:12e3e612f21a311079bbb13dd00eee0268a9c12379c3025b96e3755a2b2bc484",
+      "seq": 4,
+      "prevHash": "sha256:ad9cccd9b1980fe99dc6f2fdfedf4db33521864fef7699745e399b56a4a121f3",
+      "eventHash": "sha256:e72be112ef933b698f23aadd9b1bb6e4f71b29252d81fa4b6a75039aa56a47b8"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "eventId": "evt_000006",
+      "ts": "2026-11-27T10:00:06.000Z",
+      "logId": "demo_org/prod",
+      "actor": {
+        "kind": "agent",
+        "id": "refund-agent",
+        "version": "0.3.1",
+        "mode": "autonomous"
+      },
+      "sessionId": "sess_fixture",
+      "actionType": "model_call",
+      "action": "demo-model",
+      "surface": {
+        "plane": "model",
+        "adapter": "gateway",
+        "modality": "text"
+      },
+      "outcome": "ok",
+      "inputHash": "sha256:259a648c7737779497c41b77a45b5f7449eaa5d7f36a96cb92e5341678c54f4c",
+      "outputHash": "sha256:86a7e131e4b36059db897ed1422cb404787508b538229d1d8fb220d5ec71fbfc",
+      "cost": {
+        "currency": "USD",
+        "total": 0.0031,
+        "model": "demo-model",
+        "provider": "demo-provider"
+      },
+      "seq": 5,
+      "prevHash": "sha256:e72be112ef933b698f23aadd9b1bb6e4f71b29252d81fa4b6a75039aa56a47b8",
+      "eventHash": "sha256:7388cddcf3cf4dceb4eac3fa48dc364063991e01f66396706e7968eb03042f9f"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "eventId": "evt_000007",
+      "ts": "2026-11-27T10:00:07.000Z",
+      "logId": "demo_org/prod",
+      "actor": {
+        "kind": "agent",
+        "id": "refund-agent",
+        "version": "0.3.1",
+        "mode": "autonomous"
+      },
+      "sessionId": "sess_fixture",
+      "actionType": "tool_call",
+      "action": "send_receipt",
+      "surface": {
+        "plane": "action",
+        "adapter": "sdk",
+        "modality": "text"
+      },
+      "outcome": "ok",
+      "inputHash": "sha256:03fd3de7634a49868d83fff628b0ade7fe99f344d5ce74d94471f281c6ffe6d9",
+      "seq": 6,
+      "prevHash": "sha256:7388cddcf3cf4dceb4eac3fa48dc364063991e01f66396706e7968eb03042f9f",
+      "eventHash": "sha256:486374eeeefa611181bc622511ff5b1d2772ef6237999f58ec9e2b8277ea7f44"
+    },
+    {
+      "schemaVersion": "1.0.0",
+      "eventId": "evt_000008",
+      "ts": "2026-11-27T10:00:08.000Z",
+      "logId": "demo_org/prod",
+      "actor": {
+        "kind": "agent",
+        "id": "refund-agent",
+        "version": "0.3.1",
+        "mode": "autonomous"
+      },
+      "sessionId": "sess_fixture",
+      "actionType": "lifecycle",
+      "action": "session_end",
+      "surface": {
+        "plane": "action",
+        "adapter": "sdk",
+        "modality": "text"
+      },
+      "outcome": "ok",
+      "seq": 7,
+      "prevHash": "sha256:486374eeeefa611181bc622511ff5b1d2772ef6237999f58ec9e2b8277ea7f44",
+      "eventHash": "sha256:e5fd47a8611893e36485c60596575b50b66923c31fecc0f8e714124c68e15c30"
+    }
+  ],
+  "checkpoints": [
+    {
+      "checkpoint": {
+        "origin": "auditant.dev/demo_org/prod",
+        "treeSize": 4,
+        "headHash": "sha256:ad9cccd9b1980fe99dc6f2fdfedf4db33521864fef7699745e399b56a4a121f3",
+        "timestamp": "2026-11-27T10:05:00.000Z"
+      },
+      "body": "auditant.dev/demo_org/prod\n4\nrZzM2bGYD+mdxvL9/t9NszUhhk/vdpl0XjmbVqShIfM=\n",
+      "keyId": "auditant-fbd28f98423e",
+      "signature": "MEUCIQDXdwinWyOGpinCwlf4YdL2LnKMHiS3HqybNbWlSODEVQIgVp8+9xd6ySAt49i0SL4KMrIgYFy6Z8VsuDIMpeRs2Xs="
+    },
+    {
+      "checkpoint": {
+        "origin": "auditant.dev/demo_org/prod",
+        "treeSize": 8,
+        "headHash": "sha256:e5fd47a8611893e36485c60596575b50b66923c31fecc0f8e714124c68e15c30",
+        "timestamp": "2026-11-27T10:05:00.000Z"
+      },
+      "body": "auditant.dev/demo_org/prod\n8\n5f1HqGEYk+NkhcYFlldbULZpI8Mf7MD45xQSTGjhXDA=\n",
+      "keyId": "auditant-fbd28f98423e",
+      "signature": "MEYCIQCxhqd1zWMyJgwPu51PacXgbYRuTGUFD0Mqqa+gM5LWhAIhAMzMFhVfRopMu4iPvaz3b9nZXXlc0OSOUWYuJvHXuiw0"
+    }
+  ],
+  "startHead": {
+    "logId": "demo_org/prod",
+    "treeSize": 4,
+    "headHash": "sha256:ad9cccd9b1980fe99dc6f2fdfedf4db33521864fef7699745e399b56a4a121f3"
+  }
+}

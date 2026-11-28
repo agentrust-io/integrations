@@ -1,0 +1,2 @@
+Demo workload artifact. It stands in for the refund agent's image or build artifact, whose
+digest an operator passes as --workload-digest. Auditant does not record that digest.
