@@ -1,7 +1,7 @@
 # OpenShell bundle verifier: candidate v1
 
 Unreleased consumer-side proposal for
-[NVIDIA/OpenShell #2745](https://github.com/NVIDIA/OpenShell/issues/2745).
+[ai-openshell/openshell #2745](https://github.com/ai-openshell/openshell/issues/2745).
 The field layout below is proposed for producer review. It is not a published
 OpenShell export format. Tests and the example use synthetic events and ephemeral
 software keys. They do not run OpenShell or use hardware evidence.
